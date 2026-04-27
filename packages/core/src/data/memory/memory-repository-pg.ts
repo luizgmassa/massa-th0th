@@ -9,7 +9,7 @@
  * Raw-SQL paths work correctly — both in the API server and in bun:test.
  */
 
-import { logger } from "@th0th-ai/shared";
+import { logger, MemoryType } from "@th0th-ai/shared";
 import { Prisma } from "../../generated/prisma/index.js";
 import { getPrismaClient } from "../../services/query/prisma-client.js";
 import type { PrismaClient } from "../../generated/prisma/index.js";
@@ -180,6 +180,7 @@ export class MemoryRepositoryPg {
       projectId?: string;
       agentId?: string;
       minImportance?: number;
+      types?: MemoryType[];
     },
   ): Promise<MemoryRow[]> {
     // Split the query into individual tokens and build per-token ILIKE clauses.
@@ -201,6 +202,8 @@ export class MemoryRepositoryPg {
     if (filters?.projectId)     conditions.push(Prisma.sql`project_id = ${filters.projectId}`);
     if (filters?.agentId)       conditions.push(Prisma.sql`agent_id = ${filters.agentId}`);
     if (filters?.minImportance != null) conditions.push(Prisma.sql`importance >= ${filters.minImportance}`);
+    if (filters?.types && filters.types.length > 0)
+      conditions.push(Prisma.sql`type = ANY(${filters.types}::text[])`);
 
     const whereClause = Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`;
 

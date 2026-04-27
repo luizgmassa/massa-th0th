@@ -178,6 +178,7 @@ export class MemoryController {
       projectId,
       agentId,
       minImportance,
+      types,
     });
 
     logger.info("FTS search completed", {
