@@ -68,10 +68,11 @@ jobs:
       id-token: write
 
     steps:
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -82,13 +83,13 @@ jobs:
         working-directory: packages/shared
         run: npm publish --access public --tag ${{ env.NPM_TAG }}
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @th0th-ai/core
         working-directory: packages/core
         run: npm publish --access public --tag ${{ env.NPM_TAG }}
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-apps:
     needs: [build, publish-packages]
@@ -99,10 +100,11 @@ jobs:
       id-token: write
 
     steps:
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -113,19 +115,19 @@ jobs:
         working-directory: apps/tools-api
         run: npm publish --access public --tag ${{ env.NPM_TAG }}
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @th0th-ai/mcp-client
         working-directory: apps/mcp-client
         run: npm publish --access public --tag ${{ env.NPM_TAG }}
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @th0th-ai/opencode-plugin
         working-directory: apps/opencode-plugin
         run: npm publish --access public --tag ${{ env.NPM_TAG }}
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-docker:
     needs: build
