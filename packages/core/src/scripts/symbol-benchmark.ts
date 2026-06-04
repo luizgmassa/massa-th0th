@@ -181,7 +181,6 @@ function measure<T>(fn: () => Promise<T>): Promise<{ result: T; ms: number }> {
 const DEFINITION_FIXTURES: Array<{ name: string; kind?: string; minRefs: number }> = [
   { name: "ContextualSearchRLM", kind: "class", minRefs: 2 },
   { name: "symbolGraphService", kind: "variable", minRefs: 1 },
-  { name: "ContextualSearchRLM", kind: "class", minRefs: 1 },
   { name: "workspaceManager", kind: "variable", minRefs: 1 },
   { name: "computePageRank", kind: "function", minRefs: 1 },
   { name: "SearchController", kind: "class", minRefs: 1 },
