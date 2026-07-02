@@ -29,6 +29,7 @@ import { hookRoutes } from "./routes/hooks.js";
 import { bootstrapRoutes } from "./routes/bootstrap.js";
 import { handoffRoutes } from "./routes/handoff.js";
 import { proposalRoutes } from "./routes/proposals.js";
+import { webUiRoutes } from "./routes/web-ui.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
 import { getHealthChecker, searchSessionHook, coRetrievalHook } from "@th0th-ai/core";
@@ -65,6 +66,7 @@ const app = new Elysia({ adapter: node() })
           { name: "hooks", description: "Passive lifecycle capture (observation ingestion)" },
           { name: "handoffs", description: "Cross-session handoff begin/accept/cancel" },
           { name: "proposals", description: "Auto-improvement proposal list/approve/reject" },
+          { name: "webUi", description: "Read-only memory/search web browser (Phase 8)" },
         ],
         components: {
           securitySchemes: {
@@ -97,6 +99,7 @@ const app = new Elysia({ adapter: node() })
   .use(bootstrapRoutes)
   .use(handoffRoutes)
   .use(proposalRoutes)
+  .use(webUiRoutes)
   .get("/health", () => ({
     status: "ok",
     service: "th0th-tools-api",

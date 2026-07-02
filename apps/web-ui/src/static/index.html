@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>th0th — Memory Browser (read-only)</title>
+    <link rel="stylesheet" href="styles.css" />
+    <!-- no-FOUC theme bootstrap: apply persisted theme before stylesheet paints. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("th0th-ui-theme");
+          if (t === "dark" || t === "light") {
+            document.documentElement.setAttribute("data-theme", t);
+          }
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">th0th <span class="muted">memory browser</span></div>
+      <nav class="nav">
+        <a href="#/projects">Projects</a>
+        <a href="#/memory">Memory</a>
+        <a href="#/search">Search</a>
+        <a href="#/handoffs">Handoffs</a>
+        <a href="#/checkpoints">Checkpoints</a>
+      </nav>
+      <div class="topbar-right">
+        <label class="project-pick">
+          Project
+          <select id="project-select" data-testid="project-select">
+            <option value="">(select)</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          id="theme-toggle"
+          class="theme-toggle"
+          aria-label="Toggle dark mode"
+          data-testid="theme-toggle"
+        >
+          &#9681;
+        </button>
+      </div>
+    </header>
+    <main id="app" class="app">
+      <div class="loading">Loading…</div>
+    </main>
+    <footer class="footer muted">
+      Read-only · refresh to see new data · served by the th0th Tools API
+    </footer>
+    <script type="module" src="app.js" defer></script>
+  </body>
+</html>
