@@ -57,6 +57,15 @@ export interface ServerConfig {
   // Search / Auto-Reindex Configuration
   search: {
     autoReindexMaxFiles: number;
+    // Phase 2: query understanding (LLM rewrite + HyDE). Default-off,
+    // silent-degrades. Consumers MUST treat the absence of this block as
+    // "feature off" (original single-stream search path).
+    queryUnderstanding: {
+      enabled: boolean;
+      hydeEnabled: boolean;
+      cacheTtlMs: number;
+      cacheMaxSize: number;
+    };
   };
 
   // Shared local-first LLM configuration (cross-cutting §1).
@@ -316,6 +325,16 @@ export const defaultConfig: ServerConfig = {
     // Max files an auto-reindex (latency-sensitive) path will sync before
     // deferring. Overridable via AUTOREINDEX_MAX_FILES env var.
     autoReindexMaxFiles: envNum("AUTOREINDEX_MAX_FILES", 200),
+    // Phase 2: query understanding (LLM rewrite + HyDE). Opt-in via
+    // SEARCH_QUERY_UNDERSTANDING_ENABLED. hydeEnabled gates only the HyDE
+    // extra-LLM-call (the rewrite still runs when enabled && hydeEnabled=false).
+    // Cache is per-(query, projectId), TTL+size bounded.
+    queryUnderstanding: {
+      enabled: envBool("SEARCH_QUERY_UNDERSTANDING_ENABLED", false),
+      hydeEnabled: envBool("SEARCH_QUERY_UNDERSTANDING_HYDE_ENABLED", true),
+      cacheTtlMs: envNum("SEARCH_QUERY_UNDERSTANDING_CACHE_TTL_MS", 300_000),
+      cacheMaxSize: envNum("SEARCH_QUERY_UNDERSTANDING_CACHE_MAX_SIZE", 256),
+    },
   },
 
   // Shared local-first LLM block (cross-cutting §1). Ollama defaults; the
@@ -478,7 +497,16 @@ export class Config {
       },
       vectorStore: { ...defaults.vectorStore, ...overrides.vectorStore },
       keywordSearch: { ...defaults.keywordSearch, ...overrides.keywordSearch },
-      search: { ...defaults.search, ...overrides.search },
+      search: {
+        ...defaults.search,
+        ...overrides.search,
+        // Shallow-merge the nested queryUnderstanding block so partial
+        // overrides (e.g. { enabled: true }) don't drop the cache defaults.
+        queryUnderstanding: {
+          ...defaults.search.queryUnderstanding,
+          ...overrides.search?.queryUnderstanding,
+        },
+      },
       llm: { ...defaults.llm, ...overrides.llm },
       memory: {
         ...defaults.memory,
