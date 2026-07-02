@@ -6,6 +6,7 @@
  */
 
 import { randomUUID } from "crypto";
+import type { JobStore } from "./index-job-store.js";
 
 export interface IndexJob {
   jobId: string;
@@ -36,12 +37,26 @@ export class IndexJobTracker {
   private static instance: IndexJobTracker;
   private jobs: Map<string, IndexJob> = new Map();
   private readonly MAX_JOBS = 100; // Keep last 100 jobs
+  private readonly store?: JobStore;
 
-  private constructor() {}
+  constructor(store?: JobStore) {
+    this.store = store;
+  }
 
   static getInstance(): IndexJobTracker {
     if (!IndexJobTracker.instance) {
-      IndexJobTracker.instance = new IndexJobTracker();
+      // Phase 1: wire the durable SQLite job store (with crash recovery on
+      // first open). Falls back to in-memory only if construction throws.
+      let store: JobStore | undefined;
+      try {
+        const { getJobStore } = require("./index-job-store.js") as {
+          getJobStore: () => JobStore;
+        };
+        store = getJobStore();
+      } catch {
+        store = undefined;
+      }
+      IndexJobTracker.instance = new IndexJobTracker(store);
     }
     return IndexJobTracker.instance;
   }
@@ -51,7 +66,7 @@ export class IndexJobTracker {
    */
   createJob(projectId: string, projectPath: string): IndexJob {
     const jobId = randomUUID();
-    
+
     const job: IndexJob = {
       jobId,
       projectId,
@@ -67,22 +82,33 @@ export class IndexJobTracker {
 
     this.jobs.set(jobId, job);
     this.cleanupOldJobs();
-    
+    try { this.store?.save(job); } catch { /* best-effort */ }
     return job;
   }
 
   /**
-   * Get job by ID
+   * Get job by ID. Phase 1: lazy-loads from the durable store on a hot miss.
    */
   getJob(jobId: string): IndexJob | undefined {
-    return this.jobs.get(jobId);
+    const cached = this.jobs.get(jobId);
+    if (cached) return cached;
+    if (this.store) {
+      try {
+        const loaded = this.store.get(jobId);
+        if (loaded) {
+          this.jobs.set(jobId, loaded);
+          return loaded;
+        }
+      } catch { /* best-effort */ }
+    }
+    return undefined;
   }
 
   /**
    * Update job status
    */
   updateStatus(jobId: string, status: IndexJob["status"]): void {
-    const job = this.jobs.get(jobId);
+    const job = this.jobs.get(jobId) ?? this.getJob(jobId);
     if (!job) return;
 
     job.status = status;
@@ -94,6 +120,7 @@ export class IndexJobTracker {
     if (status === "completed" || status === "failed") {
       job.completedAt = new Date();
     }
+    try { this.store?.save(job); } catch { /* best-effort */ }
   }
 
   /**
@@ -108,6 +135,7 @@ export class IndexJobTracker {
       total,
       percentage: total > 0 ? Math.round((current / total) * 100) : 0,
     };
+    try { this.store?.save(job); } catch { /* best-effort */ }
   }
 
   /**
@@ -130,6 +158,7 @@ export class IndexJobTracker {
     }
 
     job.completedAt = new Date();
+    try { this.store?.save(job); } catch { /* best-effort */ }
   }
 
   /**

@@ -11,6 +11,7 @@ import {
   WorkingMemoryBuffer,
   type WorkingMemoryBufferConfig,
 } from "../buffer/working-memory-buffer.js";
+import type { SessionStore } from "./session-store.js";
 
 const TOKEN_RE = /[a-z0-9_]{2,}/g;
 
@@ -44,9 +45,11 @@ const DEFAULT_ACCESS_HISTORY_LIMIT = 1000;
 export class SessionRegistry {
   private sessions = new Map<string, AgentSession>();
   private defaultTtlMs: number;
+  private readonly store?: SessionStore;
 
-  constructor(defaultTtlMs: number = 3_600_000) {
+  constructor(defaultTtlMs: number = 3_600_000, store?: SessionStore) {
     this.defaultTtlMs = defaultTtlMs;
+    this.store = store;
   }
 
   create(input: CreateSessionInput, now: number = Date.now()): AgentSession {
@@ -69,6 +72,8 @@ export class SessionRegistry {
       buffer: input.bufferConfig ? new WorkingMemoryBuffer(input.bufferConfig) : undefined,
     };
     this.sessions.set(session.sessionId, session);
+    // Phase 1: write-through (best-effort).
+    try { this.store?.save(session); } catch { /* store swallows + warns */ }
     return session;
   }
 
@@ -79,10 +84,26 @@ export class SessionRegistry {
    * never extends it beyond what a fresh `create()` would give.
    */
   get(sessionId: string, now: number = Date.now()): AgentSession | null {
-    const session = this.sessions.get(sessionId);
+    let session = this.sessions.get(sessionId);
+    // Phase 1: lazy-load on a hot-cache miss.
+    if (!session && this.store) {
+      try {
+        const loaded = this.store.load(sessionId);
+        if (loaded) {
+          // Respect TTL on load; an expired persisted session is discarded.
+          if (loaded.expiresAt <= now) {
+            this.store.delete(sessionId);
+            return null;
+          }
+          this.sessions.set(sessionId, loaded);
+          session = loaded;
+        }
+      } catch { /* store swallows + warns */ }
+    }
     if (!session) return null;
     if (session.expiresAt <= now) {
       this.sessions.delete(sessionId);
+      try { this.store?.delete(sessionId); } catch { /* best-effort */ }
       return null;
     }
     const refreshed = now + (session.ttlMs ?? this.defaultTtlMs);
@@ -107,6 +128,7 @@ export class SessionRegistry {
     session.taskTokens = tokenize(taskContext);
     if (taskEmbedding) session.taskEmbedding = taskEmbedding;
     session.expiresAt = now + (session.ttlMs ?? this.defaultTtlMs);
+    try { this.store?.save(session); } catch { /* best-effort */ }
     return session;
   }
 
@@ -122,22 +144,28 @@ export class SessionRegistry {
     const session = this.get(sessionId, now);
     if (!session) return;
     const history = session.accessHistory;
+    let nextCount = 1;
     if (history.has(memoryId)) {
       const current = history.get(memoryId)!;
+      nextCount = current + 1;
       history.delete(memoryId);
-      history.set(memoryId, current + 1);
-      return;
+      history.set(memoryId, nextCount);
+    } else {
+      history.set(memoryId, 1);
     }
-    history.set(memoryId, 1);
     while (history.size > session.accessHistoryLimit) {
       const oldest = history.keys().next().value;
       if (oldest === undefined) break;
       history.delete(oldest);
     }
+    // Phase 1: write-through the access touch (best-effort, LRU recency).
+    try { this.store?.recordAccess(sessionId, memoryId, nextCount); } catch { /* best-effort */ }
   }
 
   delete(sessionId: string): boolean {
-    return this.sessions.delete(sessionId);
+    const removed = this.sessions.delete(sessionId);
+    try { this.store?.delete(sessionId); } catch { /* best-effort */ }
+    return removed;
   }
 
   /** Evict expired sessions. Called opportunistically. */
@@ -165,7 +193,23 @@ export class SessionRegistry {
 let registry: SessionRegistry | null = null;
 
 export function getSessionRegistry(): SessionRegistry {
-  if (!registry) registry = new SessionRegistry();
+  if (!registry) {
+    // Phase 1: wire the durable SQLite store with an ephemeral fallback.
+    let store: SessionStore;
+    try {
+      // Lazy require to avoid importing bun:sqlite at module-eval.
+      const { getSessionStore } = require("./session-store.js") as {
+        getSessionStore: () => SessionStore;
+      };
+      store = getSessionStore();
+    } catch {
+      const { MemorySessionStore } = require("./session-store.js") as {
+        MemorySessionStore: new () => SessionStore;
+      };
+      store = new MemorySessionStore();
+    }
+    registry = new SessionRegistry(3_600_000, store);
+  }
   return registry;
 }
 
