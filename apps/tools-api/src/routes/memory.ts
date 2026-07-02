@@ -256,6 +256,10 @@ export const memoryRoutes = new Elysia({ prefix: "/api/v1/memory" })
           const conditions: string[] = [];
           const params: unknown[] = [];
           if (body.type) { conditions.push("type = ?"); params.push(body.type); }
+          if (body.level !== undefined && body.level !== null) {
+            conditions.push("level = ?");
+            params.push(body.level);
+          }
           if (body.minImportance) { conditions.push("importance >= ?"); params.push(body.minImportance); }
           const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
           total = (db.prepare(`SELECT COUNT(*) as n FROM memories ${where}`).get(...params) as any).n;
@@ -268,8 +272,12 @@ export const memoryRoutes = new Elysia({ prefix: "/api/v1/memory" })
             includePersistent: true,
             limit: 10000,
           });
-          total = all.length;
-          rows = all.slice(offset, offset + limit);
+          const filtered =
+            body.level !== undefined && body.level !== null
+              ? all.filter((r: MemoryRow) => r.level === body.level)
+              : all;
+          total = filtered.length;
+          rows = filtered.slice(offset, offset + limit);
         }
 
         return {
@@ -300,12 +308,19 @@ export const memoryRoutes = new Elysia({ prefix: "/api/v1/memory" })
         minImportance: t.Optional(
           t.Number({ minimum: 0, maximum: 1, default: 0 }),
         ),
+        level: t.Optional(
+          t.Number({
+            minimum: 1,
+            maximum: 3,
+            description: "Filter by memory level (1=Project, 2=User, 3=Session)",
+          }),
+        ),
       }),
       detail: {
         tags: ["memory"],
         summary: "List memories",
         description:
-          "List stored memories with optional filters (no semantic search, ordered by creation date)",
+          "List stored memories with optional filters (type/level/minImportance, no semantic search, ordered by creation date)",
       },
     },
   );
