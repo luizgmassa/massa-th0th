@@ -65,14 +65,52 @@ export class ContextualSearchRLM {
   // Per-project mutex to prevent concurrent indexing
   private static indexingLocks = new Map<string, Promise<void>>();
 
-  constructor() {
+  /**
+   * Optional test/extension seam: pre-resolved dependencies. When provided,
+   * `ensureInitialized` skips the factory calls (which are process-wide
+   * mock.module targets in the full test suite) and uses these instances
+   * directly. Production callers pass nothing and resolve via factories.
+   */
+  private readonly injectedDeps?: {
+    keywordSearch?: Awaited<ReturnType<typeof getKeywordSearch>>;
+    vectorStore?: Awaited<ReturnType<typeof getVectorStore>>;
+    searchCache?: Awaited<ReturnType<typeof getSearchCache>>;
+    analytics?: Awaited<ReturnType<typeof getSearchAnalytics>>;
+    symbolRepo?: Awaited<ReturnType<typeof getSymbolRepository>>;
+  };
+
+  constructor(deps?: {
+    keywordSearch?: Awaited<ReturnType<typeof getKeywordSearch>>;
+    vectorStore?: Awaited<ReturnType<typeof getVectorStore>>;
+    searchCache?: Awaited<ReturnType<typeof getSearchCache>>;
+    analytics?: Awaited<ReturnType<typeof getSearchAnalytics>>;
+    symbolRepo?: Awaited<ReturnType<typeof getSymbolRepository>>;
+  }) {
     this.fileFilterCache = new FileFilterCache();
     this.queryUnderstanding = new QueryUnderstandingService();
+    this.injectedDeps = deps;
   }
 
   private async ensureInitialized(): Promise<void> {
     if (this.initialized) return;
-    
+
+    const injected = this.injectedDeps ?? {};
+    const resolveKeyword = injected.keywordSearch
+      ? Promise.resolve(injected.keywordSearch)
+      : getKeywordSearch();
+    const resolveVector = injected.vectorStore
+      ? Promise.resolve(injected.vectorStore)
+      : getVectorStore();
+    const resolveCache = injected.searchCache
+      ? Promise.resolve(injected.searchCache)
+      : getSearchCache();
+    const resolveAnalytics = injected.analytics
+      ? Promise.resolve(injected.analytics)
+      : getSearchAnalytics();
+    const resolveSymbolRepo = injected.symbolRepo
+      ? Promise.resolve(injected.symbolRepo)
+      : getSymbolRepository();
+
     [
       this.keywordSearch,
       this.vectorStore,
@@ -80,16 +118,18 @@ export class ContextualSearchRLM {
       this.analytics,
       this.symbolRepo,
     ] = await Promise.all([
-      getKeywordSearch(),
-      getVectorStore(),
-      getSearchCache(),
-      getSearchAnalytics(),
-      getSymbolRepository(),
+      resolveKeyword,
+      resolveVector,
+      resolveCache,
+      resolveAnalytics,
+      resolveSymbolRepo,
     ]);
-    
+
     this.indexManager = new IndexManager(this.vectorStore);
     this.initialized = true;
-    logger.info("ContextualSearchRLM initialized");
+    logger.info("ContextualSearchRLM initialized", {
+      via: injected.vectorStore ? "injected-seam" : "factory",
+    });
   }
 
   /**
