@@ -127,6 +127,13 @@ export interface EventMap {
     appliedAt: number;
     source: "llm" | "rule-based";
   };
+  /** Phase 7b: emitted after auto salience scoring on remember (LLM on, valid). */
+  "memory:salience-scored": {
+    memoryId: string;
+    projectId?: string;
+    salience: number;
+    source: "llm" | "default";
+  };
 }
 
 export type EventName = keyof EventMap;

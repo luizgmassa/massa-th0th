@@ -19,6 +19,8 @@ import {
 } from "../services/memory/memory-service.js";
 import { MemoryGraphService } from "../services/graph/memory-graph.service.js";
 import { memoryConsolidationJob } from "../services/jobs/memory-consolidation-job.js";
+import { getSalienceJudge } from "../services/memory/salience-judge.js";
+import { eventBus } from "../services/events/event-bus.js";
 
 // ── Input / Output types ─────────────────────────────────────
 
@@ -113,10 +115,22 @@ export class MemoryController {
       sessionId,
       projectId,
       agentId,
-      importance = 0.5,
       tags = [],
       linkTo = [],
     } = input;
+
+    // Phase 7b: auto-importance/salience. Caller-wins: an EXPLICIT importance
+    // (including 0) is never overridden. Only an OMITTED importance triggers
+    // auto-scoring (LLM-on) or the 0.5 neutral default (LLM-off/feature-off).
+    let importance: number;
+    let salienceSource: "llm" | "default" = "default";
+    if (input.importance !== undefined) {
+      importance = input.importance;
+    } else {
+      const judged = await getSalienceJudge().scoreSalience(content, type);
+      importance = judged.salience;
+      salienceSource = judged.source;
+    }
 
     // 1. Domain logic: generate ID and determine level
     const id = this.service.generateId(type, userId);
@@ -145,6 +159,17 @@ export class MemoryController {
       embedding,
       metadata: { type, importance, agentId },
     });
+
+    // Phase 7b: emit salience-scored only when auto-scoring ran (importance was
+    // omitted). Published after repo.insert succeeds so the memoryId exists.
+    if (input.importance === undefined) {
+      eventBus.publish("memory:salience-scored", {
+        memoryId: id,
+        projectId,
+        salience: importance,
+        source: salienceSource,
+      });
+    }
 
     logger.info("Memory stored", {
       id,

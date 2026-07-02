@@ -115,6 +115,12 @@ export interface ServerConfig {
       minFileHits: number;
       minFixHits: number;
     };
+    // Phase 7b: auto importance/salience scoring on remember. When the caller
+    // omits `importance` AND this is enabled AND the LLM is on, score 0..1 via
+    // llmObject. Default-off; silent-degrades to 0.5 (the pre-7b default).
+    autoImportance: {
+      enabled: boolean;
+    };
   };
 
   // Passive lifecycle capture (Phase 3). Ingestion is default-on (no LLM dep);
@@ -440,6 +446,11 @@ export const defaultConfig: ServerConfig = {
       minFileHits: envNum("AUTO_IMPROVE_MIN_FILE_HITS", 3),
       minFixHits: envNum("AUTO_IMPROVE_MIN_FIX_HITS", 2),
     },
+    // Phase 7b: auto salience scoring on remember (opt-in via
+    // AUTO_IMPORTANCE_ENABLED). Scores only when the caller omits importance.
+    autoImportance: {
+      enabled: envBool("AUTO_IMPORTANCE_ENABLED", false),
+    },
   },
 
   hooks: {
@@ -623,6 +634,7 @@ export class Config {
         decay: { ...defaults.memory.decay, ...overrides.memory?.decay },
         bootstrap: { ...defaults.memory.bootstrap, ...overrides.memory?.bootstrap },
         autoImprove: { ...defaults.memory.autoImprove, ...overrides.memory?.autoImprove },
+        autoImportance: { ...defaults.memory.autoImportance, ...overrides.memory?.autoImportance },
       },
       hooks: {
         ...defaults.hooks,
