@@ -120,5 +120,44 @@ export type {
 } from "./services/handoff/handoff-service.js";
 export { HandoffAutoInjector } from "./services/handoff/handoff-auto-injector.js";
 
+// Phase 5 — auto-improvement loop (G7)
+export {
+  SqliteProposalStore,
+  MemoryProposalStore,
+  getProposalStore,
+  resetProposalStore,
+  newProposalId,
+  PROPOSAL_STATUSES,
+  PROPOSAL_KINDS,
+} from "./data/proposal/proposal-repository.js";
+export type {
+  ProposalStore,
+  ProposalRecord,
+  ProposalStatus,
+  ProposalKind,
+  ProposalPayload,
+  CreateMemoryPayload,
+  UpdateMemoryPayload,
+  TagMemoryPayload,
+} from "./data/proposal/proposal-repository.js";
+export {
+  AutoImproveJob,
+  getAutoImproveJob,
+  resetAutoImproveJob,
+  autoImproveJob,
+  detectPatterns,
+  enrichWithLlm,
+  ProposalEnrichmentSchema,
+} from "./services/jobs/auto-improve-job.js";
+export type {
+  AutoImproveJobOptions,
+  AutoImproveResult,
+  ApproveRejectResult,
+  PatternThresholds,
+  PatternCandidate,
+  MemoryApplySeam,
+  ProposalEnrichment,
+} from "./services/jobs/auto-improve-job.js";
+
 // Re-export types from shared for convenience
 export type { ToolResponse, IToolHandler } from "@th0th-ai/shared";

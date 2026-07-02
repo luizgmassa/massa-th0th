@@ -28,6 +28,7 @@ import { synapseRoutes } from "./routes/synapse.js";
 import { hookRoutes } from "./routes/hooks.js";
 import { bootstrapRoutes } from "./routes/bootstrap.js";
 import { handoffRoutes } from "./routes/handoff.js";
+import { proposalRoutes } from "./routes/proposals.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
 import { getHealthChecker, searchSessionHook, coRetrievalHook } from "@th0th-ai/core";
@@ -63,6 +64,7 @@ const app = new Elysia({ adapter: node() })
           { name: "synapse", description: "Cognitive modulation layer: session, buffer, priming" },
           { name: "hooks", description: "Passive lifecycle capture (observation ingestion)" },
           { name: "handoffs", description: "Cross-session handoff begin/accept/cancel" },
+          { name: "proposals", description: "Auto-improvement proposal list/approve/reject" },
         ],
         components: {
           securitySchemes: {
@@ -94,6 +96,7 @@ const app = new Elysia({ adapter: node() })
   .use(hookRoutes)
   .use(bootstrapRoutes)
   .use(handoffRoutes)
+  .use(proposalRoutes)
   .get("/health", () => ({
     status: "ok",
     service: "th0th-tools-api",

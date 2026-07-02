@@ -146,7 +146,7 @@ const ProposalEnrichmentItemSchema = z.object({
   content: z.string(),
   rationale: z.string(),
 });
-const ProposalEnrichmentSchema = z.object({
+export const ProposalEnrichmentSchema = z.object({
   items: z.array(ProposalEnrichmentItemSchema),
 });
 export type ProposalEnrichment = z.infer<typeof ProposalEnrichmentSchema>;
