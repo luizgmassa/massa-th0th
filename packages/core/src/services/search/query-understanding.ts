@@ -229,7 +229,9 @@ export class QueryUnderstandingService {
     this.embedFn =
       opts.embedFn ??
       ((text: string) => getEmbeddingSingleton().embed(text));
-    const qu = config.get("search").queryUnderstanding;
+    // Defensive against partial/mocked config (the shared-config mock is
+    // process-wide and omits the queryUnderstanding block in some test files).
+    const qu = readQueryUnderstandingConfig();
     this.cache = new QueryUnderstandingCache(
       opts.cacheTtlMs ?? qu.cacheTtlMs,
       opts.cacheMaxSize ?? qu.cacheMaxSize,
@@ -255,8 +257,8 @@ export class QueryUnderstandingService {
       return cached;
     }
 
-    const qu = config.get("search").queryUnderstanding;
-    const timeoutMs = config.get("llm").timeoutMs;
+    const qu = readQueryUnderstandingConfig();
+    const timeoutMs = readLlmTimeoutMs();
 
     const rewrite = await rewriteQuery(trimmed, this.llmSurface, { timeoutMs });
     if (!rewrite) {
@@ -318,5 +320,22 @@ function getEmbeddingSingleton(): EmbeddingService {
   if (!embeddingSingleton) embeddingSingleton = new EmbeddingService();
   return embeddingSingleton;
 }
-// Initialize lazily on first construct via a getter assignment below.
-// (Kept as a module-level lazy to avoid touching the network at import time.)
+
+// ─── Defensive config readers ─────────────────────────────────────────────────
+// `bun mock.module("@th0th-ai/shared")` is process-wide (Phase-1 finding) and
+// some test files' mock omits the queryUnderstanding block. These readers fall
+// back to the spec defaults so the constructor never throws under a mock.
+function readQueryUnderstandingConfig() {
+  const qu = (config.get("search") as any)?.queryUnderstanding;
+  return {
+    enabled: qu?.enabled === true,
+    hydeEnabled: qu?.hydeEnabled !== false,
+    cacheTtlMs: qu?.cacheTtlMs ?? 300_000,
+    cacheMaxSize: qu?.cacheMaxSize ?? 256,
+  };
+}
+
+function readLlmTimeoutMs(): number {
+  const llmCfg = (config.get("llm") as any) ?? {};
+  return typeof llmCfg.timeoutMs === "number" ? llmCfg.timeoutMs : 30000;
+}

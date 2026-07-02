@@ -38,6 +38,11 @@ import { glob } from "glob";
 import { FileFilterCache } from "./file-filter-cache.js";
 import { smartChunk } from "./smart-chunker.js";
 import { loadProjectIgnore } from "./ignore-patterns.js";
+import {
+  QueryUnderstandingService,
+  buildRewrittenFTSQuery,
+} from "./query-understanding.js";
+import { eventBus } from "../events/event-bus.js";
 
 const globAsync = glob;
 
@@ -52,6 +57,8 @@ export class ContextualSearchRLM {
   private analytics!: Awaited<ReturnType<typeof getSearchAnalytics>>;
   private symbolRepo!: Awaited<ReturnType<typeof getSymbolRepository>>;
   private fileFilterCache: FileFilterCache;
+  /** Phase 2: query understanding (LLM rewrite + HyDE). Default-off, silent-degrade. */
+  private queryUnderstanding: QueryUnderstandingService;
   private readonly RRF_K = 60; // Constant for Reciprocal Rank Fusion
   private initialized = false;
 
@@ -60,6 +67,7 @@ export class ContextualSearchRLM {
 
   constructor() {
     this.fileFilterCache = new FileFilterCache();
+    this.queryUnderstanding = new QueryUnderstandingService();
   }
 
   private async ensureInitialized(): Promise<void> {
@@ -509,6 +517,8 @@ export class ContextualSearchRLM {
       explainScores?: boolean;
       includeFilters?: string[];
       excludeFilters?: string[];
+      /** Phase 2: Synapse session id forwarded for future Synapse-biased fusion. */
+      sessionId?: string;
     } = {},
   ): Promise<SearchResult[]> {
     await this.ensureInitialized();
@@ -573,28 +583,107 @@ export class ContextualSearchRLM {
 
     try {
       const disableKeyword = process.env.SEARCH_DISABLE_KEYWORD === "true";
-      const [vectorResults, keywordResults] = await Promise.all([
-        this.vectorStore.search(query, maxResults * 2, projectId),
-        disableKeyword
-          ? Promise.resolve([] as Awaited<ReturnType<typeof this.keywordSearch.searchWithFilter>>)
-          : this.keywordSearch.searchWithFilter(query, { projectId }, maxResults * 2)
-              .catch((err) => {
-                logger.warn("Keyword search failed — falling back to vector-only", { err: (err as Error).message });
-                return [] as Awaited<ReturnType<typeof this.keywordSearch.searchWithFilter>>;
-              }),
-      ]);
 
-      logger.debug("Search results retrieved", {
-        vectorCount: vectorResults.length,
-        keywordCount: keywordResults.length,
-      });
+      // ── Phase 2: query understanding (default-off, silent degrade) ──
+      // On any LLM throw/timeout/disabled, `understand()` returns null and we
+      // fall through silently to the original 2-stream path. This branch is
+      // also guarded by an outer try/catch so a defensive throw never escapes.
+      let resultSets: SearchResult[][] = [];
+      let usedQueryUnderstanding = false;
+      try {
+        const qu = config.get("search").queryUnderstanding;
+        if (qu?.enabled && query.trim()) {
+          const understood = await this.queryUnderstanding.understand(
+            query,
+            projectId,
+          );
+          if (understood) {
+            eventBus.publish("search:query-rewritten", {
+              query,
+              projectId,
+              expansions: understood.expansions,
+              keywords: understood.keywords,
+              hydeUsed: understood.hydeVector !== null,
+            });
+            const rewrittenFTS = buildRewrittenFTSQuery(
+              query,
+              understood.keywords,
+            );
+            const [v, k, h] = await Promise.all([
+              this.vectorStore.search(query, maxResults * 2, projectId),
+              disableKeyword
+                ? Promise.resolve([] as SearchResult[])
+                : this.keywordSearch
+                    .searchWithFilter(rewrittenFTS, { projectId }, maxResults * 2)
+                    .catch((err) => {
+                      logger.warn(
+                        "Keyword search (rewritten) failed — falling back to vector-only",
+                        { err: (err as Error).message },
+                      );
+                      return [] as SearchResult[];
+                    }),
+              understood.hydeVector
+                ? this.vectorStore.searchByEmbedding(
+                    understood.hydeVector,
+                    maxResults * 2,
+                    projectId,
+                  )
+                : Promise.resolve([]),
+            ]);
+            resultSets = understood.hydeVector ? [v, k, h] : [v, k];
+            usedQueryUnderstanding = true;
+
+            logger.debug("Query understanding fan-out", {
+              vectorCount: v.length,
+              keywordCount: k.length,
+              hydeCount: h.length,
+              hydeUsed: understood.hydeVector !== null,
+            });
+          }
+        }
+      } catch (e) {
+        logger.warn("query understanding failed — falling back to original path", {
+          err: (e as Error).message,
+        });
+        resultSets = [];
+        usedQueryUnderstanding = false;
+      }
+
+      if (!usedQueryUnderstanding) {
+        // ORIGINAL Phase-1 path — byte-for-byte the pre-Phase-2 single-stream search.
+        const [vectorResults, keywordResults] = await Promise.all([
+          this.vectorStore.search(query, maxResults * 2, projectId),
+          disableKeyword
+            ? Promise.resolve([] as SearchResult[])
+            : this.keywordSearch
+                .searchWithFilter(query, { projectId }, maxResults * 2)
+                .catch((err) => {
+                  logger.warn(
+                    "Keyword search failed — falling back to vector-only",
+                    { err: (err as Error).message },
+                  );
+                  return [] as SearchResult[];
+                }),
+        ]);
+
+        logger.debug("Search results retrieved", {
+          vectorCount: vectorResults.length,
+          keywordCount: keywordResults.length,
+        });
+        resultSets = [vectorResults, keywordResults];
+      }
 
       // Combine results using RRF (with score explanation if requested)
-      const fusedResults = this.fuseResults(
-        [vectorResults, keywordResults],
-        query,
-        explainScores,
-      );
+      const fusedResults = this.fuseResults(resultSets, query, explainScores);
+
+      if (usedQueryUnderstanding) {
+        eventBus.publish("search:reranked", {
+          query,
+          projectId,
+          streamCount: resultSets.length,
+          resultCount: fusedResults.length,
+        });
+      }
 
       // Apply file pattern filters if provided
       // Note: For maximum efficiency, filters could be applied DURING vector/keyword search
