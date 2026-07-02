@@ -66,6 +66,12 @@ export interface ServerConfig {
       cacheTtlMs: number;
       cacheMaxSize: number;
     };
+    // Phase 7a: LLM-judge reranking on top of RRF + centrality. Default-off,
+    // silent-degrades to RRF order. rerankWindow is the top-K re-scored.
+    rerank: {
+      enabled: boolean;
+      rerankWindow: number;
+    };
   };
 
   // Shared local-first LLM configuration (cross-cutting §1).
@@ -383,6 +389,12 @@ export const defaultConfig: ServerConfig = {
       cacheTtlMs: envNum("SEARCH_QUERY_UNDERSTANDING_CACHE_TTL_MS", 300_000),
       cacheMaxSize: envNum("SEARCH_QUERY_UNDERSTANDING_CACHE_MAX_SIZE", 256),
     },
+    // Phase 7a: LLM-judge rerank. Opt-in via SEARCH_RERANK_ENABLED.
+    // rerankWindow = top-K re-scored by the LLM judge after centrality boost.
+    rerank: {
+      enabled: envBool("SEARCH_RERANK_ENABLED", false),
+      rerankWindow: envNum("SEARCH_RERANK_WINDOW", 50),
+    },
   },
 
   // Shared local-first LLM block (cross-cutting §1). Ollama defaults; the
@@ -597,6 +609,11 @@ export class Config {
         queryUnderstanding: {
           ...defaults.search.queryUnderstanding,
           ...overrides.search?.queryUnderstanding,
+        },
+        // Phase 7a: shallow-merge rerank so partial overrides keep the window.
+        rerank: {
+          ...defaults.search.rerank,
+          ...overrides.search?.rerank,
         },
       },
       llm: { ...defaults.llm, ...overrides.llm },

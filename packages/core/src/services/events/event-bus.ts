@@ -83,12 +83,14 @@ export interface EventMap {
     keywords: string[];
     hydeUsed: boolean;
   };
-  /** Phase 2: emitted after fusing the expanded streams (vector + keyword + HyDE). */
+  /** Phase 2: emitted after fusing the expanded streams (vector + keyword + HyDE).
+   * Phase 7a: `source` is optional ("rrf" pre-7a, "llm-judge" when 7a reranks). */
   "search:reranked": {
     query: string;
     projectId: string;
     streamCount: number;
     resultCount: number;
+    source?: "rrf" | "llm-judge";
   };
   /** Phase 3: emitted after an observation is persisted (hook ingestion). */
   "observation:ingested": {

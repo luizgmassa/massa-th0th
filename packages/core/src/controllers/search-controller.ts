@@ -9,6 +9,7 @@
 import { logger, config } from "@th0th-ai/shared";
 import { ContextualSearchRLM } from "../services/search/contextual-search-rlm.js";
 import { eventBus } from "../services/events/event-bus.js";
+import { LLMJudgeReranker } from "../services/search/reranker.js";
 import { minimatch } from "minimatch";
 
 // ── Types ────────────────────────────────────────────────────
@@ -152,7 +153,28 @@ export class SearchController {
       ? this.applyBoost(filteredResults, boostFiles)
       : filteredResults;
 
-    const formattedResults = boostedResults.map((r) => {
+    // Phase 7a: LLM-judge rerank of the top-K window (after centrality boost).
+    // Default-off via config.search.rerank.enabled; silent-degrades to the
+    // boosted order on LLM off/{ok:false}/throw. Never throws.
+    const rerankCfg = (config.get("search") as { rerank?: { enabled?: boolean } }).rerank;
+    let rerankedResults = boostedResults;
+    if (rerankCfg?.enabled) {
+      const reranker = new LLMJudgeReranker();
+      rerankedResults = await reranker.rerank(query, boostedResults);
+      eventBus.publish("search:reranked", {
+        query,
+        projectId,
+        // The RRF stream count (2 = vector+keyword, 3 = +HyDE/qu) is owned by
+        // ContextualSearchRLM; at the controller layer we report the fused
+        // result count. Phase-2 still emits its own pre-rerank search:reranked
+        // with the precise streamCount; this post-rerank emit adds source.
+        streamCount: 2,
+        resultCount: rerankedResults.length,
+        source: "llm-judge",
+      });
+    }
+
+    const formattedResults = rerankedResults.map((r) => {
       const meta = (r.metadata ?? {}) as Record<string, unknown>;
       const base: FormattedResult = {
         id: r.id,
