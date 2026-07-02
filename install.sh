@@ -243,6 +243,59 @@ OLLAMA_EMBEDDING_DIMENSIONS=1024
 # ── Logging ──────────────────────────────────────────────────
 LOG_LEVEL=info
 ENABLE_METRICS=true
+
+# ── Local-first LLM (Ollama); all default OFF, silent degrade ──
+RLM_LLM_ENABLED=false
+RLM_LLM_BASE_URL=http://localhost:11434/v1
+RLM_LLM_API_KEY=ollama
+RLM_LLM_MODEL=qwen2.5-coder:7b
+RLM_LLM_TEMPERATURE=0.2
+RLM_LLM_MAX_OUTPUT_TOKENS=2000
+RLM_LLM_TIMEOUT_MS=30000
+
+# ── Passive capture ───────────────────────────────────────────
+HOOKS_ENABLED=true
+HOOKS_MAX_PAYLOAD_BYTES=65536
+HOOKS_QUEUE_MAX_PENDING=256
+HOOKS_BRIDGE_ENABLED=true
+HOOKS_BRIDGE_MIN_OBS=8
+HOOKS_BRIDGE_MIN_INTERVAL_MS=300000
+HOOKS_BRIDGE_MAX_WINDOW=8
+
+# ── Cross-session handoffs ────────────────────────────────────
+HANDOFFS_ENABLED=true
+
+# ── Project bootstrap ─────────────────────────────────────────
+BOOTSTRAP_ENABLED=true
+BOOTSTRAP_MAX_SEED_MEMORIES=8
+BOOTSTRAP_CENTRALITY_LIMIT=10
+BOOTSTRAP_GIT_LOG_LIMIT=20
+BOOTSTRAP_REFRESH_ENABLED=true
+
+# ── Auto-improvement (reviewGate=false = auto-approve) ────────
+AUTO_IMPROVE_ENABLED=true
+AUTO_IMPROVE_REVIEW_GATE=false
+AUTO_IMPROVE_MIN_OBS=8
+AUTO_IMPROVE_MIN_INTERVAL_MS=300000
+AUTO_IMPROVE_MAX_WINDOW=16
+AUTO_IMPROVE_MIN_QUERY_HITS=3
+AUTO_IMPROVE_MIN_FILE_HITS=3
+AUTO_IMPROVE_MIN_FIX_HITS=2
+
+# ── Auto importance/salience (LLM) ────────────────────────────
+AUTO_IMPORTANCE_ENABLED=false
+
+# ── Search quality knobs ──────────────────────────────────────
+SEARCH_QUERY_UNDERSTANDING_ENABLED=false
+SEARCH_QUERY_UNDERSTANDING_HYDE_ENABLED=true
+SEARCH_QUERY_UNDERSTANDING_CACHE_TTL_MS=300000
+SEARCH_QUERY_UNDERSTANDING_CACHE_MAX_SIZE=256
+SEARCH_RERANK_ENABLED=false
+SEARCH_RERANK_WINDOW=50
+AUTOREINDEX_MAX_FILES=200
+
+# ── Web UI (served by Tools API at /ui) ───────────────────────
+WEB_UI_ENABLED=true
 ENVEOF
 
   ok "Created .env at ${env_file}"
@@ -279,6 +332,57 @@ resolve_ports() {
 }
 
 # ── Post-install optional setup scripts ──────────────────────
+# Prints (never auto-writes) the Claude Code passive-capture hooks guide.
+# Printing avoids clobbering the user's existing .claude/settings.json.
+print_hooks_guide() {
+  local mode="$1"
+  local install_dir="$2"
+  local hooks_dir="${install_dir}/apps/claude-plugin/hooks"
+
+  echo ""
+  echo -e "${BOLD}Passive-capture hooks (Claude Code)${NC}"
+  echo -e "${DIM}These fire-and-forget scripts POST observations to the API with a 2s${NC}"
+  echo -e "${DIM}timeout and always exit 0 — they never block the agent.${NC}"
+  echo ""
+
+  if [ "$mode" = "docker" ]; then
+    # Docker mode may not have cloned the repo locally, so point at GitHub raw URLs.
+    echo -e "  ${BOLD}Hook scripts (raw):${NC}"
+    for s in session-start.sh user-prompt-submit.sh post-tool-use.sh stop.sh; do
+      echo -e "    ${GITHUB_RAW}/${BRANCH}/apps/claude-plugin/hooks/${s}"
+    done
+    echo ""
+    echo -e "  ${DIM}Or skip the scripts and POST directly:${NC}"
+    echo -e "    curl -X POST ${TH0TH_API_BASE:-http://localhost:3333}/api/v1/hook/batch \\"
+    echo -e "      -H 'Content-Type: application/json' \\"
+    echo -e "      -d '{\"events\":[{\"event\":\"user-prompt\",\"projectId\":\"my-proj\",\"payload\":{}}]}'"
+    echo ""
+    return
+  fi
+
+  # source/build: repo is cloned locally — emit the settings.json JSONc block
+  # with absolute script paths.
+  echo -e "  ${BOLD}Add this to your project or user .claude/settings.json:${NC}"
+  echo ""
+  echo -e '  {'
+  echo -e '    "hooks": {'
+  echo -e "      \"SessionStart\":     [{ \"command\": \"${hooks_dir}/session-start.sh\" }],"
+  echo -e "      \"UserPromptSubmit\": [{ \"command\": \"${hooks_dir}/user-prompt-submit.sh\" }],"
+  echo -e "      \"PostToolUse\":      [{ \"command\": \"${hooks_dir}/post-tool-use.sh\" }],"
+  echo -e "      \"Stop\":             [{ \"command\": \"${hooks_dir}/stop.sh\" }]"
+  echo -e '    }'
+  echo -e '  }'
+  echo ""
+  echo -e "  ${BOLD}Env vars (set in your shell or .env):${NC}"
+  echo -e "    ${CYAN}TH0TH_API_BASE${NC}   default http://localhost:3333"
+  echo -e "    ${CYAN}TH0TH_API_KEY${NC}    optional (x-api-key header)"
+  echo -e "    ${CYAN}TH0TH_PROJECT_ID${NC} optional (defaults to cwd basename)"
+  echo ""
+  echo -e "  ${DIM}Observations land in ~/.rlm/observations.db and are consolidated into${NC}"
+  echo -e "  ${DIM}memories only when RLM_LLM_ENABLED=true (otherwise stored raw).${NC}"
+  echo ""
+}
+
 post_install() {
   local mode="$1"
   local install_dir="$2"
@@ -323,6 +427,7 @@ post_install() {
     if [ -f "${scripts_dir}/validate-vscode-integration.sh" ]; then
       echo -e "  ${CYAN}t)${NC} Run integration tests"
     fi
+    echo -e "  ${CYAN}c)${NC} Configure Claude Code passive-capture hooks"
     echo -e "  ${CYAN}s)${NC} Skip (finish)"
     echo ""
 
@@ -338,8 +443,10 @@ post_install() {
         [ -f "${scripts_dir}/validate-vscode-integration.sh" ] \
           && bash "${scripts_dir}/validate-vscode-integration.sh" \
           || warn "Validation script not found" ;;
+      c|C)
+        print_hooks_guide "$mode" "$install_dir" ;;
       s|S|"") return ;;
-      *) warn "Unknown choice. Enter w, v, t, or s." ;;
+      *) warn "Unknown choice. Enter w, v, t, c, or s." ;;
     esac
   done
 }
@@ -358,6 +465,9 @@ show_integration() {
   echo -e "  ${GREEN}API:${NC}     http://localhost:${api_port}"
   echo -e "  ${GREEN}Health:${NC}  curl http://localhost:${api_port}/health"
   echo -e "  ${GREEN}Swagger:${NC} http://localhost:${api_port}/swagger"
+  if [ "${WEB_UI_ENABLED:-true}" != "false" ] && [ "${WEB_UI_ENABLED:-true}" != "0" ]; then
+    echo -e "  ${GREEN}Web UI:${NC}  http://localhost:${api_port}/ui"
+  fi
   echo ""
   echo -e "${BOLD}  Connect to Claude / OpenCode:${NC}"
   echo ""
@@ -401,6 +511,9 @@ show_integration() {
   else
     echo -e "    curl -s http://localhost:${api_port}/health | jq"
   fi
+  echo ""
+  echo -e "  ${DIM}For Ollama completion features (consolidation, rerank, query understanding):${NC}"
+  echo -e "  ${DIM}set RLM_LLM_ENABLED=true — see .env.example and README §Local-first LLM.${NC}"
   echo ""
 }
 
