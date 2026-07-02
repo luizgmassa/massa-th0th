@@ -16,7 +16,7 @@ import { IVectorStore, IVectorCollection, VectorDocument, VectorStoreStats, Proj
 import { SearchResult, SearchSource } from '@th0th-ai/shared';
 import { config } from '@th0th-ai/shared';
 import { logger } from '@th0th-ai/shared';
-import { EmbeddingService as ChromaEmbeddingService } from '../chromadb/vector-store.js';
+import { EmbeddingService as ChromaEmbeddingService } from '../../services/embeddings/index.js';
 import fs from 'fs';
 import path from 'path';
 

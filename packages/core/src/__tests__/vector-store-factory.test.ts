@@ -15,7 +15,7 @@ import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test";
 // Mock the ChromaDB EmbeddingService so tests don't require a running Ollama.
 // SQLiteVectorStore creates an EmbeddingService in its constructor, which
 // would otherwise kick off a provider-selection round-trip to Ollama per test.
-mock.module("../data/chromadb/vector-store.js", () => ({
+mock.module("../services/embeddings/index.js", () => ({
   EmbeddingService: class MockEmbeddingService {
     async embed(text: string): Promise<number[]> {
       return new Array(384).fill(0.1);

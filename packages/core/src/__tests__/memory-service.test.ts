@@ -9,7 +9,7 @@ import { describe, test, expect, beforeEach, mock } from "bun:test";
 import { MemoryType, MemoryLevel } from "@th0th-ai/shared";
 
 // ── Mock EmbeddingService before importing MemoryService ─────
-mock.module("../data/chromadb/vector-store.js", () => ({
+mock.module("../services/embeddings/index.js", () => ({
   EmbeddingService: class MockEmbeddingService {
     async embed(_text: string): Promise<number[]> {
       return new Array(384).fill(0.1);

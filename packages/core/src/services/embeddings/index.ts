@@ -276,3 +276,6 @@ export {
   getProvidersByPriority,
   hasApiKey,
 } from "./config.js";
+
+// Phase 7f: relocated EmbeddingService (was data/chromadb/vector-store.ts).
+export { EmbeddingService } from "./embedding-service.js";

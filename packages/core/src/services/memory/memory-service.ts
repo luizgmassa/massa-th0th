@@ -7,7 +7,7 @@
  */
 
 import { MemoryType, MemoryLevel, config } from "@th0th-ai/shared";
-import { EmbeddingService } from "../../data/chromadb/vector-store.js";
+import { EmbeddingService } from "../embeddings/index.js";
 import type { MemoryRow } from "../../data/memory/memory-repository.js";
 import { decayScore } from "./decay.js";
 

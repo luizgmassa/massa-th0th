@@ -32,7 +32,7 @@ function generateMockEmbedding(text: string): number[] {
   );
 }
 
-mock.module("../data/chromadb/vector-store.js", () => ({
+mock.module("../services/embeddings/index.js", () => ({
   EmbeddingService: class MockEmbeddingService {
     async embed(text: string): Promise<number[]> {
       embedCallCount++;

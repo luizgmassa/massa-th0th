@@ -15,7 +15,7 @@ import {
   ExtractedRelation,
   logger,
 } from "@th0th-ai/shared";
-import { EmbeddingService } from "../../data/chromadb/vector-store.js";
+import { EmbeddingService } from "../embeddings/index.js";
 import { GraphStore } from "./graph-store.js";
 import { getMemoryRepository } from "../../data/memory/memory-repository-factory.js";
 import type { MemoryRow } from "../../data/memory/memory-repository.js";

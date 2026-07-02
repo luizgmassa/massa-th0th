@@ -7,7 +7,7 @@
 
 import { IHybridSearch } from '@th0th-ai/shared';
 import { SearchResult, RetrievalOptions } from '@th0th-ai/shared';
-import { VectorStore } from '../chromadb/vector-store.js';
+import { SQLiteVectorStore } from './sqlite-vector-store.js';
 import { KeywordSearch } from '../sqlite/keyword-search.js';
 import { logger } from '@th0th-ai/shared';
 
@@ -21,11 +21,11 @@ const RRF_K = 60;
  * Hybrid Search implementation
  */
 export class HybridSearch implements IHybridSearch {
-  private vectorStore: VectorStore;
+  private vectorStore: SQLiteVectorStore;
   private keywordSearch: KeywordSearch;
 
   constructor() {
-    this.vectorStore = new VectorStore();
+    this.vectorStore = new SQLiteVectorStore();
     this.keywordSearch = new KeywordSearch();
 
     logger.info('Hybrid Search initialized');

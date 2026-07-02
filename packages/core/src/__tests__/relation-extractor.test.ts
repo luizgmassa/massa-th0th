@@ -39,7 +39,7 @@ mock.module("@th0th-ai/shared", () => {
   };
 });
 
-mock.module("../data/chromadb/vector-store.js", () => ({
+mock.module("../services/embeddings/index.js", () => ({
   EmbeddingService: class MockEmbeddingService {
     async embed(_text: string): Promise<number[]> {
       return new Array(384).fill(0.1);

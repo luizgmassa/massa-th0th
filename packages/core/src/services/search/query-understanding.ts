@@ -23,7 +23,7 @@ import { z } from "zod";
 import { config, logger } from "@th0th-ai/shared";
 import { sanitizeFTS5Query } from "@th0th-ai/shared";
 import { llm as llmHandle } from "../memory/llm-client.js";
-import { EmbeddingService } from "../../data/chromadb/vector-store.js";
+import { EmbeddingService } from "../embeddings/index.js";
 
 // ─── Zod schema (R1, P2-REWRITE-03) ────────────────────────────────────────────
 
