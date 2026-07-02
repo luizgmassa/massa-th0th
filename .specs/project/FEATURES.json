@@ -44,6 +44,13 @@
       "status": "complete",
       "priority": "P1",
       "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "phase-5-auto-improve",
+      "title": "Phase 5 — Auto-improvement loop (ProposalStore + AutoImproveJob rule-based pattern detection + LLM-optional enrichment + review-gate/auto-approve + apply/reject state machine + memory:auto-improved event + MCP tools + route)",
+      "status": "complete",
+      "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
     }
   ]
 }

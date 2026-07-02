@@ -4,16 +4,18 @@
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-virtual-lantern-plan`
 - workflow: spec-driven
-- feature: `phase-6-handoffs` (complete — same-author verified PASS)
+- feature: `phase-5-auto-improve` (complete — same-author verified PASS)
 - branch: main
 
 ## Next Step
-Phase 6 done. Next session: Phase 5 (auto-improvement loop — G7) per
+Phase 5 done. Next session: Phase 7 (retrieval + compression polish) per
 `i-want-to-understand-virtual-lantern.md` (recommended order
-0→1→2→3→4→6→5→7→8). Phase 5 may consume the `handoff:accepted` event +
-the Observation store (`listRecent`) + Synapse sessions to detect
-patterns; the `bootstrap:<projectId>` seed memories (Phase 4) + the
-handoff dual-write memories (Phase 6) give a baseline for proposed edits.
+0→1→2→3→4→6→5→7(e first, then 7a–7d, 7f last)→8). Phase 7a/7b may consume
+auto-improved memories (normal rows; `memory.create` proposals have
+`embedding:[]` so they enter FTS but not the vector stream unless re-embedded —
+salience-judge 7b can score them; rerank 7a is unaffected). Phase 7d (LLM
+compression) is independent. Phase 7e (test coverage) + 7f (dead-code removal)
+gated last.
 
 ## Decisions
 - Scope this session = Phase 0 (0a-0d) only. Phases 1-8 deferred.
@@ -74,3 +76,11 @@ handoff dual-write memories (Phase 6) give a baseline for proposed edits.
 - Same-author verifier: PASS (sole agent — caveat labeled in validation.md). Discrimination mutant killed (status-guard removal → P6-FAIL-02 accept + cancel fail). Report: `.specs/features/phase-6-handoffs/validation.md`.
 - Landed: `handoffs.enabled` config (default-on, env `HANDOFFS_ENABLED`); `HandoffStore` (SQLite WAL `handoffs.db` + Memory fallback + factory, no isPostgresEnabled); `HandoffService` (ctor-seam {store?, memoryRepo?, llm?, idFactory?}, begin/accept/cancel/listPending, state machine open→accepted|expired, dual-write conversation memory level PROJECT/importance 0.7/tagged handoff:<id>+handoff:<projectId>/no embedding, optional LLM summary-polish default-off silent-degrade, never throws); `HandoffAutoInjector` (subscribes observation:ingested session-start → listPending observability); `handoff:accepted` event; 4 MCP tools (`th0th_handoff_begin/accept/cancel/list_pending`); API route `POST /api/v1/handoff/{begin,accept,cancel,list}` (423 disabled, 400 missing); Prisma `Handoff` model (PG parity); core barrel re-exports.
 - Accepted assumptions (non-blocking): PG HandoffStore runtime deferred (Prisma model parity; SQLite-canonical like observations/synapse_sessions/index_jobs); no age-based expiry (only explicit cancel); auto-injector records via logger (listPending is the deterministic recall surface; injector is the future auto-surface hook seam); targetAgent derivation best-effort (agentId from payload or broadcast); P6-DEGRADE 423 verified by inspection.
+
+## Completion (Phase 5)
+- Commits: a4c86ff (specs), d42086a (config + memory:auto-improved event + proposals table + Prisma), d3242cb (AutoImproveJob), ba971b0 (3 MCP tools + /api/v1/proposal route + barrel), 67e9ed6 (tests + approve targetMemoryId fix + validation).
+- Gates: `bun run --filter @th0th-ai/core test` 822 pass / 0 fail / 46 skip (baseline 791 → +31); `bun run type-check` 5/5 clean.
+- Same-author verifier: PASS (sole agent — caveat labeled in validation.md). Discrimination mutant killed (setStatus WHERE status='pending' guard removal → repo "non-pending no-op" test fails). Report: `.specs/features/phase-5-auto-improve/validation.md`.
+- Landed: `memory.autoImprove` config block (default-on detection, reviewGate default false = auto-approve, env `AUTO_IMPROVE_*`); `ProposalStore` (SQLite WAL `proposals.db` + Memory fallback + factory, no isPostgresEnabled); `AutoImproveJob` (ctor-seam {llm?, observationStore?, proposalStore?, memoryRepo?, thresholds?, reviewGate?, idFactory?}, `detectPatterns` pure rule-based query/file/fix signals, `enrichWithLlm` optional silent-degrade, `runOnce` debounce, reviewGate=false auto-approve reuses `approve()` single code path, apply/reject state machine pending→approved|rejected with defense-in-depth WHERE guard, `listPending`); `memory:auto-improved` event; 3 MCP tools (`th0th_list_proposals`/`approve`/`reject`); API route `POST /api/v1/proposal/{list,approve,reject}` (423 disabled, 400 missing); Prisma `Proposal` model (PG parity); core barrel re-exports.
+- Accepted assumptions (non-blocking): PG ProposalStore runtime deferred (Prisma model parity; SQLite-canonical like observations/handoffs); no OS scheduler (trigger-driven debounce mirrors Phase-3); Synapse-session mining is a seam only (v1 keys on observation payloads); no proposal TTL; P5 423 verified by inspection; same-author verification.
+- Bug fixed in 67e9ed6: `approve` now surfaces the freshly-assigned memory id onto the returned record + `memory:auto-improved` event payload (previously shadowed by the store's getById result → event emitted targetMemoryId=undefined for memory.create). Caught by P5-APPROVE-01.

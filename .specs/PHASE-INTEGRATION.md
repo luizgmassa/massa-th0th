@@ -239,7 +239,50 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 - Phase 7 (compression): unaffected; handoff dual-write memories have no embeddings (FTS-only).
 - Phase 8 (web UI): `HandoffService.listPending` + `getById` give a read surface for a handoff list view.
 
-### Phase 5 — (pending)
+### Phase 5 — landed (commits a4c86ff specs, d42086a config+event+table+prisma, d3242cb AutoImproveJob, ba971b0 mcp+route+barrel, 67e9ed6 tests+fix+validation)
+
+**Config keys (new):**
+- `memory.autoImprove: { enabled (envBool AUTO_IMPROVE_ENABLED=true); reviewGate (envBool AUTO_IMPROVE_REVIEW_GATE=false); minObservations (envNum AUTO_IMPROVE_MIN_OBS=8); minIntervalMs (envNum AUTO_IMPROVE_MIN_INTERVAL_MS=300_000); maxWindow (envNum AUTO_IMPROVE_MAX_WINDOW=16); minQueryHits (envNum AUTO_IMPROVE_MIN_QUERY_HITS=3); minFileHits (envNum AUTO_IMPROVE_MIN_FILE_HITS=3); minFixHits (envNum AUTO_IMPROVE_MIN_FIX_HITS=2) }`. Additive nested block in `ServerConfig.memory` (alongside `decay` + `bootstrap`). `mergeConfig` shallow-merges `memory.autoImprove`. LLM enrichment inherits the top-level `llm.enabled` gate (default false, env `RLM_LLM_ENABLED`).
+
+**Services exported (path + symbol) — what Phase 7/8 consumes:**
+- `packages/core/src/data/proposal/proposal-repository.ts` → `ProposalStore` (interface), `MemoryProposalStore` (in-memory fallback), `SqliteProposalStore` (lazy open, WAL + busy_timeout=3000, `proposals` table + 2 indexes), `getProposalStore()`/`resetProposalStore()` (factory mirrors HandoffStore/ObservationStore), `newProposalId()`, `PROPOSAL_STATUSES`, `ProposalStatus`, `PROPOSAL_KINDS`, `ProposalKind`, `ProposalPayload` (typed union), `ProposalRecord`. Types: `CreateMemoryPayload`/`UpdateMemoryPayload`/`TagMemoryPayload`.
+- `packages/core/src/services/jobs/auto-improve-job.ts` → `AutoImproveJob` (ctor `AutoImproveJobOptions { llm?, observationStore?, proposalStore?, memoryRepo?, minObservations?, minIntervalMs?, maxWindow?, thresholds?, reviewGate?, idFactory? }`; methods `maybeRun(projectId)` debounce fire-and-forget, `runOnce(projectId): Promise<AutoImproveResult>`, `approve(id, projectId?, source?): Promise<ApproveRejectResult>`, `reject(id, projectId?, reason?): Promise<ApproveRejectResult>`, `listPending(projectId): ProposalRecord[]`), pure helpers `detectPatterns(observations, thresholds): PatternCandidate[]`, `enrichWithLlm(candidates, observations, surface)`, `ProposalEnrichmentSchema`, singleton `autoImproveJob` + `getAutoImproveJob()`/`resetAutoImproveJob()`. Types: `AutoImproveJobOptions`, `AutoImproveResult`, `PatternThresholds`, `PatternCandidate`, `ProposalEnrichment`, `MemoryApplySeam`, `ApproveRejectResult`.
+- Core barrel re-exports Phase-5 symbols from `packages/core/src/index.ts` (consumed by routes via `@th0th-ai/core`).
+
+**Proposals table schema (additive, both backends):**
+- SQLite: new `proposals` table (`id TEXT PK, project_id, kind, target_memory_id?, payload_json, rationale, status(pending|approved|rejected), created_at INTEGER, decided_at INTEGER?`) + 2 indexes (`idx_proposals_project_status`, `idx_proposals_created`). DB file `proposals.db` (WAL + busy_timeout=3000, separate from memories.db/observations.db/handoffs.db). No ALTER (new table).
+- PG: additive Prisma `Proposal` model (`@@map("proposals")`, index on `[projectId, status]`). No PgProposalStore code yet (SQLite-canonical runtime state, like observations/handoffs/synapse_sessions/index_jobs).
+
+**Status state machine:** `pending` → `approved` (via approve, applies the edit via memoryRepo, sets decidedAt, emits memory:auto-improved) | `pending` → `rejected` (via reject, no apply, no event). Both terminal. approve/reject on missing/non-pending/project-mismatch/apply-throw → `{ok:false, reason}` (never a silent no-op). Defense-in-depth: SqliteProposalStore `setStatus` uses `WHERE status='pending'`; the service post-checks `updated.status !== target`.
+
+**`memory:auto-improved` event shape (EventMap):**
+- `{ proposalId: string; projectId?: string; kind: "memory.create"|"memory.update"|"memory.tag"; targetMemoryId?: string; status: "approved"; appliedAt: number; source: "llm"|"rule-based" }`. Published once after a successful apply (auto-approve OR explicit approve). NOT published on reject/no-op/throw/non-pending.
+
+**Pattern detection (pure, rule-based, LLM-optional):**
+- `detectPatterns(observations, thresholds)` is PURE + total (bad payloadJson skipped via try/catch, never thrown). Signals: `user-prompt` recurring query (normalized: lowercase, stopword-strip, top-3 longest tokens sorted) ≥ minQueryHits (3) → `memory.create` (PATTERN); `post-tool-use` recurring filePath (repo-relative normalized) ≥ minFileHits (3) → `memory.create` (CODE); `post-tool-use` recurring tool:dir-bucket fix signature ≥ minFixHits (2) → `memory.create` (PATTERN). Each candidate carries a stable `signalKey` for dedup within a run; window bounded by `maxWindow` (16). Rule-based detection runs FIRST and unconditionally; pattern detection NEVER requires the LLM.
+- `enrichWithLlm`: when `llm.isEnabled()`, a single `surface.object(prompt, ProposalEnrichmentSchema)` refines content + rationale by signalKey. `{ok:false}`/throw/empty/invalid-kind → candidates verbatim (silent degrade; never throws, never blocks).
+
+**Review-gate vs auto-approve (default auto-approve + logging):**
+- `memory.autoImprove.reviewGate` (default false). When false (default), `runOnce` auto-applies each pending proposal in the SAME run by calling `this.approve(record.id, projectId, source)` — single code path, so the state machine + event emission is identical to explicit approval. `logger.info("proposal:auto-approved", { id, projectId, kind })` records the decision (audit trail = the row's decidedAt + the memory:auto-improved event + the log line). When true, proposals stay pending for surfacing via `th0th_list_proposals` + `th0th_approve_proposal`.
+
+**Audit trail:** every approved/rejected proposal carries `status` + `decidedAt` + `rationale`; approved proposals additionally emit `memory:auto-improved` + a `proposal:auto-approved`/`proposal:approved`/`proposal:rejected` log line. The proposals row IS the audit record (no separate audit table).
+
+**MCP tools + route (new):**
+- `th0th_list_proposals` / `th0th_approve_proposal` / `th0th_reject_proposal` (POST `/api/v1/proposal/{list,approve,reject}`) in `TOOL_DEFINITIONS`.
+- `apps/tools-api/src/routes/proposals.ts` (Elysia prefix `/api/v1/proposal`): 3 POST handlers; 423 when `memory.autoImprove.enabled=false`; 400 on missing `projectId`/`id`; 200 + `{ success, data }`. Wired into `apps/tools-api/src/index.ts` via `.use(proposalRoutes)` after `.use(handoffRoutes)`. Swagger tag `proposals`.
+
+**Silent-degradation contract (mirrors Phase-2/3/4/6):**
+- LLM off (`!isEnabled()`) → rule-based candidates only → still produces proposals. LLM `{ok:false}`/throw/timeout → rule-based candidates verbatim (same count). Store insert throw → proposal skipped, job returns noop. Memory apply throw → `approve` returns `{ok:false, apply-failed}`, status stays pending. `runOnce` noop when `<2` observations or no patterns. Outer job/service methods NEVER throw to the caller.
+
+**Backend-polymorphic dispatch pattern:** use `getProposalStore()`. Never re-introduce `isPostgresEnabled()` short-circuits.
+
+**Test-isolation note (extends Phase-1..6 rule):** `auto-improve-job.test.ts` does NOT mock `@th0th-ai/shared`. It injects `MemoryProposalStore` + `MemoryObservationStore` (pre-loaded with deterministic observations) + fake `MemoryApplySeam` (captures inserts/updates; controls failNext) + fake `LlmSurface` (enabled/disabled/failing/throwing/enriching) + deterministic `idFactory`. No `mock.module`. No real MemoryRepository singleton is touched (the closed-singleton landmine from memory-crud.test.ts is avoided via the `memoryRepo` ctor-seam — mirrors ObservationConsolidationJob/BootstrapDeps/HandoffDeps). `proposal-repository.test.ts` uses explicit temp `dbPath`.
+
+**Bug fixed in 67e9ed6 (load-bearing for P5-APPROVE-01):** `AutoImproveJob.approve` previously mutated a local `row.targetMemoryId` that was then shadowed by the store's `getById` result, so `memory:auto-improved` emitted `targetMemoryId=undefined` for `memory.create` proposals even though the memory had been applied. The fix captures the freshly-assigned id from `applyProposal` and surfaces it onto the returned record + event payload AFTER the status flip.
+
+**Seams Phase 7/8 reuse:**
+- Phase 7b (salience): auto-improved `memory.create` proposals are inserted with `embedding:[]` (FTS-only, consistent with bootstrap/handoff seeds). They enter FTS search but NOT the vector stream unless a future step re-embeds them. Salience-judge can still score them on insert. Rerank (7a) + compression (7d) are unaffected.
+- Phase 8 (web UI): `AutoImproveJob.listPending` + `GET`-equivalent `/api/v1/proposal/list` give a read surface for a proposal-review view.
 ### Phase 7 — (pending)
 ### Phase 8 — (pending)
 
@@ -252,3 +295,4 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 | 3 | 9f8b7a1 f28c30e b950df7 8fb0cac | passive capture: hooks config + Observation store (WAL) + writer queue + 429 + HookService + Elysia routes + consolidation bridge + Claude Code hook scripts + th0th_hook_ingest + observation:ingested event, tests |
 | 4 | c022731 1be1a1c ae296e7 773a130 3fec6fd | bootstrap from repo: memory.bootstrap config + bootstrap:completed event + BootstrapService (scan git/README/docs/manifests/centrality, LLM llmObject+SeedMemoriesSchema, rule-based fallback, idempotent bootstrap:<projectId> tag marker, silent degradation) + th0th_bootstrap MCP tool + /api/v1/bootstrap route + barrel re-exports, tests |
 | 6 | d3ccd2e 60e799b 4d8ac60 8f2f0a0 1a4bc40 | cross-session handoffs: handoffs.enabled config + handoff:accepted event + HandoffStore (SQLite WAL handoffs.db + Memory fallback + factory) + HandoffService (begin/accept/cancel/listPending, state machine open→accepted|expired, dual-write conversation memory PROJECT/0.7/handoff:<id> tags/no embedding, optional LLM summary-polish default-off silent-degrade, never throws) + HandoffAutoInjector (observation:ingested session-start → listPending) + 4 MCP tools + /api/v1/handoff routes + Prisma Handoff model + barrel re-exports, tests |
+| 5 | a4c86ff d42086a d3242cb ba971b0 67e9ed6 | auto-improvement loop: memory.autoImprove config (default-on detect, reviewGate=false auto-approve, env AUTO_IMPROVE_*) + memory:auto-improved event + ProposalStore (SQLite WAL proposals.db + Memory fallback + factory, no isPostgresEnabled) + AutoImproveJob (ctor-seam, detectPatterns pure rule-based query/file/fix signals, enrichWithLlm optional silent-degrade, runOnce debounce, reviewGate=false auto-approve reuses approve() single code path, apply/reject state machine pending→approved|rejected with defense-in-depth WHERE guard, listPending) + 3 MCP tools + /api/v1/proposal routes + Prisma Proposal model + barrel re-exports + approve targetMemoryId fix, tests |
