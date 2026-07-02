@@ -16,6 +16,7 @@ import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
 import { searchRoutes } from "./routes/search.js";
 import { memoryRoutes } from "./routes/memory.js";
+import { checkpointRoutes } from "./routes/checkpoints.js";
 import { projectRoutes } from "./routes/project.js";
 import { contextRoutes } from "./routes/context.js";
 import { analyticsRoutes } from "./routes/analytics.js";
@@ -44,6 +45,7 @@ const app = new Elysia({ adapter: node() })
         tags: [
           { name: "search", description: "Semantic and keyword search" },
           { name: "memory", description: "Memory storage and retrieval" },
+          { name: "checkpoint", description: "Task checkpoint save and restore" },
           { name: "project", description: "Project indexing" },
           {
             name: "context",
@@ -75,6 +77,7 @@ const app = new Elysia({ adapter: node() })
   .use(authMiddleware)
   .use(searchRoutes)
   .use(memoryRoutes)
+  .use(checkpointRoutes)
   .use(projectRoutes)
   .use(contextRoutes)
   .use(analyticsRoutes)

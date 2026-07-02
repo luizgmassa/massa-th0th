@@ -295,6 +295,140 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
+    name: "th0th_list_checkpoints",
+    description:
+      "List saved task checkpoints. Filter by task ID, project, or type.",
+    apiEndpoint: "/api/v1/checkpoints/list",
+    apiMethod: "POST",
+    inputSchema: {
+      type: "object",
+      properties: {
+        taskId: { type: "string", description: "Filter by task ID" },
+        projectId: { type: "string", description: "Filter by project ID" },
+        checkpointType: {
+          type: "string",
+          enum: ["auto", "manual", "milestone"],
+          description: "Filter by checkpoint type",
+        },
+        includeExpired: {
+          type: "boolean",
+          description: "Include expired checkpoints",
+          default: false,
+        },
+        limit: { type: "number", description: "Max results to return", default: 10 },
+        format: {
+          type: "string",
+          enum: ["json", "toon"],
+          description: "Output format (json or toon)",
+          default: "toon",
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "th0th_create_checkpoint",
+    description:
+      "Create a checkpoint to save current task progress for later resumption.",
+    apiEndpoint: "/api/v1/checkpoints/create",
+    apiMethod: "POST",
+    inputSchema: {
+      type: "object",
+      properties: {
+        taskId: { type: "string", description: "Unique identifier for the task" },
+        description: {
+          type: "string",
+          description: "Human-readable description of the task",
+        },
+        status: {
+          type: "string",
+          enum: ["pending", "in_progress", "completed", "failed", "paused"],
+          description: "Current task status",
+          default: "in_progress",
+        },
+        currentStep: { type: "string", description: "Current step name" },
+        progressPercent: {
+          type: "number",
+          description: "Overall progress percentage (0-100)",
+          default: 0,
+        },
+        totalSteps: { type: "number", description: "Total steps", default: 0 },
+        completedSteps: { type: "number", description: "Completed steps", default: 0 },
+        checkpointType: {
+          type: "string",
+          enum: ["manual", "milestone"],
+          description: "Checkpoint type (milestone has longer TTL)",
+          default: "manual",
+        },
+        agentId: { type: "string", description: "Agent creating the checkpoint" },
+        projectId: { type: "string", description: "Project ID" },
+        memoryIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Memory IDs related to this task",
+        },
+        fileChanges: {
+          type: "array",
+          items: { type: "string" },
+          description: "File paths modified during this task",
+        },
+        decisions: {
+          type: "array",
+          items: { type: "string" },
+          description: "Memory IDs of decisions made",
+        },
+        learnings: {
+          type: "array",
+          items: { type: "string" },
+          description: "Key learnings or insights",
+        },
+        nextAction: {
+          type: "string",
+          description: "Next action to take when restoring",
+        },
+        pendingValidations: {
+          type: "array",
+          items: { type: "string" },
+          description: "Validations still pending",
+        },
+        format: {
+          type: "string",
+          enum: ["json", "toon"],
+          description: "Output format (json or toon)",
+          default: "toon",
+        },
+      },
+      required: ["taskId", "description"],
+    },
+  },
+  {
+    name: "th0th_restore_checkpoint",
+    description:
+      "Restore a saved checkpoint and return its state plus integrity checks.",
+    apiEndpoint: "/api/v1/checkpoints/restore",
+    apiMethod: "POST",
+    inputSchema: {
+      type: "object",
+      properties: {
+        checkpointId: {
+          type: "string",
+          description: "Checkpoint ID to restore (omit to use taskId)",
+        },
+        taskId: {
+          type: "string",
+          description: "Restore the latest checkpoint for this task",
+        },
+        format: {
+          type: "string",
+          enum: ["json", "toon"],
+          description: "Output format (json or toon)",
+          default: "toon",
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: "th0th_compress",
     description:
       "Compress context using semantic compression (keeps structure, removes details)",
