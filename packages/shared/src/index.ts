@@ -19,4 +19,5 @@ export {
   defaultConfig,
   type ServerConfig,
   type SynapseRuntimeConfig,
+  DEFAULT_ALLOWED_EXTENSIONS,
 } from "./config/index.js";

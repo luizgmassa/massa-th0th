@@ -18,7 +18,13 @@ beforeAll(async () => {
 
   // Unsupported file (should be ignored)
   await fs.writeFile(path.join(tmpDir, "style.css"), 'body {}');
+
+  // .md is now in the shared canonical allow-list → collected (was excluded under the old 8-ext gate)
   await fs.writeFile(path.join(tmpDir, "README.md"), '# readme');
+
+  // Additional canonical-list languages (beyond the old 8-ext gate)
+  await fs.writeFile(path.join(tmpDir, "main.go"), 'package main');
+  await fs.writeFile(path.join(tmpDir, "lib.rs"), 'pub fn x() {}');
 
   // Nested supported file
   await fs.mkdir(path.join(tmpDir, "src"), { recursive: true });
@@ -51,7 +57,15 @@ describe("collectFiles", () => {
     const files = await collectFiles(tmpDir);
     const paths = files.map((f) => f.relativePath);
     expect(paths).not.toContain("style.css");
-    expect(paths).not.toContain("README.md");
+  });
+
+  it("collects the full shared canonical extension list (md/go/rs)", async () => {
+    const files = await collectFiles(tmpDir);
+    const paths = files.map((f) => f.relativePath);
+    // .md, .go, .rs are in the shared canonical list; the old 8-ext gate dropped them.
+    expect(paths).toContain("README.md");
+    expect(paths).toContain("main.go");
+    expect(paths).toContain("lib.rs");
   });
 
   it("skips node_modules and dist", async () => {

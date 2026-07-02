@@ -10,7 +10,7 @@
 import fs from "fs";
 import path from "path";
 import { glob } from "glob";
-import { logger, config } from "@th0th-ai/shared";
+import { logger, config, DEFAULT_ALLOWED_EXTENSIONS } from "@th0th-ai/shared";
 import type { IVectorStore } from "@th0th-ai/shared";
 import { loadProjectIgnore } from "./ignore-patterns.js";
 
@@ -248,16 +248,8 @@ export class IndexManager {
     try {
       // Use same extensions as indexProject() to avoid false staleness
       const securityConfig = config.get("security");
-      const allowedExtensions = securityConfig.allowedExtensions || [
-        ".ts",
-        ".js",
-        ".tsx",
-        ".jsx",
-        ".dart",
-        ".py",
-        ".kt",
-        ".kts",
-      ];
+      const allowedExtensions =
+        securityConfig.allowedExtensions || DEFAULT_ALLOWED_EXTENSIONS;
 
       // Single combined glob pattern (avoids N separate directory traversals)
       const combinedPattern = `**/*{${allowedExtensions.join(",")}}`;

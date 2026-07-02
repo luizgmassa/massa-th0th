@@ -171,6 +171,48 @@ function getGlobalDataDir(): string {
 }
 
 /**
+ * Canonical default allow-list of file extensions th0th indexes/searches.
+ * Single source of truth — consumed by the indexing pipeline, the search
+ * index scanner, and the MCP upload collector so the three never drift.
+ * User config (`security.allowedExtensions`) overrides this at runtime.
+ */
+export const DEFAULT_ALLOWED_EXTENSIONS: readonly string[] = [
+  ".ts",
+  ".js",
+  ".tsx",
+  ".jsx",
+  ".vue",
+  ".dart",
+  ".py",
+  ".php",
+  ".java",
+  ".go",
+  ".rs",
+  ".cpp",
+  ".c",
+  ".h",
+  ".md",
+  ".json",
+  ".yaml",
+  ".yml",
+  ".hpp",
+  ".cs",
+  ".rb",
+  ".swift",
+  ".kt",
+  ".kts",
+  ".scala",
+  ".lua",
+  ".zig",
+  ".ex",
+  ".exs",
+  ".erl",
+  ".clj",
+  ".ml",
+  ".hs",
+];
+
+/**
  * Default Configuration
  */
 export const defaultConfig: ServerConfig = {
@@ -236,41 +278,7 @@ export const defaultConfig: ServerConfig = {
     sanitizeInputs: process.env.SANITIZE_INPUTS !== "false",
     maxIndexSize: 100000, // max files to index
     maxFileSize: 1024 * 1024, // 1MB per file
-    allowedExtensions: [
-      ".ts",
-      ".js",
-      ".tsx",
-      ".jsx",
-      ".vue",
-      ".dart",
-      ".py",
-      ".php",
-      ".java",
-      ".go",
-      ".rs",
-      ".cpp",
-      ".c",
-      ".h",
-      ".md",
-      ".json",
-      ".yaml",
-      ".yml",
-      ".hpp",
-      ".cs",
-      ".rb",
-      ".swift",
-      ".kt",
-      ".kts",
-      ".scala",
-      ".lua",
-      ".zig",
-      ".ex",
-      ".exs",
-      ".erl",
-      ".clj",
-      ".ml",
-      ".hs"
-    ],
+    allowedExtensions: [...DEFAULT_ALLOWED_EXTENSIONS],
     excludePatterns: [
       "node_modules/**",
       ".git/**",
