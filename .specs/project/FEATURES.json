@@ -1,0 +1,14 @@
+{
+  "project": "massa-th0th",
+  "version": 1,
+  "source": "i-want-to-understand-virtual-lantern.md",
+  "features": [
+    {
+      "slug": "phase-0-quick-wins",
+      "title": "Phase 0 — Quick wins (0a upload gate, 0b reindex cap, 0c memory CRUD, 0d checkpoint MCP)",
+      "status": "in_progress",
+      "priority": "P1",
+      "phases": { "specify": true, "design": false, "tasks": "inline", "execute": true }
+    }
+  ]
+}
