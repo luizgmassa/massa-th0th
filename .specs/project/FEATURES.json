@@ -30,6 +30,13 @@
       "status": "complete",
       "priority": "P1",
       "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "phase-4-bootstrap",
+      "title": "Phase 4 — Bootstrap from repo (scan git/README/docs/manifests/centrality → LLM/rule-based seed memories, idempotent, bootstrap:completed event)",
+      "status": "complete",
+      "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
     }
   ]
 }

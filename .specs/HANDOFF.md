@@ -49,4 +49,26 @@ Sole resumed agent verified its own work — no independent verifier sub-agent. 
 Sole agent verified its own work — no independent verifier sub-agent. Mitigations: per-AC file:line evidence, discrimination sensor (saturation-check mutant killed), objective gate (738/0). See `.specs/features/phase-3-hook-capture/validation.md`.
 
 ## Plan reference
-`i-want-to-understand-virtual-lantern.md` Phase 0 (done) → Phase 1 (done) → Phase 2 (done) → Phase 3 (done) → Phase 4 next.
+`i-want-to-understand-virtual-lantern.md` Phase 0 (done) → Phase 1 (done) → Phase 2 (done) → Phase 3 (done) → Phase 4 (done) → Phase 6 next.
+
+## Phase 4 handoff (PASS — same-author verified)
+
+- in-progress: none
+- next step: Phase 6 (cross-session handoffs — G2). May consume the SessionStart hook (Phase 3) + the `bootstrap:<projectId>` seed memories (Phase 4) as initial context. Phase 5 (auto-improve) may consume seed memories as a baseline for proposed edits.
+- blockers: none
+- uncommitted files: none
+- branch: main; commits c022731 (specs), 1be1a1c (config+event), ae296e7 (bootstrap-service), 773a130 (mcp+route+barrel), 3fec6fd (tests).
+
+## Key decisions for Phase 6+ (and later phases)
+- Bootstrap service: `import { BootstrapService, getBootstrapService, SeedMemoriesSchema } from "packages/core/src/services/bootstrap/bootstrap-service.js"` (or via `@th0th-ai/core`). `bootstrap(projectId, { projectPath?, force? })` → `BootstrapResult`. Idempotent (marker = `bootstrap:<projectId>` tag); `force:true` refresh.
+- Config block: `config.get("memory").bootstrap` = `{ enabled(true), maxSeedMemories(8), centralityLimit(10), gitLogLimit(20), refreshEnabled(true) }`. Env knobs: `BOOTSTRAP_ENABLED`, `BOOTSTRAP_MAX_SEED_MEMORIES`, `BOOTSTRAP_CENTRALITY_LIMIT`, `BOOTSTRAP_GIT_LOG_LIMIT`, `BOOTSTRAP_REFRESH_ENABLED`. LLM summarization inherits top-level `llm.enabled`.
+- Seed memories: stored as normal `memories` rows with `tags:["bootstrap","bootstrap:<projectId>"]`, `embedding:[]` (FTS-only, not vector-searchable), `level: PROJECT(1)`, `metadata.source:"bootstrap"`. Searchable via `MemoryRepository.fullTextSearch`.
+- Idempotency marker: `tags LIKE '%bootstrap:<projectId>%' AND deleted_at IS NULL`. Injectable `MemoryRepoSeam.hasBootstrapMarker` (default queries DB; PG falls back to "not bootstrapped" — `getDb()` is SQLite-only).
+- Silent degradation: LLM off/`{ok:false}`/throw → `ruleBasedSeed` (README + git log + package.json, max 3, importance 0.6). Empty signals → `noopResult("no-signals")`. Never throws.
+- EventBus: `bootstrap:completed` ({ projectId, bootstrapId, seedMemoryIds[], source llm|rule-based, signalCount, memoryCount }) added to EventMap. Published on ≥1 stored seed only.
+- MCP tool: `th0th_bootstrap` (POST /api/v1/bootstrap; projectId required, optional projectPath + force). Route: 423 when disabled, 400 on empty projectId.
+- Centrality reuse: consumes `SymbolGraphService.getTopCentralFiles(projectId, limit)` — existing PageRank ETL output. No reimplementation. Empty when not indexed (caught).
+- Test isolation (still applies): bootstrap tests inject fake `MemoryRepoSeam` + `LlmSurface` + `CentralitySource` + `GitRunner` (no shared-config mock). P4-SEARCH-01 resets the MemoryRepository singleton to a temp DB (mirrors memory-crud.test.ts) + restores it.
+
+## Same-author caveat (Phase 4)
+Sole agent verified its own work — no independent verifier sub-agent. Mitigations: per-AC file:line evidence, discrimination sensor (idempotency-guard mutant killed), objective gate (754/0). See `.specs/features/phase-4-bootstrap/validation.md`.

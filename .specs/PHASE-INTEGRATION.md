@@ -164,8 +164,40 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 - Phase 4 (bootstrap): independent of observations; consumes `llm-client` + `project_map` PageRank.
 - Phase 5 (auto-improve): consumes `observation:ingested` + the Observation store (`listRecent`) to detect patterns; may emit proposals.
 - Phase 6 (handoffs): may consume the SessionStart hook (auto-inject a pending handoff on session-start) + the `observation:ingested` stream.
-### Phase 4 — (pending)
+### Phase 4 — landed (commits c022731 specs, 1be1a1c config+event, ae296e7 bootstrap-service, 773a130 mcp+route+barrel, 3fec6fd tests)
+
+**Config keys (new):**
+- `memory.bootstrap: { enabled (envBool BOOTSTRAP_ENABLED=true); maxSeedMemories (envNum BOOTSTRAP_MAX_SEED_MEMORIES=8); centralityLimit (envNum BOOTSTRAP_CENTRALITY_LIMIT=10); gitLogLimit (envNum BOOTSTRAP_GIT_LOG_LIMIT=20); refreshEnabled (envBool BOOTSTRAP_REFRESH_ENABLED=true) }`. Additive nested block in `ServerConfig.memory` (alongside `decay`). `mergeConfig` shallow-merges `memory.bootstrap`. LLM summarization inherits the top-level `llm.enabled` gate (default false, env `RLM_LLM_ENABLED`).
+
+**Services exported (path + symbol) — what Phase 5/6 consumes:**
+- `packages/core/src/services/bootstrap/bootstrap-service.ts` → `BootstrapService` (ctor `BootstrapDeps { llm?, memoryRepo?, isBootstrapped?, symbolGraph?, gitRunner? }`; method `bootstrap(projectId, opts?): Promise<BootstrapResult>`), pure helpers `scanSignals`, `summarizeWithLlm`, `ruleBasedSeed`, `storeSeeds`, `countSignals`, `SeedMemoriesSchema` (zod, bounded list), singleton `bootstrapService`, `getBootstrapService()`/`resetBootstrapService()`. Types: `BootstrapSeed`, `BootstrapSignals`, `BootstrapResult`, `BootstrapOptions`, `BootstrapDeps`, `MemoryRepoSeam`, `CentralitySource`, `GitRunner`, `SeedType`, `BootstrapSource`, `SeedMemories`.
+- Core barrel re-exports Phase-4 bootstrap symbols from `packages/core/src/index.ts` (consumed by routes via `@th0th-ai/core`).
+
+**Idempotency marker scheme:**
+- A seed memory is stored with `tags: ["bootstrap", "bootstrap:<projectId>"]`. The default `MemoryRepoSeam.hasBootstrapMarker(projectId)` queries `SELECT 1 FROM memories WHERE project_id = ? AND tags LIKE '%bootstrap:<projectId>%' AND deleted_at IS NULL LIMIT 1`. A second `bootstrap()` without `force` returns `{ bootstrapped:false, skipped:true, reason:"already-bootstrapped" }` — no inserts, no event. `force:true` refresh stores a fresh batch alongside priors (no delete; the consolidation job may SUPERSEDE them later). The marker is injectable (`isBootstrapped` dep) so tests stay deterministic and dodge the closed-singleton landmine. PG marker query falls back to "not bootstrapped" (`getDb()` is SQLite-only) — a future `bootstrap_state` table can replace this.
+
+**`bootstrap:completed` event shape (EventMap):**
+- `{ projectId: string; bootstrapId: string; seedMemoryIds: string[]; source: "llm" | "rule-based"; signalCount: number; memoryCount: number }`. Published once after `storeSeeds` returns ≥1 id. NOT published on no-op (`skipped:true`) or empty-signal (`source:"none"`) runs.
+
+**MCP tool + route:**
+- `th0th_bootstrap` in `TOOL_DEFINITIONS` (POST `/api/v1/bootstrap`; `projectId` required, optional `projectPath` + `force`). Dispatch is the generic POST path (`apps/mcp-client/src/index.ts`).
+- `apps/tools-api/src/routes/bootstrap.ts` (Elysia, prefix `/api/v1/bootstrap`): 423 when `memory.bootstrap.enabled=false`; 400 on empty `projectId`; 200 + `{ success, data: BootstrapResult }`. Wired into `apps/tools-api/src/index.ts` via `.use(bootstrapRoutes)` after `.use(hookRoutes)`.
+
+**Silent-degradation contract (mirrors Phase-2/3):**
+- LLM off (`!isEnabled()`) → rule-based seeds from README + git log + package.json (`ruleBasedSeed`, max 3, importance 0.6, level PROJECT=1). LLM `{ok:false}`/throw → same fallback. Empty signal bundle (`signalCount===0`) → short-circuit `noopResult("no-signals")` BEFORE any LLM call. `storeSeeds` throw → `noopResult("insert-failed")`. Outer `bootstrap()` never throws to caller.
+
+**Centrality reuse (no reinvention):**
+- Consumes `SymbolGraphService.getTopCentralFiles(projectId, limit)` (`packages/core/src/services/symbol/symbol-graph.service.ts:272`) — the existing PageRank ETL output. If the project is not indexed, returns `[]` (caught, not thrown). The `CentralitySource` seam is injectable for tests.
+
+**Test-isolation note (extends Phase-1/2/3 rule):** `bootstrap-service.test.ts` does NOT mock `@th0th-ai/shared`. It injects a fake `MemoryRepoSeam` (captures inserts + controls `hasBootstrapMarker`), a fake `LlmSurface` (enabled/disabled/failing), a fake `CentralitySource`, and a fake `GitRunner`; uses a temp project root with fixture README/docs/manifest files for `scanSignals`. The single P4-SEARCH-01 integration block resets the `MemoryRepository` singleton to a temp dataDir (mirrors `memory-crud.test.ts`) and restores it in `afterEach` — this is the proven pattern; no process-wide shared-config mock is added.
+
+**Seams Phase 5/6 reuse:**
+- Phase 5 (auto-improve): may consume the `bootstrap:<projectId>` seed memories (query via `tags LIKE` or the `MemoryRepoSeam.hasBootstrapMarker` seam) as a baseline for proposed edits; may also consume `bootstrap:completed` as a trigger.
+- Phase 6 (handoffs): may consume the SessionStart hook (Phase 3) to auto-inject a pending handoff; the `bootstrap:<projectId>` seed memories give initial project context on session start. The `MemoryRepoSeam` + `LlmSurface` ctor-seam pattern is the reusable test-isolation template.
+- Phase 7 (compression): unaffected; seed memories have no embeddings (FTS-only), so they do not enter the vector-search/compression paths.
+
 ### Phase 6 — (pending)
+### Phase 5 — (pending)
 ### Phase 5 — (pending)
 ### Phase 7 — (pending)
 ### Phase 8 — (pending)
@@ -177,3 +209,4 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 | 1 | befa3cb e49ffa9 12fe002 1ccb42c | memory foundation: decay/pinned/soft-delete, llm-client+consolidator+polymorphic job+read-side, durable sessions/jobs |
 | 2 | ebcc202 5b0ba18 6a7598f 6cb5edb f2acceb | query understanding: config gate, rewrite+hyde+cache service, search fan-out, search:query-rewritten/reranked events, tests |
 | 3 | 9f8b7a1 f28c30e b950df7 8fb0cac | passive capture: hooks config + Observation store (WAL) + writer queue + 429 + HookService + Elysia routes + consolidation bridge + Claude Code hook scripts + th0th_hook_ingest + observation:ingested event, tests |
+| 4 | c022731 1be1a1c ae296e7 773a130 3fec6fd | bootstrap from repo: memory.bootstrap config + bootstrap:completed event + BootstrapService (scan git/README/docs/manifests/centrality, LLM llmObject+SeedMemoriesSchema, rule-based fallback, idempotent bootstrap:<projectId> tag marker, silent degradation) + th0th_bootstrap MCP tool + /api/v1/bootstrap route + barrel re-exports, tests |

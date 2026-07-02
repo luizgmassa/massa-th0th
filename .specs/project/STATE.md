@@ -4,11 +4,11 @@
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-virtual-lantern-plan`
 - workflow: spec-driven
-- feature: `phase-3-hook-capture` (complete — same-author verified PASS)
+- feature: `phase-4-bootstrap` (complete — same-author verified PASS)
 - branch: main
 
 ## Next Step
-Phase 3 done. Next session: Phase 4 (bootstrap from repo — G6) per `i-want-to-understand-virtual-lantern.md`. Phase 4 consumes the `llm-client` surface + the `project_map` PageRank output; it is independent of Phase 3's observations. Phase 6 (handoffs) may consume the SessionStart hook landed here.
+Phase 4 done. Next session: Phase 6 (cross-session handoffs — G2) per `i-want-to-understand-virtual-lantern.md` (recommended order 0→1→2→3→4→6→5→7→8). Phase 6 may consume the SessionStart hook (Phase 3) + the `bootstrap:<projectId>` seed memories (Phase 4) as initial context. Phase 5 (auto-improve) may consume seed memories as a baseline for proposed edits.
 
 ## Decisions
 - Scope this session = Phase 0 (0a-0d) only. Phases 1-8 deferred.
@@ -55,3 +55,10 @@ Phase 3 done. Next session: Phase 4 (bootstrap from repo — G6) per `i-want-to-
 - Same-author verifier: PASS (sole agent — caveat labeled in validation.md). Discrimination mutant killed (saturation-check removal → P3-BACKPRESSURE-01 fails). Report: `.specs/features/phase-3-hook-capture/validation.md`.
 - Landed: `hooks` config block (default-on ingestion, bridge inherits llm.enabled); `ObservationStore` (SQLite WAL + Memory fallback + factory); `WriterQueue` (promise-chain mutex + 429 on saturation); `HookService` (validate/normalize, fire-and-forget 202, batch atomic, observation:ingested event); Elysia routes `POST /api/v1/hook` + `/hook/batch`; `ObservationConsolidationJob` (debounce bridge, recency-window + direct LlmSurface.object with ConsolidatedBatchSchema, silent-skip when off/{ok:false}/throw); Claude Code hook scripts (SessionStart/UserPromptSubmit/PostToolUse/Stop); `th0th_hook_ingest` MCP tool; Prisma Observation model (PG parity).
 - Accepted assumptions (non-blocking): bridge bypasses consolidateWindow prefilter (observations have no embeddings → recency window + direct schema-validated LLM call); no OS-level scheduler (trigger-driven debounce); PG ObservationStore code deferred (Prisma model provides parity; SQLite-canonical like synapse_sessions/index_jobs); fire-and-forget write failures logged not retried; sourceIds in memory:consolidated are observation ids (informational, no edge to non-memory rows).
+
+## Completion (Phase 4)
+- Commits: c022731 (specs), 1be1a1c (config + event), ae296e7 (bootstrap-service), 773a130 (MCP tool + route + barrel), 3fec6fd (tests + no-signals short-circuit fix).
+- Gates: `bun run test` 754 pass / 0 fail / 46 skip (baseline 738 → +16); `bun run type-check` 5/5 clean.
+- Same-author verifier: PASS (sole agent — caveat labeled in validation.md). Discrimination mutant killed (idempotency-guard removal → P4-IDEMPOTENT-01 fails). Report: `.specs/features/phase-4-bootstrap/validation.md`.
+- Landed: `memory.bootstrap` config block (default-on scan/rule-based, LLM inherits llm.enabled); `BootstrapService` (scan git/README/docs/manifests/centrality via `SymbolGraphService.getTopCentralFiles`, LLM `llmObject`+zod `SeedMemoriesSchema`, rule-based fallback, idempotent via `bootstrap:<projectId>` tag marker, silent degradation, `bootstrap:completed` event); MCP tool `th0th_bootstrap`; API route `POST /api/v1/bootstrap` (423 disabled, 400 empty projectId); core barrel re-exports. No schema/migration (seeds are existing `memories` rows).
+- Accepted assumptions (non-blocking): seed memories have no embeddings (FTS-only, consistent with Phase-3); marker = tag (O(rows) but rare, indexed by project_id); refresh does not delete prior seeds (consolidation handles); PG marker query falls back to "not bootstrapped" (SQLite-canonical default, dedicated bootstrap_state table deferred); P4-DEGRADE-03 (423) verified by inspection.
