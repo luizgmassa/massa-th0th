@@ -252,6 +252,11 @@ export class BootstrapService {
     );
     const signalCount = countSignals(signals);
 
+    // R5: empty signal bundle → skip seeding entirely (no LLM call, no store).
+    if (signalCount === 0) {
+      return { ...noopResult("no-signals"), signalCount };
+    }
+
     // R2 summarize with silent fallback to rule-based (R5)
     let seeds: BootstrapSeed[];
     let source: "llm" | "rule-based";
