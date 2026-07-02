@@ -16,6 +16,13 @@
       "status": "complete",
       "priority": "P1",
       "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "phase-2-query-understanding",
+      "title": "Phase 2 — Query understanding (LLM rewrite + HyDE, config-gated, silent-degrade)",
+      "status": "complete",
+      "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
     }
   ]
 }

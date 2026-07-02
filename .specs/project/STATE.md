@@ -4,11 +4,11 @@
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-virtual-lantern-plan`
 - workflow: spec-driven
-- feature: `phase-1-memory-foundation` (complete — same-author verified PASS)
+- feature: `phase-2-query-understanding` (complete — same-author verified PASS)
 - branch: main
 
 ## Next Step
-Phase 1 done. Next session: Phase 2 (retrieval quality — query rewrite + HyDE) per `i-want-to-understand-virtual-lantern.md`. Phase 2 consumes the shared `llm-client` + top-level `llm` config + `memory:consolidated` event landed here. Then Phase 3 (passive capture, needs llm-client + consolidation from here).
+Phase 2 done. Next session: Phase 3 (passive memory capture — observation ingestion + hooks) per `i-want-to-understand-virtual-lantern.md`. Phase 3 consumes the `llm-client` surface + the `search:query-rewritten` / `search:reranked` EventBus events landed here, plus Phase 1's `SessionStore`/`JobStore`.
 
 ## Decisions
 - Scope this session = Phase 0 (0a-0d) only. Phases 1-8 deferred.
@@ -33,6 +33,14 @@ Phase 1 done. Next session: Phase 2 (retrieval quality — query rewrite + HyDE)
 - Landed: pure `decayScore` (+DEFAULT_DECAY_PARAMS) replacing temporalScore; `pinned`+`deleted_at` columns both backends (additive); soft-delete recall filtering; shared `llm-client` (default-off, silent degrade) + top-level `llm` config (Ollama defaults, `compression.llm` deprecated alias); `consolidator` (zod-enforced ConsolidatedBatch, cosine prefilter); backend-polymorphic `MemoryConsolidationJob` (no isPostgresEnabled short-circuit, decay+prune-soft+merge phases, SUPERSEDES edges, `memory:consolidated` event, ConsolidationStats extended); read-side hides superseded; durable `SessionStore`/`SqliteJobStore` (write-through + lazy-load + crash recovery).
 - Accepted assumptions (non-blocking): PG parity for synapse_sessions/index_jobs deferred (SQLite-canonical runtime state, interfaces portable); WorkingMemoryBuffer snapshot best-effort; edge batch-id via SQLite `evidence` vs PG `metadata`.
 - Verified source facts (corrections to plan): `GraphStore.createEdge` (not addEdge); SQLite edge cols `source_id/target_id/relation_type` (no metadata); `temporalScore` was at :200 not :146; only `envNum` helper existed (added envBool/envString); true baseline 611 (plan said 609).
+
+## Completion (Phase 2)
+- Commits: ebcc202 (specs — prior invocation), 5b0ba18 (config schema), 6a7598f (service + events), 6cb5edb (wire fan-out into search), f2acceb (tests).
+- Gates: `bun run test` 700 pass / 0 fail / 46 skip (baseline 677 → +23); `bun run type-check` 5/5 clean.
+- Same-author verifier: PASS (sole resumed agent — caveat labeled in validation.md). Discrimination mutant killed. Report: `.specs/features/phase-2-query-understanding/validation.md`.
+- Landed: `search.queryUnderstanding` config block (default-off, env `SEARCH_QUERY_UNDERSTANDING_ENABLED`); `query-understanding.ts` service (`rewriteQuery` via llmObject+zod, `hyde` LLM→existing-EmbeddingService embed, TTL+size-bounded cache, `QueryUnderstandingService.understand()`, injectable `QueryLlmSurface` + `EmbedFn`, `buildRewrittenFTSQuery`); `ContextualSearchRLM.search()` fan-out (original vector + HyDE vector via `searchByEmbedding` + rewritten-FTS → existing `fuseResults`), silent-degrade outer try/catch, `sessionId` threaded; `search:query-rewritten` + `search:reranked` EventBus events.
+- Accepted assumptions (non-blocking): retrieval-quality test uses an in-memory RRF replica (spec §9 permitted; live test would need Ollama + collides with process-wide shared-config mock); `sessionId` threaded but Synapse-biased fusion deferred to later phase; defensive config readers (no-op in prod, prevents mock constructor crash).
+- Verified source facts: `SQLiteVectorStore.searchByEmbedding(embedding, limit, projectId)` exists (line 610); `HybridSearch.rerank(SearchResult[][])` exists (line 85) but `ContextualSearchRLM.fuseResults` already accepts `SearchResult[][]` (used directly); `EmbeddingService.embed` at `data/chromadb/vector-store.ts:412`; `sanitizeFTS5Query` re-splits composed strings (rebuilt FTS query term-by-term instead).
 
 ## Verified Source Facts (grounded this session)
 - file-collector.ts:9 hardcoded 8 exts; index-manager.ts:251-260 duplicated the 8-ext fallback. → fixed via shared `DEFAULT_ALLOWED_EXTENSIONS`.

@@ -101,7 +101,29 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 **Latent landmine removed:** `graph-store-pg.ts` no longer eagerly constructs the Prisma client at module-eval (lazy Proxy) — importing `graph-store-factory` is now side-effect-free in SQLite-only environments.
 
 **Test-isolation rule (IMPORTANT for Phase 2+):** bun `mock.module("@th0th-ai/shared")` is process-wide and collides across files. Only ONE test file (memory-crud.test.ts) mocks shared config for the memory subsystem; co-locate new memory tests there or avoid mocking config (pass explicit dbPaths / use the `_setLlmEnabledForTesting` seam). The SQLite consolidation tests live in memory-crud.test.ts for this reason.
-### Phase 2 — (pending)
+### Phase 2 — landed (commits ebcc202 specs, 5b0ba18, 6a7598f, 6cb5edb, f2acceb)
+
+**Config keys (new):**
+- `search.queryUnderstanding: { enabled=false; hydeEnabled=true; cacheTtlMs=300_000; cacheMaxSize=256 }` — additive nested block in `ServerConfig.search`. Env opt-in `SEARCH_QUERY_UNDERSTANDING_ENABLED` (also `SEARCH_QUERY_UNDERSTANDING_HYDE_ENABLED`, `SEARCH_QUERY_UNDERSTANDING_CACHE_TTL_MS`, `SEARCH_QUERY_UNDERSTANDING_CACHE_MAX_SIZE`). Default-off; `mergeConfig` shallow-merges the nested object.
+
+**Services exported (path + symbol) — what Phase 3+ consumes:**
+- `packages/core/src/services/search/query-understanding.ts` → `QueryUnderstandingService` (ctor `{ llmSurface?, embedFn?, cacheTtlMs?, cacheMaxSize? }`; method `understand(query, projectId): Promise<QueryUnderstandingResult | null>`), `rewriteQuery(query, surface, opts?)`, `hyde(query, surface, embedFn, opts?)`, `buildRewrittenFTSQuery(query, keywords)`, `QueryRewriteSchema` + `QueryRewrite` type, `QueryLlmSurface` + `EmbedFn` interfaces, `QueryUnderstandingResult` type.
+- Default `llmSurface` = the real `llm` handle from Phase-1 `llm-client.ts`. Default `embedFn` reuses the existing `EmbeddingService` singleton (lazy, `data/chromadb/vector-store.ts`) — no new provider.
+- `ContextualSearchRLM.search()` now accepts `options.sessionId?: string` (forward-compatible seam for Synapse-biased fusion; not yet consumed).
+
+**EventBus events emitted (new):**
+- `search:query-rewritten: { query, projectId, expansions[], keywords[], hydeUsed }` — published after a successful LLM rewrite (only when `queryUnderstanding.enabled`).
+- `search:reranked: { query, projectId, streamCount, resultCount }` — published after fusing the expanded streams (only on the query-understanding path; NOT on the original 2-stream path).
+
+**Fan-out shape / seams Phase 3 reuses:**
+- `ContextualSearchRLM.search()` builds `resultSets: SearchResult[][]` then calls the existing `fuseResults(resultSets, query, explainScores)` (RRF). When QU off/degraded → 2 streams (vector + keyword), byte-identical to Phase-1. When QU on → 3 streams (vector + rewritten-FTS + HyDE via `vectorStore.searchByEmbedding`).
+- Silent-degrade contract: the QU branch is wrapped in an outer try/catch in `search()` that resets to the original 2-stream path on ANY throw. `understand()` returns `null` on disabled/timeout/error/empty-query. NEVER blocks search, NEVER throws to caller.
+- Cache: in-memory `Map<projectId::query, {value, expiresAt}>`, TTL+size-bounded (no new dependency). `clearCache()` for tests.
+
+**No schema delta, no migration.** Additive config + code + EventBus events only.
+
+**Test-isolation note (extends Phase-1 rule):** `query-understanding.test.ts` does NOT mock `@th0th-ai/shared`. It injects a fake `QueryLlmSurface` + fake `EmbedFn` (no config, no DB, no network). The `QueryUnderstandingService` constructor has defensive config readers (fall back to spec defaults) because other test files' process-wide shared-config mock omits the `queryUnderstanding` block — this is a no-op in production.
+
 ### Phase 3 — (pending)
 ### Phase 4 — (pending)
 ### Phase 6 — (pending)
@@ -114,3 +136,4 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 | --- | --- | --- |
 | 0 | 538fe66 4e27925 c25f9d3 b84ea3e be65877 a1e5ca2 3fb4eb1 | quick wins + specs + validation |
 | 1 | befa3cb e49ffa9 12fe002 1ccb42c | memory foundation: decay/pinned/soft-delete, llm-client+consolidator+polymorphic job+read-side, durable sessions/jobs |
+| 2 | ebcc202 5b0ba18 6a7598f 6cb5edb f2acceb | query understanding: config gate, rewrite+hyde+cache service, search fan-out, search:query-rewritten/reranked events, tests |
