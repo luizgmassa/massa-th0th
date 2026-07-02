@@ -4,19 +4,18 @@
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-virtual-lantern-plan`
 - workflow: spec-driven
-- feature: `phase-7-retrieval-polish` (complete — same-author verified PASS)
+- feature: `phase-8-web-ui` (COMPLETE — same-author verified PASS — FINAL phase)
 - branch: main
 
 ## Next Step
-Phase 7 done. Next session: Phase 8 (Web UI, G5) per
-`i-want-to-understand-virtual-lantern.md`. Phase 8 consumes the now-stable
-search/recall/memory surfaces: `ContextualSearchRLM.search` (2–3 RRF streams +
-optional 7a LLM-judge rerank + 7c graph stream), `MemoryController.store`
-(optional 7b auto-salience), `code-compressor.compress` (7d LLM path), the
-`search:reranked` / `memory:salience-scored` / `memory:auto-improved` EventBus
-events, and the read surfaces (`listPending`, `/api/v1/proposal`,
-`/api/v1/handoff`). Embeddings now import from `services/embeddings/index.js`
-(7f relocated out of the deleted `data/chromadb`).
+**Plan complete.** All 9 phases (0→8) of
+`i-want-to-understand-virtual-lantern.md` are landed and verified. No further
+phases are planned. Residual non-blocking items across the plan are recorded in
+each phase's `validation.md` (e.g. PG-runtime parity for the SQLite-canonical
+stores, a future EventBus-SSE live UI, syntax-highlight + richer markdown for
+the web UI, memory-search end-to-end coverage for the 7c graph stream). The
+web UI is served at `http://localhost:3333/ui/` when the Tools API runs
+(`bun run dev:api` / `bun run start:api`); disable with `WEB_UI_ENABLED=false`.
 
 ## Decisions
 - Scope this session = Phase 0 (0a-0d) only. Phases 1-8 deferred.
@@ -92,3 +91,11 @@ events, and the read surfaces (`listPending`, `/api/v1/proposal`,
 - Same-author verifier: PASS (sole resumed agent — caveat labeled in validation.md). All 4 discrimination mutants killed (7a degrade guard, 7b degrade guard, 7c seed-exclusion, 7d {ok:false}/length guard). Report: `.specs/features/phase-7-retrieval-polish/validation.md`.
 - Landed: `search.rerank` config (default-off, SEARCH_RERANK_*); `LLMJudgeReranker` (services/search/reranker.ts, llmObject + RerankVerdictSchema, top-K window=50, silent-degrade to RRF order on LLM off/{ok:false}/throw); wired into SearchController after applyBoost + optional `source:"llm-judge"` on `search:reranked` (back-compat optional field); `memory.autoImportance` config (default-off, AUTO_IMPORTANCE_ENABLED); `SalienceJudge` (services/memory/salience-judge.ts, llmObject + SalienceSchema, caller-wins in MemoryController.store, neutral 0.5 default, embedding-independent, feeds Phase-1 decay); `memory:salience-scored` event; `GraphStore.bfsNeighbors(seedIds, depth)` (SQLite + Pg, outgoing-only, visited dedup, cyclic-safe) + 3rd RRF stream in ContextualSearchRLM.search (fixed 0.45 score, silent-omit when empty); code-compressor LLM branch (regex-always-first fallback, isLlmEnabled gate, metadata.compressionSource); chromadb dead-code removed (EmbeddingService relocated to services/embeddings/embedding-service.ts + barrel re-export, 4 live importers + hybrid-search dead importer redirected, data/chromadb/{vector-store,index}.ts deleted, postgres getCollection already clear-errors); ContextualSearchRLM injected-deps ctor seam (test-only) to bypass the process-wide mock.module landmine.
 - Accepted assumptions (non-blocking): 7c graph stream is typically empty for pure code search (graph edges are memory ids, code-search vector ids aren't memory ids) — designed silent-omit, surfaces context on memory-search reuse; 7a controller-level streamCount=2 (precise 2/3 owned by RLM pre-rerank emit); same-author verification.
+
+## Completion (Phase 8 — FINAL)
+- Commits: bd5d888 (specs), 71f0727 (8a scaffold + static route), 46c2995 (8b views + markdown + dark mode), 01971e3 (8c level filter), 58a1d5e (8d tests), bbb888c (docs — this commit).
+- Gates: `bun run test` — core 893 pass / 0 fail / 46 skip (no regression), mcp-client 7/0, **tools-api 50/0** (newly in the turbo gate: +39 web-ui tests + 11 pre-existing auth/checkpoints tests wired via a new `test` script). `bun run type-check` 6/6 clean (added `@th0th-ai/web-ui` task).
+- Same-author verifier: PASS (sole agent — caveat labeled in validation.md). Read-only discrimination mutant killed (3 failing tests on `api.request("/memory/store")` injection). Report: `.specs/features/phase-8-web-ui/validation.md`.
+- Landed: zero-dependency `@th0th-ai/web-ui` package (vanilla HTML/CSS/JS bundle in `apps/web-ui/src/static/`); Tools-API static-serving route `apps/tools-api/src/routes/web-ui.ts` (`/ui` + `/ui/*`, content-type map, traversal guard, `WEB_UI_ENABLED` gate, cwd-ancestor static-root resolution) wired after `proposalRoutes`; `app.js` single source (createApiClient same-origin `/api/v1`, 5 pure view renderers, minimal vanilla `markdownToHtml` with HTML-escape, `initTheme`/`toggleTheme` data-theme+localStorage no-FOUC, hash router, guarded browser bootstrap, `FORBIDDEN_MUTATING_PATHS`); `styles.css` CSS variables + `[data-theme=dark]`; additive `level` filter on `POST /api/v1/memory/list` (read-only route condition, no core change); 4 test files (serve/views/render/readonly). UI served at `http://localhost:3333/ui/`.
+- Accepted assumptions (non-blocking): zero browser build (plain JS, `app.js` shared between browser + bun:test via `typeof document` guard); `src/index.ts` is a tsc anchor only (static JS unchecked; read-only enforced by static-scan test); markdown renderer is a minimal subset (no tables/nested-lists/raw-HTML — real memory content covered); no syntax highlighter; no live updates (refresh-to-see-new-data; EventBus SSE is a future enhancement); `level` filter is the only route change; same-author verification.
+- **Plan 0→8 COMPLETE.** All phases landed and verified. No further phases planned.

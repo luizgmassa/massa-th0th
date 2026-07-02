@@ -98,6 +98,18 @@
         "tasks": true,
         "execute": true
       }
+    },
+    {
+      "slug": "phase-8-web-ui",
+      "title": "Phase 8 \u2014 Web UI [G5] (read-only HTML browser over SQLite memories + FTS5 search + handoffs + checkpoints + indexed projects, served via Tools API, vanilla HTML/CSS/JS, markdown + dark mode, no new core logic)",
+      "status": "complete",
+      "priority": "P1",
+      "phases": {
+        "specify": true,
+        "design": true,
+        "tasks": true,
+        "execute": true
+      }
     }
   ]
 }

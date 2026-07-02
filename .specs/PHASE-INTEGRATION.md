@@ -322,7 +322,80 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 - EventBus events for a live UI: `search:reranked` (with `source`), `memory:salience-scored`, `memory:auto-improved`, `handoff:accepted`, `bootstrap:completed`, `observation:ingested`.
 - Embeddings import canonical path is now `services/embeddings/index.js` — Phase 8 must NOT re-introduce a `data/chromadb` import.
 
-### Phase 8 — (pending)
+### Phase 8 — landed (commits bd5d888 specs, 71f0727 scaffold+route, 46c2995 views+markdown+dark-mode, 01971e3 level filter, 58a1d5e tests, bbb888c docs)
+
+**Serve strategy (chosen):** the read-only web UI is served by the existing
+Tools API (Elysia) on `/ui/*` — single deployment, single port
+(`TH0TH_API_PORT`, default **3333**), same-origin (no CORS for same-host use).
+Launch: `bun run dev:api` (or `bun run start:api`) → open
+**`http://localhost:3333/ui/`**. Disable with `WEB_UI_ENABLED=false` (404).
+
+**New package + route:**
+- `apps/web-ui/` — zero-dependency `@th0th-ai/web-ui` package. Static bundle in
+  `src/static/{index.html, styles.css, app.js}` (plain HTML/CSS/JS, no SPA
+  framework, no markdown/highlight lib). `src/index.ts` is a tsc anchor only
+  (tsc rejects a pure-JS program; the static JS is `allowJs`/`checkJs:false` —
+  the read-only guarantee is enforced by a static-scan test, not type-checking).
+- `apps/tools-api/src/routes/web-ui.ts` — Elysia route serving `/ui` (index
+  shell) + `/ui/*` (static assets + index.html fallback). Content-type map
+  (.html/.css/.js/.svg/...); path-traversal guard; 404 when disabled. Static
+  root resolved via `import.meta.url` + cwd-ancestor walk (robust to
+  dev/start/test-runner cwds). Wired into `apps/tools-api/src/index.ts` after
+  `.use(proposalRoutes)`; `webUi` swagger tag added.
+
+**View → API mapping (all read-only, all pre-existing routes — NO new core logic):**
+| View | Route | Read surface |
+| --- | --- | --- |
+| Project list | `GET /api/v1/project/list` | `VectorStore.listProjects()` |
+| Memory browser | `POST /api/v1/memory/list` | `MemoryRepository` list (Phase 0/1) |
+| Search (FTS5+semantic) | `POST /api/v1/memory/search` | `SearchMemoriesTool` (Phase 0/2) |
+| Handoff list | `POST /api/v1/handoff/list` | `HandoffService.listPending` (Phase 6) |
+| Checkpoint list | `POST /api/v1/checkpoints/list` | `ListCheckpointsTool` (Phase 0d) |
+
+**New read-only route change (only route change, NO core logic):**
+- `POST /api/v1/memory/list` gained an additive optional `level` filter
+  (`t.Optional(t.Number())`, 1=Project/2=User/3=Session). SQLite branch adds
+  `level = ?`; PG branch filters `search()` rows by `MemoryRow.level`.
+  `MemoryRepository` already selects `level`; no service/repo/migration change.
+  Backward-compatible.
+
+**Markdown + dark mode (dependency-free):**
+- `markdownToHtml(md)` in `app.js` — minimal vanilla renderer (ATX headings,
+  bold, italic, inline code, fenced code `<pre><code>`, ul/ol, safe links
+  `target=_blank rel=noopener`, paragraphs). HTML-escapes all raw text first
+  (raw `<script>` neutralized). No `marked`/`markdown-it` dep. No syntax
+  highlighter (fenced code = styled monospace; future CDN lazy-load).
+- Dark mode: `toggleTheme`/`initTheme` flip `document.documentElement`
+  `data-theme`; persisted in `localStorage["th0th-ui-theme"]`; no-FOUC via an
+  inline `<head>` script that applies the attribute before paint.
+
+**Read-only guarantee (enforced):**
+- `app.js` exposes `FORBIDDEN_MUTATING_PATHS` (exhaustive: `/memory/store|update|delete`,
+  `/handoff/begin|accept|cancel`, `/checkpoints/create|restore`,
+  `/proposal/approve|reject`, `/project/reset|index|upload-and-index`, `/hook`,
+  `/hook/batch`, `/bootstrap`). The UI talks to the backend ONLY via
+  `api.request(path)`; `web-ui-readonly.test.ts` asserts every `request()`
+  target ∈ the 5 READ paths and no forbidden path is ever a target.
+  Discrimination sensor: injecting `api.request("/memory/store")` fails 3 tests.
+- `index.html` has no `type="submit"` form, no mutating control; nav has only
+  the 5 read-only view hash links.
+
+**Test-isolation note (extends Phase-1..7 rule):** web-ui tests do NOT mock
+`@th0th-ai/shared`. The pure renderers + markdown + theme helpers are imported
+from `app.js` via `createRequire` (bun runs JS natively; the browser-init block
+is `typeof document`-guarded). The serve test invokes `webUiRoutes.handle(Request)`
+directly (no server boot). No real `MemoryRepository` singleton is touched. A
+`test` script was added to `apps/tools-api/package.json` (`bun test`), bringing
+the 11 pre-existing auth/checkpoints tests + the 39 new web-ui tests into the
+turbo gate (previously orphaned).
+
+**Gates:** `bun run test` — core 893/0/46 (no regression), mcp-client 7/0,
+tools-api 50/0 (newly in gate). `bun run type-check` 6/6 (added @th0th-ai/web-ui
+task). Same-author verifier: PASS — every AC file:line-anchored, read-only
+discrimination mutant killed (3 failing tests), objective gate.
+
+**No schema delta, no migration, no new EventBus events, no new core services.**
+Phase 8 is the FINAL phase of the 0→8 plan.
 
 ## Commit ledger (append)
 | Phase | Commit(s) | Summary |
@@ -335,3 +408,4 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 | 6 | d3ccd2e 60e799b 4d8ac60 8f2f0a0 1a4bc40 | cross-session handoffs: handoffs.enabled config + handoff:accepted event + HandoffStore (SQLite WAL handoffs.db + Memory fallback + factory) + HandoffService (begin/accept/cancel/listPending, state machine open→accepted|expired, dual-write conversation memory PROJECT/0.7/handoff:<id> tags/no embedding, optional LLM summary-polish default-off silent-degrade, never throws) + HandoffAutoInjector (observation:ingested session-start → listPending) + 4 MCP tools + /api/v1/handoff routes + Prisma Handoff model + barrel re-exports, tests |
 | 5 | a4c86ff d42086a d3242cb ba971b0 67e9ed6 | auto-improvement loop: memory.autoImprove config (default-on detect, reviewGate=false auto-approve, env AUTO_IMPROVE_*) + memory:auto-improved event + ProposalStore (SQLite WAL proposals.db + Memory fallback + factory, no isPostgresEnabled) + AutoImproveJob (ctor-seam, detectPatterns pure rule-based query/file/fix signals, enrichWithLlm optional silent-degrade, runOnce debounce, reviewGate=false auto-approve reuses approve() single code path, apply/reject state machine pending→approved|rejected with defense-in-depth WHERE guard, listPending) + 3 MCP tools + /api/v1/proposal routes + Prisma Proposal model + barrel re-exports + approve targetMemoryId fix, tests |
 | 7 | 3d7fa86 b201531 2c043f2 3716e66 d0adee1 784fe00 9bded69 | retrieval + compression polish: 7e characterization tests (etl-pipeline/smart-chunker/code-compressor/csrlm-e2e) + ContextualSearchRLM injected-deps ctor seam; 7a LLMJudgeReranker (services/search/reranker.ts, llmObject+RerankVerdictSchema, top-K window=50, silent-degrade) wired into SearchController after applyBoost + search.rerank config + optional source:"llm-judge" on search:reranked; 7b SalienceJudge (services/memory/salience-judge.ts) + caller-wins wire in MemoryController.store + memory.autoImportance config + memory:salience-scored event; 7c GraphStore.bfsNeighbors (SQLite sync + Pg async, outgoing-only, visited dedup) + 3rd RRF stream in ContextualSearchRLM.search (fixed 0.45, silent-omit); 7d code-compressor LLM branch (regex-always-first fallback, isLlmEnabled gate, metadata.compressionSource on CompressionMetadata); 7f EmbeddingService relocated to services/embeddings/embedding-service.ts + barrel re-export, 4 live importers + hybrid-search dead importer redirected, data/chromadb/{vector-store,index}.ts deleted, postgres getCollection already clear-errors, 5 test mock.module targets retargeted; tests |
+| 8 | bd5d888 71f0727 46c2995 01971e3 58a1d5e | web UI [G5]: zero-dep @th0th-ai/web-ui package (vanilla HTML/CSS/JS in src/static/) served by Tools API at /ui/* (single port 3333, WEB_UI_ENABLED gate, content-type map + traversal guard + cwd-ancestor static-root resolution); app.js single source (createApiClient same-origin /api/v1, 5 pure view renderers, minimal vanilla markdownToHtml with HTML-escape, initTheme/toggleTheme data-theme+localStorage no-FOUC, hash router, guarded browser bootstrap, FORBIDDEN_MUTATING_PATHS); styles.css CSS variables + [data-theme=dark]; additive level filter on /memory/list (read-only route condition, no core change); 4 test files (serve/views/render/readonly) + test script on tools-api package.json (brings pre-existing auth/checkpoints + 39 web-ui tests into turbo gate); read-only enforced by request-target static scan + discrimination sensor; FINAL phase |

@@ -120,3 +120,22 @@ Sole agent verified its own work — no independent verifier sub-agent. Mitigati
 
 ## Same-author caveat (Phase 5)
 Sole agent verified its own work — no independent verifier sub-agent. (A prior sibling invocation landed tasks 1–4; this invocation finished task 5: tests + the `approve` targetMemoryId fix + validation + ledger.) Mitigations: per-AC file:line evidence, discrimination sensor (pending-guard mutant killed, 1 failing test), objective gate (822/0). See `.specs/features/phase-5-auto-improve/validation.md`.
+
+## Phase 8 handoff (PASS — same-author verified — FINAL phase)
+
+- feature: phase-8-web-ui — COMPLETE; the plan (0→8) is now fully landed.
+- in-progress: none
+- next step: **none (plan complete).** Residual non-blocking enhancements are recorded in each phase's validation.md (PG-runtime parity for SQLite-canonical stores; EventBus-SSE live UI; syntax-highlight + richer markdown for the web UI; memory-search e2e for the 7c graph stream).
+- blockers: none
+- uncommitted files: none (the docs commit finalizes Phase 8)
+- branch: main; commits bd5d888 (specs), 71f0727 (8a), 46c2995 (8b), 01971e3 (8c), 58a1d5e (8d), bbb888c (docs).
+
+## Key decisions for Phase 8 (web UI)
+- Serve strategy: Tools-API-served static at `/ui/*` (single port 3333, same-origin, no second process). `apps/tools-api/src/routes/web-ui.ts` reads files verbatim from `apps/web-ui/src/static/` (content-type map, traversal guard, `WEB_UI_ENABLED=false`→404, cwd-ancestor static-root resolution robust to dev/start/test cwds). Wired after `proposalRoutes`; `webUi` swagger tag.
+- Zero-dep bundle: `apps/web-ui/src/static/{index.html, styles.css, app.js}` (plain HTML/CSS/JS, no SPA framework, no markdown/highlight lib). `app.js` is the single source for pure helpers (markdownToHtml, 5 view renderers, theme helpers) — exported on `globalThis.TH0TH_UI` with the browser-init guarded by `typeof document` so `bun:test` can `require()` the same file. `apps/web-ui/src/index.ts` is a tsc anchor only (tsc rejects a pure-JS program).
+- View → API (all read-only, pre-existing routes, NO new core logic): Projects `GET /api/v1/project/list`; Memory `POST /api/v1/memory/list`; Search `POST /api/v1/memory/search`; Handoffs `POST /api/v1/handoff/list`; Checkpoints `POST /api/v1/checkpoints/list`.
+- Only route change: additive optional `level` filter on `POST /api/v1/memory/list` (SQLite `level = ?` + PG row filter; `MemoryRepository` already selects level; no service/repo/migration). Backward-compatible.
+- Markdown: minimal vanilla renderer (headings/bold/italic/inline-code/fenced-code/lists/safe-links/paragraphs), HTML-escape first (raw `<script>` neutralized). Dark mode: `data-theme` + `localStorage["th0th-ui-theme"]` + no-FOUC inline head script.
+- Read-only guarantee: `FORBIDDEN_MUTATING_PATHS` (exhaustive mutating list). `web-ui-readonly.test.ts` asserts every `request()` target ∈ the 5 READ paths + no forbidden path is a target. Discrimination sensor: injecting `api.request("/memory/store")` fails 3 tests.
+- Test gate: added `"test": "bun test"` to `apps/tools-api/package.json` — brings 11 pre-existing auth/checkpoints tests + 39 new web-ui tests into turbo (previously orphaned). Gates: core 893/0/46, mcp-client 7/0, tools-api 50/0; type-check 6/6.
+- Accepted assumptions (non-blocking): zero browser build; tsc anchor file; markdown subset; no syntax highlighter; no live updates (refresh UI; SSE future); same-author verification.
