@@ -20,7 +20,7 @@ import {
   mrrAtK,
   ndcgAtK,
 } from "./fixtures/ir-metrics.js";
-import type { SynapseRuntimeConfig, SearchResult } from "@th0th-ai/shared";
+import type { SynapseRuntimeConfig, SearchResult } from "@massa-th0th/shared";
 
 function defaultConfig(attentionEnabled: boolean): SynapseRuntimeConfig {
   return {

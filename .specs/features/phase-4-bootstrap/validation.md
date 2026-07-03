@@ -11,7 +11,7 @@ discrimination sensor killed its mutant, and the gate is the objective
 
 The repo-bootstrap deliverable (`BootstrapService` with scan + LLM/rule-based
 seed paths + idempotency marker + silent degradation, `bootstrap:completed`
-event, MCP tool `th0th_bootstrap`, API route, core barrel re-exports) meets
+event, MCP tool `bootstrap`, API route, core barrel re-exports) meets
 its acceptance criteria. Gate = `bun run test` **754 pass / 0 fail /
 46 skip** (baseline 738 → +16, no regressions), `bun run type-check` clean
 (5/5). The discrimination sensor killed its mutant. The LLM path is
@@ -42,7 +42,7 @@ proven (a seed memory is found by `MemoryRepository.fullTextSearch`).
 | P4-DEGRADE-02 | LLM on but `{ok:false}` → rule-based fallback, no throw | P4-DEGRADE-02 injects `failingSurface()` (returns `{ok:false}`), asserts `bootstrapped=true`, `source="rule-based"`. | YES |
 | P4-EVENT-01 | `bootstrap:completed` in EventMap + published with correct shape on success | `event-bus.ts` EventMap entry; `bootstrap-service.ts` publishes after `storeSeeds`; P4-EVENT-01 subscribes, asserts payload `{projectId, source:"llm", bootstrapId:"^boot-", seedMemoryIds:[3], signalCount>0, memoryCount:3}`. No-event-on-no-signals test asserts the skip path does not emit. | YES |
 | P4-DEGRADE-03 | `bootstrap.enabled=false` → 423 | `routes/bootstrap.ts` `bootstrapDisabled()` → `set.status=423`; service-level disabled path returns `noopResult("bootstrap-disabled")`. (Route-level 423 verified by code inspection; the service-level path is the contract gate.) | YES (inspection) |
-| P4-TOOL-01 | `th0th_bootstrap` in `TOOL_DEFINITIONS`; route registered | `apps/mcp-client/src/tool-definitions.ts` entry (POST `/api/v1/bootstrap`, projectId required); `apps/tools-api/src/routes/bootstrap.ts` route; `apps/tools-api/src/index.ts` `.use(bootstrapRoutes)`. Verified by type-check (route compiles + is imported). | YES |
+| P4-TOOL-01 | `bootstrap` in `TOOL_DEFINITIONS`; route registered | `apps/mcp-client/src/tool-definitions.ts` entry (POST `/api/v1/bootstrap`, projectId required); `apps/tools-api/src/routes/bootstrap.ts` route; `apps/tools-api/src/index.ts` `.use(bootstrapRoutes)`. Verified by type-check (route compiles + is imported). | YES |
 
 ## Edge cases
 
@@ -116,7 +116,7 @@ Mutant killed. No surviving mutant.
    branch direct to `ruleBasedSeed`; `signalCount===0` short-circuits to
    `no-signals`; `storeSeeds` try/catch → `insert-failed`. Outer control flow
    never throws to caller. **OK.**
-7. **MCP tool + route (R6, P4-TOOL-01).** Spec: `th0th_bootstrap` POST
+7. **MCP tool + route (R6, P4-TOOL-01).** Spec: `bootstrap` POST
    `/api/v1/bootstrap`. Read `tool-definitions.ts`: entry with correct schema;
    `routes/bootstrap.ts`: Elysia prefix, 423 when disabled, 400 on empty
    projectId, 200 + `{success, data}`; `index.ts` `.use(bootstrapRoutes)`.
@@ -125,7 +125,7 @@ Mutant killed. No surviving mutant.
    mock. Read `bootstrap-service.test.ts`: injects `MemoryRepoSeam` +
    `LlmSurface` + `CentralitySource` + `GitRunner`; single P4-SEARCH-01 block
    resets the MemoryRepository singleton to a temp DB and restores it. No
-   `mock.module("@th0th-ai/shared")`. **OK.**
+   `mock.module("@massa-th0th/shared")`. **OK.**
 9. **No migration (NF2).** Spec: seed memories are existing `memories` rows.
    Read `storeSeeds`: only calls `MemoryRepository.insert` (existing schema);
    marker = tag query. No `ALTER TABLE`, no new table. **OK.**

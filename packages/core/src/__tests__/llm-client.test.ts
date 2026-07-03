@@ -6,7 +6,7 @@
  *   (b) degrades silently ({ ok:false }) on failure — never throws,
  *   (c) default-off.
  *
- * Isolation: this file deliberately does NOT `mock.module("@th0th-ai/shared")`.
+ * Isolation: this file deliberately does NOT `mock.module("@massa-th0th/shared")`.
  * bun's mock.module is process-wide, and another test file (memory-crud.test.ts)
  * already mocks shared config for dataDir isolation; a second mock here would
  * collide (last-writer-wins) and break one of the two files. Instead the

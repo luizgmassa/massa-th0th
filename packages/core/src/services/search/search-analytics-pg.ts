@@ -4,7 +4,7 @@
  * Tracks search query analytics using PostgreSQL.
  */
 
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { getPgPool } from "../../data/db-connection.js";
 import type { Pool } from "pg";
 

@@ -23,7 +23,7 @@ import {
   RestoreResult,
   config,
   logger,
-} from "@th0th-ai/shared";
+} from "@massa-th0th/shared";
 
 // ── Internal row type ────────────────────────────────────────
 

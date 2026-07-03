@@ -117,8 +117,8 @@ Additive only; no ALTER to existing tables. No PgProposalStore code yet
   state machine + event emission is identical). An injected logger sink
   records `"auto-approved"` (audit trail = the row's `decidedAt` + the
   `memory:auto-improved` event + the log line).
-- `true`: proposals stay `pending`; surfaced via `th0th_list_proposals` +
-  `th0th_approve_proposal`.
+- `true`: proposals stay `pending`; surfaced via `list_proposals` +
+  `approve_proposal`.
 
 Default-off review gate matches the plan ("default auto-approve with
 logging"). Auto-approve is observable: the event fires and the row flips.
@@ -232,7 +232,7 @@ files that mock shared config process-wide and omit the block don't break.
 
 ## 11. Test-isolation strategy (extends Phase-1..6 rule)
 
-`auto-improve-job.test.ts` does NOT mock `@th0th-ai/shared`. It injects:
+`auto-improve-job.test.ts` does NOT mock `@massa-th0th/shared`. It injects:
 - `MemoryProposalStore` (in-memory) for proposal persistence.
 - `MemoryObservationStore` (in-memory) pre-loaded with deterministic
   observations carrying the recurring file/query/fix signals.

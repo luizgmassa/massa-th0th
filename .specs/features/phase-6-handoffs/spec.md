@@ -73,10 +73,10 @@ not depend on the hook being installed (degrades gracefully when it
 isn't). Never blocks; never throws.
 
 ### R4 — MCP tools + API route
-- `th0th_handoff_begin` (POST `/api/v1/handoff/begin`)
-- `th0th_handoff_accept` (POST `/api/v1/handoff/accept`)
-- `th0th_handoff_cancel` (POST `/api/v1/handoff/cancel`)
-- `th0th_handoff_list_pending` (POST `/api/v1/handoff/list` — supports
+- `handoff_begin` (POST `/api/v1/handoff/begin`)
+- `handoff_accept` (POST `/api/v1/handoff/accept`)
+- `handoff_cancel` (POST `/api/v1/handoff/cancel`)
+- `handoff_list_pending` (POST `/api/v1/handoff/list` — supports
   the auto-inject / recall surfacing path)
 
 Wire into `apps/mcp-client/src/tool-definitions.ts` + an Elysia route
@@ -90,7 +90,7 @@ On `begin`, also persist a searchable `conversation`-type memory via
 passes the FTS `level <= USER` recall filter, per the Phase-4
 correction), importance 0.7, no embedding (FTS-only, consistent with
 bootstrap seeds). This makes the handoff discoverable by the existing
-`fullTextSearch` / `th0th_search` recall path independently of the
+`fullTextSearch` / `search` recall path independently of the
 Handoff table.
 
 ### R6 — EventBus `handoff:accepted`
@@ -113,11 +113,11 @@ optional polish — the begin path stores what the caller passed.)
 
 | AC ID | Outcome |
 | --- | --- |
-| P6-BEGIN-01 | `th0th_handoff_begin` with valid fields creates a row with `status="open"`, returns `{id, status:"open", memoryId}`, and the summary is present. |
+| P6-BEGIN-01 | `handoff_begin` with valid fields creates a row with `status="open"`, returns `{id, status:"open", memoryId}`, and the summary is present. |
 | P6-DUALWRITE-01 | A begin call also inserts a `conversation` memory with `tags` including `handoff:<id>` and `level=PROJECT(1)`, importance 0.7, no embedding. |
 | P6-SEARCH-01 | The dual-write memory is found by `MemoryRepository.fullTextSearch(<distinctive summary token>, ...)` (FTS5). |
-| P6-ACCEPT-01 | `th0th_handoff_accept` on an `open` handoff flips status to `accepted`, sets `accepted_at` (epoch ms), emits `handoff:accepted` with the correct shape. |
-| P6-CANCEL-01 | `th0th_handoff_cancel` on an `open` handoff flips status to `expired`; no `handoff:accepted` event. |
+| P6-ACCEPT-01 | `handoff_accept` on an `open` handoff flips status to `accepted`, sets `accepted_at` (epoch ms), emits `handoff:accepted` with the correct shape. |
+| P6-CANCEL-01 | `handoff_cancel` on an `open` handoff flips status to `expired`; no `handoff:accepted` event. |
 | P6-FAIL-01 | `accept` on a missing id → `{ok:false, reason:"not-found"}`; no status change, no event. |
 | P6-FAIL-02 | `accept` on an already-`accepted` or `expired` handoff → `{ok:false, reason:"not-open"}`; no event, `accepted_at` unchanged. |
 | P6-FAIL-03 | `accept`/`cancel` with a mismatched `projectId` (when provided) → `{ok:false, reason:"project-mismatch"}`. |
@@ -158,7 +158,7 @@ optional polish — the begin path stores what the caller passed.)
 - **NF3** — LLM local-first default-off + silent degradation
   (cross-cutting §1).
 - **NF4** — Test-isolation: inject a fake store + fake `MemoryRepoSeam`
-  + fake `LlmSurface`; do NOT `mock.module("@th0th-ai/shared")` (the
+  + fake `LlmSurface`; do NOT `mock.module("@massa-th0th/shared")` (the
   process-wide landmine). The single P6-SEARCH-01 integration block may
   reset the `MemoryRepository` singleton to a temp dataDir (mirrors
   Phase-4 P4-SEARCH-01).
@@ -172,5 +172,5 @@ optional polish — the begin path stores what the caller passed.)
   LLM-off degradation + the single P6-SEARCH-01 FTS integration block.
 - Discrimination sensor: mutate the status-guard in `accept` so it
   accepts terminal-status rows → P6-FAIL-02 must fail.
-- Gate: `bun run --filter @th0th-ai/core test` no regressions vs 754;
+- Gate: `bun run --filter @massa-th0th/core test` no regressions vs 754;
   `bun run type-check` clean.

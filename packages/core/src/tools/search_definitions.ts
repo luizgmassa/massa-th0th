@@ -1,11 +1,11 @@
 /**
- * Search Definitions Tool (th0th_search_definitions)
+ * Search Definitions Tool (search_definitions)
  *
  * Browse symbols (functions, classes, types, etc.) in a project.
  * Uses the Symbol Graph's SQLite index for fast, exact results.
  */
 
-import { IToolHandler, ToolResponse } from "@th0th-ai/shared";
+import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
 import { symbolGraphService } from "../services/symbol/symbol-graph.service.js";
 
 interface SearchDefinitionsParams {

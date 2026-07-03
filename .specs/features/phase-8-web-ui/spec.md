@@ -114,6 +114,6 @@ REST read surfaces already exposed by `apps/tools-api`. Vanilla HTML/CSS/JS only
 - The UI tests assert against (a) the served bundle (HTTP) and (b) deterministic
   REST response fixtures — they do NOT touch the real `MemoryRepository`
   singleton (which is closed by `memory-crud.test.ts` in the full suite).
-- No `mock.module("@th0th-ai/shared")` is added.
+- No `mock.module("@massa-th0th/shared")` is added.
 - A thin read-only route (if any) follows the existing route-test harness pattern
   (inject fakes / isolated temp DBs).

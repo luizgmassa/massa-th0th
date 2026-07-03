@@ -10,8 +10,8 @@
  * fields. The service never throws; all failures surface as {ok:false, reason}.
  */
 
-import { getHandoffService } from "@th0th-ai/core";
-import { config, logger } from "@th0th-ai/shared";
+import { getHandoffService } from "@massa-th0th/core";
+import { config, logger } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
 
 let cachedService: ReturnType<typeof getHandoffService> | null = null;

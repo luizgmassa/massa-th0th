@@ -5,7 +5,7 @@
  * or from the tools-api. Submodules should be imported from this barrel.
  */
 
-import { config as runtimeConfig } from "@th0th-ai/shared";
+import { config as runtimeConfig } from "@massa-th0th/shared";
 import { SynapseManager } from "./synapse-manager.js";
 
 export { SynapseManager } from "./synapse-manager.js";

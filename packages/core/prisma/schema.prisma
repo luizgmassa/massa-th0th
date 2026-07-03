@@ -1,4 +1,4 @@
-// Prisma Schema para th0th.db
+// Prisma Schema para massa-th0th.db
 // Base de dados consolidada para queries e relatórios
 // Read-only - dados sincronizados via triggers dos bancos operacionais
 

@@ -15,7 +15,7 @@ export interface ToolDefinition {
 
 export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
-    name: "th0th_index",
+    name: "index",
     description:
       "Index a project directory for contextual code search with semantic embeddings",
     apiEndpoint: "/api/v1/project/index",
@@ -54,9 +54,9 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_index_status",
+    name: "index_status",
     description:
-      "Get the status of a background indexing job by its jobId. Use this after calling th0th_index to check progress.",
+      "Get the status of a background indexing job by its jobId. Use this after calling index to check progress.",
     apiEndpoint: "/api/v1/project/index/status/:jobId",
     apiMethod: "GET",
     inputSchema: {
@@ -64,14 +64,14 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       properties: {
         jobId: {
           type: "string",
-          description: "Job ID returned from th0th_index",
+          description: "Job ID returned from index",
         },
       },
       required: ["jobId"],
     },
   },
   {
-    name: "th0th_search",
+    name: "search",
     description:
       "Search for code in an indexed project using semantic and keyword search",
     apiEndpoint: "/api/v1/search/project",
@@ -131,14 +131,14 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
         sessionId: {
           type: "string",
-          description: "Synapse session ID from th0th_synapse_session. Activates cognitive modulation: task alignment, agent affinity, working-memory boost.",
+          description: "Synapse session ID from synapse_session. Activates cognitive modulation: task alignment, agent affinity, working-memory boost.",
         },
       },
       required: ["query", "projectId"],
     },
   },
   {
-    name: "th0th_remember",
+    name: "remember",
     description:
       "Store memory in the hierarchical memory system (local SQLite)",
     apiEndpoint: "/api/v1/memory/store",
@@ -181,7 +181,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_recall",
+    name: "recall",
     description:
       "Search stored memories across sessions using semantic search (recovers context from previous conversations)",
     apiEndpoint: "/api/v1/memory/search",
@@ -235,7 +235,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_memory_update",
+    name: "memory_update",
     description:
       "Update an existing memory by id (content, importance, or tags). Content changes are re-embedded.",
     apiEndpoint: "/api/v1/memory/update",
@@ -275,7 +275,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_memory_delete",
+    name: "memory_delete",
     description:
       "Delete a memory by id (hard delete). Also removes its graph edges.",
     apiEndpoint: "/api/v1/memory/delete",
@@ -295,7 +295,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_list_checkpoints",
+    name: "list_checkpoints",
     description:
       "List saved task checkpoints. Filter by task ID, project, or type.",
     apiEndpoint: "/api/v1/checkpoints/list",
@@ -327,7 +327,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_create_checkpoint",
+    name: "create_checkpoint",
     description:
       "Create a checkpoint to save current task progress for later resumption.",
     apiEndpoint: "/api/v1/checkpoints/create",
@@ -402,7 +402,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_restore_checkpoint",
+    name: "restore_checkpoint",
     description:
       "Restore a saved checkpoint and return its state plus integrity checks.",
     apiEndpoint: "/api/v1/checkpoints/restore",
@@ -429,7 +429,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_compress",
+    name: "compress",
     description:
       "Compress context using semantic compression (keeps structure, removes details)",
     apiEndpoint: "/api/v1/context/compress",
@@ -464,7 +464,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_optimized_context",
+    name: "optimized_context",
     description:
       "Retrieve and compress context with maximum token efficiency (search + compress)",
     apiEndpoint: "/api/v1/context/optimized",
@@ -499,7 +499,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_analytics",
+    name: "analytics",
     description:
       "Get search analytics and performance metrics (usage patterns, cache performance, etc)",
     apiEndpoint: "/api/v1/analytics",
@@ -535,7 +535,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   // ── Symbol Graph tools ──────────────────────────────────────────────────
 
   {
-    name: "th0th_list_projects",
+    name: "list_projects",
     description:
       "List all indexed projects with their status (pending/indexing/indexed/error), file counts, symbol counts, and last indexed time.",
     apiEndpoint: "/api/v1/workspace/list",
@@ -554,7 +554,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
 
   {
-    name: "th0th_project_map",
+    name: "project_map",
     description:
       "Aggregate view of an indexed project: overall stats (files/chunks/symbols/status/lastIndexedAt), top central files by PageRank (the dependency backbone), symbols grouped by kind (function/class/interface/type/etc.), files grouped by extension (language distribution), and the most-recently indexed files. Use this as a one-shot 'what's in this project?' summary.",
     apiEndpoint: "/api/v1/workspace/:id/map",
@@ -564,7 +564,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       properties: {
         id: {
           type: "string",
-          description: "The project ID (as registered via th0th_index_project).",
+          description: "The project ID (as registered via index_project).",
         },
         centralityLimit: {
           type: "number",
@@ -582,7 +582,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
 
   {
-    name: "th0th_search_definitions",
+    name: "search_definitions",
     description:
       "Search for symbol definitions (functions, classes, variables, types, interfaces) in an indexed project. Returns name, kind, file location, line numbers, and doc comments.",
     apiEndpoint: "/api/v1/symbol/definitions",
@@ -622,7 +622,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
 
   {
-    name: "th0th_get_references",
+    name: "get_references",
     description:
       "Find all references (usages) of a symbol across the project. Returns file paths, line numbers, reference kinds (call/import/type_ref/extend/implement), and code context snippets.",
     apiEndpoint: "/api/v1/symbol/references",
@@ -654,7 +654,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
 
   {
-    name: "th0th_go_to_definition",
+    name: "go_to_definition",
     description:
       "Find the definition of a symbol (function, class, variable, type, etc.) in the project. Disambiguates by calling file context. Returns file location, line numbers, doc comment, and code snippet.",
     apiEndpoint: "/api/v1/symbol/definition",
@@ -683,7 +683,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   // ── Project reset ───────────────────────────────────────────────────────
 
   {
-    name: "th0th_reset_project",
+    name: "reset_project",
     description:
       "Delete all indexed data for a project: vector embeddings, symbol graph (definitions/references/imports/centrality), and stored memories. " +
       "Use before a full reindex or to free space. Each scope (vectors, symbols, memories) can be toggled independently.",
@@ -716,7 +716,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_read_file",
+    name: "read_file",
     description: "Read a specific file (or line range) with symbol metadata and imports. Use instead of Read/grep when you have filePath+lineStart+lineEnd from a search result.",
     apiEndpoint: "/api/v1/file/read",
     apiMethod: "POST",
@@ -735,8 +735,8 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_synapse_session",
-    description: "Create/resume a Synapse cognitive session. Returns sessionId to pass as sessionId on every th0th_search. Activates task alignment, agent affinity, working-memory buffer. Name by intent: 'debug-auth', 'feature-payment'.",
+    name: "synapse_session",
+    description: "Create/resume a Synapse cognitive session. Returns sessionId to pass as sessionId on every search. Activates task alignment, agent affinity, working-memory buffer. Name by intent: 'debug-auth', 'feature-payment'.",
     apiEndpoint: "/api/v1/synapse/session",
     apiMethod: "POST",
     inputSchema: {
@@ -752,21 +752,21 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_synapse_prime",
-    description: "Seed the Synapse working-memory buffer with recalled memories before searching. Call at session start with th0th_recall results.",
+    name: "synapse_prime",
+    description: "Seed the Synapse working-memory buffer with recalled memories before searching. Call at session start with recall results.",
     apiEndpoint: "/api/v1/synapse/session/:id/prime",
     apiMethod: "POST",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "Session ID from th0th_synapse_session" },
+        id: { type: "string", description: "Session ID from synapse_session" },
         results: { type: "array", description: "Search results to seed into the buffer", items: { type: "object" } },
       },
       required: ["id", "results"],
     },
   },
   {
-    name: "th0th_synapse_access",
+    name: "synapse_access",
     description: "Record file access for affinity scoring — boosts that file in future searches. Call after reading or editing a file.",
     apiEndpoint: "/api/v1/synapse/session/:id/access",
     apiMethod: "POST",
@@ -781,7 +781,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_symbol_snippet",
+    name: "symbol_snippet",
     description: "Get raw code snippet by file + line range from an indexed project.",
     apiEndpoint: "/api/v1/symbol/snippet",
     apiMethod: "GET",
@@ -797,8 +797,8 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_memory_list",
-    description: "Browse stored memories by type/importance without a semantic query (audit mode). Use th0th_recall for semantic search.",
+    name: "memory_list",
+    description: "Browse stored memories by type/importance without a semantic query (audit mode). Use recall for semantic search.",
     apiEndpoint: "/api/v1/memory/list",
     apiMethod: "POST",
     inputSchema: {
@@ -814,7 +814,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_reindex",
+    name: "reindex",
     description: "Force full reindex of a project workspace. Use when autoReindex (configurable via search.autoReindexMaxFiles, default 200) is insufficient after a large refactor.",
     apiEndpoint: "/api/v1/workspace/:id/reindex",
     apiMethod: "POST",
@@ -828,7 +828,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_hook_ingest",
+    name: "hook_ingest",
     description:
       "Passively ingest a batch of lifecycle events (session-start, user-prompt, pre/post-tool-use, pre-compact, session-end) as Observations. Fire-and-forget; consolidated into memories later by the LLM bridge. Useful for non-Claude hosts.",
     apiEndpoint: "/api/v1/hook/batch",
@@ -868,7 +868,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_bootstrap",
+    name: "bootstrap",
     description:
       "Scan a project (git log, README, docs, package manifests, top central files from PageRank) and create LLM-summarized seed memories so an agent begins with usable context. Idempotent — skips if already bootstrapped unless force=true. LLM-off degrades silently to rule-based seeds. Never throws.",
     apiEndpoint: "/api/v1/bootstrap",
@@ -891,7 +891,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_handoff_begin",
+    name: "handoff_begin",
     description:
       "Begin a cross-session handoff: leave a structured record (summary, open questions, next steps, files) for a later agent to discover on session start. The handoff is persisted in the Handoff table AND dual-written as a searchable memory (FTS-discoverable). Optional LLM summary-polish (default-off). Never throws.",
     apiEndpoint: "/api/v1/handoff/begin",
@@ -911,7 +911,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_handoff_accept",
+    name: "handoff_accept",
     description:
       "Accept an open handoff by id. Flips status open→accepted, sets accepted_at, emits handoff:accepted. Missing/expired/already-accepted/project-mismatch ids return a clear {ok:false, reason}. Never throws.",
     apiEndpoint: "/api/v1/handoff/accept",
@@ -926,7 +926,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_handoff_cancel",
+    name: "handoff_cancel",
     description:
       "Cancel (expire) an open handoff by id. Flips status open→expired (no event). Same failure semantics as accept on missing/non-open/project-mismatch. Never throws.",
     apiEndpoint: "/api/v1/handoff/cancel",
@@ -941,7 +941,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_handoff_list_pending",
+    name: "handoff_list_pending",
     description:
       "List open handoffs for a project (optionally filtered by target agent), ordered oldest-first. The recall-path surfacing primitive for auto-inject on session start. Never throws.",
     apiEndpoint: "/api/v1/handoff/list",
@@ -956,7 +956,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_list_proposals",
+    name: "list_proposals",
     description:
       "List pending auto-improvement proposals for a project (newest-first). The review-gate surfacing primitive: proposals are generated by the auto-improve loop from recurring patterns (repeated queries, hot files, common fixes). Never throws.",
     apiEndpoint: "/api/v1/proposal/list",
@@ -970,7 +970,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_approve_proposal",
+    name: "approve_proposal",
     description:
       "Approve a pending auto-improvement proposal by id. Applies the proposed memory edit, flips status pending→approved, and emits memory:auto-improved. Missing/non-pending/project-mismatch/apply-failed ids return a clear {ok:false, reason}. Never throws.",
     apiEndpoint: "/api/v1/proposal/approve",
@@ -990,7 +990,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "th0th_reject_proposal",
+    name: "reject_proposal",
     description:
       "Reject a pending auto-improvement proposal by id. Flips status pending→rejected (no memory edit applied, no event emitted). Same failure semantics as approve on missing/non-pending/project-mismatch. Never throws.",
     apiEndpoint: "/api/v1/proposal/reject",

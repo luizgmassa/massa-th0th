@@ -15,7 +15,7 @@
  *   7) buffer put          — record final survivors for the next query in the session
  */
 
-import type { SearchResult, SynapseRuntimeConfig } from "@th0th-ai/shared";
+import type { SearchResult, SynapseRuntimeConfig } from "@massa-th0th/shared";
 import {
   applyDiversityPenalty,
   applyTemporalInhibition,

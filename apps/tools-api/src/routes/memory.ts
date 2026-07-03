@@ -6,15 +6,15 @@
  * POST /api/v1/memory/list   - Listar memórias (sem busca semântica)
  */
 
-import type { MemoryRow } from "@th0th-ai/core";
+import type { MemoryRow } from "@massa-th0th/core";
 import {
   getMemoryRepository,
   SearchMemoriesTool,
   StoreMemoryTool,
   UpdateMemoryTool,
   DeleteMemoryTool,
-} from "@th0th-ai/core";
-import { logger } from "@th0th-ai/shared";
+} from "@massa-th0th/core";
+import { logger } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
 
 let storeMemoryTool: StoreMemoryTool | null = null;

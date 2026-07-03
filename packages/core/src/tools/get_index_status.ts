@@ -4,10 +4,10 @@
  * Queries the status and progress of an async indexing job.
  */
 
-import { IToolHandler } from "@th0th-ai/shared";
-import { ToolResponse } from "@th0th-ai/shared";
+import { IToolHandler } from "@massa-th0th/shared";
+import { ToolResponse } from "@massa-th0th/shared";
 import { indexJobTracker } from "../services/jobs/index-job-tracker.js";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 
 interface GetIndexStatusParams {
   jobId: string;
@@ -16,13 +16,13 @@ interface GetIndexStatusParams {
 export class GetIndexStatusTool implements IToolHandler {
   name = "get_index_status";
   description =
-    "Get the status and progress of an async indexing job started with th0th_index";
+    "Get the status and progress of an async indexing job started with index";
   inputSchema = {
     type: "object",
     properties: {
       jobId: {
         type: "string",
-        description: "Job ID returned by th0th_index",
+        description: "Job ID returned by index",
       },
     },
     required: ["jobId"],

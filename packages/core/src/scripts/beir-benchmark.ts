@@ -280,7 +280,7 @@ async function main(): Promise<void> {
     throw new Error("No evaluable queries found in qrels/test.tsv");
   }
 
-  const tempProjectPath = path.join(os.tmpdir(), `th0th-beir-${opts.datasetName}`);
+  const tempProjectPath = path.join(os.tmpdir(), `massa-th0th-beir-${opts.datasetName}`);
   await fs.rm(tempProjectPath, { recursive: true, force: true });
   await materializeCorpus(corpus, tempProjectPath);
 

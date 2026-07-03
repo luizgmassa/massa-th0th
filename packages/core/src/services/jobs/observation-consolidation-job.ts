@@ -17,9 +17,9 @@
  * project; sourceIds in the event payload are observation ids (informational).
  */
 
-import { logger, MemoryLevel, MemoryType } from "@th0th-ai/shared";
+import { logger, MemoryLevel, MemoryType } from "@massa-th0th/shared";
 import { randomUUID } from "crypto";
-import { config } from "@th0th-ai/shared";
+import { config } from "@massa-th0th/shared";
 import { getMemoryRepository } from "../../data/memory/memory-repository-factory.js";
 import { eventBus } from "../events/event-bus.js";
 import {

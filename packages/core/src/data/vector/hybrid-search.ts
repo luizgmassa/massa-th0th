@@ -5,11 +5,11 @@
  * using Reciprocal Rank Fusion (RRF) for reranking
  */
 
-import { IHybridSearch } from '@th0th-ai/shared';
-import { SearchResult, RetrievalOptions } from '@th0th-ai/shared';
+import { IHybridSearch } from '@massa-th0th/shared';
+import { SearchResult, RetrievalOptions } from '@massa-th0th/shared';
 import { SQLiteVectorStore } from './sqlite-vector-store.js';
 import { KeywordSearch } from '../sqlite/keyword-search.js';
-import { logger } from '@th0th-ai/shared';
+import { logger } from '@massa-th0th/shared';
 
 /**
  * Reciprocal Rank Fusion constant

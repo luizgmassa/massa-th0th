@@ -10,7 +10,7 @@ Slug: `phase-4-bootstrap`. Workflow: `spec-driven` (TLC v3). Plan ref:
 A fresh project in massa-th0th starts with an **empty memory store**. An
 agent working on it has no pre-loaded context — no understanding of the
 repo's architecture, conventions, key entrypoints, or recent direction.
-Today every useful memory must be created manually via `th0th_remember`.
+Today every useful memory must be created manually via `remember`.
 The feature borrowed from `ai-memory` is **repo bootstrap**: scan a
 project root for cheap, high-signal signals (recent git history, README,
 docs, package manifests, top-central files from the existing PageRank
@@ -45,7 +45,7 @@ IN:
 - Silent degradation: when LLM is off, store **rule-based minimal seed
   memories** (derived from README/git log without LLM summarization) OR
   skip seeding with a logged reason — never throws.
-- MCP tool `th0th_bootstrap` (wired into `tool-definitions.ts`) + a thin
+- MCP tool `bootstrap` (wired into `tool-definitions.ts`) + a thin
   API route under `apps/tools-api/src/routes/bootstrap.ts` mirroring
   `routes/hooks.ts` / `routes/memory.ts`.
 - New `memory.bootstrap` config block (default-off LLM summarization
@@ -134,7 +134,7 @@ signalCount, memoryCount }`. The event MUST be added to `EventMap`
   never throws to the caller.
 
 ### R6 — MCP tool + API route
-- MCP tool `th0th_bootstrap` MUST be added to `TOOL_DEFINITIONS`
+- MCP tool `bootstrap` MUST be added to `TOOL_DEFINITIONS`
   (`apps/mcp-client/src/tool-definitions.ts`) with
   `apiEndpoint: "/api/v1/bootstrap"`, `apiMethod: "POST"`, input
   schema `{ projectId: string, projectPath?: string, force?: boolean }`
@@ -177,7 +177,7 @@ signalCount, memoryCount }`. The event MUST be added to `EventMap`
 | P4-DEGRADE-02 | With the LLM on but the call returning `{ok:false}`, `bootstrap` falls back to the rule-based path (same as P4-DEGRADE-01); no throw. |
 | P4-EVENT-01 | `bootstrap:completed` is in `EventMap` and is published on a successful bootstrap with the correct payload shape. |
 | P4-DEGRADE-03 | When `bootstrap.enabled=false`, the route returns **423** and the service is not invoked. |
-| P4-TOOL-01 | `th0th_bootstrap` is present in `TOOL_DEFINITIONS` with the correct endpoint/method/schema; the route is registered in `apps/tools-api/src/index.ts`. |
+| P4-TOOL-01 | `bootstrap` is present in `TOOL_DEFINITIONS` with the correct endpoint/method/schema; the route is registered in `apps/tools-api/src/index.ts`. |
 
 ## Edge cases
 

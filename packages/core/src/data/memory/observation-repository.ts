@@ -15,7 +15,7 @@
  * use it. The factory never short-circuits on `isPostgresEnabled()`.
  */
 
-import { config, logger } from "@th0th-ai/shared";
+import { config, logger } from "@massa-th0th/shared";
 import { Database } from "bun:sqlite";
 import fs from "fs";
 import path from "path";

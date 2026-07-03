@@ -21,8 +21,8 @@ import {
   ProjectInfo,
   SearchResult,
   SearchSource,
-} from '@th0th-ai/shared';
-import { logger } from '@th0th-ai/shared';
+} from '@massa-th0th/shared';
+import { logger } from '@massa-th0th/shared';
 import type { Pool, PoolConfig } from 'pg';
 
 export interface PostgresConfig {

@@ -10,8 +10,8 @@
  * read against the same buckets used in production benchmarks.
  */
 
-import type { SearchResult } from "@th0th-ai/shared";
-import { SearchSource } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
+import { SearchSource } from "@massa-th0th/shared";
 
 export type Category =
   | "architecture"

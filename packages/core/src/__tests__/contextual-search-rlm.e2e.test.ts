@@ -8,12 +8,12 @@
  *
  * Isolation strategy (design.md §7): the full bun suite runs in ONE process and
  * other test files (concurrent-indexing.test.ts, search-controller.test.ts) use
- * `mock.module` to replace `getKeywordSearch`/`getVectorStore`/`@th0th-ai/shared`
+ * `mock.module` to replace `getKeywordSearch`/`getVectorStore`/`@massa-th0th/shared`
  * with bare stubs (no `index`, no `config.set`). Those mocks are process-wide
  * and registered before this file runs. To stay independent of that landmine we:
  *   1. Construct REAL `KeywordSearch` + `SQLiteVectorStore` instances DIRECTLY
  *      (bypassing the mocked factories). They read the global default config
- *      (`~/.rlm` data dir) — we isolate by PROJECT-prefixed unique IDs, not by
+ *      (`~/.massa-th0th-data` data dir) — we isolate by PROJECT-prefixed unique IDs, not by
  *      dbPath, because the mocked `config` in-suite lacks `.set`.
  *   2. Pass those same instances into `ContextualSearchRLM` via its injected-deps
  *      ctor seam, so `search()` exercises the real load-bearing path
@@ -29,7 +29,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import type { VectorDocument } from "@th0th-ai/shared";
+import type { VectorDocument } from "@massa-th0th/shared";
 import { KeywordSearch } from "../data/sqlite/keyword-search.js";
 import { SQLiteVectorStore } from "../data/vector/sqlite-vector-store.js";
 import { ContextualSearchRLM } from "../services/search/contextual-search-rlm.js";
@@ -66,7 +66,7 @@ function doc(id: string, content: string, filePath: string, lineStart: number, l
 
 beforeAll(async () => {
   // Construct REAL instances directly. They read the default global config
-  // (~/.rlm data dir); we isolate via the PROJECT_ID-scoped unique IDs below +
+  // (~/.massa-th0th-data data dir); we isolate via the PROJECT_ID-scoped unique IDs below +
   // clean them up in afterAll.
   vs = new SQLiteVectorStore();
   ks = new KeywordSearch();

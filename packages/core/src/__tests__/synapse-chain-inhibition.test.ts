@@ -4,8 +4,8 @@ import {
   detectIntent,
   DEFAULT_CHAIN_BOOSTS,
 } from "../services/synapse/inhibition/chain-inhibition.js";
-import type { SearchResult } from "@th0th-ai/shared";
-import { SearchSource } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
+import { SearchSource } from "@massa-th0th/shared";
 
 function r(id: string, score: number, type?: string): SearchResult {
   return {

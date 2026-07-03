@@ -7,21 +7,21 @@ import {
   loadConfig,
   saveConfig,
   initConfig,
-  defaultTh0thConfig,
-} from "@th0th-ai/shared/config";
+  defaultMassaTh0thConfig,
+} from "@massa-th0th/shared/config";
 
 const args = process.argv.slice(2);
 const command = args[0];
 
 function help() {
   console.log(`
-th0th-config - Configuration manager for th0th
+massa-th0th-config - Configuration manager for massa-th0th
 
 Usage:
-  th0th-config <command> [options]
+  massa-th0th-config <command> [options]
 
 Commands:
-  init              Initialize th0th configuration
+  init              Initialize massa-th0th configuration
     --ollama          Use Ollama (local, default)
     --mistral <key>   Use Mistral with API key
     --openai <key>    Use OpenAI with API key
@@ -35,11 +35,11 @@ Commands:
     --base-url <url>  Base URL (for ollama)
 
 Examples:
-  th0th-config init
-  th0th-config init --mistral your-api-key
-  th0th-config use ollama --model nomic-embed-text:latest
-  th0th-config use mistral --api-key your-key
-  th0th-config set embedding.dimensions 1024
+  massa-th0th-config init
+  massa-th0th-config init --mistral your-api-key
+  massa-th0th-config use ollama --model nomic-embed-text:latest
+  massa-th0th-config use mistral --api-key your-key
+  massa-th0th-config set embedding.dimensions 1024
 `);
 }
 
@@ -105,9 +105,9 @@ switch (command) {
 
   case "show": {
     if (!configExists()) {
-      console.log("No config file found. Run `th0th-config init` to create one.");
+      console.log("No config file found. Run `massa-th0th-config init` to create one.");
       console.log("\nUsing defaults:");
-      console.log(JSON.stringify(defaultTh0thConfig, null, 2));
+      console.log(JSON.stringify(defaultMassaTh0thConfig, null, 2));
       process.exit(0);
     }
     
@@ -121,7 +121,7 @@ switch (command) {
     const value = args[2];
     
     if (!key || !value) {
-      console.error("Usage: th0th-config set <key> <value>");
+      console.error("Usage: massa-th0th-config set <key> <value>");
       process.exit(1);
     }
     

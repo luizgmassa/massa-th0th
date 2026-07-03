@@ -19,7 +19,7 @@ let dbPath: string;
 let tmpDir: string;
 
 beforeEach(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-jobs-"));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-jobs-"));
   dbPath = path.join(tmpDir, "jobs.db");
 });
 

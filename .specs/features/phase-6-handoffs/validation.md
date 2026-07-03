@@ -13,7 +13,7 @@ The cross-session handoff deliverable (`HandoffStore` SQLite-canonical +
 `HandoffService` begin/accept/cancel/listPending with dual-write searchable
 memory + `handoff:accepted` event + auto-injector + 4 MCP tools + API
 route + core barrel re-exports) meets its acceptance criteria. Gate =
-`bun run --filter @th0th-ai/core test` **791 pass / 0 fail / 46 skip**
+`bun run --filter @massa-th0th/core test` **791 pass / 0 fail / 46 skip**
 (baseline 754 → +37), `bun run type-check` clean (5/5). The discrimination
 sensor killed its mutant. The state machine (open → accepted | expired,
 both terminal) is proven; every failure mode (missing / non-open /
@@ -47,7 +47,7 @@ memory is proven FTS-searchable; auto-inject surfaces a pending handoff on
 | P6-FAIL-03 | accept with projectId mismatch → {ok:false, project-mismatch} | P6-FAIL-03 asserts `{ok:false, project-mismatch}`, status unchanged (open). | YES |
 | P6-AUTOINJECT-01 | listPending returns only open handoffs for project/target; injector records on session-start | `handoff-service.ts` `listPending`; test asserts ordered oldest-first, target filter (broadcast nulls included), accept excludes; `HandoffAutoInjector` subscribes `observation:ingested`, on `source:"session-start"` records pending count (log captured), listPending returns the row. Non-session-start event ignored. | YES |
 | P6-EVENT-01 | handoff:accepted in EventMap with specified shape | `event-bus.ts` EventMap entry `{handoffId, projectId?, sourceSessionId?, targetAgent?, acceptedAt}`; P6-EVENT-01 asserts all fields. | YES |
-| P6-TOOL-01 | 4 MCP tools in TOOL_DEFINITIONS + route registered | `tool-definitions.ts` entries th0th_handoff_begin/accept/cancel/list_pending; `routes/handoff.ts` 4 POST handlers; `index.ts` `.use(handoffRoutes)`. Type-check confirms route compiles + is imported. | YES |
+| P6-TOOL-01 | 4 MCP tools in TOOL_DEFINITIONS + route registered | `tool-definitions.ts` entries handoff_begin/accept/cancel/list_pending; `routes/handoff.ts` 4 POST handlers; `index.ts` `.use(handoffRoutes)`. Type-check confirms route compiles + is imported. | YES |
 | P6-DEGRADE-01 | empty summary + LLM off → stores empty summary, no throw; LLM {ok:false} likewise | P6-DEGRADE-01 (off) asserts ok:true, summary=""; (on-polished) asserts summary="Polished summary from LLM"; (on-fail) asserts summary="" with failingSurface. | YES |
 | P6-MIGRATION-01 | SQLite CREATE TABLE IF NOT EXISTS handoffs + Prisma Handoff model; additive | `handoff-repository.ts` `createSchema` `CREATE TABLE IF NOT EXISTS handoffs` + 3 indexes; `schema.prisma` `model Handoff @@map("handoffs")`; idempotent-reopen test asserts second store on same path reads the row. | YES |
 
@@ -68,8 +68,8 @@ memory is proven FTS-searchable; auto-inject surfaces a pending handoff on
 
 | Gate | Command | Result |
 | --- | --- | --- |
-| Full suite (core) | `bun run --filter @th0th-ai/core test` | **791 pass / 0 fail / 46 skip** (baseline 754 → +37). Ran 837 tests across 65 files. |
-| Full suite (mcp-client) | `bun run --filter @th0th-ai/mcp-client test` | **7 pass / 0 fail** (unchanged). |
+| Full suite (core) | `bun run --filter @massa-th0th/core test` | **791 pass / 0 fail / 46 skip** (baseline 754 → +37). Ran 837 tests across 65 files. |
+| Full suite (mcp-client) | `bun run --filter @massa-th0th/mcp-client test` | **7 pass / 0 fail** (unchanged). |
 | type-check | `bun run type-check` | **clean** (5/5 tasks). |
 | begin happy path | `handoff-service.test.ts` P6-BEGIN-01 | open row + id + memoryId. |
 | accept state transition + event | `handoff-service.test.ts` P6-ACCEPT-01 | status accepted, acceptedAt set, event fired with shape. |

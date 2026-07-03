@@ -6,7 +6,7 @@
 
 import { GraphStore } from "./graph-store.js";
 import { GraphStorePg } from "./graph-store-pg.js";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 
 let cachedStore: GraphStore | GraphStorePg | null = null;
 

@@ -8,7 +8,7 @@ import { Elysia } from "elysia";
 
 export const errorHandler = new Elysia({ name: "error-handler" }).onError(
   ({ error, set }) => {
-    console.error("[th0th-api] Error:", error);
+    console.error("[massa-th0th-api] Error:", error);
 
     // Default to 500 if no status set
     if (!set.status || set.status === 200) {

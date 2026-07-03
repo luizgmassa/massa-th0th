@@ -2,23 +2,23 @@
 set -e
 
 # ========================================
-# th0th - VSCode Integration Validator
+# massa-th0th - VSCode Integration Validator
 # ========================================
-# Validates that the th0th + VSCode integration is working.
+# Validates that the massa-th0th + VSCode integration is working.
 #
 # Usage: ./scripts/validate-vscode-integration.sh
 # ========================================
 
 # shellcheck source=scripts/banner.sh
 source "$(dirname "${BASH_SOURCE[0]}")/banner.sh"
-th0th_banner
+massa_th0th_banner
 
 ERRORS=0
 WARNINGS=0
 
-# Get th0th root directory
+# Get massa-th0th root directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TH0TH_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+MASSA_TH0TH_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # ---- Test 1: Prerequisites ----
 echo -e "${BOLD}[1/6] Checking prerequisites...${NC}"
@@ -72,11 +72,11 @@ else
     WARNINGS=$((WARNINGS + 1))
 fi
 
-# ---- Test 3: th0th API ----
+# ---- Test 3: massa-th0th API ----
 echo ""
-echo -e "${BOLD}[3/6] Checking th0th API...${NC}"
+echo -e "${BOLD}[3/6] Checking massa-th0th API...${NC}"
 
-API_URL="${TH0TH_API_URL:-http://localhost:3333}"
+API_URL="${MASSA_TH0TH_API_URL:-http://localhost:3333}"
 
 if curl -s --max-time 2 "${API_URL}/health" > /dev/null 2>&1; then
     echo -e "  ${GREEN}✓${NC} API: healthy at ${API_URL}"
@@ -104,25 +104,25 @@ echo ""
 echo -e "${BOLD}[4/6] Checking MCP server...${NC}"
 
 if command -v bunx &> /dev/null; then
-    echo -e "  ${GREEN}✓${NC} MCP client: @th0th-ai/mcp-client (bunx)"
+    echo -e "  ${GREEN}✓${NC} MCP client: @massa-th0th/mcp-client (bunx)"
     
     # Test MCP server startup
     TEST_OUTPUT=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-        TH0TH_API_URL="${API_URL}" timeout 10 bunx @th0th-ai/mcp-client 2>&1 || echo "TIMEOUT")
+        MASSA_TH0TH_API_URL="${API_URL}" timeout 10 bunx @massa-th0th/mcp-client 2>&1 || echo "TIMEOUT")
 elif command -v npx &> /dev/null; then
-    echo -e "  ${GREEN}✓${NC} MCP client: @th0th-ai/mcp-client (npx)"
+    echo -e "  ${GREEN}✓${NC} MCP client: @massa-th0th/mcp-client (npx)"
     
     # Test MCP server startup
     TEST_OUTPUT=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-        TH0TH_API_URL="${API_URL}" timeout 10 npx @th0th-ai/mcp-client 2>&1 || echo "TIMEOUT")
+        MASSA_TH0TH_API_URL="${API_URL}" timeout 10 npx @massa-th0th/mcp-client 2>&1 || echo "TIMEOUT")
     
-    if echo "$TEST_OUTPUT" | grep -q "th0th_search"; then
-        TOOL_COUNT=$(echo "$TEST_OUTPUT" | grep -o '"name":"th0th_[^"]*"' | wc -l)
+    if echo "$TEST_OUTPUT" | grep -q "search"; then
+        TOOL_COUNT=$(echo "$TEST_OUTPUT" | grep -o '"name":"massa_th0th_[^"]*"' | wc -l)
         echo -e "  ${GREEN}✓${NC} MCP server: starts successfully (${TOOL_COUNT} tools)"
         
         # List tools
         echo -e "      Tools discovered:"
-        echo "$TEST_OUTPUT" | grep -o '"name":"th0th_[^"]*"' | sed 's/"name":"//g' | sed 's/"//g' | while read tool; do
+        echo "$TEST_OUTPUT" | grep -o '"name":"massa_th0th_[^"]*"' | sed 's/"name":"//g' | sed 's/"//g' | while read tool; do
             echo -e "        ${BLUE}•${NC} ${tool}"
         done
     else
@@ -147,15 +147,15 @@ if [ -f ".vscode/mcp.json" ]; then
     if python3 -c "import json; json.load(open('.vscode/mcp.json'))" 2>/dev/null; then
         echo -e "  ${GREEN}✓${NC} Config syntax: valid JSON"
         
-        # Check if th0th is configured
-        if grep -q "th0th" .vscode/mcp.json; then
-            echo -e "  ${GREEN}✓${NC} th0th server: configured"
+        # Check if massa-th0th is configured
+        if grep -q "massa-th0th" .vscode/mcp.json; then
+            echo -e "  ${GREEN}✓${NC} massa-th0th server: configured"
             
             # Extract command
             COMMAND=$(python3 -c "
 import json
 config = json.load(open('.vscode/mcp.json'))
-server = config.get('servers', {}).get('th0th', {})
+server = config.get('servers', {}).get('massa-th0th', {})
 cmd = server.get('command', '')
 args = ' '.join(server.get('args', []))
 print(f'{cmd} {args}'[:80])
@@ -163,8 +163,8 @@ print(f'{cmd} {args}'[:80])
             
             echo -e "      Command: ${COMMAND}"
         else
-            echo -e "  ${RED}✗${NC} th0th server: not configured"
-            echo -e "      Fix: Add th0th to .vscode/mcp.json"
+            echo -e "  ${RED}✗${NC} massa-th0th server: not configured"
+            echo -e "      Fix: Add massa-th0th to .vscode/mcp.json"
             ERRORS=$((ERRORS + 1))
         fi
     else
@@ -187,7 +187,7 @@ if [ $ERRORS -eq 0 ]; then
     echo -e "  Testing: index → search → recall"
     
     # Create temp test project
-    TEST_DIR="/tmp/th0th-validation-test"
+    TEST_DIR="/tmp/massa-th0th-validation-test"
     mkdir -p "$TEST_DIR"
     echo "// Test file for validation" > "$TEST_DIR/test.ts"
     echo "function authenticate(user: string) { return true; }" >> "$TEST_DIR/test.ts"
@@ -249,7 +249,7 @@ if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
     echo ""
     echo -e "  Next steps:"
     echo -e "    1. Restart VSCode/Antigravity"
-    echo -e "    2. Test in chat: 'Use th0th to search for authentication'"
+    echo -e "    2. Test in chat: 'Use massa-th0th to search for authentication'"
     echo ""
     exit 0
 elif [ $ERRORS -eq 0 ]; then
@@ -266,7 +266,7 @@ else
     echo ""
     echo -e "  ${BOLD}Errors: ${ERRORS}  Warnings: ${WARNINGS}${NC}"
     echo ""
-    echo -e "  ${RED}Fix errors before using th0th.${NC}"
+    echo -e "  ${RED}Fix errors before using massa-th0th.${NC}"
     echo ""
     echo -e "  Common fixes:"
     echo -e "    • Start API: bun run start:api"

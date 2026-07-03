@@ -42,7 +42,7 @@ describe("Claude Code hook scripts (P3-HOOKSCRIPT-01)", () => {
     }
   });
 
-  it("each lifecycle script maps to the correct th0th event kind", () => {
+  it("each lifecycle script maps to the correct massa-th0th event kind", () => {
     const cases: Array<[string, string]> = [
       ["session-start.sh", "session-start"],
       ["user-prompt-submit.sh", "user-prompt"],
@@ -61,7 +61,7 @@ describe("Claude Code hook scripts (P3-HOOKSCRIPT-01)", () => {
 command -v curl >/dev/null 2>&1 || { exit 0; }
 exit 7
 `;
-    const tmp = path.join(fs.mkdtempSync(path.join(require("os").tmpdir(), "th0th-hook-")), "probe.sh");
+    const tmp = path.join(fs.mkdtempSync(path.join(require("os").tmpdir(), "massa-th0th-hook-")), "probe.sh");
     fs.writeFileSync(tmp, probe);
     fs.chmodSync(tmp, 0o755);
     // Run with a PATH that does NOT contain curl (use /dev/null).
@@ -79,7 +79,7 @@ exit 7
     const content = fs.readFileSync(path.join(HOOKS_DIR, "_post.sh"), "utf8");
     expect(content).toContain("-m 2");
     expect(content).toContain("exit 0");
-    expect(content).toContain("TH0TH_API_BASE");
-    expect(content).toContain("TH0TH_API_KEY");
+    expect(content).toContain("MASSA_TH0TH_API_BASE");
+    expect(content).toContain("MASSA_TH0TH_API_KEY");
   });
 });

@@ -1,5 +1,5 @@
 /**
- * @th0th-ai/core - Memory Data Layer
+ * @massa-th0th/core - Memory Data Layer
  */
 
 export { MemoryRepository } from "./memory-repository.js";

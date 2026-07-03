@@ -13,8 +13,8 @@ import {
   ListCheckpointsTool,
   CreateCheckpointTool,
   RestoreCheckpointTool,
-} from "@th0th-ai/core";
-import { logger } from "@th0th-ai/shared";
+} from "@massa-th0th/core";
+import { logger } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
 
 let listCheckpointsTool: ListCheckpointsTool | null = null;

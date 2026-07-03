@@ -8,7 +8,7 @@
  * asking for.
  */
 
-import type { SearchResult } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
 import type { QueryClass } from "../types.js";
 
 export interface ConfidenceGateConfig {

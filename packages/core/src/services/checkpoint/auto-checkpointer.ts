@@ -19,7 +19,7 @@ import {
   CheckpointType,
   TaskStatus,
   logger,
-} from "@th0th-ai/shared";
+} from "@massa-th0th/shared";
 import { CheckpointManager } from "./checkpoint-manager.js";
 
 export type CheckpointTrigger = "operation" | "error" | "milestone";

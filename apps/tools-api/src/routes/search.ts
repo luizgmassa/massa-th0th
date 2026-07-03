@@ -5,7 +5,7 @@
  * POST /api/v1/search/code    - Busca semântica de código
  */
 
-import { SearchCodeTool, SearchProjectTool } from "@th0th-ai/core";
+import { SearchCodeTool, SearchProjectTool } from "@massa-th0th/core";
 import { Elysia, t } from "elysia";
 
 let searchProjectTool: SearchProjectTool | null = null;

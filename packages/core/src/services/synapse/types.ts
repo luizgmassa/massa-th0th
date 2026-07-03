@@ -5,7 +5,7 @@
  * It does not replace search; it modulates which results survive and in what order.
  */
 
-import type { SearchResult } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
 import type { WorkingMemoryBuffer } from "./buffer/working-memory-buffer.js";
 
 /**

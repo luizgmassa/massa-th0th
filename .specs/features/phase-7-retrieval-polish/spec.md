@@ -48,7 +48,7 @@ Out of scope:
   extends the in-class `resultSets`; `HybridSearch` is left intact (its
   `rerank` is already 3rd-stream-ready per Phase 2).
 - `MemoryController.store` (`controllers/memory-controller.ts:108`) is the
-  `th0th_remember` insert path; `importance` defaults to `0.5` at `:116`. This
+  `remember` insert path; `importance` defaults to `0.5` at `:116`. This
   is the 7b injection point (when `input.importance === undefined`).
 - `GraphStore` exposes `createEdge`, `getOutgoingEdges`, `getIncomingEdges`
   (`graph-store.ts:103/209/216`) but **no BFS/traversal** — 7c adds a focused
@@ -222,7 +222,7 @@ The mutant is reverted before commit; the killing test stays.
 
 ## Gate (non-negotiable)
 
-- `bun run --filter @th0th-ai/core test` passes with **no regression vs 822
+- `bun run --filter @massa-th0th/core test` passes with **no regression vs 822
   pass / 0 fail / 46 skip** (the pre-Phase-7 baseline). New tests add to the
   pass count; none weakened/skipped/deleted.
 - `bun run type-check` clean (5/5).

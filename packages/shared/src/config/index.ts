@@ -1,7 +1,7 @@
 /**
  * Configuration Management
  *
- * Centralized configuration for th0th Server
+ * Centralized configuration for massa-th0th Server
  *
  * Architecture:
  * - Global cache with projectId namespace (multi-tenant)
@@ -190,7 +190,7 @@ export interface ServerConfig {
   };
 
   // Synapse — cognitive modulation layer (focus, retention, prioritization, speed).
-  // Mirrored from Th0thConfig so runtime services have a uniform access point.
+  // Mirrored from MassaTh0thConfig so runtime services have a uniform access point.
   synapse: SynapseRuntimeConfig;
 }
 
@@ -291,16 +291,16 @@ export interface DecayParams {
 
 /**
  * Get global data directory
- * Creates ~/.rlm/ directory for all projects
+ * Creates ~/.massa-th0th-data/ directory for all projects
  */
 function getGlobalDataDir(): string {
   const homeDir = os.homedir();
-  const dataDir = path.join(homeDir, ".rlm");
+  const dataDir = path.join(homeDir, ".massa-th0th-data");
   return dataDir;
 }
 
 /**
- * Canonical default allow-list of file extensions th0th indexes/searches.
+ * Canonical default allow-list of file extensions massa-th0th indexes/searches.
  * Single source of truth — consumed by the indexing pipeline, the search
  * index scanner, and the MCP upload collector so the three never drift.
  * User config (`security.allowedExtensions`) overrides this at runtime.
@@ -345,7 +345,7 @@ export const DEFAULT_ALLOWED_EXTENSIONS: readonly string[] = [
  * Default Configuration
  */
 export const defaultConfig: ServerConfig = {
-  name: "th0th-server",
+  name: "massa-th0th-server",
   version: "1.0.0",
 
   dataDir: getGlobalDataDir(),
@@ -436,7 +436,7 @@ export const defaultConfig: ServerConfig = {
       // Phase 5: auto-improvement loop. Rule-based pattern detection has
       // no LLM dep; LLM enrichment inherits the top-level llm.enabled gate.
       // Default auto-approve + logging; reviewGate=true surfaces pending
-      // proposals via th0th_list_proposals / th0th_approve_proposal.
+      // proposals via list_proposals / approve_proposal.
       enabled: envBool("AUTO_IMPROVE_ENABLED", true),
       reviewGate: envBool("AUTO_IMPROVE_REVIEW_GATE", false),
       minObservations: envNum("AUTO_IMPROVE_MIN_OBS", 8),
@@ -752,9 +752,9 @@ export class Config {
 export const config = new Config();
 
 export {
-  Th0thConfig,
-  defaultTh0thConfig,
-} from "./th0th-config";
+  MassaTh0thConfig,
+  defaultMassaTh0thConfig,
+} from "./massa-th0th-config";
 
 export {
   getConfigDir,

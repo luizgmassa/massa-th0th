@@ -6,7 +6,7 @@
  * coordination from the SearchProjectTool.
  */
 
-import { logger, config } from "@th0th-ai/shared";
+import { logger, config } from "@massa-th0th/shared";
 import { ContextualSearchRLM } from "../services/search/contextual-search-rlm.js";
 import { eventBus } from "../services/events/event-bus.js";
 import { LLMJudgeReranker } from "../services/search/reranker.js";
@@ -215,13 +215,13 @@ export class SearchController {
     // Add reindex recommendations
     if ((reindexInfo as any)?.deferred) {
       recommendations.push("Indexing deferred to keep this search responsive");
-      recommendations.push("Run th0th_index(projectPath, projectId) and poll th0th_get_index_status(jobId)");
+      recommendations.push("Run index(projectPath, projectId) and poll get_index_status(jobId)");
     }
 
     // Add usage recommendations based on response mode
     if (responseMode === "summary" && formattedResults.length > 0) {
       recommendations.push("Use responseMode='enriched' to get full content + file imports + parentSymbol without extra tool calls");
-      if (formattedResults.length >= 3) recommendations.push("Use th0th_optimized_context(query) for compressed multi-file context");
+      if (formattedResults.length >= 3) recommendations.push("Use optimized_context(query) for compressed multi-file context");
     }
     if (responseMode === "full") recommendations.push("Try responseMode='enriched' — same content plus fileImports and parentSymbol");
     if (responseMode === "enriched" && formattedResults.length > 0) recommendations.push("Enriched mode: content + fileImports + parentSymbol included. Use chunkIndex/totalChunks to navigate adjacent chunks.");
@@ -229,7 +229,7 @@ export class SearchController {
     // Add project-specific recommendations
     if (formattedResults.length === 0) {
       recommendations.push("Try lowering minScore (current: " + minScore + ") or different query terms");
-      recommendations.push("Check if project is indexed: th0th_list_projects()");
+      recommendations.push("Check if project is indexed: list_projects()");
     }
 
     return {

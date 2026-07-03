@@ -21,7 +21,7 @@ import { ollama } from "ollama-ai-provider";
 import type { EmbeddingProviderConfig } from "./config.js";
 import { metrics } from "../monitoring/metrics.js";
 import { EmbeddingRateLimiter } from "./rate-limiter.js";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 
 /**
  * Base interface for embedding providers

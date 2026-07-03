@@ -1,5 +1,5 @@
 /**
- * @th0th-ai/core - Read File Tool
+ * @massa-th0th/core - Read File Tool
  * 
  * Optimized file reading with:
  * - Automatic compression for large files
@@ -9,8 +9,8 @@
  * - Language detection
  */
 
-import { IToolHandler, ToolResponse, estimateTokens } from "@th0th-ai/shared";
-import { logger } from "@th0th-ai/shared";
+import { IToolHandler, ToolResponse, estimateTokens } from "@massa-th0th/shared";
+import { logger } from "@massa-th0th/shared";
 import { CodeCompressor } from "../services/compression/code-compressor.js";
 import { SymbolGraphService } from "../services/symbol/symbol-graph.service.js";
 import { workspaceManager } from "../services/workspace/workspace-manager.js";
@@ -56,7 +56,7 @@ export class ReadFileTool implements IToolHandler {
   name = "read_file";
   description = 
     "Read file with automatic compression, caching, and symbol metadata. " +
-    "Use with th0th_search results for 60% token savings.";
+    "Use with search results for 60% token savings.";
 
   inputSchema = {
     type: "object",
@@ -240,7 +240,7 @@ export class ReadFileTool implements IToolHandler {
       // Add related files tip if symbols found
       if (metadata.symbols && metadata.symbols.definitions > 0) {
         result.recommendations.push(
-          `💡 Use th0th_get_references() to find usages of ${metadata.symbols.definitions} symbols in this file`
+          `💡 Use get_references() to find usages of ${metadata.symbols.definitions} symbols in this file`
         );
       }
 

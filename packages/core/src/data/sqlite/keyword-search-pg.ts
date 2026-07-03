@@ -4,8 +4,8 @@
  * Uses PostgreSQL full-text search with to_tsvector for FTS capabilities.
  */
 
-import { SearchResult, SearchSource } from "@th0th-ai/shared";
-import { logger } from "@th0th-ai/shared";
+import { SearchResult, SearchSource } from "@massa-th0th/shared";
+import { logger } from "@massa-th0th/shared";
 import { getPgPool } from "../db-connection.js";
 import type { Pool } from "pg";
 

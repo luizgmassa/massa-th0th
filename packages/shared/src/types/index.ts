@@ -1,5 +1,5 @@
 /**
- * Core Types for th0th MCP Server
+ * Core Types for massa-th0th MCP Server
  * 
  * This file contains all fundamental type definitions following
  * the hierarchical memory architecture described in docs/02-architecture.md

@@ -1,7 +1,7 @@
 /**
  * ObservationRepository tests (Phase 3).
  *
- * Test-isolation rule (Phase 1/2): do NOT `mock.module("@th0th-ai/shared")` —
+ * Test-isolation rule (Phase 1/2): do NOT `mock.module("@massa-th0th/shared")` —
  * it is process-wide and collides with other files. Instead construct the
  * SqliteObservationStore with an explicit temp dbPath so no shared config
  * singleton is relied upon.
@@ -31,7 +31,7 @@ function makeObs(over: Partial<Observation> = {}): Observation {
 }
 
 function tempDbPath(): string {
-  const dir = fs.mkdtempSync(path.join(tmpdir(), "th0th-obs-"));
+  const dir = fs.mkdtempSync(path.join(tmpdir(), "massa-th0th-obs-"));
   return path.join(dir, "observations.db");
 }
 

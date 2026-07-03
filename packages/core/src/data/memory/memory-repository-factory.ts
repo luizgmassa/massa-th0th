@@ -5,7 +5,7 @@
  * No modo local-first, usa SQLite.
  */
 
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { MemoryRepositoryPg } from "./memory-repository-pg.js";
 import { MemoryRepository } from "./memory-repository.js";
 

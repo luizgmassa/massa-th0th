@@ -1,7 +1,7 @@
 /**
  * AutoImproveJob tests (Phase 5 — auto-improvement loop, G7).
  *
- * Test-isolation rule (Phase 1/2/3/4/6): do NOT `mock.module("@th0th-ai/shared")`
+ * Test-isolation rule (Phase 1/2/3/4/6): do NOT `mock.module("@massa-th0th/shared")`
  * (process-wide collision — memory-crud.test.ts owns it). Inject a fake
  * ProposalStore (MemoryProposalStore), a fake ObservationStore (MemoryObservationStore
  * pre-loaded with deterministic observations), a fake MemoryApplySeam, and a fake
@@ -488,10 +488,10 @@ describe("P5-TOOL-01: MCP tools + route registered", () => {
     const mod = await import("../../../../apps/mcp-client/src/tool-definitions.js");
     const defs = (mod as any).TOOL_DEFINITIONS as Array<{ name: string; apiEndpoint: string }>;
     const names = defs.map((d) => d.name);
-    expect(names).toContain("th0th_list_proposals");
-    expect(names).toContain("th0th_approve_proposal");
-    expect(names).toContain("th0th_reject_proposal");
-    const approve = defs.find((d) => d.name === "th0th_approve_proposal")!;
+    expect(names).toContain("list_proposals");
+    expect(names).toContain("approve_proposal");
+    expect(names).toContain("reject_proposal");
+    const approve = defs.find((d) => d.name === "approve_proposal")!;
     expect(approve.apiEndpoint).toBe("/api/v1/proposal/approve");
   });
 

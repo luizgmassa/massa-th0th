@@ -1,7 +1,7 @@
 {
-  "projectId": "th0th",
+  "projectId": "massa-th0th",
   "version": "1.0.0",
-  "description": "Needles validated against the th0th codebase itself (dogfooding). Each needle targets a non-obvious heuristic, magic constant, or scoring rule that pure keyword search would miss. Captured 2026-04-20.",
+  "description": "Needles validated against the massa-th0th codebase itself (dogfooding). Each needle targets a non-obvious heuristic, magic constant, or scoring rule that pure keyword search would miss. Captured 2026-04-20.",
   "scoring": {
     "topK": 10,
     "hitAtK": [1, 3, 5, 10],

@@ -19,7 +19,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
   skips). New work must not regress this.
 - `node_modules`/`dist` may be absent at agent start → run `bun install` first if
   `node_modules` is missing, then build/type-check.
-- **`th0th_search`/index is N/A for this repo** (not indexed; only massa-vault +
+- **`search`/index is N/A for this repo** (not indexed; only massa-vault +
   useful-agent-skills are). Use direct source reads + `grep`/Glob/Read.
 - Architecture tiers: MCP client (`apps/mcp-client`) → Tools API
   (`apps/tools-api`, routes under `src/routes/`) → core (`packages/core`) +
@@ -58,7 +58,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
   `AUTOREINDEX_MAX_FILES`); 3 sites derive (`search-controller.ts:246`,
   `contextual-search-rlm.ts:290-291,317,346`).
 - 0c memory CRUD: `MemoryRepository`(SQLite) + `MemoryRepositoryPg` gained
-  `update`/`deleteById`; MCP tools `th0th_memory_update` + `th0th_memory_delete`;
+  `update`/`deleteById`; MCP tools `memory_update` + `memory_delete`;
   routes under `apps/tools-api/src/routes/memory.ts`. **Delete = HARD delete +
   sever GraphStore edges via `MemoryGraphService.onMemoryDeleted(id)`.** Soft-delete
   (`deleted_at` + recall filtering) deferred to Phase 1. Update re-embeds + rebuilds
@@ -71,7 +71,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 ### Phase 1 — landed (commits befa3cb, e49ffa9, 12fe002, 1ccb42c)
 
 **Config keys (new):**
-- `memory.decay: { lambda=0.02; sigma=0.6; mu=0.04; coldThreshold=0.20 }` (`DecayParams`, exported from `@th0th-ai/shared`).
+- `memory.decay: { lambda=0.02; sigma=0.6; mu=0.04; coldThreshold=0.20 }` (`DecayParams`, exported from `@massa-th0th/shared`).
 - Top-level `llm: { enabled; baseUrl; apiKey; model; temperature; maxOutputTokens; timeoutMs }` — Ollama defaults (`http://localhost:11434/v1`, `qwen2.5-coder:7b`, `apiKey "ollama"`), **default-off** (env `RLM_LLM_ENABLED=true`).
 - `compression.llm` is now a **deprecated alias** of `llm` (same env vars; `prompt` stays compression-specific). Migrate readers to `config.get("llm")`.
 - New env helpers in `packages/shared/src/config`: `envBool`, `envString` (alongside `envNum`).
@@ -100,7 +100,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 
 **Latent landmine removed:** `graph-store-pg.ts` no longer eagerly constructs the Prisma client at module-eval (lazy Proxy) — importing `graph-store-factory` is now side-effect-free in SQLite-only environments.
 
-**Test-isolation rule (IMPORTANT for Phase 2+):** bun `mock.module("@th0th-ai/shared")` is process-wide and collides across files. Only ONE test file (memory-crud.test.ts) mocks shared config for the memory subsystem; co-locate new memory tests there or avoid mocking config (pass explicit dbPaths / use the `_setLlmEnabledForTesting` seam). The SQLite consolidation tests live in memory-crud.test.ts for this reason.
+**Test-isolation rule (IMPORTANT for Phase 2+):** bun `mock.module("@massa-th0th/shared")` is process-wide and collides across files. Only ONE test file (memory-crud.test.ts) mocks shared config for the memory subsystem; co-locate new memory tests there or avoid mocking config (pass explicit dbPaths / use the `_setLlmEnabledForTesting` seam). The SQLite consolidation tests live in memory-crud.test.ts for this reason.
 ### Phase 2 — landed (commits ebcc202 specs, 5b0ba18, 6a7598f, 6cb5edb, f2acceb)
 
 **Config keys (new):**
@@ -122,7 +122,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 
 **No schema delta, no migration.** Additive config + code + EventBus events only.
 
-**Test-isolation note (extends Phase-1 rule):** `query-understanding.test.ts` does NOT mock `@th0th-ai/shared`. It injects a fake `QueryLlmSurface` + fake `EmbedFn` (no config, no DB, no network). The `QueryUnderstandingService` constructor has defensive config readers (fall back to spec defaults) because other test files' process-wide shared-config mock omits the `queryUnderstanding` block — this is a no-op in production.
+**Test-isolation note (extends Phase-1 rule):** `query-understanding.test.ts` does NOT mock `@massa-th0th/shared`. It injects a fake `QueryLlmSurface` + fake `EmbedFn` (no config, no DB, no network). The `QueryUnderstandingService` constructor has defensive config readers (fall back to spec defaults) because other test files' process-wide shared-config mock omits the `queryUnderstanding` block — this is a no-op in production.
 
 ### Phase 3 — landed (commits 9f8b7a1 specs, f28c30e store+config+event, b950df7 hook-service+queue+429, 8fb0cac routes+bridge+scripts+mcp)
 
@@ -134,7 +134,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 - `packages/core/src/services/hooks/writer-queue.ts` → `WriterQueue` (promise-chain mutex mirroring `provider.ts:323`), `QueueSaturatedError` (carries `retryAfterSeconds`).
 - `packages/core/src/services/hooks/hook-service.ts` → `HookService` (ctor `{ store?, maxPending?, maxPayloadBytes?, bridge?, idFactory? }`), `validateEvent(raw, maxPayloadBytes)` (pure), `ingestOne`/`ingestBatch`, `ValidationError` (code 400|413), `getHookService()`/`resetHookService()` singleton, `IncomingEvent`/`NormalizedEvent`/`BridgeTrigger` types.
 - `packages/core/src/services/jobs/observation-consolidation-job.ts` → `ObservationConsolidationJob` (ctor `{ llm?, store?, memoryRepo?, minObservations?, minIntervalMs?, maxWindow? }`), `maybeRun(projectId)` (debounce trigger), `runOnce(projectId)` (silent-skip on LLM-off/`{ok:false}`/throw), singleton `observationConsolidationJob`.
-- Core barrel re-exports Phase-3 hook symbols from `packages/core/src/index.ts` (consumed by routes via `@th0th-ai/core`).
+- Core barrel re-exports Phase-3 hook symbols from `packages/core/src/index.ts` (consumed by routes via `@massa-th0th/core`).
 
 **Routes (new, Elysia):**
 - `POST /api/v1/hook` → single lifecycle event → 202 + `{ id }`; 429 + `Retry-After` when saturated; 400/413 validation; 423 when `hooks.enabled=false`.
@@ -155,10 +155,10 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 - Separate job (`ObservationConsolidationJob`), NOT extending `memory-consolidation-job.ts` — observations are a different source stream (no embeddings) with a different trigger. Reuses `ConsolidatedBatchSchema` + `LlmSurface` contract. Bypasses `consolidateWindow`'s cosine prefilter (observations have no embeddings → recency window + direct `llm.object` call). Silent-skip when `!isEnabled()` / `{ok:false}` / throw; observations ALWAYS retained. Debounce trigger from the ingest path (every `minObservations` OR `minIntervalMs`); fire-and-forget, never blocks the 202.
 
 **Hook scripts + MCP tool:**
-- `apps/claude-plugin/hooks/{session-start,user-prompt-submit,post-tool-use,stop}.sh` + shared `_post.sh` (2s curl timeout, `exit 0`, env `TH0TH_API_BASE`/`TH0TH_API_KEY`/`TH0TH_PROJECT_ID`) + `README.md`.
-- MCP tool `th0th_hook_ingest` (POST /api/v1/hook/batch) for non-Claude hosts.
+- `apps/claude-plugin/hooks/{session-start,user-prompt-submit,post-tool-use,stop}.sh` + shared `_post.sh` (2s curl timeout, `exit 0`, env `MASSA_TH0TH_API_BASE`/`MASSA_TH0TH_API_KEY`/`MASSA_TH0TH_PROJECT_ID`) + `README.md`.
+- MCP tool `hook_ingest` (POST /api/v1/hook/batch) for non-Claude hosts.
 
-**Test-isolation note (extends Phase-1/2 rule):** Phase-3 tests do NOT mock `@th0th-ai/shared`. `observation-repository.test.ts` uses explicit temp `dbPath`; `hook-service.test.ts` injects `MemoryObservationStore` + fake `BridgeTrigger` + explicit `maxPending`; `observation-consolidation-job.test.ts` injects a fake `LlmSurface` + fake `memoryRepo` (the real `MemoryRepository` singleton is closed by `memory-crud.test.ts` in the full suite — the `memoryRepo` injection seam avoids the closed-DB landmine).
+**Test-isolation note (extends Phase-1/2 rule):** Phase-3 tests do NOT mock `@massa-th0th/shared`. `observation-repository.test.ts` uses explicit temp `dbPath`; `hook-service.test.ts` injects `MemoryObservationStore` + fake `BridgeTrigger` + explicit `maxPending`; `observation-consolidation-job.test.ts` injects a fake `LlmSurface` + fake `memoryRepo` (the real `MemoryRepository` singleton is closed by `memory-crud.test.ts` in the full suite — the `memoryRepo` injection seam avoids the closed-DB landmine).
 
 **Seams Phase 4/5/6 reuse:**
 - Phase 4 (bootstrap): independent of observations; consumes `llm-client` + `project_map` PageRank.
@@ -171,7 +171,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 
 **Services exported (path + symbol) — what Phase 5/6 consumes:**
 - `packages/core/src/services/bootstrap/bootstrap-service.ts` → `BootstrapService` (ctor `BootstrapDeps { llm?, memoryRepo?, isBootstrapped?, symbolGraph?, gitRunner? }`; method `bootstrap(projectId, opts?): Promise<BootstrapResult>`), pure helpers `scanSignals`, `summarizeWithLlm`, `ruleBasedSeed`, `storeSeeds`, `countSignals`, `SeedMemoriesSchema` (zod, bounded list), singleton `bootstrapService`, `getBootstrapService()`/`resetBootstrapService()`. Types: `BootstrapSeed`, `BootstrapSignals`, `BootstrapResult`, `BootstrapOptions`, `BootstrapDeps`, `MemoryRepoSeam`, `CentralitySource`, `GitRunner`, `SeedType`, `BootstrapSource`, `SeedMemories`.
-- Core barrel re-exports Phase-4 bootstrap symbols from `packages/core/src/index.ts` (consumed by routes via `@th0th-ai/core`).
+- Core barrel re-exports Phase-4 bootstrap symbols from `packages/core/src/index.ts` (consumed by routes via `@massa-th0th/core`).
 
 **Idempotency marker scheme:**
 - A seed memory is stored with `tags: ["bootstrap", "bootstrap:<projectId>"]`. The default `MemoryRepoSeam.hasBootstrapMarker(projectId)` queries `SELECT 1 FROM memories WHERE project_id = ? AND tags LIKE '%bootstrap:<projectId>%' AND deleted_at IS NULL LIMIT 1`. A second `bootstrap()` without `force` returns `{ bootstrapped:false, skipped:true, reason:"already-bootstrapped" }` — no inserts, no event. `force:true` refresh stores a fresh batch alongside priors (no delete; the consolidation job may SUPERSEDE them later). The marker is injectable (`isBootstrapped` dep) so tests stay deterministic and dodge the closed-singleton landmine. PG marker query falls back to "not bootstrapped" (`getDb()` is SQLite-only) — a future `bootstrap_state` table can replace this.
@@ -180,7 +180,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 - `{ projectId: string; bootstrapId: string; seedMemoryIds: string[]; source: "llm" | "rule-based"; signalCount: number; memoryCount: number }`. Published once after `storeSeeds` returns ≥1 id. NOT published on no-op (`skipped:true`) or empty-signal (`source:"none"`) runs.
 
 **MCP tool + route:**
-- `th0th_bootstrap` in `TOOL_DEFINITIONS` (POST `/api/v1/bootstrap`; `projectId` required, optional `projectPath` + `force`). Dispatch is the generic POST path (`apps/mcp-client/src/index.ts`).
+- `bootstrap` in `TOOL_DEFINITIONS` (POST `/api/v1/bootstrap`; `projectId` required, optional `projectPath` + `force`). Dispatch is the generic POST path (`apps/mcp-client/src/index.ts`).
 - `apps/tools-api/src/routes/bootstrap.ts` (Elysia, prefix `/api/v1/bootstrap`): 423 when `memory.bootstrap.enabled=false`; 400 on empty `projectId`; 200 + `{ success, data: BootstrapResult }`. Wired into `apps/tools-api/src/index.ts` via `.use(bootstrapRoutes)` after `.use(hookRoutes)`.
 
 **Silent-degradation contract (mirrors Phase-2/3):**
@@ -189,7 +189,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 **Centrality reuse (no reinvention):**
 - Consumes `SymbolGraphService.getTopCentralFiles(projectId, limit)` (`packages/core/src/services/symbol/symbol-graph.service.ts:272`) — the existing PageRank ETL output. If the project is not indexed, returns `[]` (caught, not thrown). The `CentralitySource` seam is injectable for tests.
 
-**Test-isolation note (extends Phase-1/2/3 rule):** `bootstrap-service.test.ts` does NOT mock `@th0th-ai/shared`. It injects a fake `MemoryRepoSeam` (captures inserts + controls `hasBootstrapMarker`), a fake `LlmSurface` (enabled/disabled/failing), a fake `CentralitySource`, and a fake `GitRunner`; uses a temp project root with fixture README/docs/manifest files for `scanSignals`. The single P4-SEARCH-01 integration block resets the `MemoryRepository` singleton to a temp dataDir (mirrors `memory-crud.test.ts`) and restores it in `afterEach` — this is the proven pattern; no process-wide shared-config mock is added.
+**Test-isolation note (extends Phase-1/2/3 rule):** `bootstrap-service.test.ts` does NOT mock `@massa-th0th/shared`. It injects a fake `MemoryRepoSeam` (captures inserts + controls `hasBootstrapMarker`), a fake `LlmSurface` (enabled/disabled/failing), a fake `CentralitySource`, and a fake `GitRunner`; uses a temp project root with fixture README/docs/manifest files for `scanSignals`. The single P4-SEARCH-01 integration block resets the `MemoryRepository` singleton to a temp dataDir (mirrors `memory-crud.test.ts`) and restores it in `afterEach` — this is the proven pattern; no process-wide shared-config mock is added.
 
 **Seams Phase 5/6 reuse:**
 - Phase 5 (auto-improve): may consume the `bootstrap:<projectId>` seed memories (query via `tags LIKE` or the `MemoryRepoSeam.hasBootstrapMarker` seam) as a baseline for proposed edits; may also consume `bootstrap:completed` as a trigger.
@@ -205,7 +205,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 - `packages/core/src/data/handoff/handoff-repository.ts` → `HandoffStore` (interface), `MemoryHandoffStore` (in-memory fallback), `SqliteHandoffStore` (lazy open, WAL + busy_timeout=3000, `handoffs` table + 3 indexes), `getHandoffStore()`/`resetHandoffStore()` (factory mirrors ObservationStore), `newHandoffId()`, `HANDOFF_STATUSES`, `HandoffRecord`/`HandoffStatus` types.
 - `packages/core/src/services/handoff/handoff-service.ts` → `HandoffService` (ctor `HandoffDeps { store?, memoryRepo?, llm?, idFactory? }`; methods `begin(input): Promise<BeginResult>`, `accept({id, projectId?}): Promise<AcceptCancelResult>`, `cancel({id, projectId?}): Promise<AcceptCancelResult>`, `listPending(projectId, targetAgent?): HandoffRecord[]`), pure helpers `buildHandoffMemoryInput`, `formatMemoryContent`, singleton `getHandoffService()`/`resetHandoffService()`. Types: `BeginHandoffInput`, `BeginResult`, `AcceptCancelResult`, `HandoffMemorySeam`, `HandoffDeps`.
 - `packages/core/src/services/handoff/handoff-auto-injector.ts` → `HandoffAutoInjector` (ctor takes a `HandoffService`; `start()` returns an unsubscribe; subscribes `observation:ingested` → on `source:"session-start"` calls `listPending` + logs).
-- Core barrel re-exports Phase-6 handoff symbols from `packages/core/src/index.ts` (consumed by routes via `@th0th-ai/core`).
+- Core barrel re-exports Phase-6 handoff symbols from `packages/core/src/index.ts` (consumed by routes via `@massa-th0th/core`).
 
 **Handoff table schema (additive, both backends):**
 - SQLite: new `handoffs` table (`id TEXT PK, project_id, source_session_id, target_agent, summary, open_questions_json, next_steps_json, files_json, status(open|accepted|expired), created_at, accepted_at`) + 3 indexes (`idx_handoffs_project_status`, `idx_handoffs_target_agent`, `idx_handoffs_created`). DB file `handoffs.db` (WAL + busy_timeout=3000, separate from memories.db/observations.db). No ALTER (new table).
@@ -220,10 +220,10 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 - On `begin`, a `conversation` memory is stored via `MemoryRepository.insert` with `tags:["handoff","handoff:<id>","handoff:<projectId>"]`, `level:PROJECT(1)` (so it passes the FTS `level <= USER` filter — Phase-4 correction), `importance:0.7`, `embedding:[]` (FTS-only, consistent with bootstrap seeds), `metadata.source:"handoff"`. Searchable via `MemoryRepository.fullTextSearch`. Best-effort (memory insert throw → `memoryId:null`, begin still ok).
 
 **Auto-inject seam (consumes Phase-3 `observation:ingested`):**
-- `HandoffAutoInjector` subscribes `observation:ingested`; on `source:"session-start"` calls `service.listPending(projectId, agentId?)` + logs count. Deterministic surfacing primitive is `listPending` (recall path / `th0th_handoff_list_pending` MCP tool). When the Phase-3 hook is not installed, the event never fires and `listPending` still works (graceful degrade). Never blocks; never throws. Justification: reusing the typed `observation:ingested` seam keeps a single integration bus (cross-cutting §3) and avoids coupling the memory recall path to the handoff table.
+- `HandoffAutoInjector` subscribes `observation:ingested`; on `source:"session-start"` calls `service.listPending(projectId, agentId?)` + logs count. Deterministic surfacing primitive is `listPending` (recall path / `handoff_list_pending` MCP tool). When the Phase-3 hook is not installed, the event never fires and `listPending` still works (graceful degrade). Never blocks; never throws. Justification: reusing the typed `observation:ingested` seam keeps a single integration bus (cross-cutting §3) and avoids coupling the memory recall path to the handoff table.
 
 **MCP tools + route (new):**
-- `th0th_handoff_begin` / `th0th_handoff_accept` / `th0th_handoff_cancel` / `th0th_handoff_list_pending` (POST `/api/v1/handoff/{begin,accept,cancel,list}`) in `TOOL_DEFINITIONS`.
+- `handoff_begin` / `handoff_accept` / `handoff_cancel` / `handoff_list_pending` (POST `/api/v1/handoff/{begin,accept,cancel,list}`) in `TOOL_DEFINITIONS`.
 - `apps/tools-api/src/routes/handoff.ts` (Elysia prefix `/api/v1/handoff`): 4 POST handlers; 423 when `handoffs.enabled=false`; 400 on missing `projectId`/`id`; 200 + `{success, data}`. Wired into `apps/tools-api/src/index.ts` via `.use(handoffRoutes)` after `.use(bootstrapRoutes)`. Swagger tag `handoffs`.
 
 **Silent-degradation contract (mirrors Phase-2/3/4):**
@@ -232,7 +232,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 
 **Backend-polymorphic dispatch pattern:** use `getHandoffStore()`. Never re-introduce `isPostgresEnabled()` short-circuits (NF1).
 
-**Test-isolation note (extends Phase-1/2/3/4 rule):** `handoff-service.test.ts` does NOT mock `@th0th-ai/shared`. It injects `MemoryHandoffStore` + fake `HandoffMemorySeam` + fake `LlmSurface` + deterministic `idFactory`. The single P6-SEARCH-01 block resets the MemoryRepository singleton to a temp DB (mirrors P4-SEARCH-01) + restores it. `handoff-repository.test.ts` uses explicit temp `dbPath`. No `mock.module`.
+**Test-isolation note (extends Phase-1/2/3/4 rule):** `handoff-service.test.ts` does NOT mock `@massa-th0th/shared`. It injects `MemoryHandoffStore` + fake `HandoffMemorySeam` + fake `LlmSurface` + deterministic `idFactory`. The single P6-SEARCH-01 block resets the MemoryRepository singleton to a temp DB (mirrors P4-SEARCH-01) + restores it. `handoff-repository.test.ts` uses explicit temp `dbPath`. No `mock.module`.
 
 **Seams Phase 5/7/8 reuse:**
 - Phase 5 (auto-improve): may consume `handoff:accepted` as a trigger + `HandoffService.listPending` + the Observation store (`listRecent`) + Synapse sessions to detect patterns; the handoff dual-write memories + bootstrap seed memories give a baseline for proposed edits.
@@ -247,7 +247,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 **Services exported (path + symbol) — what Phase 7/8 consumes:**
 - `packages/core/src/data/proposal/proposal-repository.ts` → `ProposalStore` (interface), `MemoryProposalStore` (in-memory fallback), `SqliteProposalStore` (lazy open, WAL + busy_timeout=3000, `proposals` table + 2 indexes), `getProposalStore()`/`resetProposalStore()` (factory mirrors HandoffStore/ObservationStore), `newProposalId()`, `PROPOSAL_STATUSES`, `ProposalStatus`, `PROPOSAL_KINDS`, `ProposalKind`, `ProposalPayload` (typed union), `ProposalRecord`. Types: `CreateMemoryPayload`/`UpdateMemoryPayload`/`TagMemoryPayload`.
 - `packages/core/src/services/jobs/auto-improve-job.ts` → `AutoImproveJob` (ctor `AutoImproveJobOptions { llm?, observationStore?, proposalStore?, memoryRepo?, minObservations?, minIntervalMs?, maxWindow?, thresholds?, reviewGate?, idFactory? }`; methods `maybeRun(projectId)` debounce fire-and-forget, `runOnce(projectId): Promise<AutoImproveResult>`, `approve(id, projectId?, source?): Promise<ApproveRejectResult>`, `reject(id, projectId?, reason?): Promise<ApproveRejectResult>`, `listPending(projectId): ProposalRecord[]`), pure helpers `detectPatterns(observations, thresholds): PatternCandidate[]`, `enrichWithLlm(candidates, observations, surface)`, `ProposalEnrichmentSchema`, singleton `autoImproveJob` + `getAutoImproveJob()`/`resetAutoImproveJob()`. Types: `AutoImproveJobOptions`, `AutoImproveResult`, `PatternThresholds`, `PatternCandidate`, `ProposalEnrichment`, `MemoryApplySeam`, `ApproveRejectResult`.
-- Core barrel re-exports Phase-5 symbols from `packages/core/src/index.ts` (consumed by routes via `@th0th-ai/core`).
+- Core barrel re-exports Phase-5 symbols from `packages/core/src/index.ts` (consumed by routes via `@massa-th0th/core`).
 
 **Proposals table schema (additive, both backends):**
 - SQLite: new `proposals` table (`id TEXT PK, project_id, kind, target_memory_id?, payload_json, rationale, status(pending|approved|rejected), created_at INTEGER, decided_at INTEGER?`) + 2 indexes (`idx_proposals_project_status`, `idx_proposals_created`). DB file `proposals.db` (WAL + busy_timeout=3000, separate from memories.db/observations.db/handoffs.db). No ALTER (new table).
@@ -263,12 +263,12 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 - `enrichWithLlm`: when `llm.isEnabled()`, a single `surface.object(prompt, ProposalEnrichmentSchema)` refines content + rationale by signalKey. `{ok:false}`/throw/empty/invalid-kind → candidates verbatim (silent degrade; never throws, never blocks).
 
 **Review-gate vs auto-approve (default auto-approve + logging):**
-- `memory.autoImprove.reviewGate` (default false). When false (default), `runOnce` auto-applies each pending proposal in the SAME run by calling `this.approve(record.id, projectId, source)` — single code path, so the state machine + event emission is identical to explicit approval. `logger.info("proposal:auto-approved", { id, projectId, kind })` records the decision (audit trail = the row's decidedAt + the memory:auto-improved event + the log line). When true, proposals stay pending for surfacing via `th0th_list_proposals` + `th0th_approve_proposal`.
+- `memory.autoImprove.reviewGate` (default false). When false (default), `runOnce` auto-applies each pending proposal in the SAME run by calling `this.approve(record.id, projectId, source)` — single code path, so the state machine + event emission is identical to explicit approval. `logger.info("proposal:auto-approved", { id, projectId, kind })` records the decision (audit trail = the row's decidedAt + the memory:auto-improved event + the log line). When true, proposals stay pending for surfacing via `list_proposals` + `approve_proposal`.
 
 **Audit trail:** every approved/rejected proposal carries `status` + `decidedAt` + `rationale`; approved proposals additionally emit `memory:auto-improved` + a `proposal:auto-approved`/`proposal:approved`/`proposal:rejected` log line. The proposals row IS the audit record (no separate audit table).
 
 **MCP tools + route (new):**
-- `th0th_list_proposals` / `th0th_approve_proposal` / `th0th_reject_proposal` (POST `/api/v1/proposal/{list,approve,reject}`) in `TOOL_DEFINITIONS`.
+- `list_proposals` / `approve_proposal` / `reject_proposal` (POST `/api/v1/proposal/{list,approve,reject}`) in `TOOL_DEFINITIONS`.
 - `apps/tools-api/src/routes/proposals.ts` (Elysia prefix `/api/v1/proposal`): 3 POST handlers; 423 when `memory.autoImprove.enabled=false`; 400 on missing `projectId`/`id`; 200 + `{ success, data }`. Wired into `apps/tools-api/src/index.ts` via `.use(proposalRoutes)` after `.use(handoffRoutes)`. Swagger tag `proposals`.
 
 **Silent-degradation contract (mirrors Phase-2/3/4/6):**
@@ -276,7 +276,7 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 
 **Backend-polymorphic dispatch pattern:** use `getProposalStore()`. Never re-introduce `isPostgresEnabled()` short-circuits.
 
-**Test-isolation note (extends Phase-1..6 rule):** `auto-improve-job.test.ts` does NOT mock `@th0th-ai/shared`. It injects `MemoryProposalStore` + `MemoryObservationStore` (pre-loaded with deterministic observations) + fake `MemoryApplySeam` (captures inserts/updates; controls failNext) + fake `LlmSurface` (enabled/disabled/failing/throwing/enriching) + deterministic `idFactory`. No `mock.module`. No real MemoryRepository singleton is touched (the closed-singleton landmine from memory-crud.test.ts is avoided via the `memoryRepo` ctor-seam — mirrors ObservationConsolidationJob/BootstrapDeps/HandoffDeps). `proposal-repository.test.ts` uses explicit temp `dbPath`.
+**Test-isolation note (extends Phase-1..6 rule):** `auto-improve-job.test.ts` does NOT mock `@massa-th0th/shared`. It injects `MemoryProposalStore` + `MemoryObservationStore` (pre-loaded with deterministic observations) + fake `MemoryApplySeam` (captures inserts/updates; controls failNext) + fake `LlmSurface` (enabled/disabled/failing/throwing/enriching) + deterministic `idFactory`. No `mock.module`. No real MemoryRepository singleton is touched (the closed-singleton landmine from memory-crud.test.ts is avoided via the `memoryRepo` ctor-seam — mirrors ObservationConsolidationJob/BootstrapDeps/HandoffDeps). `proposal-repository.test.ts` uses explicit temp `dbPath`.
 
 **Bug fixed in 67e9ed6 (load-bearing for P5-APPROVE-01):** `AutoImproveJob.approve` previously mutated a local `row.targetMemoryId` that was then shadowed by the store's `getById` result, so `memory:auto-improved` emitted `targetMemoryId=undefined` for `memory.create` proposals even though the memory had been applied. The fix captures the freshly-assigned id from `applyProposal` and surfaces it onto the returned record + event payload AFTER the status flip.
 
@@ -326,12 +326,12 @@ schema, EventBus events, seams). Not the spec; canonical state stays in
 
 **Serve strategy (chosen):** the read-only web UI is served by the existing
 Tools API (Elysia) on `/ui/*` — single deployment, single port
-(`TH0TH_API_PORT`, default **3333**), same-origin (no CORS for same-host use).
+(`MASSA_TH0TH_API_PORT`, default **3333**), same-origin (no CORS for same-host use).
 Launch: `bun run dev:api` (or `bun run start:api`) → open
 **`http://localhost:3333/ui/`**. Disable with `WEB_UI_ENABLED=false` (404).
 
 **New package + route:**
-- `apps/web-ui/` — zero-dependency `@th0th-ai/web-ui` package. Static bundle in
+- `apps/web-ui/` — zero-dependency `@massa-th0th/web-ui` package. Static bundle in
   `src/static/{index.html, styles.css, app.js}` (plain HTML/CSS/JS, no SPA
   framework, no markdown/highlight lib). `src/index.ts` is a tsc anchor only
   (tsc rejects a pure-JS program; the static JS is `allowJs`/`checkJs:false` —
@@ -366,7 +366,7 @@ Launch: `bun run dev:api` (or `bun run start:api`) → open
   (raw `<script>` neutralized). No `marked`/`markdown-it` dep. No syntax
   highlighter (fenced code = styled monospace; future CDN lazy-load).
 - Dark mode: `toggleTheme`/`initTheme` flip `document.documentElement`
-  `data-theme`; persisted in `localStorage["th0th-ui-theme"]`; no-FOUC via an
+  `data-theme`; persisted in `localStorage["massa-th0th-ui-theme"]`; no-FOUC via an
   inline `<head>` script that applies the attribute before paint.
 
 **Read-only guarantee (enforced):**
@@ -381,7 +381,7 @@ Launch: `bun run dev:api` (or `bun run start:api`) → open
   the 5 read-only view hash links.
 
 **Test-isolation note (extends Phase-1..7 rule):** web-ui tests do NOT mock
-`@th0th-ai/shared`. The pure renderers + markdown + theme helpers are imported
+`@massa-th0th/shared`. The pure renderers + markdown + theme helpers are imported
 from `app.js` via `createRequire` (bun runs JS natively; the browser-init block
 is `typeof document`-guarded). The serve test invokes `webUiRoutes.handle(Request)`
 directly (no server boot). No real `MemoryRepository` singleton is touched. A
@@ -390,7 +390,7 @@ the 11 pre-existing auth/checkpoints tests + the 39 new web-ui tests into the
 turbo gate (previously orphaned).
 
 **Gates:** `bun run test` — core 893/0/46 (no regression), mcp-client 7/0,
-tools-api 50/0 (newly in gate). `bun run type-check` 6/6 (added @th0th-ai/web-ui
+tools-api 50/0 (newly in gate). `bun run type-check` 6/6 (added @massa-th0th/web-ui
 task). Same-author verifier: PASS — every AC file:line-anchored, read-only
 discrimination mutant killed (3 failing tests), objective gate.
 
@@ -403,9 +403,9 @@ Phase 8 is the FINAL phase of the 0→8 plan.
 | 0 | 538fe66 4e27925 c25f9d3 b84ea3e be65877 a1e5ca2 3fb4eb1 | quick wins + specs + validation |
 | 1 | befa3cb e49ffa9 12fe002 1ccb42c | memory foundation: decay/pinned/soft-delete, llm-client+consolidator+polymorphic job+read-side, durable sessions/jobs |
 | 2 | ebcc202 5b0ba18 6a7598f 6cb5edb f2acceb | query understanding: config gate, rewrite+hyde+cache service, search fan-out, search:query-rewritten/reranked events, tests |
-| 3 | 9f8b7a1 f28c30e b950df7 8fb0cac | passive capture: hooks config + Observation store (WAL) + writer queue + 429 + HookService + Elysia routes + consolidation bridge + Claude Code hook scripts + th0th_hook_ingest + observation:ingested event, tests |
-| 4 | c022731 1be1a1c ae296e7 773a130 3fec6fd | bootstrap from repo: memory.bootstrap config + bootstrap:completed event + BootstrapService (scan git/README/docs/manifests/centrality, LLM llmObject+SeedMemoriesSchema, rule-based fallback, idempotent bootstrap:<projectId> tag marker, silent degradation) + th0th_bootstrap MCP tool + /api/v1/bootstrap route + barrel re-exports, tests |
+| 3 | 9f8b7a1 f28c30e b950df7 8fb0cac | passive capture: hooks config + Observation store (WAL) + writer queue + 429 + HookService + Elysia routes + consolidation bridge + Claude Code hook scripts + hook_ingest + observation:ingested event, tests |
+| 4 | c022731 1be1a1c ae296e7 773a130 3fec6fd | bootstrap from repo: memory.bootstrap config + bootstrap:completed event + BootstrapService (scan git/README/docs/manifests/centrality, LLM llmObject+SeedMemoriesSchema, rule-based fallback, idempotent bootstrap:<projectId> tag marker, silent degradation) + bootstrap MCP tool + /api/v1/bootstrap route + barrel re-exports, tests |
 | 6 | d3ccd2e 60e799b 4d8ac60 8f2f0a0 1a4bc40 | cross-session handoffs: handoffs.enabled config + handoff:accepted event + HandoffStore (SQLite WAL handoffs.db + Memory fallback + factory) + HandoffService (begin/accept/cancel/listPending, state machine open→accepted|expired, dual-write conversation memory PROJECT/0.7/handoff:<id> tags/no embedding, optional LLM summary-polish default-off silent-degrade, never throws) + HandoffAutoInjector (observation:ingested session-start → listPending) + 4 MCP tools + /api/v1/handoff routes + Prisma Handoff model + barrel re-exports, tests |
 | 5 | a4c86ff d42086a d3242cb ba971b0 67e9ed6 | auto-improvement loop: memory.autoImprove config (default-on detect, reviewGate=false auto-approve, env AUTO_IMPROVE_*) + memory:auto-improved event + ProposalStore (SQLite WAL proposals.db + Memory fallback + factory, no isPostgresEnabled) + AutoImproveJob (ctor-seam, detectPatterns pure rule-based query/file/fix signals, enrichWithLlm optional silent-degrade, runOnce debounce, reviewGate=false auto-approve reuses approve() single code path, apply/reject state machine pending→approved|rejected with defense-in-depth WHERE guard, listPending) + 3 MCP tools + /api/v1/proposal routes + Prisma Proposal model + barrel re-exports + approve targetMemoryId fix, tests |
 | 7 | 3d7fa86 b201531 2c043f2 3716e66 d0adee1 784fe00 9bded69 | retrieval + compression polish: 7e characterization tests (etl-pipeline/smart-chunker/code-compressor/csrlm-e2e) + ContextualSearchRLM injected-deps ctor seam; 7a LLMJudgeReranker (services/search/reranker.ts, llmObject+RerankVerdictSchema, top-K window=50, silent-degrade) wired into SearchController after applyBoost + search.rerank config + optional source:"llm-judge" on search:reranked; 7b SalienceJudge (services/memory/salience-judge.ts) + caller-wins wire in MemoryController.store + memory.autoImportance config + memory:salience-scored event; 7c GraphStore.bfsNeighbors (SQLite sync + Pg async, outgoing-only, visited dedup) + 3rd RRF stream in ContextualSearchRLM.search (fixed 0.45, silent-omit); 7d code-compressor LLM branch (regex-always-first fallback, isLlmEnabled gate, metadata.compressionSource on CompressionMetadata); 7f EmbeddingService relocated to services/embeddings/embedding-service.ts + barrel re-export, 4 live importers + hybrid-search dead importer redirected, data/chromadb/{vector-store,index}.ts deleted, postgres getCollection already clear-errors, 5 test mock.module targets retargeted; tests |
-| 8 | bd5d888 71f0727 46c2995 01971e3 58a1d5e | web UI [G5]: zero-dep @th0th-ai/web-ui package (vanilla HTML/CSS/JS in src/static/) served by Tools API at /ui/* (single port 3333, WEB_UI_ENABLED gate, content-type map + traversal guard + cwd-ancestor static-root resolution); app.js single source (createApiClient same-origin /api/v1, 5 pure view renderers, minimal vanilla markdownToHtml with HTML-escape, initTheme/toggleTheme data-theme+localStorage no-FOUC, hash router, guarded browser bootstrap, FORBIDDEN_MUTATING_PATHS); styles.css CSS variables + [data-theme=dark]; additive level filter on /memory/list (read-only route condition, no core change); 4 test files (serve/views/render/readonly) + test script on tools-api package.json (brings pre-existing auth/checkpoints + 39 web-ui tests into turbo gate); read-only enforced by request-target static scan + discrimination sensor; FINAL phase |
+| 8 | bd5d888 71f0727 46c2995 01971e3 58a1d5e | web UI [G5]: zero-dep @massa-th0th/web-ui package (vanilla HTML/CSS/JS in src/static/) served by Tools API at /ui/* (single port 3333, WEB_UI_ENABLED gate, content-type map + traversal guard + cwd-ancestor static-root resolution); app.js single source (createApiClient same-origin /api/v1, 5 pure view renderers, minimal vanilla markdownToHtml with HTML-escape, initTheme/toggleTheme data-theme+localStorage no-FOUC, hash router, guarded browser bootstrap, FORBIDDEN_MUTATING_PATHS); styles.css CSS variables + [data-theme=dark]; additive level filter on /memory/list (read-only route condition, no core change); 4 test files (serve/views/render/readonly) + test script on tools-api package.json (brings pre-existing auth/checkpoints + 39 web-ui tests into turbo gate); read-only enforced by request-target static scan + discrimination sensor; FINAL phase |

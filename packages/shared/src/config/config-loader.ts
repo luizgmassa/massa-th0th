@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
-import { Th0thConfig, defaultTh0thConfig } from "./th0th-config";
+import { MassaTh0thConfig, defaultMassaTh0thConfig } from "./massa-th0th-config";
 
-const CONFIG_DIR = path.join(os.homedir(), ".config", "th0th");
+const CONFIG_DIR = path.join(os.homedir(), ".config", "massa-th0th");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
 
 export function getConfigDir(): string {
@@ -18,9 +18,9 @@ export function configExists(): boolean {
   return fs.existsSync(CONFIG_FILE);
 }
 
-export function loadConfig(): Th0thConfig {
+export function loadConfig(): MassaTh0thConfig {
   if (!fs.existsSync(CONFIG_FILE)) {
-    return defaultTh0thConfig;
+    return defaultMassaTh0thConfig;
   }
 
   try {
@@ -28,20 +28,20 @@ export function loadConfig(): Th0thConfig {
     const userConfig = JSON.parse(content);
     
     return {
-      ...defaultTh0thConfig,
+      ...defaultMassaTh0thConfig,
       ...userConfig,
-      embedding: { ...defaultTh0thConfig.embedding, ...userConfig.embedding },
-      compression: { ...defaultTh0thConfig.compression, ...userConfig.compression },
-      cache: { ...defaultTh0thConfig.cache, ...userConfig.cache },
-      logging: { ...defaultTh0thConfig.logging, ...userConfig.logging },
+      embedding: { ...defaultMassaTh0thConfig.embedding, ...userConfig.embedding },
+      compression: { ...defaultMassaTh0thConfig.compression, ...userConfig.compression },
+      cache: { ...defaultMassaTh0thConfig.cache, ...userConfig.cache },
+      logging: { ...defaultMassaTh0thConfig.logging, ...userConfig.logging },
     };
   } catch (error) {
     console.error(`Error loading config from ${CONFIG_FILE}:`, error);
-    return defaultTh0thConfig;
+    return defaultMassaTh0thConfig;
   }
 }
 
-export function saveConfig(config: Th0thConfig): void {
+export function saveConfig(config: MassaTh0thConfig): void {
   if (!fs.existsSync(CONFIG_DIR)) {
     fs.mkdirSync(CONFIG_DIR, { recursive: true });
   }
@@ -51,7 +51,7 @@ export function saveConfig(config: Th0thConfig): void {
 
 export function initConfig(): void {
   if (!fs.existsSync(CONFIG_FILE)) {
-    saveConfig(defaultTh0thConfig);
+    saveConfig(defaultMassaTh0thConfig);
     console.log(`Created default config at ${CONFIG_FILE}`);
   }
 }

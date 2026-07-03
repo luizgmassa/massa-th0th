@@ -10,7 +10,7 @@ import {
   MemoryEdge,
   MemoryRelationType,
   logger,
-} from "@th0th-ai/shared";
+} from "@massa-th0th/shared";
 import type { PrismaClient } from "../../generated/prisma/index.js";
 
 /**

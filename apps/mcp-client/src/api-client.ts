@@ -20,8 +20,8 @@ export class ApiClient {
 
   constructor(config?: Partial<ApiClientConfig>) {
     this.baseUrl =
-      config?.baseUrl || process.env.TH0TH_API_URL || "http://localhost:3333";
-    this.apiKey = config?.apiKey || process.env.TH0TH_API_KEY || "";
+      config?.baseUrl || process.env.MASSA_TH0TH_API_URL || "http://localhost:3333";
+    this.apiKey = config?.apiKey || process.env.MASSA_TH0TH_API_KEY || "";
     this.timeoutMs = config?.timeoutMs || 30000;
     this.maxRetries = config?.maxRetries || 2;
   }

@@ -28,8 +28,8 @@ import {
 import { analyzeSpectrum } from "../services/synapse/metacognition/score-spectrum.js";
 import { SynapseManager } from "../services/synapse/synapse-manager.js";
 import { inferTypeFromPath } from "../services/synapse/inhibition/type-inference.js";
-import type { SearchResult, SynapseRuntimeConfig } from "@th0th-ai/shared";
-import { SearchSource } from "@th0th-ai/shared";
+import type { SearchResult, SynapseRuntimeConfig } from "@massa-th0th/shared";
+import { SearchSource } from "@massa-th0th/shared";
 
 function r(id: string, score: number, meta: Record<string, unknown> = {}): SearchResult {
   return { id, content: id, score, source: SearchSource.VECTOR, metadata: meta as any };

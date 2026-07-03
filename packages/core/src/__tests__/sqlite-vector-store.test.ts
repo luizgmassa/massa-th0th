@@ -10,7 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test";
-import { SearchSource } from "@th0th-ai/shared";
+import { SearchSource } from "@massa-th0th/shared";
 import fs from "fs";
 import path from "path";
 import os from "os";
@@ -52,8 +52,8 @@ mock.module("../services/embeddings/index.js", () => ({
 
 // Mock config
 let testDbPath: string;
-mock.module("@th0th-ai/shared", () => {
-  const actual = require("@th0th-ai/shared");
+mock.module("@massa-th0th/shared", () => {
+  const actual = require("@massa-th0th/shared");
   return {
     ...actual,
     config: {

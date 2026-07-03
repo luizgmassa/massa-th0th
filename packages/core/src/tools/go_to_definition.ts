@@ -1,11 +1,11 @@
 /**
- * Go To Definition Tool (th0th_go_to_definition)
+ * Go To Definition Tool (go_to_definition)
  *
  * Resolves where a symbol is declared, with disambiguation by calling context.
  * Returns file path, line range, doc comment, and code snippet.
  */
 
-import { IToolHandler, ToolResponse } from "@th0th-ai/shared";
+import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
 import { symbolGraphService } from "../services/symbol/symbol-graph.service.js";
 
 interface GoToDefinitionParams {

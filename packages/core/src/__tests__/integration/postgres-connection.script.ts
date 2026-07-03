@@ -4,7 +4,7 @@
  */
 
 import { getPrismaClient, disconnectPrisma } from "../../services/query/prisma-client.js";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 
 async function testConnection() {
   try {

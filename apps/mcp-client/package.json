@@ -1,13 +1,13 @@
 {
-  "name": "@th0th-ai/mcp-client",
-  "version": "1.1.5",
-  "description": "th0th MCP server - Semantic code search, memory, and context compression via Model Context Protocol",
+  "name": "@massa-th0th/mcp-client",
+  "version": "1.0.0",
+  "description": "massa-th0th MCP server - Semantic code search, memory, and context compression via Model Context Protocol",
   "author": "S1LV4",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "th0th": "dist/index.js",
-    "th0th-config": "dist/config-cli.js"
+    "massa-th0th": "dist/index.js",
+    "massa-th0th-config": "dist/config-cli.js"
   },
   "files": [
     "dist"
@@ -20,7 +20,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@th0th-ai/shared": "workspace:*",
+    "@massa-th0th/shared": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
@@ -31,6 +31,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/S1LV4/th0th"
+    "url": "https://github.com/S1LV4/massa-th0th"
   }
 }

@@ -15,7 +15,7 @@
  *    LLM-touching stage and it silent-degrades.
  */
 
-import { config, logger } from "@th0th-ai/shared";
+import { config, logger } from "@massa-th0th/shared";
 import { eventBus } from "../events/event-bus.js";
 import {
   getObservationStore,
@@ -285,7 +285,7 @@ export class ValidationError extends Error {
 
 // ── Defensive config reader ─────────────────────────────────────────────────
 // Real config always has the hooks block (added in Phase 3). Some test files
-// mock @th0th-ai/shared process-wide and omit it; fall back to spec defaults
+// mock @massa-th0th/shared process-wide and omit it; fall back to spec defaults
 // (mirrors the Phase-2 QueryUnderstandingService defensive reader pattern).
 
 const FALLBACK_HOOKS = {

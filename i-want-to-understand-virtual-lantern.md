@@ -56,7 +56,7 @@ The merged plan keeps massa-th0th **SQLite-canonical** (no markdown wiki / git s
 
 ### 0c. Memory CRUD [G9]
 - **Gap:** only store/recall/list exist; no update/delete.
-- Add MCP tools `th0th_memory_update` (content/importance/tags/tags merge) + `th0th_memory_delete` (soft then hard). Reuse `MemoryRepository`; delete should sever GraphStore edges. Add API routes under `apps/tools-api/src/routes/memory.ts`.
+- Add MCP tools `memory_update` (content/importance/tags/tags merge) + `memory_delete` (soft then hard). Reuse `MemoryRepository`; delete should sever GraphStore edges. Add API routes under `apps/tools-api/src/routes/memory.ts`.
 - Files: `apps/mcp-client/src/tool-definitions.ts`, `packages/core/src/tools/memory-update.ts` + `memory-delete.ts`, `data/memory/memory-repository.ts`.
 - **Risk S · Effort S.** Verify: `memory-crud.test.ts`.
 
@@ -102,18 +102,18 @@ The merged plan keeps massa-th0th **SQLite-canonical** (no markdown wiki / git s
 ---
 
 ## Phase 3 — Passive memory capture [G1]  *(largest new scope)*
-- **Gap:** memory is manual (`th0th_remember`). ai-memory's killer feature is passive capture.
+- **Gap:** memory is manual (`remember`). ai-memory's killer feature is passive capture.
 - **Create** `services/hooks/hook-service.ts` — lifecycle event ingestion: `session-start`, `user-prompt`, `pre-tool-use`, `post-tool-use`, `pre-compact`, `session-end`. Fire-and-forget (202), 429 on saturation (cross-cutting #4 writer queue).
 - **Create** `data/memory/observation-repository.ts` + **Observation table** (SQLite-canonical): `id, project_id, session_id, source(event), payload_json, importance, created_at`.
 - **Routes:** `apps/tools-api/src/routes/hooks.ts` — `POST /api/v1/hook` + `POST /api/v1/hook/batch`.
 - **Consolidation bridge:** periodic job (extend `memory-consolidation-job.ts` or new `observation-consolidation-job.ts`) summarizes raw observations → structured memories via `llm-client` + `consolidator`. Emit `observation:ingested`.
-- **Integration:** generate Claude Code hook scripts (`SessionStart`, `UserPromptSubmit`, `PostToolUse`, `Stop`) under `apps/claude-plugin` or `skills/` that `curl` the endpoint. Optional MCP tool `th0th_hook_ingest` for non-Claude hosts.
+- **Integration:** generate Claude Code hook scripts (`SessionStart`, `UserPromptSubmit`, `PostToolUse`, `Stop`) under `apps/claude-plugin` or `skills/` that `curl` the endpoint. Optional MCP tool `hook_ingest` for non-Claude hosts.
 - **Dependencies:** Phase 1 (llm-client, consolidation). **Risk M · Effort L · Migration: new Observations table.**
 
 ---
 
 ## Phase 4 — Bootstrap from repo [G6]
-- **Create** MCP tool `th0th_bootstrap` + `services/bootstrap/bootstrap-service.ts`.
+- **Create** MCP tool `bootstrap` + `services/bootstrap/bootstrap-service.ts`.
 - Scan `git log --oneline`, `README.md`, `docs/`, package manifests, top central files (reuse `project_map` PageRank output) → LLM-summarized **seed memories** (types `pattern`/`code`/`decision`). Idempotent (skip if project already bootstrapped). Emit `bootstrap:completed`.
 - Reuses `llm-client` + ETL centrality data.
 - **Risk M · Effort M · Migration none.** Verify: run on this repo, assert seed memories created + searchable.
@@ -122,14 +122,14 @@ The merged plan keeps massa-th0th **SQLite-canonical** (no markdown wiki / git s
 
 ## Phase 5 — Auto-improvement loop [G7]
 - **Create** `services/jobs/auto-improve-job.ts` — scheduled review of completed Synapse sessions / recent observations; detect patterns (repeated queries, common fixes, frequently-referenced files); propose memory edits as `pending` proposals with audit trail. Optional review gate (`memory.autoImprove.reviewGate`); default auto-approve with logging.
-- Surfaces proposed edits via a new tool/route `th0th_list_proposals` + `th0th_approve_proposal` (or auto-apply). Emit `memory:auto-improved`.
+- Surfaces proposed edits via a new tool/route `list_proposals` + `approve_proposal` (or auto-apply). Emit `memory:auto-improved`.
 - **Dependencies:** Phase 3 (observations) or session data. **Risk M · Effort M · Migration: proposals table (pending/approved/rejected).**
 
 ---
 
 ## Phase 6 — Cross-session handoffs [G2]
 - **Create** `services/handoff/handoff-service.ts` + **Handoff table** (SQLite-canonical): `id, source_session_id, target_agent, summary, open_questions_json, next_steps_json, files_json, status(open/accepted/expired), created_at, accepted_at`.
-- MCP tools `th0th_handoff_begin` / `th0th_handoff_accept` / `th0th_handoff_cancel`. Route `apps/tools-api/src/routes/handoff.ts`.
+- MCP tools `handoff_begin` / `handoff_accept` / `handoff_cancel`. Route `apps/tools-api/src/routes/handoff.ts`.
 - Auto-inject pending handoff into context on session start (consumes Phase 3 SessionStart hook or a check in `recall`).
 - **Dual-write** handoff as a `conversation`/`decision` memory for searchability. Emit `handoff:accepted`.
 - **Risk S-M · Effort S-M · Migration: new Handoff table.**
@@ -201,12 +201,12 @@ Recommended order: **0 → 1 → 2 → 3 → 4 → 6 → 5 → 7(e first) → 8.
 **End-to-end via MCP (local-first Ollama):**
 1. `ollama serve` + `ollama pull bge-m3` + `ollama pull qwen2.5-coder:7b`.
 2. `bun run dev:api` + `bun run dev:mcp`.
-3. `th0th_index` multi-language fixture → all 30+ exts indexed (0a); SSE job survives API restart (Phase 3).
-4. `th0th_search "auth middleware"` with `RLM_LLM_ENABLED=true` → rewrite fires (`search:query-rewritten`), HyDE vector joins fusion, beats rewrite-off baseline.
-5. `th0th_remember` w/o `importance` → auto-salience (7b); wait consolidation interval → SUPERSEDES edge appears.
+3. `index` multi-language fixture → all 30+ exts indexed (0a); SSE job survives API restart (Phase 3).
+4. `search "auth middleware"` with `RLM_LLM_ENABLED=true` → rewrite fires (`search:query-rewritten`), HyDE vector joins fusion, beats rewrite-off baseline.
+5. `remember` w/o `importance` → auto-salience (7b); wait consolidation interval → SUPERSEDES edge appears.
 6. **Hook e2e:** install Claude Code hook scripts, run a session → Observation rows appear → consolidated into memory.
-7. **Bootstrap e2e:** `th0th_bootstrap` on this repo → seed memories created + searchable.
-8. **Handoff e2e:** `th0th_handoff_begin` → new session → `recall` surfaces it → `th0th_handoff_accept`.
+7. **Bootstrap e2e:** `bootstrap` on this repo → seed memories created + searchable.
+8. **Handoff e2e:** `handoff_begin` → new session → `recall` surfaces it → `handoff_accept`.
 9. **Web UI:** serves + FTS search returns results + memory browser renders.
 10. `RLM_LLM_ENABLED=false` → every LLM feature degrades silently, no errors.
 

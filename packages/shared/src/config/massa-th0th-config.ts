@@ -1,4 +1,4 @@
-export interface Th0thConfig {
+export interface MassaTh0thConfig {
   embedding: {
     provider: "ollama" | "mistral" | "openai" | "google" | "cohere";
     model: string;
@@ -65,7 +65,7 @@ export interface SynapseConfig {
   };
 }
 
-export const defaultTh0thConfig: Th0thConfig = {
+export const defaultMassaTh0thConfig: MassaTh0thConfig = {
   embedding: {
     provider: "ollama",
     model: "nomic-embed-text:latest",
@@ -83,7 +83,7 @@ export const defaultTh0thConfig: Th0thConfig = {
     l2MaxSizeMB: 500,
     defaultTTLSeconds: 3600,
   },
-  dataDir: "~/.rlm",
+  dataDir: "~/.massa-th0th-data",
   logging: {
     level: "info",
     enableMetrics: false,

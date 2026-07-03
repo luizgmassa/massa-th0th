@@ -1,7 +1,7 @@
 /**
  * HookService tests (Phase 3).
  *
- * Test-isolation rule (Phase 1/2): do NOT `mock.module("@th0th-ai/shared")` —
+ * Test-isolation rule (Phase 1/2): do NOT `mock.module("@massa-th0th/shared")` —
  * it is process-wide. Construct HookService with injected MemoryObservationStore
  * + a fake bridge + explicit maxPending/maxPayloadBytes so no shared config
  * singleton is relied upon.

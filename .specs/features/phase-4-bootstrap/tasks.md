@@ -35,7 +35,7 @@ Commits. Branch `main` (never `git push`).
 - Commit: `feat(bootstrap): add BootstrapService with scan, LLM/rule-based seed, idempotency`
 
 ## Task 4 — MCP tool + API route + barrel re-exports
-- Append `th0th_bootstrap` tool definition to `TOOL_DEFINITIONS` in
+- Append `bootstrap` tool definition to `TOOL_DEFINITIONS` in
   `apps/mcp-client/src/tool-definitions.ts`.
 - Create `apps/tools-api/src/routes/bootstrap.ts` (Elysia, mirroring
   `routes/hooks.ts`): `POST /api/v1/bootstrap` → `getBootstrapService().bootstrap(...)`,
@@ -43,7 +43,7 @@ Commits. Branch `main` (never `git push`).
 - Wire into `apps/tools-api/src/index.ts`: import + `.use(bootstrapRoutes)`.
 - Re-export bootstrap symbols from `packages/core/src/index.ts` (core barrel).
 - Verify: `bun run type-check` clean.
-- Commit: `feat(bootstrap): wire th0th_bootstrap MCP tool + API route + barrel exports`
+- Commit: `feat(bootstrap): wire bootstrap MCP tool + API route + barrel exports`
 
 ## Task 5 — Tests + validation + ledger update
 - Create `packages/core/src/__tests__/bootstrap-service.test.ts` covering:

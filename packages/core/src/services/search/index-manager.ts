@@ -10,8 +10,8 @@
 import fs from "fs";
 import path from "path";
 import { glob } from "glob";
-import { logger, config, DEFAULT_ALLOWED_EXTENSIONS } from "@th0th-ai/shared";
-import type { IVectorStore } from "@th0th-ai/shared";
+import { logger, config, DEFAULT_ALLOWED_EXTENSIONS } from "@massa-th0th/shared";
+import type { IVectorStore } from "@massa-th0th/shared";
 import { loadProjectIgnore } from "./ignore-patterns.js";
 
 const globAsync = glob;

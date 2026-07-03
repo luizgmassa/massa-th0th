@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # ============================================================
-#  th0th - Installer
-#  https://github.com/S1LV4/th0th
+#  massa-th0th - Installer
+#  https://github.com/S1LV4/massa-th0th
 #
 #  Usage:
-#    curl -fsSL https://raw.githubusercontent.com/S1LV4/th0th/main/install.sh | bash
+#    curl -fsSL https://raw.githubusercontent.com/S1LV4/massa-th0th/main/install.sh | bash
 #
 #  Environment overrides (export before piping):
-#    TH0TH_MODE=docker|build|source   Installation mode (default: docker)
-#    TH0TH_DIR=/path/to/install        Where to install (default: ~/.th0th)
-#    TH0TH_API_PORT=3333               API port
-#    TH0TH_POSTGRES_PORT=5432          PostgreSQL port
-#    POSTGRES_PASSWORD=<pass>          DB password (default: th0th_password)
+#    MASSA_TH0TH_MODE=docker|build|source   Installation mode (default: docker)
+#    MASSA_TH0TH_DIR=/path/to/install        Where to install (default: ~/.massa-th0th)
+#    MASSA_TH0TH_API_PORT=3333               API port
+#    MASSA_TH0TH_POSTGRES_PORT=5432          PostgreSQL port
+#    POSTGRES_PASSWORD=<pass>          DB password (default: massa_th0th_password)
 #    OLLAMA_BASE_URL=http://...        Override Ollama URL
-#    TH0TH_BRANCH=main                 Git branch (source/build mode)
-#    TH0TH_NO_START=1                  Skip starting services after install
+#    MASSA_TH0TH_BRANCH=main                 Git branch (source/build mode)
+#    MASSA_TH0TH_NO_START=1                  Skip starting services after install
 # ============================================================
 
 set -e
@@ -32,8 +32,8 @@ die()  { err "$*"; exit 1; }
 # ── Version detection ─────────────────────────────────────────
 # Fetches version from GitHub (non-blocking — shows "latest" on failure).
 # install.sh runs before any local clone exists, so we can't source banner.sh.
-_TH0TH_INSTALLER_VERSION="$(curl -fsSL --max-time 3 \
-  "https://raw.githubusercontent.com/${GITHUB_REPO:-S1LV4/th0th}/main/package.json" \
+_MASSA_TH0TH_INSTALLER_VERSION="$(curl -fsSL --max-time 3 \
+  "https://raw.githubusercontent.com/${GITHUB_REPO:-S1LV4/massa-th0th}/main/package.json" \
   2>/dev/null \
   | grep '"version"' | head -1 \
   | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' \
@@ -52,28 +52,28 @@ cat << EOF
     ███████  ███   ████    ████████     ███████░ ████  ████
      ░████  █████  █████    █████         ████   ████░ █████
 
-   Ancient knowledge keeper for modern code.  v${_TH0TH_INSTALLER_VERSION}
-   https://github.com/S1LV4/th0th
+   Ancient knowledge keeper for modern code.  v${_MASSA_TH0TH_INSTALLER_VERSION}
+   https://github.com/S1LV4/massa-th0th
 
 EOF
 
 # ── Constants ─────────────────────────────────────────────────
-GITHUB_REPO="S1LV4/th0th"
+GITHUB_REPO="S1LV4/massa-th0th"
 GITHUB_RAW="https://raw.githubusercontent.com/${GITHUB_REPO}"
 GITHUB_URL="https://github.com/${GITHUB_REPO}"
 # Docker Hub org is the lowercase GitHub owner (Docker requires lowercase).
 _DOCKER_ORG=$(echo "${GITHUB_REPO%%/*}" | tr '[:upper:]' '[:lower:]')
-DOCKER_API_IMAGE="${_DOCKER_ORG}/th0th:api-latest"
-DOCKER_MCP_IMAGE="${_DOCKER_ORG}/th0th:mcp-latest"
+DOCKER_API_IMAGE="${_DOCKER_ORG}/massa-th0th:api-latest"
+DOCKER_MCP_IMAGE="${_DOCKER_ORG}/massa-th0th:mcp-latest"
 
 # ── Config (overridable via env) ──────────────────────────────
-MODE="${TH0TH_MODE:-}"
-INSTALL_DIR="${TH0TH_DIR:-$HOME/.th0th}"
-API_PORT="${TH0TH_API_PORT:-3333}"
-POSTGRES_PORT="${TH0TH_POSTGRES_PORT:-5432}"
-DB_PASS="${POSTGRES_PASSWORD:-th0th_password}"
-BRANCH="${TH0TH_BRANCH:-main}"
-NO_START="${TH0TH_NO_START:-0}"
+MODE="${MASSA_TH0TH_MODE:-}"
+INSTALL_DIR="${MASSA_TH0TH_DIR:-$HOME/.massa-th0th}"
+API_PORT="${MASSA_TH0TH_API_PORT:-3333}"
+POSTGRES_PORT="${MASSA_TH0TH_POSTGRES_PORT:-5432}"
+DB_PASS="${POSTGRES_PASSWORD:-massa_th0th_password}"
+BRANCH="${MASSA_TH0TH_BRANCH:-main}"
+NO_START="${MASSA_TH0TH_NO_START:-0}"
 OLLAMA_URL="${OLLAMA_BASE_URL:-}"  # auto-detected below if empty
 
 # ── Helpers ───────────────────────────────────────────────────
@@ -194,7 +194,7 @@ check_ollama() {
     return 0
   else
     warn "Ollama not reachable at ${url}"
-    warn "Start Ollama before using th0th, or set OLLAMA_BASE_URL."
+    warn "Start Ollama before using massa-th0th, or set OLLAMA_BASE_URL."
     return 1
   fi
 }
@@ -211,7 +211,7 @@ ollama_has_model() {
 }
 
 # Interactively offer the LLM search-quality toggles. Both run synchronously on
-# every th0th_search, so they stay opt-in. Only prompts when the install is
+# every search, so they stay opt-in. Only prompts when the install is
 # interactive (NO_START != 1) AND the LLM model is present (llm_on=true);
 # otherwise keeps defaults false. Sets globals SEARCH_QU_ENABLED and
 # SEARCH_RERANK_ENABLED. <>/dev/tty is required because install runs under
@@ -225,7 +225,7 @@ prompt_search_quality_flags() {
 
   echo ""
   echo -e "${BOLD}LLM search-quality features (optional, off by default)${NC}"
-  echo -e "${DIM}Both run synchronously on every th0th_search and add LLM latency.${NC}"
+  echo -e "${DIM}Both run synchronously on every search and add LLM latency.${NC}"
   echo ""
 
   echo -e "  ${BOLD}Query understanding${NC} — rewrites your query (+ HyDE) before retrieval for"
@@ -278,18 +278,18 @@ write_env() {
   local rerank_enabled="${SEARCH_RERANK_ENABLED:-false}"
 
   cat > "$env_file" << ENVEOF
-# th0th - generated by install.sh
+# massa-th0th - generated by install.sh
 # Edit this file to customise your installation.
 
 # ── API ──────────────────────────────────────────────────────
-TH0TH_API_PORT=${API_PORT}
-TH0TH_API_IMAGE=${api_image}
-TH0TH_MCP_IMAGE=${mcp_image}
+MASSA_TH0TH_API_PORT=${API_PORT}
+MASSA_TH0TH_API_IMAGE=${api_image}
+MASSA_TH0TH_MCP_IMAGE=${mcp_image}
 NODE_ENV=production
 
 # ── Database ─────────────────────────────────────────────────
 POSTGRES_PASSWORD=${DB_PASS}
-TH0TH_POSTGRES_PORT=${POSTGRES_PORT}
+MASSA_TH0TH_POSTGRES_PORT=${POSTGRES_PORT}
 DATABASE_URL=${db_url}
 
 # ── Embeddings (Ollama - local, free) ────────────────────────
@@ -424,7 +424,7 @@ print_hooks_guide() {
     done
     echo ""
     echo -e "  ${DIM}Or skip the scripts and POST directly (works from any platform hook):${NC}"
-    echo -e "    curl -X POST ${TH0TH_API_BASE:-http://localhost:3333}/api/v1/hook/batch \\"
+    echo -e "    curl -X POST ${MASSA_TH0TH_API_BASE:-http://localhost:3333}/api/v1/hook/batch \\"
     echo -e "      -H 'Content-Type: application/json' \\"
     echo -e "      -d '{\"events\":[{\"event\":\"user-prompt\",\"projectId\":\"my-proj\",\"payload\":{}}]}'"
     echo ""
@@ -481,11 +481,11 @@ print_hooks_guide() {
   echo ""
 
   echo -e "  ${BOLD}Env vars (set in your shell or .env; all platforms):${NC}"
-  echo -e "    ${CYAN}TH0TH_API_BASE${NC}   default http://localhost:3333"
-  echo -e "    ${CYAN}TH0TH_API_KEY${NC}    optional (x-api-key header)"
-  echo -e "    ${CYAN}TH0TH_PROJECT_ID${NC} optional (defaults to cwd basename)"
+  echo -e "    ${CYAN}MASSA_TH0TH_API_BASE${NC}   default http://localhost:3333"
+  echo -e "    ${CYAN}MASSA_TH0TH_API_KEY${NC}    optional (x-api-key header)"
+  echo -e "    ${CYAN}MASSA_TH0TH_PROJECT_ID${NC} optional (defaults to cwd basename)"
   echo ""
-  echo -e "  ${DIM}Observations land in ~/.rlm/observations.db and are consolidated into${NC}"
+  echo -e "  ${DIM}Observations land in ~/.massa-th0th-data/observations.db and are consolidated into${NC}"
   echo -e "  ${DIM}memories only when RLM_LLM_ENABLED=true (otherwise stored raw).${NC}"
   echo ""
 }
@@ -566,7 +566,7 @@ show_integration() {
 
   echo ""
   echo -e "${BOLD}╔═══════════════════════════════════════════════════════╗${NC}"
-  echo -e "${BOLD}║              th0th is ready!                          ║${NC}"
+  echo -e "${BOLD}║              massa-th0th is ready!                          ║${NC}"
   echo -e "${BOLD}╚═══════════════════════════════════════════════════════╝${NC}"
   echo ""
   echo -e "  ${GREEN}API:${NC}     http://localhost:${api_port}"
@@ -585,7 +585,7 @@ show_integration() {
     echo ""
     echo -e '  {'
     echo -e '    "mcpServers": {'
-    echo -e '      "th0th": {'
+    echo -e '      "massa-th0th": {'
     echo -e '        "type": "local",'
     echo -e "        \"command\": [\"docker\", \"compose\", \"-f\", \"${install_dir}/docker-compose.yml\", \"run\", \"--rm\", \"-i\", \"mcp\"],"
     echo -e '        "enabled": true'
@@ -598,10 +598,10 @@ show_integration() {
 
   echo -e '  {'
   echo -e '    "mcpServers": {'
-  echo -e '      "th0th": {'
+  echo -e '      "massa-th0th": {'
   echo -e '        "type": "local",'
-  echo -e '        "command": ["npx", "@th0th-ai/mcp-client"],'
-  echo -e "        \"env\": { \"TH0TH_API_URL\": \"http://localhost:${api_port}\" },"
+  echo -e '        "command": ["npx", "@massa-th0th/mcp-client"],'
+  echo -e "        \"env\": { \"MASSA_TH0TH_API_URL\": \"http://localhost:${api_port}\" },"
   echo -e '        "enabled": true'
   echo -e '      }'
   echo -e '    }'
@@ -640,14 +640,14 @@ install_docker() {
   local ollama_url; ollama_url=$(detect_ollama_url "docker")
   check_ollama "$ollama_url" || true
 
-  local db_url="postgresql://th0th:${DB_PASS}@localhost:${POSTGRES_PORT}/th0th"
+  local db_url="postgresql://massa_th0th:${DB_PASS}@localhost:${POSTGRES_PORT}/massa_th0th"
   fetch_compose "$INSTALL_DIR"
   write_env "$INSTALL_DIR" "$ollama_url" "$db_url"
   echo ""
 
   echo -e "${BOLD}[3/4] Pulling Docker images...${NC}"
   (cd "$INSTALL_DIR" && \
-    env TH0TH_API_PORT="$API_PORT" TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
+    env MASSA_TH0TH_API_PORT="$API_PORT" MASSA_TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
         POSTGRES_PASSWORD="$DB_PASS" OLLAMA_BASE_URL="$ollama_url" \
     docker compose pull)
   ok "Images pulled"
@@ -656,20 +656,20 @@ install_docker() {
   if [ "$NO_START" != "1" ]; then
     echo -e "${BOLD}[4/4] Starting services...${NC}"
     (cd "$INSTALL_DIR" && \
-      env TH0TH_API_PORT="$API_PORT" TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
+      env MASSA_TH0TH_API_PORT="$API_PORT" MASSA_TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
           POSTGRES_PASSWORD="$DB_PASS" OLLAMA_BASE_URL="$ollama_url" \
       docker compose up -d postgres)
     ok "PostgreSQL started"
 
     info "Waiting for database to be ready..."
     local tries=0
-    until (cd "$INSTALL_DIR" && docker compose exec -T postgres pg_isready -U th0th &>/dev/null) \
+    until (cd "$INSTALL_DIR" && docker compose exec -T postgres pg_isready -U massa_th0th &>/dev/null) \
           || [ $tries -ge 15 ]; do
       sleep 2; tries=$((tries + 1))
     done
 
     (cd "$INSTALL_DIR" && \
-      env TH0TH_API_PORT="$API_PORT" TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
+      env MASSA_TH0TH_API_PORT="$API_PORT" MASSA_TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
           POSTGRES_PASSWORD="$DB_PASS" OLLAMA_BASE_URL="$ollama_url" \
       docker compose up -d api)
     ok "API started (migrations run automatically on first boot)"
@@ -703,26 +703,26 @@ install_build() {
   resolve_ports
   local ollama_url; ollama_url=$(detect_ollama_url "docker")
   check_ollama "$ollama_url" || true
-  local db_url="postgresql://th0th:${DB_PASS}@localhost:${POSTGRES_PORT}/th0th"
+  local db_url="postgresql://massa_th0th:${DB_PASS}@localhost:${POSTGRES_PORT}/massa_th0th"
   # Pass local image names so the .env points at what was actually built,
   # not the Docker Hub constants (which may not exist or be stale).
-  write_env "$INSTALL_DIR" "$ollama_url" "$db_url" "th0th-api:local" "th0th-mcp:local"
+  write_env "$INSTALL_DIR" "$ollama_url" "$db_url" "massa-th0th-api:local" "massa-th0th-mcp:local"
   echo ""
 
   echo -e "${BOLD}[4/5] Building Docker images...${NC}"
-  (cd "$INSTALL_DIR" && docker build --target api -t th0th-api:local .)
-  (cd "$INSTALL_DIR" && docker build --target mcp -t th0th-mcp:local .)
+  (cd "$INSTALL_DIR" && docker build --target api -t massa-th0th-api:local .)
+  (cd "$INSTALL_DIR" && docker build --target mcp -t massa-th0th-mcp:local .)
   ok "Images built"
-  export TH0TH_API_IMAGE="th0th-api:local"
-  export TH0TH_MCP_IMAGE="th0th-mcp:local"
+  export MASSA_TH0TH_API_IMAGE="massa-th0th-api:local"
+  export MASSA_TH0TH_MCP_IMAGE="massa-th0th-mcp:local"
   echo ""
 
   if [ "$NO_START" != "1" ]; then
     echo -e "${BOLD}[5/5] Starting services...${NC}"
     (cd "$INSTALL_DIR" && \
-      env TH0TH_API_PORT="$API_PORT" TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
+      env MASSA_TH0TH_API_PORT="$API_PORT" MASSA_TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
           POSTGRES_PASSWORD="$DB_PASS" OLLAMA_BASE_URL="$ollama_url" \
-          TH0TH_API_IMAGE="th0th-api:local" TH0TH_MCP_IMAGE="th0th-mcp:local" \
+          MASSA_TH0TH_API_IMAGE="massa-th0th-api:local" MASSA_TH0TH_MCP_IMAGE="massa-th0th-mcp:local" \
       docker compose up -d postgres api)
     ok "Services started"
     echo ""

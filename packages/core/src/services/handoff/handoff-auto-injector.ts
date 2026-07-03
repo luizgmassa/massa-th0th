@@ -7,7 +7,7 @@
  * (via logger.info) how many were found. This is observability + a
  * future auto-surface hook; the deterministic surfacing primitive is
  * `HandoffService.listPending` (invoked directly or via the
- * `th0th_handoff_list_pending` MCP tool).
+ * `handoff_list_pending` MCP tool).
  *
  * Design call: consume `observation:ingested` (already typed, already
  * fired by the Phase-3 SessionStart hook, already consumed by the
@@ -21,7 +21,7 @@
  * throws.
  */
 
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { eventBus } from "../events/event-bus.js";
 import type { HandoffService } from "./handoff-service.js";
 

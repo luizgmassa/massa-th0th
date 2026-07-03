@@ -5,7 +5,7 @@
  * Prisma 7.7.0 + Bun ORM bug (isObjectEnumValue is not a function).
  */
 
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { getPrismaClient } from "../../services/query/prisma-client.js";
 
 // ─── Domain types ────────────────────────────────────────────────────────────

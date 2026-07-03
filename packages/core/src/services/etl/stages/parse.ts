@@ -13,7 +13,7 @@
 
 import fs from "fs/promises";
 import path from "path";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { smartChunk, type Chunk } from "../../search/smart-chunker.js";
 import type {
   EtlStageContext,

@@ -38,7 +38,7 @@ describe("SqliteProposalStore", () => {
   let store: SqliteProposalStore;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-proposal-sqlite-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-proposal-sqlite-"));
     dbPath = path.join(tmpDir, "proposals.db");
     store = new SqliteProposalStore(dbPath);
   });

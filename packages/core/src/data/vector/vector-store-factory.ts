@@ -5,8 +5,8 @@
  * Maintains backward compatibility with existing singleton pattern.
  */
 
-import { IVectorStore } from '@th0th-ai/shared';
-import { logger } from '@th0th-ai/shared';
+import { IVectorStore } from '@massa-th0th/shared';
+import { logger } from '@massa-th0th/shared';
 import { PostgresConfig } from './postgres-vector-store.js';
 
 export type VectorStoreType = 'sqlite' | 'postgres';

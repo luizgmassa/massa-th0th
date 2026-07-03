@@ -11,8 +11,8 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { config, SearchSource } from "@th0th-ai/shared";
-import type { SearchResult } from "@th0th-ai/shared";
+import { config, SearchSource } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-th0th/shared";
 import {
   LLMJudgeReranker,
   applyVerdict,

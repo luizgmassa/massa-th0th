@@ -1,7 +1,7 @@
 /**
- * Real-world integration tests against the running th0th API.
+ * Real-world integration tests against the running massa-th0th API.
  *
- * Uses the th0th codebase itself as the test fixture — indexes the project
+ * Uses the massa-th0th codebase itself as the test fixture — indexes the project
  * and validates semantic search, memory, symbol graph, and compression.
  *
  * Requires:
@@ -9,15 +9,15 @@
  *   - Ollama with qwen3-embedding (or bge-m3) available
  *   - Local PostgreSQL at localhost:5434
  *
- * Run: DATABASE_URL=postgresql://th0th:th0th_password@localhost:5434/th0th \
+ * Run: DATABASE_URL=postgresql://massa_th0th:massa_th0th_password@localhost:5434/massa_th0th \
  *        bun test src/__tests__/integration/real-api.test.ts
  */
 
 import { describe, test, expect, beforeAll } from "bun:test";
 import path from "path";
 
-const API = process.env.TH0TH_API_URL ?? "http://localhost:3333";
-const PROJECT_ID = "th0th-self-test";
+const API = process.env.MASSA_TH0TH_API_URL ?? "http://localhost:3333";
+const PROJECT_ID = "massa-th0th-self-test";
 
 // Skip the entire suite when the API server isn't reachable
 const API_AVAILABLE = await fetch(`${API}/health`, { signal: AbortSignal.timeout(2000) })
@@ -56,14 +56,14 @@ async function pollUntil(
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe.skipIf(!API_AVAILABLE)("th0th API — real integration (using th0th codebase as fixture)", () => {
+describe.skipIf(!API_AVAILABLE)("massa-th0th API — real integration (using massa-th0th codebase as fixture)", () => {
 
   // ── Health ─────────────────────────────────────────────────────────────────
   describe("health", () => {
     test("API is up and reports healthy", async () => {
       const res = await get("/health");
       expect(res.status).toBe("ok");
-      expect(res.service).toBe("th0th-tools-api");
+      expect(res.service).toBe("massa-th0th-tools-api");
       expect(res.version).toMatch(/^\d+\.\d+\.\d+/);
     });
   });
@@ -224,7 +224,7 @@ describe.skipIf(!API_AVAILABLE)("th0th API — real integration (using th0th cod
 
   // ── Symbol graph ──────────────────────────────────────────────────────────
   describe("symbol graph tools", () => {
-    test("list projects returns th0th-self-test as indexed", async () => {
+    test("list projects returns massa-th0th-self-test as indexed", async () => {
       const res = await get(`/api/v1/workspace/list`);
       expect(res.success ?? true).toBeTruthy();
 
@@ -388,7 +388,7 @@ describe.skipIf(!API_AVAILABLE)("th0th API — real integration (using th0th cod
     const CODE_SAMPLE = `
 import { getPrismaClient } from "../services/query/prisma-client.js";
 import { Prisma } from "../../generated/prisma/index.js";
-import { MemoryLevel } from "@th0th-ai/shared";
+import { MemoryLevel } from "@massa-th0th/shared";
 
 export class MemoryConsolidationJob {
   private running = false;

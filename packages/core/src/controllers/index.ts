@@ -1,5 +1,5 @@
 /**
- * @th0th-ai/core - Controllers Export
+ * @massa-th0th/core - Controllers Export
  *
  * Orchestration layer between tools (thin MCP handlers) and
  * services/data (domain logic + persistence).

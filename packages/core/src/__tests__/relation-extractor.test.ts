@@ -6,13 +6,13 @@
  */
 
 import { describe, test, expect, mock, beforeAll, afterAll } from "bun:test";
-import { MemoryRelationType } from "@th0th-ai/shared";
+import { MemoryRelationType } from "@massa-th0th/shared";
 
 // ── Mock dependencies ────────────────────────────────────────
-let tmpDir = "/tmp/th0th-test-relext";
+let tmpDir = "/tmp/massa-th0th-test-relext";
 
-mock.module("@th0th-ai/shared", () => {
-  const actual = require("@th0th-ai/shared");
+mock.module("@massa-th0th/shared", () => {
+  const actual = require("@massa-th0th/shared");
   return {
     ...actual,
     MemoryRelationType: actual.MemoryRelationType,
@@ -21,9 +21,9 @@ mock.module("@th0th-ai/shared", () => {
       get: (key: string) => {
         if (key === "dataDir") return tmpDir;
         const defaults: Record<string, any> = {
-          vectorStore: { type: "sqlite", dbPath: "/tmp/th0th-test-vs.db", collectionName: "test", embeddingModel: "default" },
-          keywordSearch: { dbPath: "/tmp/th0th-test-kw.db", ftsVersion: "fts5" },
-          cache: { l1: { maxSize: 1024, defaultTTL: 60 }, l2: { dbPath: "/tmp/th0th-test-cache.db", maxSize: 1024, defaultTTL: 60 }, embedding: { dbPath: "/tmp/th0th-test-emb-cache.db", maxAgeHours: 1 } },
+          vectorStore: { type: "sqlite", dbPath: "/tmp/massa-th0th-test-vs.db", collectionName: "test", embeddingModel: "default" },
+          keywordSearch: { dbPath: "/tmp/massa-th0th-test-kw.db", ftsVersion: "fts5" },
+          cache: { l1: { maxSize: 1024, defaultTTL: 60 }, l2: { dbPath: "/tmp/massa-th0th-test-cache.db", maxSize: 1024, defaultTTL: 60 }, embedding: { dbPath: "/tmp/massa-th0th-test-emb-cache.db", maxAgeHours: 1 } },
           security: { maxInputLength: 10000, sanitizeInputs: true, maxIndexSize: 1000, maxFileSize: 1048576, allowedExtensions: [".ts"], excludePatterns: [] },
         };
         return defaults[key];
@@ -94,7 +94,7 @@ describe("RelationExtractor.classifyRelation", () => {
   let cleanupDir: string;
 
   beforeAll(() => {
-    cleanupDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-test-relext-"));
+    cleanupDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-test-relext-"));
     tmpDir = cleanupDir;
     (GraphStore as any).instance = null;
     graphStore = new GraphStore();

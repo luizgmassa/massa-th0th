@@ -14,7 +14,7 @@ import type { Ignore } from "ignore";
 import fs from "fs/promises";
 import path from "path";
 import { createHash } from "crypto";
-import { config, logger } from "@th0th-ai/shared";
+import { config, logger } from "@massa-th0th/shared";
 import { getSymbolRepository } from "../../../data/sqlite/symbol-repository-factory.js";
 import type { EtlStageContext, DiscoveredFile } from "../stage-context.js";
 import { DEFAULT_EXTENSIONS, loadProjectIgnore } from "../../search/ignore-patterns.js";

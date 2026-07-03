@@ -3,7 +3,7 @@
  *
  * The SQLite integration tests (LLM-off/on, SUPERSEDES edges, pinned-exempt,
  * recall hides sources) live in memory-crud.test.ts, because bun's
- * `mock.module("@th0th-ai/shared")` is process-wide and two files mocking the
+ * `mock.module("@massa-th0th/shared")` is process-wide and two files mocking the
  * same module collide. memory-crud.test.ts already mocks config for the memory
  * subsystem, so the consolidation SQLite scenarios co-locate there.
  *

@@ -12,7 +12,7 @@
 
 import path from "path";
 import fs from "fs/promises";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { getSymbolRepository } from "../../data/sqlite/symbol-repository-factory.js";
 import { workspaceManager } from "../workspace/workspace-manager.js";
 import type {

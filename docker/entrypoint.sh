@@ -1,6 +1,6 @@
 #!/bin/sh
 # ============================================
-# th0th API - Container Entrypoint
+# massa-th0th API - Container Entrypoint
 # ============================================
 # Runs Prisma migrations before starting the API.
 # Safe to run on every startup: migrate deploy is idempotent.
@@ -18,5 +18,5 @@ else
   echo "[entrypoint] No PostgreSQL DATABASE_URL detected, skipping migrations."
 fi
 
-echo "[entrypoint] Starting th0th API..."
+echo "[entrypoint] Starting massa-th0th API..."
 exec "$@"

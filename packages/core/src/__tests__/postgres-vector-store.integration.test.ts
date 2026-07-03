@@ -4,7 +4,7 @@
  * These tests require a running PostgreSQL instance with pgvector.
  * Run with: docker-compose -f docker-compose.test.yml up -d
  * 
- * Connection: postgresql://test:test@localhost:5433/th0th_test
+ * Connection: postgresql://test:test@localhost:5433/massa_th0th_test
  * 
  * Skip these tests in CI if PostgreSQL is not available:
  *   SKIP_POSTGRES_TESTS=1 bun test
@@ -14,11 +14,11 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from "bun:test";
-import { SearchSource } from "@th0th-ai/shared";
+import { SearchSource } from "@massa-th0th/shared";
 
 // Only run if explicitly enabled (requires PostgreSQL running)
 const RUN_TESTS = process.env.RUN_POSTGRES_TESTS === "1";
-const POSTGRES_URL = process.env.POSTGRES_TEST_URL || "postgresql://test:test@localhost:5433/th0th_test";
+const POSTGRES_URL = process.env.POSTGRES_TEST_URL || "postgresql://test:test@localhost:5433/massa_th0th_test";
 
 // These tests need real embeddings, so we don't mock the embedding service
 // Make sure OLLAMA_URL is set or embeddings are available

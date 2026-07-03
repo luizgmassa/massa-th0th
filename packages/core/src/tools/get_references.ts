@@ -1,11 +1,11 @@
 /**
- * Get References Tool (th0th_get_references)
+ * Get References Tool (get_references)
  *
  * Find all usage sites of a symbol across the project.
  * Returns file, line, usage kind, and code context snippets.
  */
 
-import { IToolHandler, ToolResponse } from "@th0th-ai/shared";
+import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
 import { symbolGraphService } from "../services/symbol/symbol-graph.service.js";
 
 interface GetReferencesParams {

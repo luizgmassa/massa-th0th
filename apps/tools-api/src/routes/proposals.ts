@@ -9,8 +9,8 @@
  * fields. The job/service never throws; all failures surface as {ok:false, reason}.
  */
 
-import { getAutoImproveJob } from "@th0th-ai/core";
-import { config, logger } from "@th0th-ai/shared";
+import { getAutoImproveJob } from "@massa-th0th/core";
+import { config, logger } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
 
 let cachedJob: ReturnType<typeof getAutoImproveJob> | null = null;

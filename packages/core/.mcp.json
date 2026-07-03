@@ -1,12 +1,9 @@
 {
   "mcpServers": {
-    "th0th": {
+    "massa-th0th": {
       "type": "stdio",
-      "command": "/home/joaovs/.bun/bin/bun",
-      "args": [
-        "run",
-        "/home/joaovs/projetos/th0th/apps/mcp-client/src/index.ts"
-      ],
+      "command": "bun",
+      "args": ["run", "./apps/mcp-client/src/index.ts"],
       "env": {}
     }
   }

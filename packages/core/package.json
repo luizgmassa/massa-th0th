@@ -1,6 +1,6 @@
 {
-  "name": "@th0th-ai/core",
-  "version": "1.1.5",
+  "name": "@massa-th0th/core",
+  "version": "1.0.0",
   "author": "S1LV4",
   "type": "module",
   "main": "dist/index.js",
@@ -47,7 +47,7 @@
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "@prisma/client-runtime-utils": "^7.3.0",
-    "@th0th-ai/shared": "workspace:*",
+    "@massa-th0th/shared": "workspace:*",
     "@toon-format/toon": "^2.1.0",
     "ai": "^6.0.66",
     "glob": "^10.0.0",

@@ -20,8 +20,8 @@ import {
   buildPrefetchPlan,
   DEFAULT_PREFETCH_CONFIG,
   type PrefetchEntry,
-} from "@th0th-ai/core/services";
-import { SearchSource } from "@th0th-ai/shared";
+} from "@massa-th0th/core/services";
+import { SearchSource } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
 
 const SessionInfoSchema = t.Object({

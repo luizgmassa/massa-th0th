@@ -1,11 +1,11 @@
 /**
- * List Projects Tool (th0th_list_projects)
+ * List Projects Tool (list_projects)
  *
  * Lists all indexed workspaces with their status and statistics.
  * Data sourced from WorkspaceManager (SQLite workspaces table).
  */
 
-import { IToolHandler, ToolResponse } from "@th0th-ai/shared";
+import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
 import { workspaceManager } from "../services/workspace/workspace-manager.js";
 import type { WorkspaceStatus } from "../services/workspace/workspace-manager.js";
 

@@ -24,7 +24,7 @@
 
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 
-// No @th0th-ai/shared mock needed: the adapter loaders throw before
+// No @massa-th0th/shared mock needed: the adapter loaders throw before
 // config.get() or logger are ever reached in both SQLite and PostgreSQL paths.
 import {
   getPrismaClient,
@@ -123,7 +123,7 @@ describe("getPrismaClient() — missing adapter fallback (Issue #25)", () => {
     beforeEach(() => {
       failPrismaPg();
       process.env.DATABASE_URL =
-        "postgresql://th0th:th0th_password@localhost:5432/th0th";
+        "postgresql://massa_th0th:massa_th0th_password@localhost:5432/massa_th0th";
     });
 
     test("throws an Error when the adapter cannot be loaded", () => {

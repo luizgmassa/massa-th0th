@@ -21,11 +21,11 @@
 import {
   SearchResult,
   VectorDocument,
-} from "@th0th-ai/shared";
-import { logger } from "@th0th-ai/shared";
+} from "@massa-th0th/shared";
+import { logger } from "@massa-th0th/shared";
 import { getKeywordSearch } from "../../data/sqlite/keyword-search-factory.js";
 import { getVectorStore } from "../../data/vector/vector-store-factory.js";
-import { config } from "@th0th-ai/shared";
+import { config } from "@massa-th0th/shared";
 import { IndexManager } from "./index-manager.js";
 import { getSearchCache } from "./cache-factory.js";
 import { getSearchAnalytics } from "./analytics-factory.js";

@@ -2,21 +2,21 @@
 /**
  * Script de Sincronização de Bancos de Dados
  * 
- * Sincroniza dados dos bancos operacionais para th0th.db (Prisma)
- * - memories.db → th0th.db (memories)
- * - vector-store.db → th0th.db (projects, documents)
- * - search-analytics.db → th0th.db (search_queries, cache_stats)
+ * Sincroniza dados dos bancos operacionais para massa-th0th.db (Prisma)
+ * - memories.db → massa-th0th.db (memories)
+ * - vector-store.db → massa-th0th.db (projects, documents)
+ * - search-analytics.db → massa-th0th.db (search_queries, cache_stats)
  */
 
 import { PrismaClient } from "../generated/prisma/index.js";
 import { PrismaBunSqlite } from "prisma-adapter-bun-sqlite";
 // @ts-ignore - bun:sqlite is a Bun built-in module
 import { Database } from "bun:sqlite";
-import { config } from "@th0th-ai/shared";
+import { config } from "@massa-th0th/shared";
 import path from "path";
 
 const dataDir = config.get("dataDir");
-const th0thDbPath = path.join(dataDir, "th0th.db");
+const th0thDbPath = path.join(dataDir, "massa-th0th.db");
 
 // Create Bun SQLite adapter for Prisma
 const adapter = new PrismaBunSqlite({ 

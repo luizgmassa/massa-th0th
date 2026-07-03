@@ -17,7 +17,7 @@
 
 import { generateText, generateObject } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { config, logger } from "@th0th-ai/shared";
+import { config, logger } from "@massa-th0th/shared";
 import type { z } from "zod";
 
 export interface LlmCompleteOptions {
@@ -50,7 +50,7 @@ export function isLlmEnabled(): boolean {
 
 /**
  * Test seam: force the enabled flag without touching config (avoids colliding
- * with other test files that mock `@th0th-ai/shared`). Pass `null` to clear.
+ * with other test files that mock `@massa-th0th/shared`). Pass `null` to clear.
  * @internal
  */
 let testEnabledOverride: boolean | null = null;

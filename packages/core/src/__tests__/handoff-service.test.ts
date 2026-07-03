@@ -1,7 +1,7 @@
 /**
  * HandoffService tests (Phase 6 — cross-session handoffs, G2).
  *
- * Test-isolation rule (Phase 1/2/3/4): do NOT `mock.module("@th0th-ai/shared")`
+ * Test-isolation rule (Phase 1/2/3/4): do NOT `mock.module("@massa-th0th/shared")`
  * (process-wide collision — memory-crud.test.ts owns it). Inject a fake
  * HandoffStore, a fake HandoffMemorySeam, and a fake LlmSurface. The single
  * P6-SEARCH-01 integration block mirrors bootstrap-service.test.ts's P4-SEARCH-01:
@@ -29,7 +29,7 @@ import {
 import type { InsertMemoryInput } from "../data/memory/memory-repository.js";
 import type { LlmSurface } from "../services/memory/consolidator.js";
 import { eventBus } from "../services/events/event-bus.js";
-import { MemoryLevel, MemoryType } from "@th0th-ai/shared";
+import { MemoryLevel, MemoryType } from "@massa-th0th/shared";
 
 // ── Fakes ────────────────────────────────────────────────────────────────────
 
@@ -612,7 +612,7 @@ describe("HandoffService — P6-SEARCH-01 dual-write memory searchability (integ
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-handoff-search-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-handoff-search-"));
     savedInstance = (MemoryRepository as any).instance;
     (MemoryRepository as any).instance = null;
     repo = MemoryRepository.getInstance();

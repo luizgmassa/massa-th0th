@@ -1,6 +1,6 @@
-# th0th Web UI (read-only)
+# massa-th0th Web UI (read-only)
 
-A dependency-free HTML browser over the th0th SQLite-canonical memories, FTS5
+A dependency-free HTML browser over the massa-th0th SQLite-canonical memories, FTS5
 search, handoffs, checkpoints, and indexed projects. **Read-only** — no mutating
 controls. Served by the Tools API.
 
@@ -8,7 +8,7 @@ controls. Served by the Tools API.
 
 ```bash
 # from repo root
-bun run dev:api        # or: bun run --filter @th0th-ai/tools-api dev
+bun run dev:api        # or: bun run --filter @massa-th0th/tools-api dev
 # then open:
 #   http://localhost:3333/ui/
 ```
@@ -35,4 +35,4 @@ The UI bundle contains no call to any mutating endpoint
 
 ## Theme
 
-Dark mode toggle persists in `localStorage["th0th-ui-theme"]` (default: light).
+Dark mode toggle persists in `localStorage["massa-th0th-ui-theme"]` (default: light).

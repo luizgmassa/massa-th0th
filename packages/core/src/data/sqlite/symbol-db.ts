@@ -9,8 +9,8 @@
  */
 
 import { Database } from "bun:sqlite";
-import { config } from "@th0th-ai/shared";
-import { logger } from "@th0th-ai/shared";
+import { config } from "@massa-th0th/shared";
+import { logger } from "@massa-th0th/shared";
 import path from "path";
 import fs from "fs";
 
@@ -18,7 +18,7 @@ const SCHEMA_VERSION = 1;
 
 /**
  * Singleton Symbol DB — one shared SQLite file per process.
- * With TH0TH_SYMBOL_DB_SHARDING=true, each projectId gets its own file.
+ * With MASSA_TH0TH_SYMBOL_DB_SHARDING=true, each projectId gets its own file.
  */
 export class SymbolDb {
   private static instance: SymbolDb | null = null;

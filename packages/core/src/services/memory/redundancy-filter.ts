@@ -35,7 +35,7 @@
 
 import { Database } from "bun:sqlite";
 import path from "path";
-import { config, logger, MemoryRelationType } from "@th0th-ai/shared";
+import { config, logger, MemoryRelationType } from "@massa-th0th/shared";
 import type { MemoryRowWithEmbedding } from "../graph/types.js";
 import { TokenMetrics } from "../metrics/token-metrics.js";
 

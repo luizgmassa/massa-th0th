@@ -14,7 +14,7 @@
  *   const result = await pipeline.run({ projectId, projectPath, jobId });
  */
 
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { DiscoverStage } from "./stages/discover.js";
 import { ParseStage } from "./stages/parse.js";
 import { ResolveStage } from "./stages/resolve.js";

@@ -1,12 +1,12 @@
 import type { Plugin, PluginInput } from "@opencode-ai/plugin"
 import { tool, type ToolContext } from "@opencode-ai/plugin"
-import { configExists, initConfig, loadConfig } from "@th0th-ai/shared/config"
+import { configExists, initConfig, loadConfig } from "@massa-th0th/shared/config"
 
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
 
-const TH0TH_API_URL = process.env.TH0TH_API_URL || "http://localhost:3333"
+const MASSA_TH0TH_API_URL = process.env.MASSA_TH0TH_API_URL || "http://localhost:3333"
 const FETCH_TIMEOUT_MS = 5_000
 const REINDEX_DEBOUNCE_MS = 60_000
 const REINDEX_FILE_THRESHOLD = 15
@@ -21,14 +21,14 @@ function ensureConfig(): void {
     initConfig()
     console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  th0th initialized with default configuration                  ║
+║  massa-th0th initialized with default configuration                  ║
 ║                                                                ║
-║  Config: ~/.config/th0th/config.json                           ║
+║  Config: ~/.config/massa-th0th/config.json                           ║
 ║  Provider: Ollama (local, free)                                ║
 ║                                                                ║
 ║  To change provider:                                           ║
-║    npx th0th-config use mistral --api-key YOUR_KEY             ║
-║    npx th0th-config use openai --api-key YOUR_KEY              ║
+║    npx massa-th0th-config use mistral --api-key YOUR_KEY             ║
+║    npx massa-th0th-config use openai --api-key YOUR_KEY              ║
 ╚═══════════════════════════════════════════════════════════════╝
 `)
   }
@@ -47,7 +47,7 @@ async function th0thFetch<T = unknown>(
   const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const res = await fetch(`${TH0TH_API_URL}${endpoint}`, {
+    const res = await fetch(`${MASSA_TH0TH_API_URL}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -55,7 +55,7 @@ async function th0thFetch<T = unknown>(
     })
     if (!res.ok) {
       const text = await res.text().catch(() => "")
-      throw new Error(`th0th ${res.status}: ${text.slice(0, 200)}`)
+      throw new Error(`massa-th0th ${res.status}: ${text.slice(0, 200)}`)
     }
     return res.json()
   } finally {
@@ -71,13 +71,13 @@ async function th0thGet<T = unknown>(
   const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const res = await fetch(`${TH0TH_API_URL}${endpoint}`, {
+    const res = await fetch(`${MASSA_TH0TH_API_URL}${endpoint}`, {
       method: "GET",
       signal: controller.signal,
     })
     if (!res.ok) {
       const text = await res.text().catch(() => "")
-      throw new Error(`th0th ${res.status}: ${text.slice(0, 200)}`)
+      throw new Error(`massa-th0th ${res.status}: ${text.slice(0, 200)}`)
     }
     return res.json()
   } finally {
@@ -102,7 +102,7 @@ async function th0thGetWithQuery<T = unknown>(
 // Plugin
 // ---------------------------------------------------------------------------
 
-export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client }: PluginInput) => {
+export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, client }: PluginInput) => {
   // Auto-configure on first run
   ensureConfig()
   
@@ -123,13 +123,13 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
 
   function log(level: "debug" | "info" | "warn" | "error", message: string, extra?: Record<string, unknown>) {
     client.app.log({
-      body: { service: "th0th", level, message, extra },
+      body: { service: "massa-th0th", level, message, extra },
     }).catch(() => {})
   }
 
   function toast(message: string, variant: "success" | "error" | "info" = "info") {
     client.tui.showToast({
-      body: { message: `[th0th] ${message}`, variant },
+      body: { message: `[massa-th0th] ${message}`, variant },
     }).catch(() => {})
   }
 
@@ -180,7 +180,7 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
 
   return {
     tool: {
-      "th0th_search": tool({
+      "search": tool({
         description:
           "Semantic code search in indexed project. Uses hybrid vector + keyword search with RRF ranking. Returns relevant code snippets with file paths and line numbers.",
         args: {
@@ -209,9 +209,9 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_remember": tool({
+      "remember": tool({
         description:
-          "Store important information in th0th memory. Persists across sessions. Use for: user criticals, architectural decisions, discovered patterns.",
+          "Store important information in massa-th0th memory. Persists across sessions. Use for: user criticals, architectural decisions, discovered patterns.",
         args: {
           content: tool.schema.string().describe("Content to store"),
           type: tool.schema.enum(["critical", "conversation", "code", "decision", "pattern"]).describe("Memory type"),
@@ -233,7 +233,7 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_recall": tool({
+      "recall": tool({
         description:
           "Search stored memories from previous sessions. Recovers decisions, patterns, and context.",
         args: {
@@ -257,7 +257,7 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_index": tool({
+      "index": tool({
         description:
           "Index the current project for semantic search. Async - returns jobId.",
         args: {
@@ -277,7 +277,7 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_compress": tool({
+      "compress": tool({
         description:
           "Compress context using semantic compression. Keeps structure, removes details. 70-98% token reduction.",
         args: {
@@ -297,7 +297,7 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_optimized_context": tool({
+      "optimized_context": tool({
         description:
           "Search + compress in one call. Maximum token efficiency for limited context budgets.",
         args: {
@@ -317,9 +317,9 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_read": tool({
+      "read": tool({
         description:
-          "Read file with automatic compression, caching, and symbol metadata. Use with th0th_search results for 60% token savings.",
+          "Read file with automatic compression, caching, and symbol metadata. Use with search results for 60% token savings.",
         args: {
           filePath: tool.schema.string().describe("File path (absolute or relative to project root)"),
           projectId: tool.schema.string().optional().describe("Project ID for symbol metadata"),
@@ -351,11 +351,11 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_index_status": tool({
+      "index_status": tool({
         description:
-          "Check the status and progress of an async indexing job. Use the jobId returned by th0th_index.",
+          "Check the status and progress of an async indexing job. Use the jobId returned by index.",
         args: {
-          jobId: tool.schema.string().describe("Job ID returned by th0th_index"),
+          jobId: tool.schema.string().describe("Job ID returned by index"),
         },
         async execute(args) {
           const result = await th0thGet(`/api/v1/project/index/status/${encodeURIComponent(args.jobId)}`)
@@ -363,8 +363,8 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_analytics": tool({
-        description: "Get th0th usage analytics and performance metrics.",
+      "analytics": tool({
+        description: "Get massa-th0th usage analytics and performance metrics.",
         args: {
           type: tool.schema.enum(["summary", "project", "cache", "recent"]).optional().default("summary"),
           limit: tool.schema.number().optional().default(10),
@@ -381,7 +381,7 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
 
       // ── Symbol Graph tools ────────────────────────────────────────────────
 
-      "th0th_list_projects": tool({
+      "list_projects": tool({
         description:
           "List all indexed projects with their status (pending/indexing/indexed/error), file counts, symbol counts, and last indexed time.",
         args: {
@@ -399,7 +399,7 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_search_definitions": tool({
+      "search_definitions": tool({
         description:
           "Search for symbol definitions (functions, classes, variables, types, interfaces) in an indexed project. Returns name, kind, file location, and doc comments.",
         args: {
@@ -439,7 +439,7 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_get_references": tool({
+      "get_references": tool({
         description:
           "Find all references (usages) of a symbol in the project. Returns file paths, line numbers, reference kinds (call/import/type_ref/extend/implement), and code context.",
         args: {
@@ -469,7 +469,7 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
         },
       }),
 
-      "th0th_go_to_definition": tool({
+      "go_to_definition": tool({
         description:
           "Find the definition of a symbol (function, class, variable, type, etc.) in the project. Disambiguates by calling file context. Returns file location, line numbers, doc comment, and code snippet.",
         args: {
@@ -503,17 +503,17 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
       try {
         const controller = new AbortController()
         const timer = setTimeout(() => controller.abort(), 3_000)
-        const res = await fetch(`${TH0TH_API_URL}/health`, { signal: controller.signal })
+        const res = await fetch(`${MASSA_TH0TH_API_URL}/health`, { signal: controller.signal })
         clearTimeout(timer)
         apiAvailable = res.ok
         if (apiAvailable) {
-          log("info", `Connected to th0th API at ${TH0TH_API_URL}`)
+          log("info", `Connected to massa-th0th API at ${MASSA_TH0TH_API_URL}`)
         } else {
-          toast("th0th API unhealthy", "error")
+          toast("massa-th0th API unhealthy", "error")
         }
       } catch {
         apiAvailable = false
-        log("warn", `th0th API unreachable at ${TH0TH_API_URL}`)
+        log("warn", `massa-th0th API unreachable at ${MASSA_TH0TH_API_URL}`)
       }
     },
 
@@ -562,7 +562,7 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
           const memoryText = memories.data.memories
             .map((m, i) => `${i + 1}. ${m.content}`)
             .join("\n")
-          output.context.push(`## th0th - Persistent Memories\n${memoryText}`)
+          output.context.push(`## massa-th0th - Persistent Memories\n${memoryText}`)
         }
       } catch (err) {
         log("debug", "Failed to fetch memories for compaction", {
@@ -571,12 +571,12 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
       }
     },
 
-    // Inject th0th env vars into shell
+    // Inject massa-th0th env vars into shell
     // Hooks interface: shell.env(input: { cwd, sessionID?, callID? }, output: { env })
     "shell.env": async (_input, output) => {
-      output.env.TH0TH_PROJECT_ID = projectId
-      output.env.TH0TH_PROJECT_PATH = projectPath
-      output.env.TH0TH_API_URL = TH0TH_API_URL
+      output.env.MASSA_TH0TH_PROJECT_ID = projectId
+      output.env.MASSA_TH0TH_PROJECT_PATH = projectPath
+      output.env.MASSA_TH0TH_API_URL = MASSA_TH0TH_API_URL
     },
 
     // Unified event handler for file tracking + LSP diagnostics
@@ -616,4 +616,4 @@ export const Th0thPlugin: Plugin = async ({ project, directory, worktree, client
   }
 }
 
-export default Th0thPlugin
+export default MassaTh0thPlugin

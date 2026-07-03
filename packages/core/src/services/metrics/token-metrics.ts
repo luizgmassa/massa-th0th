@@ -1,4 +1,4 @@
-import { logger, estimateTokens } from "@th0th-ai/shared";
+import { logger, estimateTokens } from "@massa-th0th/shared";
 
 // ── Types ────────────────────────────────────────────────────────
 

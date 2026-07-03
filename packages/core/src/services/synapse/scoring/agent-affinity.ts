@@ -11,7 +11,7 @@
  * Result is clamped to [0, 1].
  */
 
-import type { SearchResult } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
 import type { AgentSession } from "../types.js";
 
 const USAGE_CAP = 10;

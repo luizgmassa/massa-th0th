@@ -4,7 +4,7 @@
  * POST /api/v1/file/read - Read file with optimizations
  */
 
-import { ReadFileTool, SymbolGraphService } from "@th0th-ai/core";
+import { ReadFileTool, SymbolGraphService } from "@massa-th0th/core";
 import { Elysia, t } from "elysia";
 
 let readFileTool: ReadFileTool | null = null;
@@ -74,7 +74,7 @@ export const fileRoutes = new Elysia({ prefix: "/api/v1/file" }).post(
       summary: "Read file with optimizations",
       description:
         "Read file with automatic compression, caching, and symbol metadata. " +
-        "Use with th0th_search results for 60% token savings.",
+        "Use with search results for 60% token savings.",
       tags: ["file"],
     },
   },

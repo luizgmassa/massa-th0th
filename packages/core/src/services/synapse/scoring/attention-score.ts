@@ -23,7 +23,7 @@
  * below that window is appended unchanged, preserving RRF order at the tail.
  */
 
-import type { SearchResult } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
 import type { AgentSession } from "../types.js";
 import { computeTaskAlignment } from "./task-alignment.js";
 import { computeAgentAffinity } from "./agent-affinity.js";

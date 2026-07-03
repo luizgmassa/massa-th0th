@@ -3,8 +3,8 @@ import {
   applyConfidenceGate,
   classifyQuery,
 } from "../services/synapse/inhibition/confidence-gate.js";
-import type { SearchResult } from "@th0th-ai/shared";
-import { SearchSource } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
+import { SearchSource } from "@massa-th0th/shared";
 
 function r(id: string, score: number): SearchResult {
   return {

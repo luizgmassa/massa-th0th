@@ -333,14 +333,14 @@ Four POSIX shell scripts, one per Claude Code hook:
 - `post-tool-use.sh` ← `PostToolUse`
 - `stop.sh` ← `Stop`
 
-Each reads `$TH0TH_API_BASE` (default `http://localhost:3333`) and optional
-`$TH0TH_API_KEY`, builds a JSON body from stdin/env, and:
+Each reads `$MASSA_TH0TH_API_BASE` (default `http://localhost:3333`) and optional
+`$MASSA_TH0TH_API_KEY`, builds a JSON body from stdin/env, and:
 ```sh
 command -v curl >/dev/null 2>&1 || exit 0
 curl -sS -m 2 -o /dev/null \
   -H "Content-Type: application/json" \
-  ${TH0TH_API_KEY:+-H "x-api-key: $TH0TH_API_KEY"} \
-  -X POST "$TH0TH_API_BASE/api/v1/hook" \
+  ${MASSA_TH0TH_API_KEY:+-H "x-api-key: $MASSA_TH0TH_API_KEY"} \
+  -X POST "$MASSA_TH0TH_API_BASE/api/v1/hook" \
   --data "$BODY" 2>/dev/null || true
 exit 0
 ```
@@ -351,12 +351,12 @@ script forwards it as `payload` with the `event` kind hardcoded.
 A small `README.md` in the same dir documents wiring into `.claude/settings.json`
 `hooks` block.
 
-## 10. Optional MCP tool `th0th_hook_ingest`
+## 10. Optional MCP tool `hook_ingest`
 
 Add to `apps/mcp-client/src/tool-definitions.ts` (pure-data `ToolDefinition`):
-name `th0th_hook_ingest`, `POST /api/v1/hook/batch`, schema `{ events: [...] }`.
+name `hook_ingest`, `POST /api/v1/hook/batch`, schema `{ events: [...] }`.
 Useful for non-Claude hosts (Cursor, OpenCode). Low risk; wired like the
-existing `th0th_memory_update`.
+existing `memory_update`.
 
 ## 11. Degradation paths (summary)
 
@@ -369,7 +369,7 @@ existing `th0th_memory_update`.
 | Queue saturated | route returns 429 + Retry-After; caller retries. |
 | `curl` missing / API down (hook script) | exit 0, no output, agent unaffected. |
 
-## 12. Test strategy (no @th0th-ai/shared mock)
+## 12. Test strategy (no @massa-th0th/shared mock)
 
 Following the Phase-1/2 rule (`memory-crud.test.ts` is the only file mocking
 shared config), Phase-3 tests:

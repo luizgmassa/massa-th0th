@@ -1,5 +1,5 @@
 /**
- * @th0th-ai/core - Tools Export
+ * @massa-th0th/core - Tools Export
  */
 
 export { IndexProjectTool } from "./index_project.js";

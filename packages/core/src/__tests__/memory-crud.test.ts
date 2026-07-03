@@ -16,8 +16,8 @@ import os from "os";
 // ── Mock config and logger ────────────────────────────────────
 let tmpDir: string;
 
-mock.module("@th0th-ai/shared", () => {
-  const actual = require("@th0th-ai/shared");
+mock.module("@massa-th0th/shared", () => {
+  const actual = require("@massa-th0th/shared");
   return {
     ...actual,
     config: {
@@ -43,7 +43,7 @@ mock.module("@th0th-ai/shared", () => {
   };
 });
 
-import { MemoryLevel, MemoryRelationType } from "@th0th-ai/shared";
+import { MemoryLevel, MemoryRelationType } from "@massa-th0th/shared";
 import { MemoryRepository } from "../data/memory/memory-repository.js";
 import type { InsertMemoryInput } from "../data/memory/memory-repository.js";
 import { MemoryController } from "../controllers/memory-controller.js";
@@ -91,7 +91,7 @@ describe("MemoryRepository.update / deleteById", () => {
   let repo: MemoryRepository;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-crud-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-crud-"));
     (MemoryRepository as any).instance = null;
     repo = MemoryRepository.getInstance();
   });
@@ -162,7 +162,7 @@ describe("MemoryController update (merge tags) + delete (sever edges)", () => {
   let graph: MemoryGraphService;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-crud-ctrl-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-crud-ctrl-"));
     (GraphStore as any).instance = null;
     (MemoryGraphService as any).instance = null;
     (MemoryRepository as any).instance = null;
@@ -230,7 +230,7 @@ describe("MemoryRepository.softDeleteById + recall filtering (Phase 1)", () => {
   let repo: MemoryRepository;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-soft-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-soft-"));
     (MemoryRepository as any).instance = null;
     repo = MemoryRepository.getInstance();
   });
@@ -276,7 +276,7 @@ describe("MemoryRepository.softDeleteById + recall filtering (Phase 1)", () => {
 
 // ── Phase 1: MemoryConsolidationJob — SQLite integration ─────────────────
 // Lives here (not in memory-consolidation-job.test.ts) because bun's
-// mock.module is process-wide and two files mocking "@th0th-ai/shared"
+// mock.module is process-wide and two files mocking "@massa-th0th/shared"
 // collide. The throttle + PG-skip tests stay in the other file (no config
 // mock needed).
 describe("MemoryConsolidationJob — SQLite integration (Phase 1)", () => {
@@ -285,7 +285,7 @@ describe("MemoryConsolidationJob — SQLite integration (Phase 1)", () => {
   let job: any;
 
   beforeEach(async () => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-consol-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-consol-"));
     (MemoryRepository as any).instance = null;
     (GraphStore as any).instance = null;
     const { resetGraphStore } = await import("../services/graph/graph-store-factory.js");

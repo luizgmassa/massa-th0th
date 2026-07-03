@@ -9,7 +9,7 @@
  * - Query patterns by project
  */
 
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { Database } from "bun:sqlite";
 import path from "path";
 import os from "os";
@@ -57,7 +57,7 @@ export class SearchAnalytics {
   private db: Database;
 
   constructor(dbPath?: string) {
-    const defaultPath = path.join(os.homedir(), ".rlm", "search-analytics.db");
+    const defaultPath = path.join(os.homedir(), ".massa-th0th-data", "search-analytics.db");
     const finalPath = dbPath || defaultPath;
 
     // Ensure directory exists

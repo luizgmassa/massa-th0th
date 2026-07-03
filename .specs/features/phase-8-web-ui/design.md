@@ -8,7 +8,7 @@ logic is introduced.
 
 **Decision:** serve the `apps/web-ui/` static bundle from the existing Tools API
 via a new Elysia route that reads assets from disk and returns them with correct
-content-types. Single deployment, single port (`TH0TH_API_PORT`, default 3333),
+content-types. Single deployment, single port (`MASSA_TH0TH_API_PORT`, default 3333),
 no new process. URL: `http://localhost:3333/ui/` (prefix chosen to never collide
 with `/api/v1/*`, `/health`, `/swagger`).
 
@@ -20,7 +20,7 @@ with `/api/v1/*`, `/health`, `/swagger`).
 - The UI is read-only and dependency-free; there is no build step that would
   benefit from a separate static host (e.g. Vite).
 - A standalone server can still be used by pointing any static file server at
-  `apps/web-ui/src/static/` and setting `TH0TH_API_BASE` — the bundle is
+  `apps/web-ui/src/static/` and setting `MASSA_TH0TH_API_BASE` — the bundle is
   origin-agnostic (configurable API base).
 
 **Static serving mechanism:** Elysia does not ship a static plugin in this repo
@@ -97,7 +97,7 @@ within scope, and covers real memory content (decisions, patterns, code
 snippets).
 
 **Dark mode:** a toggle button sets `document.documentElement.dataset.theme` to
-`"dark"` or `"light"`; the choice is read from `localStorage["th0th-ui-theme"]`
+`"dark"` or `"light"`; the choice is read from `localStorage["massa-th0th-ui-theme"]`
 on load (default `"light"` when absent — no FOUC because the attribute is set by
 a tiny inline `<script>` in `<head>` before the stylesheet applies). CSS uses
 `[data-theme="dark"]` selectors overriding CSS variables.
@@ -130,7 +130,7 @@ a tiny inline `<script>` in `<head>` before the stylesheet applies). CSS uses
 
 ```
 apps/web-ui/
-  package.json          # name @th0th-ai/web-ui, private, no deps, scripts: type-check
+  package.json          # name @massa-th0th/web-ui, private, no deps, scripts: type-check
   tsconfig.json         # standalone, no project refs (vanilla JS consumed)
   src/
     static/

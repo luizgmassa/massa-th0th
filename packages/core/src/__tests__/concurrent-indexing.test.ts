@@ -44,14 +44,14 @@ mock.module("../services/search/file-filter-cache.js", () => ({
     clear() {}
   },
 }));
-// Spread real @th0th-ai/shared so enums (MemoryRelationType, MemoryLevel, etc.)
+// Spread real @massa-th0th/shared so enums (MemoryRelationType, MemoryLevel, etc.)
 // remain available to other test files that run in the same process.
-mock.module("@th0th-ai/shared", () => {
-  const actual = require("@th0th-ai/shared");
+mock.module("@massa-th0th/shared", () => {
+  const actual = require("@massa-th0th/shared");
   return {
     ...actual,
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
-    config: { get: () => "/tmp/th0th-test-concurrent" },
+    config: { get: () => "/tmp/massa-th0th-test-concurrent" },
     estimateTokens: (s: string) => Math.ceil(s.length / 4),
   };
 });

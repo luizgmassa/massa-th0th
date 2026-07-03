@@ -242,7 +242,7 @@ search: {
 ## 9. Test strategy
 
 Co-locate under `packages/core/src/__tests__/query-understanding.test.ts`.
-**Do not mock `@th0th-ai/shared`** (process-wide collision rule from
+**Do not mock `@massa-th0th/shared`** (process-wide collision rule from
 Phase 1). Instead:
 
 - Inject a fake `QueryLlmSurface` into the service ctor for unit tests

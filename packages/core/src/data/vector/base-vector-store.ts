@@ -10,9 +10,9 @@
  * Implementations: SQLiteVectorStore, PostgresVectorStore
  */
 
-import { IVectorStore, SearchResult, VectorDocument, VectorStoreStats, ProjectInfo } from '@th0th-ai/shared';
+import { IVectorStore, SearchResult, VectorDocument, VectorStoreStats, ProjectInfo } from '@massa-th0th/shared';
 import { createEmbeddingProvider, EmbeddingProvider } from '../../services/embeddings/index.js';
-import { logger } from '@th0th-ai/shared';
+import { logger } from '@massa-th0th/shared';
 
 /**
  * Base class for all vector store implementations

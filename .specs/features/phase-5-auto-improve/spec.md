@@ -11,8 +11,8 @@ detects recurring patterns (repeated queries, frequently-referenced files,
 common fixes) and proposes memory edits as **pending proposals** with an
 audit trail. Proposals default to **auto-approve** (apply + log) unless an
 explicit review gate (`memory.autoImprove.reviewGate`) opts into
-human-in-the-loop surfacing via `th0th_list_proposals` +
-`th0th_approve_proposal`. The pattern-detection pipeline MUST NOT require
+human-in-the-loop surfacing via `list_proposals` +
+`approve_proposal`. The pattern-detection pipeline MUST NOT require
 the LLM; LLM enrichment is optional, default-off, silent-degrade.
 
 ## Background / dependencies
@@ -90,7 +90,7 @@ is a fire-and-forget debounce trigger (every `minObservations` OR
      flip status to `approved` + set `decidedAt` + emit `memory:auto-improved`
      + log "auto-approved" (audit trail = the row + the event).
    - `reviewGate === true`: leave proposals `pending` for surfacing via
-     `th0th_list_proposals` + `th0th_approve_proposal`.
+     `list_proposals` + `approve_proposal`.
 6. Never throws to caller; all errors are caught + logged + return a `noop`
    result `{ improved:false, proposalsCreated:0, proposalsApplied:0 }`.
 
@@ -109,9 +109,9 @@ Published once after a successful apply (auto-approve OR explicit approve).
 NOT published on reject / no-op / throw.
 
 ### R7 — Surfacing: MCP tools + API route
-`th0th_list_proposals` (POST `/api/v1/proposal/list`) → pending proposals for
-a project. `th0th_approve_proposal` (POST `/api/v1/proposal/approve`) → apply +
-flip + emit. (Optional `th0th_reject_proposal` POST `/api/v1/proposal/reject`
+`list_proposals` (POST `/api/v1/proposal/list`) → pending proposals for
+a project. `approve_proposal` (POST `/api/v1/proposal/approve`) → apply +
+flip + emit. (Optional `reject_proposal` POST `/api/v1/proposal/reject`
 is included for completeness, mirroring the handoff accept/cancel pair.)
 Route `apps/tools-api/src/routes/proposals.ts` (Elysia prefix
 `/api/v1/proposal`): 423 when `memory.autoImprove.enabled === false`; 400 on
@@ -134,7 +134,7 @@ methods NEVER throw to the caller.
 | --- | --- |
 | P5-DETECT-01 | `runOnce` over ≥1 deterministic pattern (e.g. 3 observations referencing the same file path under `post-tool-use`) produces ≥1 `pending` proposal whose `kind` and `rationale` reference the pattern. |
 | P5-DETECT-02 | `runOnce` with no recurring pattern (all-distinct observations) produces 0 proposals and returns `{improved:false, proposalsCreated:0}` without throwing. |
-| P5-LIST-01 | `th0th_list_proposals` returns pending proposals for a project (ordered newest-first or oldest-first — documented), excluding approved/rejected. |
+| P5-LIST-01 | `list_proposals` returns pending proposals for a project (ordered newest-first or oldest-first — documented), excluding approved/rejected. |
 | P5-APPROVE-01 | `approve(pending_id)` applies the edit via `memoryRepo` (insert for create/tag, update for update), flips status to `approved`, sets `decidedAt`, and emits `memory:auto-improved` with the spec-defined shape. |
 | P5-AUTOAPPROVE-01 | With `reviewGate=false` (default), `runOnce` auto-approves each generated proposal: applies the edit, flips status, emits the event, and logs an "auto-approved" record (assertable via an injected logger sink or the event payload). |
 | P5-REJECT-01 | `reject(pending_id)` flips status to `rejected`, sets `decidedAt`, does NOT apply the edit, does NOT emit `memory:auto-improved`. |
@@ -142,7 +142,7 @@ methods NEVER throw to the caller.
 | P5-DEGRADE-02 | With LLM on but `{ok:false}`/throw, `runOnce` falls through to rule-based candidates verbatim (no throw; same proposal count as LLM-off). |
 | P5-FAIL-01 | `approve` on missing id → `{ok:false, not-found}`; on non-pending → `{ok:false, not-pending}`; on project-mismatch → `{ok:false, project-mismatch}`. No event in any failure case. |
 | P5-EVENT-01 | `memory:auto-improved` is in `EventMap` with the R6 shape; the test asserts all fields on a real approve. |
-| P5-TOOL-01 | `th0th_list_proposals` + `th0th_approve_proposal` (+ `th0th_reject_proposal`) are in `TOOL_DEFINITIONS`; the route is registered in `index.ts`. Type-check confirms the route compiles + is imported. |
+| P5-TOOL-01 | `list_proposals` + `approve_proposal` (+ `reject_proposal`) are in `TOOL_DEFINITIONS`; the route is registered in `index.ts`. Type-check confirms the route compiles + is imported. |
 | P5-MIGRATION-01 | SQLite `CREATE TABLE IF NOT EXISTS proposals` with the R1 columns + indexes; Prisma `Proposal @@map("proposals")` model. An idempotent-reopen test asserts a second store on the same dbPath reads the prior row. |
 | P5-CONFIG-01 | `memory.autoImprove.{enabled, reviewGate, minObservations, minIntervalMs, maxWindow, minQueryHits, minFileHits, minFixHits}` exist with documented defaults; `mergeConfig` shallow-merges the nested block. |
 

@@ -7,7 +7,7 @@ Phase-1/3 seams verbatim. No new schema, no migration.
 ## 1. Architecture overview
 
 ```
-MCP th0th_bootstrap ─┐
+MCP bootstrap ─┐
                      ├─→ POST /api/v1/bootstrap (routes/bootstrap.ts)
 API client ──────────┘            │
                                   ▼
@@ -322,7 +322,7 @@ Notes:
   bridge (`observation-consolidation-job.ts:225`).
 - The `bootstrap:<projectId>` tag is the **idempotency marker** (R3) —
   `hasBootstrapMarker` queries it.
-- `MemoryType`/`MemoryLevel` enums are in `@th0th-ai/shared`.
+- `MemoryType`/`MemoryLevel` enums are in `@massa-th0th/shared`.
 
 ## 8. EventBus event — `bootstrap:completed` (R4)
 
@@ -408,7 +408,7 @@ async bootstrap(projectId, opts = {}): Promise<BootstrapResult> {
 `TOOL_DEFINITIONS` before the closing `]`):
 ```ts
 {
-  name: "th0th_bootstrap",
+  name: "bootstrap",
   description: "Scan a project (git log, README, docs, manifests, top central files) and create LLM-summarized seed memories so an agent begins with usable context. Idempotent — skips if already bootstrapped unless force=true. LLM-off degrades to rule-based seeds.",
   apiEndpoint: "/api/v1/bootstrap",
   apiMethod: "POST",
@@ -429,8 +429,8 @@ Dispatch is the generic POST path (`apps/mcp-client/src/index.ts:169`) →
 **API route** (`apps/tools-api/src/routes/bootstrap.ts`, mirroring
 `routes/hooks.ts`):
 ```ts
-import { getBootstrapService } from "@th0th-ai/core";
-import { config, logger } from "@th0th-ai/shared";
+import { getBootstrapService } from "@massa-th0th/core";
+import { config, logger } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
 
 let cached: ReturnType<typeof getBootstrapService> | null = null;
@@ -472,7 +472,7 @@ Registered in `apps/tools-api/src/index.ts`:
 ## 11. Test-isolation strategy (load-bearing)
 
 Mirrors Phase-3 exactly (`observation-consolidation-job.test.ts`):
-- Do NOT `mock.module("@th0th-ai/shared")` (process-wide collision).
+- Do NOT `mock.module("@massa-th0th/shared")` (process-wide collision).
 - Inject a **fake `MemoryRepoSeam`** that captures inserts + controls
   `hasBootstrapMarker` — avoids the closed-`MemoryRepository` singleton
   landmine.

@@ -5,11 +5,11 @@
  * Mantém estrutura essencial, remove detalhes, economiza tokens.
  */
 
-import { IToolHandler } from "@th0th-ai/shared";
-import { ToolResponse } from "@th0th-ai/shared";
+import { IToolHandler } from "@massa-th0th/shared";
+import { ToolResponse } from "@massa-th0th/shared";
 import { CodeCompressor } from "../services/compression/code-compressor.js";
-import { logger } from "@th0th-ai/shared";
-import { estimateTokens } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
+import { estimateTokens } from "@massa-th0th/shared";
 
 interface CompressContextParams {
   content: string;

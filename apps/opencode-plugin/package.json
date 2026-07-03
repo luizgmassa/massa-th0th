@@ -1,11 +1,11 @@
 {
-  "name": "@th0th-ai/opencode-plugin",
-  "version": "1.1.5",
-  "description": "th0th plugin for OpenCode - Semantic code search, memory, and context compression",
+  "name": "@massa-th0th/opencode-plugin",
+  "version": "1.0.0",
+  "description": "massa-th0th plugin for OpenCode - Semantic code search, memory, and context compression",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "th0th-config": "dist/config-cli.js"
+    "massa-th0th-config": "dist/config-cli.js"
   },
   "files": [
     "dist"
@@ -19,8 +19,8 @@
   "dependencies": {
     "@opencode-ai/plugin": "^1.2.15",
     "@opencode-ai/sdk": "^1.2.15",
-    "@th0th-ai/core": "workspace:*",
-    "@th0th-ai/shared": "workspace:*"
+    "@massa-th0th/core": "workspace:*",
+    "@massa-th0th/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
@@ -30,7 +30,7 @@
   "keywords": [
     "opencode",
     "plugin",
-    "th0th",
+    "massa-th0th",
     "semantic-search",
     "code-search",
     "memory",
@@ -41,6 +41,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/S1LV4/th0th"
+    "url": "https://github.com/S1LV4/massa-th0th"
   }
 }

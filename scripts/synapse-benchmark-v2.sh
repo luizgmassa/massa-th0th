@@ -8,7 +8,7 @@
 set -euo pipefail
 
 BATCH="${BATCH:-A}"
-PROJECT="${PROJECT:-th0th}"
+PROJECT="${PROJECT:@massa-th0th}"
 URL="${URL:-http://localhost:3333/api/v1/search/project}"
 OUT="${OUT:-/tmp/synapse-bench-${BATCH}.jsonl}"
 QUERY_FILE="${QUERY_FILE:-}"

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * th0th MCP Client
+ * massa-th0th MCP Client
  *
  * Cliente MCP que se conecta ao OpenCode via stdio
  * e faz proxy das tool calls para a Tools API via HTTP.
@@ -22,7 +22,7 @@ import {
   loadConfig,
   getConfigPath,
   getConfigDir
-} from "@th0th-ai/shared/config";
+} from "@massa-th0th/shared/config";
 
 // Check for config-related flags before starting MCP server
 const args = process.argv.slice(2);
@@ -61,10 +61,10 @@ if (args.includes("--config-init")) {
 
 if (args.includes("--help") || args.includes("-h")) {
   console.log(`
-th0th MCP Client
+massa-th0th MCP Client
 
 Usage:
-  npx @th0th-ai/mcp-client [options]
+  npx @massa-th0th/mcp-client [options]
 
 Options:
   --config-show     Show current configuration
@@ -74,11 +74,11 @@ Options:
   --help, -h        Show this help message
 
 For advanced configuration, use the config CLI:
-  npx @th0th-ai/mcp-client th0th-config <command>
+  npx @massa-th0th/mcp-client massa-th0th-config <command>
 
 Examples:
-  npx @th0th-ai/mcp-client --config-show
-  npx @th0th-ai/mcp-client --config-path
+  npx @massa-th0th/mcp-client --config-show
+  npx @massa-th0th/mcp-client --config-path
 `);
   process.exit(0);
 }
@@ -91,10 +91,10 @@ function textContent(text: string) {
 if (!configExists()) {
   initConfig();
   console.log(`
-[th0th] Initialized with default configuration
-[th0th] Config: ~/.config/th0th/config.json
-[th0th] Provider: Ollama (local, free)
-[th0th] To change: npx @th0th-ai/mcp-client th0th-config use mistral --api-key YOUR_KEY
+[massa-th0th] Initialized with default configuration
+[massa-th0th] Config: ~/.config/massa-th0th/config.json
+[massa-th0th] Provider: Ollama (local, free)
+[massa-th0th] To change: npx @massa-th0th/mcp-client massa-th0th-config use mistral --api-key YOUR_KEY
 `);
 }
 
@@ -106,7 +106,7 @@ class McpProxyServer {
   constructor() {
     this.server = new Server(
       {
-        name: "th0th",
+        name: "massa-th0th",
         version: "1.0.0",
       },
       {
@@ -138,7 +138,7 @@ class McpProxyServer {
       const { name, arguments: args } = request.params;
 
       try {
-        if (name === "th0th_index") {
+        if (name === "index") {
           return await this.handleIndexTool((args ?? {}) as Record<string, unknown>);
         }
 
@@ -253,7 +253,7 @@ class McpProxyServer {
     const healthy = await this.apiClient.healthCheck();
     if (!healthy) {
       console.log(
-        "[th0th-mcp] Warning: Tools API is not reachable. Requests will fail until API is available.",
+        "[massa-th0th-mcp] Warning: Tools API is not reachable. Requests will fail until API is available.",
       );
     }
 

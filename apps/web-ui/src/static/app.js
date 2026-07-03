@@ -1,5 +1,5 @@
 /**
- * th0th Web UI — app.js (read-only memory/search browser).
+ * massa-th0th Web UI — app.js (read-only memory/search browser).
  *
  * Single source for the pure helpers (markdownToHtml, view renderers, theme
  * helpers). The browser-init block is guarded by `typeof document !==
@@ -41,7 +41,7 @@ export const MEMORY_LEVELS = [
   { value: 3, label: "3 — Session" },
 ];
 
-const THEME_STORAGE_KEY = "th0th-ui-theme";
+const THEME_STORAGE_KEY = "massa-th0th-ui-theme";
 
 // ── HTML escaping ──────────────────────────────────────────────────────────
 
@@ -96,7 +96,7 @@ export function markdownToHtml(md) {
     const codeStash = [];
     t = t.replace(/`([^`]+)`/g, (_m, c) => {
       codeStash.push(c);
-      return "@@TH0THCODE" + (codeStash.length - 1) + "@@";
+      return "@@MASSA_TH0THCODE" + (codeStash.length - 1) + "@@";
     });
     // links [text](url) — url must be http(s)/mailto; escape text already done
     t = t.replace(
@@ -107,7 +107,7 @@ export function markdownToHtml(md) {
     t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     t = t.replace(/\*([^*]+)\*/g, "<em>$1</em>");
     // restore inline code
-    t = t.replace(/@@TH0THCODE(\d+)@@/g, (_m, idx) => "<code>" + codeStash[Number(idx)] + "</code>");
+    t = t.replace(/@@MASSA_TH0THCODE(\d+)@@/g, (_m, idx) => "<code>" + codeStash[Number(idx)] + "</code>");
     return t;
   }
 
@@ -671,7 +671,7 @@ function startApp(opts) {
 }
 
 // Export pure helpers + bootstrap on globalThis for both browser and Node import.
-const TH0TH_UI = {
+const MASSA_TH0TH_UI = {
   markdownToHtml,
   escapeHtml,
   renderProjects,
@@ -688,7 +688,7 @@ const TH0TH_UI = {
   MEMORY_LEVELS,
 };
 if (typeof globalThis !== "undefined") {
-  globalThis.TH0TH_UI = TH0TH_UI;
+  globalThis.MASSA_TH0TH_UI = MASSA_TH0TH_UI;
 }
 
 // Auto-start in a browser environment.

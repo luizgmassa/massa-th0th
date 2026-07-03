@@ -12,10 +12,10 @@
  */
 
 import { Database } from 'bun:sqlite';
-import { IVectorStore, IVectorCollection, VectorDocument, VectorStoreStats, ProjectInfo } from '@th0th-ai/shared';
-import { SearchResult, SearchSource } from '@th0th-ai/shared';
-import { config } from '@th0th-ai/shared';
-import { logger } from '@th0th-ai/shared';
+import { IVectorStore, IVectorCollection, VectorDocument, VectorStoreStats, ProjectInfo } from '@massa-th0th/shared';
+import { SearchResult, SearchSource } from '@massa-th0th/shared';
+import { config } from '@massa-th0th/shared';
+import { logger } from '@massa-th0th/shared';
 import { EmbeddingService as ChromaEmbeddingService } from '../../services/embeddings/index.js';
 import fs from 'fs';
 import path from 'path';

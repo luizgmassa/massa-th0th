@@ -20,8 +20,8 @@ import {
 import { SessionRegistry } from "../services/synapse/session/session-registry.js";
 import { DEFAULT_BUFFER_CONFIG } from "../services/synapse/buffer/working-memory-buffer.js";
 import { SynapseManager } from "../services/synapse/synapse-manager.js";
-import type { SearchResult, SynapseRuntimeConfig } from "@th0th-ai/shared";
-import { SearchSource } from "@th0th-ai/shared";
+import type { SearchResult, SynapseRuntimeConfig } from "@massa-th0th/shared";
+import { SearchSource } from "@massa-th0th/shared";
 
 function r(id: string, score: number, meta: Record<string, unknown> = {}, content: string = id): SearchResult {
   return { id, content, score, source: SearchSource.VECTOR, metadata: meta as any };

@@ -21,8 +21,8 @@ import { Database } from "bun:sqlite";
 // ── Mock config and logger ────────────────────────────────────
 let tmpDir: string;
 
-mock.module("@th0th-ai/shared", () => {
-  const actual = require("@th0th-ai/shared");
+mock.module("@massa-th0th/shared", () => {
+  const actual = require("@massa-th0th/shared");
   return {
     ...actual,
     MemoryRelationType: actual.MemoryRelationType,
@@ -31,9 +31,9 @@ mock.module("@th0th-ai/shared", () => {
         if (key === "dataDir") return tmpDir;
         // Provide safe defaults for module-level singletons that may load
         const defaults: Record<string, any> = {
-          vectorStore: { type: "sqlite", dbPath: "/tmp/th0th-test-vs.db", collectionName: "test", embeddingModel: "default" },
-          keywordSearch: { dbPath: "/tmp/th0th-test-kw.db", ftsVersion: "fts5" },
-          cache: { l1: { maxSize: 1024, defaultTTL: 60 }, l2: { dbPath: "/tmp/th0th-test-cache.db", maxSize: 1024, defaultTTL: 60 }, embedding: { dbPath: "/tmp/th0th-test-emb-cache.db", maxAgeHours: 1 } },
+          vectorStore: { type: "sqlite", dbPath: "/tmp/massa-th0th-test-vs.db", collectionName: "test", embeddingModel: "default" },
+          keywordSearch: { dbPath: "/tmp/massa-th0th-test-kw.db", ftsVersion: "fts5" },
+          cache: { l1: { maxSize: 1024, defaultTTL: 60 }, l2: { dbPath: "/tmp/massa-th0th-test-cache.db", maxSize: 1024, defaultTTL: 60 }, embedding: { dbPath: "/tmp/massa-th0th-test-emb-cache.db", maxAgeHours: 1 } },
           security: { maxInputLength: 10000, sanitizeInputs: true, maxIndexSize: 1000, maxFileSize: 1048576, allowedExtensions: [".ts"], excludePatterns: [] },
         };
         return defaults[key];
@@ -141,7 +141,7 @@ describe("RedundancyFilter", () => {
   let db: Database;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-test-rf-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-test-rf-"));
     const dbPath = path.join(tmpDir, "memories.db");
     db = setupMemoriesTable(dbPath);
     (RedundancyFilter as any).instance = null;
@@ -502,7 +502,7 @@ describe("MemoryClustering", () => {
   let db: Database;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-test-clust-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-test-clust-"));
     const dbPath = path.join(tmpDir, "memories.db");
     db = setupMemoriesTable(dbPath);
     (MemoryClustering as any).instance = null;

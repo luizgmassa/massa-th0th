@@ -15,7 +15,7 @@ The auto-improvement deliverable (`ProposalStore` SQLite-canonical +
 `AutoImproveJob` rule-based pattern detection + LLM-optional enrichment +
 review-gate/auto-approve + apply/reject state machine + `memory:auto-improved`
 event + 3 MCP tools + API route + core barrel re-exports) meets its acceptance
-criteria. Gate = `bun run --filter @th0th-ai/core test` **822 pass / 0 fail /
+criteria. Gate = `bun run --filter @massa-th0th/core test` **822 pass / 0 fail /
 46 skip** (baseline 791 → +31), `bun run type-check` clean (5/5). The
 discrimination sensor killed its mutant. The state machine
 (pending → approved | rejected, both terminal) is proven; every failure mode
@@ -56,7 +56,7 @@ the LLM-off degradation path still produces proposals.
 | P5-DEGRADE-02 | LLM on + {ok:false}/throw → rule-based candidates verbatim | P5-DEGRADE-02 (failingSurface): `proposalsCreated===baselineCount`, `source==="rule-based"`. (throwingSurface): `improved`, `source==="rule-based"`. (enabledEnrichSurface): `source==="llm"`, enriched content + rationale applied. | YES |
 | P5-FAIL-01 | approve missing → not-found; non-pending → not-pending; project-mismatch → project-mismatch; empty → missing-id | P5-FAIL-01 (missing-id): `not-found`, 0 events. (already-approved): second approve `not-pending`. (project-mismatch): `project-mismatch`. (empty id): `missing-id`. apply-failed: `mem.failNext` → `apply-failed`, status stays pending. | YES |
 | P5-EVENT-01 | memory:auto-improved in EventMap with R6 shape | `event-bus.ts` EventMap entry; P5-EVENT-01 asserts `proposalId:string`, `projectId:"proj-ai"`, `kind∈{create,update,tag}`, `status:"approved"`, `appliedAt:number`, `source∈{llm,rule-based}`. | YES |
-| P5-TOOL-01 | 3 tools in TOOL_DEFINITIONS + route registered | `tool-definitions.ts` th0th_list_proposals/approve/reject; `routes/proposals.ts` `proposalRoutes`; `index.ts` `.use(proposalRoutes)` + swagger tag. P5-TOOL-01 asserts all 3 names + `apiEndpoint` + `proposalRoutes` defined. Type-check confirms. | YES |
+| P5-TOOL-01 | 3 tools in TOOL_DEFINITIONS + route registered | `tool-definitions.ts` list_proposals/approve/reject; `routes/proposals.ts` `proposalRoutes`; `index.ts` `.use(proposalRoutes)` + swagger tag. P5-TOOL-01 asserts all 3 names + `apiEndpoint` + `proposalRoutes` defined. Type-check confirms. | YES |
 | P5-MIGRATION-01 | SQLite CREATE TABLE IF NOT EXISTS proposals + indexes; Prisma Proposal; idempotent reopen | `proposal-repository.ts` `createSchema` + 2 indexes; `schema.prisma` `model Proposal @@map("proposals")`; idempotent-reopen test: store2 on same dbPath reads prior row. | YES |
 | P5-CONFIG-01 | memory.autoImprove.* keys + defaults; mergeConfig shallow-merges | `config/index.ts` `memory.autoImprove` block (interface + defaultConfig + mergeConfig); defensive `readAutoImproveConfig` fallback for process-wide mock omission. | YES |
 
@@ -78,7 +78,7 @@ the LLM-off degradation path still produces proposals.
 
 | Gate | Command | Result |
 | --- | --- | --- |
-| Full suite (core) | `bun run --filter @th0th-ai/core test` | **822 pass / 0 fail / 46 skip** (baseline 791 → +31). Ran 868 tests across 67 files. |
+| Full suite (core) | `bun run --filter @massa-th0th/core test` | **822 pass / 0 fail / 46 skip** (baseline 791 → +31). Ran 868 tests across 67 files. |
 | type-check | `bun run type-check` | **clean** (5/5 tasks). |
 | pattern generation | `auto-improve-job.test.ts` P5-DETECT-01 | ≥1 pending proposal from hot-file pattern. |
 | listPending | `auto-improve-job.test.ts` P5-LIST-01 + repo test | pending-only, project-scoped, newest-first. |
@@ -145,7 +145,7 @@ Mutant killed. No surviving mutant.
    `memory:auto-improved` published only on success. `reject`: same guards,
    flip to rejected, no apply, no event. **OK.**
 9. **MCP tools + route (R7, P5-TOOL-01).** Spec: 3 tools + route. Read
-   `tool-definitions.ts`: th0th_list_proposals/approve/reject with correct
+   `tool-definitions.ts`: list_proposals/approve/reject with correct
    apiEndpoints; `routes/proposals.ts` `proposalRoutes`; `index.ts`
    `.use(proposalRoutes)` after `.use(handoffRoutes)` + swagger tag `proposals`.
    **OK.**

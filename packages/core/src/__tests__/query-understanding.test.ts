@@ -2,7 +2,7 @@
  * Tests for Phase-2 query understanding (rewrite + HyDE + cache + fan-out +
  * degradation + retrieval quality).
  *
- * Isolation strategy (Phase-1 finding): bun `mock.module("@th0th-ai/shared")`
+ * Isolation strategy (Phase-1 finding): bun `mock.module("@massa-th0th/shared")`
  * is process-wide and collides across files. We therefore do NOT mock shared
  * config here. Instead:
  *   - Unit tests inject a fake `QueryLlmSurface` + fake `embedFn` (no config,
@@ -27,8 +27,8 @@ import {
   type QueryLlmSurface,
   type EmbedFn,
 } from "../services/search/query-understanding.js";
-import type { SearchResult } from "@th0th-ai/shared";
-import { SearchSource } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
+import { SearchSource } from "@massa-th0th/shared";
 import type { z } from "zod";
 
 // ─── Fake-surface builders ────────────────────────────────────────────────────

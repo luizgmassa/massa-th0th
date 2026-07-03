@@ -26,8 +26,8 @@
 
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import { logger, MemoryLevel, MemoryType } from "@th0th-ai/shared";
-import { config } from "@th0th-ai/shared";
+import { logger, MemoryLevel, MemoryType } from "@massa-th0th/shared";
+import { config } from "@massa-th0th/shared";
 import {
   getProposalStore,
   newProposalId,

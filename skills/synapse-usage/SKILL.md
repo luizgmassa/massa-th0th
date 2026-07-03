@@ -1,6 +1,6 @@
 ---
 name: synapse-usage
-description: Use the th0th Synapse cognitive modulation layer to get focused, low-noise retrieval during multi-step coding tasks. Open a session, prime the buffer with known-relevant memories, pass synapseSessionId on every search, and prefetch when opening a file. Triggers on tasks involving repeated searches in the same context (debugging, code review, refactor, onboarding) where retrieval quality matters more than one-shot speed.
+description: Use the massa-th0th Synapse cognitive modulation layer to get focused, low-noise retrieval during multi-step coding tasks. Open a session, prime the buffer with known-relevant memories, pass synapseSessionId on every search, and prefetch when opening a file. Triggers on tasks involving repeated searches in the same context (debugging, code review, refactor, onboarding) where retrieval quality matters more than one-shot speed.
 license: MIT
 metadata:
   author: S1LV4
@@ -9,7 +9,7 @@ metadata:
 
 # synapse-usage Skill
 
-Use the th0th **Synapse** cognitive modulation layer to get focused, low-noise retrieval during multi-step coding tasks. Synapse does not replace `th0th_search` or `th0th_optimized_context` — it modulates *which results survive and in what order* based on session context, task alignment, agent affinity, intent, recency, and result diversity.
+Use the massa-th0th **Synapse** cognitive modulation layer to get focused, low-noise retrieval during multi-step coding tasks. Synapse does not replace `search` or `optimized_context` — it modulates *which results survive and in what order* based on session context, task alignment, agent affinity, intent, recency, and result diversity.
 
 ## When to Apply
 
@@ -38,7 +38,7 @@ Synapse is exposed via the tools-API at `http://localhost:3333/api/v1/synapse/..
 | `POST   /api/v1/synapse/session/:id/prefetch` | Plan + execute prefetch on file open |
 | `GET    /api/v1/synapse/sessions` | List active session count (debug) |
 
-Search integration: pass `synapseSessionId` on `POST /api/v1/search/project` (the `th0th_search` MCP tool maps to this endpoint).
+Search integration: pass `synapseSessionId` on `POST /api/v1/search/project` (the `search` MCP tool maps to this endpoint).
 
 ## Lifecycle (the five moves)
 
@@ -60,10 +60,10 @@ SID=$(curl -sS -X POST http://localhost:3333/api/v1/synapse/session \
 
 ### 2. Pass `synapseSessionId` to every search
 
-When using `th0th_search` (or POSTing directly to `/api/v1/search/project`):
+When using `search` (or POSTing directly to `/api/v1/search/project`):
 
 ```
-th0th_search({
+search({
   query: "where does the timeout get applied?",
   projectId: "my-project",
   synapseSessionId: "syn_mp16isfr_nvfo1g7c"
@@ -106,7 +106,7 @@ curl -sS -X POST http://localhost:3333/api/v1/synapse/session/$SID/prefetch \
   }'
 ```
 
-`entries` are memories you (typically from a prior `th0th_recall`) believe will be relevant. The endpoint can also be called with just `filePath`/`symbols` and no entries — Synapse then builds a prefetch *plan* (returned in the response) which you can execute with `th0th_recall` and POST back as `entries`.
+`entries` are memories you (typically from a prior `recall`) believe will be relevant. The endpoint can also be called with just `filePath`/`symbols` and no entries — Synapse then builds a prefetch *plan* (returned in the response) which you can execute with `recall` and POST back as `entries`.
 
 ### 5. Close the session at task end
 
@@ -153,11 +153,11 @@ When `synapseSessionId` is provided and the server logs at `LOG_LEVEL=debug`, on
 
 ```
 1. CREATE session   taskContext = "investigating <error> in <area>"
-2. th0th_search     for the error message  (pass synapseSessionId)
+2. search     for the error message  (pass synapseSessionId)
 3. PREFETCH         on the file that owns the failing code
-4. th0th_search     for context (config, related handlers, recent changes)
+4. search     for context (config, related handlers, recent changes)
 5. UPDATE context   "applying fix for <root cause>"
-6. th0th_search     for affected tests
+6. search     for affected tests
 7. DELETE session
 ```
 
@@ -165,9 +165,9 @@ When `synapseSessionId` is provided and the server logs at `LOG_LEVEL=debug`, on
 
 ```
 1. CREATE session   taskContext = "reviewing PR #N about <feature>"
-2. th0th_search     each touched file's history
+2. search     each touched file's history
 3. PREFETCH         on each touched file
-4. th0th_search     tests covering the change
+4. search     tests covering the change
 5. DELETE
 ```
 
@@ -175,10 +175,10 @@ When `synapseSessionId` is provided and the server logs at `LOG_LEVEL=debug`, on
 
 ```
 1. CREATE session   taskContext = "renaming X to Y across the codebase"
-2. th0th_search     references — wide net first
+2. search     references — wide net first
 3. POST /access     on each true hit (agent-affinity boost for next iteration)
 4. PREFETCH         per file as you decide which to edit
-5. th0th_search     again later for the same X — buffer surfaces prior hits
+5. search     again later for the same X — buffer surfaces prior hits
 6. DELETE
 ```
 
@@ -215,7 +215,7 @@ SID=$(curl -sS -X POST http://localhost:3333/api/v1/synapse/session \
   -d '{"agentId":"claude-code","taskContext":"add retry to auth client","enableBuffer":true}' \
   | jq -r .data.sessionId)
 
-# Every search (or use th0th_search with synapseSessionId param)
+# Every search (or use search with synapseSessionId param)
 curl -sS -X POST http://localhost:3333/api/v1/search/project \
   -H 'Content-Type: application/json' \
   -d "{\"query\":\"auth client retry\",\"projectId\":\"my-project\",\"synapseSessionId\":\"$SID\"}"
@@ -231,11 +231,11 @@ That is the entire surface area. Everything else (attention, chain inhibition, d
 ```
 Starting a multi-step task?
   → POST /api/v1/synapse/session   (open session, get sessionId)
-  → th0th_recall                   (collect known-relevant memories for the task)
+  → recall                   (collect known-relevant memories for the task)
   → POST /session/:id/prime        (seed buffer with those memories)
 
 Running a search inside the task?
-  → th0th_search  with synapseSessionId param
+  → search  with synapseSessionId param
   → (server applies the full pipeline automatically)
 
 Opening a file the agent will dig into?

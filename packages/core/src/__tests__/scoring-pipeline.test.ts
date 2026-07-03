@@ -14,19 +14,19 @@
 
 import { describe, test, expect, mock, beforeAll } from "bun:test";
 
-// ── Mock @th0th-ai/shared ────────────────────────────────────
-mock.module("@th0th-ai/shared", () => {
-  const actual = require("@th0th-ai/shared");
+// ── Mock @massa-th0th/shared ────────────────────────────────────
+mock.module("@massa-th0th/shared", () => {
+  const actual = require("@massa-th0th/shared");
   return {
     ...actual,
     SearchSource: { VECTOR: "vector", KEYWORD: "keyword", HYBRID: "hybrid", CACHE: "cache" },
     config: {
       get: (key: string) => {
         const defaults: Record<string, any> = {
-          dataDir: "/tmp/th0th-test-scoring",
-          vectorStore: { type: "sqlite", dbPath: "/tmp/th0th-test-vs.db", collectionName: "test", embeddingModel: "default" },
-          keywordSearch: { dbPath: "/tmp/th0th-test-kw.db", ftsVersion: "fts5" },
-          cache: { l1: { maxSize: 1024, defaultTTL: 60 }, l2: { dbPath: "/tmp/th0th-test-cache.db", maxSize: 1024, defaultTTL: 60 }, embedding: { dbPath: "/tmp/th0th-test-emb-cache.db", maxAgeHours: 1 } },
+          dataDir: "/tmp/massa-th0th-test-scoring",
+          vectorStore: { type: "sqlite", dbPath: "/tmp/massa-th0th-test-vs.db", collectionName: "test", embeddingModel: "default" },
+          keywordSearch: { dbPath: "/tmp/massa-th0th-test-kw.db", ftsVersion: "fts5" },
+          cache: { l1: { maxSize: 1024, defaultTTL: 60 }, l2: { dbPath: "/tmp/massa-th0th-test-cache.db", maxSize: 1024, defaultTTL: 60 }, embedding: { dbPath: "/tmp/massa-th0th-test-emb-cache.db", maxAgeHours: 1 } },
           security: { maxInputLength: 10000, sanitizeInputs: true, maxIndexSize: 1000, maxFileSize: 1048576, allowedExtensions: [".ts"], excludePatterns: [] },
         };
         return defaults[key];

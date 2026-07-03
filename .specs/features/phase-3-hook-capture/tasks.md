@@ -34,7 +34,7 @@ One atomic commit per task. Conventional Commits. Branch `main`. Never `git push
   `/hook/batch`); wire into `apps/tools-api/src/index.ts`.
 - [ ] `packages/core/src/services/jobs/observation-consolidation-job.ts`
   (debounce trigger, silent-skip, reuse consolidator).
-- [ ] `apps/mcp-client/src/tool-definitions.ts`: add `th0th_hook_ingest`.
+- [ ] `apps/mcp-client/src/tool-definitions.ts`: add `hook_ingest`.
 - [ ] `apps/claude-plugin/hooks/{session-start,user-prompt-submit,post-tool-use,stop}.sh`
   + `README.md`.
 - Tests: `observation-consolidation-job.test.ts` — P3-CONSOLIDATE-01/02/03

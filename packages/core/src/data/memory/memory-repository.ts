@@ -6,7 +6,7 @@
  * No business logic — that lives in MemoryService and MemoryController.
  */
 
-import { config, logger, MemoryLevel, MemoryType } from "@th0th-ai/shared";
+import { config, logger, MemoryLevel, MemoryType } from "@massa-th0th/shared";
 import { Database } from "bun:sqlite";
 import fs from "fs";
 import path from "path";

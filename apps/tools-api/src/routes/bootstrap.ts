@@ -6,8 +6,8 @@
  * 423 when bootstrap is disabled via config, 400 on empty projectId.
  */
 
-import { getBootstrapService } from "@th0th-ai/core";
-import { config, logger } from "@th0th-ai/shared";
+import { getBootstrapService } from "@massa-th0th/core";
+import { config, logger } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
 
 let cachedService: ReturnType<typeof getBootstrapService> | null = null;

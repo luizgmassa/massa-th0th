@@ -6,7 +6,7 @@
 
 import { KeywordSearch } from "./keyword-search.js";
 import { KeywordSearchPg } from "./keyword-search-pg.js";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 
 let cachedSearch: KeywordSearch | KeywordSearchPg | null = null;
 

@@ -2,7 +2,7 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: th0th_test
+      POSTGRES_DB: massa_th0th_test
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
     ports:

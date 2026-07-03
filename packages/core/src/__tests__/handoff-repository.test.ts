@@ -40,7 +40,7 @@ describe("SqliteHandoffStore", () => {
   let store: SqliteHandoffStore;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-handoff-sqlite-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-handoff-sqlite-"));
     dbPath = path.join(tmpDir, "handoffs.db");
     store = new SqliteHandoffStore(dbPath);
   });

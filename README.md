@@ -26,7 +26,7 @@ Non-interactive (CI/scripted):
 
 ```bash
 # Docker mode, custom port, skip start
-TH0TH_MODE=docker TH0TH_API_PORT=4000 TH0TH_NO_START=1 \
+MASSA_TH0TH_MODE=docker MASSA_TH0TH_API_PORT=4000 MASSA_TH0TH_NO_START=1 \
   curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-th0th/main/install.sh | bash
 ```
 
@@ -35,7 +35,7 @@ TH0TH_MODE=docker TH0TH_API_PORT=4000 TH0TH_NO_START=1 \
 ```bash
 # 1. Clone and install
 git clone https://github.com/luizgmassa/massa-th0th.git
-cd th0th
+cd massa-th0th
 bun install
 
 # 2. Setup (100% offline with Ollama)
@@ -68,14 +68,14 @@ File: `~/.config/opencode/opencode.json`
 ```json
 {
   "mcp": {
-    "th0th": {
+    "massa-th0th": {
       "type": "local",
       "command": [
         "bunx",
-        "@th0th-ai/mcp-client"
+        "@massa-th0th/mcp-client"
       ],
       "environment": {
-        "TH0TH_API_URL": "http://localhost:3333"
+        "MASSA_TH0TH_API_URL": "http://localhost:3333"
       },
       "enabled": true
     }
@@ -87,7 +87,7 @@ File: `~/.config/opencode/opencode.json`
 
 ```json
 {
-  "plugin": ["@th0th-ai/opencode-plugin"]
+  "plugin": ["@massa-th0th/opencode-plugin"]
 }
 ```
 
@@ -96,9 +96,9 @@ File: `~/.config/opencode/opencode.json`
 ```json
 {
   "mcpServers": {
-    "th0th": {
+    "massa-th0th": {
       "type": "local",
-      "command": ["bun", "run", "/path/to/th0th/apps/mcp-client/src/index.ts"],
+      "command": ["bun", "run", "/path/to/massa-th0th/apps/mcp-client/src/index.ts"],
       "enabled": true
     }
   }
@@ -112,11 +112,11 @@ Create `.vscode/mcp.json` in your workspace:
 ```json
 {
   "servers": {
-    "th0th": {
+    "massa-th0th": {
       "command": "bunx",
-        "args": ["@th0th-ai/mcp-client"],
+        "args": ["@massa-th0th/mcp-client"],
       "env": {
-        "TH0TH_API_URL": "http://localhost:3333"
+        "MASSA_TH0TH_API_URL": "http://localhost:3333"
       }
     }
   }
@@ -127,7 +127,7 @@ Or run `./scripts/setup-vscode.sh` for automatic configuration.
 
 ### Claude Code (passive-capture hooks)
 
-Wire Claude Code lifecycle hooks into th0th so every session/prompt/tool-use is
+Wire Claude Code lifecycle hooks into massa-th0th so every session/prompt/tool-use is
 captured as an Observation and later consolidated into memories. See
 [§Passive Capture (Claude Code hooks)](#passive-capture-claude-code-hooks) for
 the install block and env vars.
@@ -137,7 +137,7 @@ the install block and env vars.
 ```json
 {
   "mcpServers": {
-    "th0th": {
+    "massa-th0th": {
       "type": "local",
       "command": ["docker", "compose", "run", "--rm", "-i", "mcp"],
       "enabled": true
@@ -163,7 +163,7 @@ is off.
 
 ```bash
 # MCP
-th0th_bootstrap { projectId: "my-app", projectPath: "/abs/path" }
+bootstrap { projectId: "my-app", projectPath: "/abs/path" }
 # REST
 curl -X POST http://localhost:3333/api/v1/bootstrap \
   -H "Content-Type: application/json" \
@@ -174,11 +174,11 @@ curl -X POST http://localhost:3333/api/v1/bootstrap \
 
 Install the Claude Code hooks (see
 [§Passive Capture](#passive-capture-claude-code-hooks)) so observations are
-streamed to `/api/v1/hook`. Non-Claude hosts use `th0th_hook_ingest` or
+streamed to `/api/v1/hook`. Non-Claude hosts use `hook_ingest` or
 `POST /api/v1/hook/batch`.
 
 ```bash
-# Observations land in ~/.rlm/observations.db; consolidated to memories
+# Observations land in ~/.massa-th0th-data/observations.db; consolidated to memories
 # only when RLM_LLM_ENABLED=true (else stored raw, bridge skips silently).
 ```
 
@@ -186,9 +186,9 @@ streamed to `/api/v1/hook`. Non-Claude hosts use `th0th_hook_ingest` or
 
 ```bash
 # Semantic memory search
-th0th_recall { query: "how does auth work", projectId: "my-app" }
+recall { query: "how does auth work", projectId: "my-app" }
 # Code search (enriched = full content + imports + parent symbol in one call)
-th0th_search { query: "token validation", projectId: "my-app", responseMode: "enriched" }
+search { query: "token validation", projectId: "my-app", responseMode: "enriched" }
 ```
 
 Quality knobs (default **OFF**, opt-in via env): `queryUnderstanding`
@@ -201,15 +201,15 @@ Session A leaves a structured record; session B discovers and accepts it.
 
 ```bash
 # Session A — leave the handoff
-th0th_handoff_begin {
+handoff_begin {
   projectId: "my-app",
   summary: "Auth refactor in progress; token rotation unfinished",
   nextSteps: ["finish rotateToken in auth.ts", "add tests"],
   files: ["src/auth.ts", "src/token.ts"]
 }
 # Session B — discover and accept
-th0th_handoff_list_pending { projectId: "my-app" }
-th0th_handoff_accept { id: "<handoff-id>" }
+handoff_list_pending { projectId: "my-app" }
+handoff_accept { id: "<handoff-id>" }
 ```
 
 ### 5. Review auto-improvement proposals
@@ -220,9 +220,9 @@ common fixes) and generates memory-edit proposals. With
 it `true` to surface them for review.
 
 ```bash
-th0th_list_proposals   { projectId: "my-app" }
-th0th_approve_proposal { id: "<proposal-id>" }
-th0th_reject_proposal  { id: "<proposal-id>", reason: "stale" }
+list_proposals   { projectId: "my-app" }
+approve_proposal { id: "<proposal-id>" }
+reject_proposal  { id: "<proposal-id>", reason: "stale" }
 ```
 
 ### 6. Snapshot and restore
@@ -231,14 +231,14 @@ Save task progress (status, steps, file changes, decisions, next action) and
 resume later — across a restart, a context compaction, or a new agent.
 
 ```bash
-th0th_create_checkpoint {
+create_checkpoint {
   taskId: "auth-refactor",
   description: "Token rotation mid-flight",
   progressPercent: 60,
   nextAction: "finish rotateToken in src/auth.ts"
 }
-th0th_list_checkpoints   { taskId: "auth-refactor" }
-th0th_restore_checkpoint { checkpointId: "<cp-id>" }
+list_checkpoints   { taskId: "auth-refactor" }
+restore_checkpoint { checkpointId: "<cp-id>" }
 ```
 
 ---
@@ -252,83 +252,83 @@ th0th_restore_checkpoint { checkpointId: "<cp-id>" }
 
 | Tool | Description |
 |------|-------------|
-| `th0th_index` | Index a project directory with semantic embeddings |
-| `th0th_index_status` | Poll background indexing job progress |
-| `th0th_search` | Hybrid semantic + keyword search with RRF ranking. Supports `responseMode=enriched` for full content + imports + parentSymbol in one call |
-| `th0th_reindex` | Force full reindex after a large refactor |
-| `th0th_reset_project` | Delete all indexed data for a project (vectors, symbols, memories) |
-| `th0th_list_projects` | List all indexed projects with status and file counts |
-| `th0th_project_map` | One-shot project summary: stats, top files by PageRank, symbol distribution |
+| `index` | Index a project directory with semantic embeddings |
+| `index_status` | Poll background indexing job progress |
+| `search` | Hybrid semantic + keyword search with RRF ranking. Supports `responseMode=enriched` for full content + imports + parentSymbol in one call |
+| `reindex` | Force full reindex after a large refactor |
+| `reset_project` | Delete all indexed data for a project (vectors, symbols, memories) |
+| `list_projects` | List all indexed projects with status and file counts |
+| `project_map` | One-shot project summary: stats, top files by PageRank, symbol distribution |
 
 ### Symbol Graph
 
 | Tool | Description |
 |------|-------------|
-| `th0th_search_definitions` | Find function/class/type definitions by name |
-| `th0th_get_references` | Find all usages of a symbol across the project |
-| `th0th_go_to_definition` | Jump to definition with file + line context |
-| `th0th_symbol_snippet` | Get raw code snippet by file + line range |
-| `th0th_read_file` | Read a file with symbol metadata and imports |
+| `search_definitions` | Find function/class/type definitions by name |
+| `get_references` | Find all usages of a symbol across the project |
+| `go_to_definition` | Jump to definition with file + line context |
+| `symbol_snippet` | Get raw code snippet by file + line range |
+| `read_file` | Read a file with symbol metadata and imports |
 
 ### Memory & Lifecycle
 
 | Tool | Purpose |
 |------|---------|
-| `th0th_remember` | Store information in persistent memory. **Req:** `content`. **Opt:** `type`, `importance`(0-1), `projectId`, `sessionId`, `agentId`, `tags`[], `format` |
-| `th0th_recall` | Semantic search over stored memories. **Req:** `query`. **Opt:** `userId`, `projectId`, `sessionId`, `agentId`, `types`[], `limit`, `minImportance`, `format` |
-| `th0th_memory_list` | Browse memories by type/importance (audit mode). **Opt:** `projectId`, `type`, `minImportance`, `limit`, `offset`, `format` |
-| `th0th_memory_update` | Update a memory by id; re-embeds on content change. **Req:** `id`. **Opt:** `content`, `importance`(0-1), `tags`[], `mergeTags`(bool, default false), `format` |
-| `th0th_memory_delete` | Hard-delete a memory by id; severs its graph edges. **Req:** `id`. **Opt:** `format` |
-| `th0th_optimized_context` | Search + compress in one call (max token efficiency) |
-| `th0th_analytics` | Usage patterns, cache performance, metrics |
-| `th0th_compress` | Compress context (keeps structure, removes detail) |
+| `remember` | Store information in persistent memory. **Req:** `content`. **Opt:** `type`, `importance`(0-1), `projectId`, `sessionId`, `agentId`, `tags`[], `format` |
+| `recall` | Semantic search over stored memories. **Req:** `query`. **Opt:** `userId`, `projectId`, `sessionId`, `agentId`, `types`[], `limit`, `minImportance`, `format` |
+| `memory_list` | Browse memories by type/importance (audit mode). **Opt:** `projectId`, `type`, `minImportance`, `limit`, `offset`, `format` |
+| `memory_update` | Update a memory by id; re-embeds on content change. **Req:** `id`. **Opt:** `content`, `importance`(0-1), `tags`[], `mergeTags`(bool, default false), `format` |
+| `memory_delete` | Hard-delete a memory by id; severs its graph edges. **Req:** `id`. **Opt:** `format` |
+| `optimized_context` | Search + compress in one call (max token efficiency) |
+| `analytics` | Usage patterns, cache performance, metrics |
+| `compress` | Compress context (keeps structure, removes detail) |
 
 ### Synapse (Cognitive Layer)
 
-Synapse is an optional post-retrieval modulation layer that improves result quality over a session by tracking task context, agent affinity, and working-memory. Enable by creating a session and passing `sessionId` to `th0th_search`.
+Synapse is an optional post-retrieval modulation layer that improves result quality over a session by tracking task context, agent affinity, and working-memory. Enable by creating a session and passing `sessionId` to `search`.
 
 | Tool | Description |
 |------|-------------|
-| `th0th_synapse_session` | Create/resume a cognitive session scoped to a task |
-| `th0th_synapse_prime` | Seed working-memory buffer with recalled memories |
-| `th0th_synapse_access` | Record file access to boost that file in future searches |
+| `synapse_session` | Create/resume a cognitive session scoped to a task |
+| `synapse_prime` | Seed working-memory buffer with recalled memories |
+| `synapse_access` | Record file access to boost that file in future searches |
 
 ### Passive Capture
 
 | Tool | Purpose |
 |------|---------|
-| `th0th_hook_ingest` | Passively ingest a batch of lifecycle events as Observations (fire-and-forget; consolidated later by the LLM bridge). **Req:** `events`[]. Each event **Req:** `event`∈{`session-start`,`user-prompt`,`pre-tool-use`,`post-tool-use`,`pre-compact`,`session-end`}, `projectId`, `payload`. **Opt:** `sessionId`, `importance`(0-1), `agentId`, `ts` |
+| `hook_ingest` | Passively ingest a batch of lifecycle events as Observations (fire-and-forget; consolidated later by the LLM bridge). **Req:** `events`[]. Each event **Req:** `event`∈{`session-start`,`user-prompt`,`pre-tool-use`,`post-tool-use`,`pre-compact`,`session-end`}, `projectId`, `payload`. **Opt:** `sessionId`, `importance`(0-1), `agentId`, `ts` |
 
 ### Project Bootstrap
 
 | Tool | Purpose |
 |------|---------|
-| `th0th_bootstrap` | Scan a project (git log, README, docs, top central files) and create seed memories. Idempotent; LLM-off degrades silently to rule-based. **Req:** `projectId`. **Opt:** `projectPath`, `force`(default false) |
+| `bootstrap` | Scan a project (git log, README, docs, top central files) and create seed memories. Idempotent; LLM-off degrades silently to rule-based. **Req:** `projectId`. **Opt:** `projectPath`, `force`(default false) |
 
 ### Cross-session Handoffs
 
 | Tool | Purpose |
 |------|---------|
-| `th0th_handoff_begin` | Begin a cross-session handoff (summary, open questions, next steps, files). Dual-written as a searchable memory. **Req:** `projectId`. **Opt:** `sourceSessionId`, `targetAgent`, `summary`(max 1024), `openQuestions`[], `nextSteps`[], `files`[] |
-| `th0th_handoff_accept` | Accept an open handoff by id (open→accepted). **Req:** `id`. **Opt:** `projectId` |
-| `th0th_handoff_cancel` | Cancel (expire) an open handoff by id (open→expired). **Req:** `id`. **Opt:** `projectId` |
-| `th0th_handoff_list_pending` | List open handoffs for a project, oldest-first. **Req:** `projectId`. **Opt:** `targetAgent` |
+| `handoff_begin` | Begin a cross-session handoff (summary, open questions, next steps, files). Dual-written as a searchable memory. **Req:** `projectId`. **Opt:** `sourceSessionId`, `targetAgent`, `summary`(max 1024), `openQuestions`[], `nextSteps`[], `files`[] |
+| `handoff_accept` | Accept an open handoff by id (open→accepted). **Req:** `id`. **Opt:** `projectId` |
+| `handoff_cancel` | Cancel (expire) an open handoff by id (open→expired). **Req:** `id`. **Opt:** `projectId` |
+| `handoff_list_pending` | List open handoffs for a project, oldest-first. **Req:** `projectId`. **Opt:** `targetAgent` |
 
 ### Auto-improvement (Proposals)
 
 | Tool | Purpose |
 |------|---------|
-| `th0th_list_proposals` | List pending auto-improvement proposals, newest-first. **Req:** `projectId` |
-| `th0th_approve_proposal` | Approve a proposal by id; applies the memory edit. **Req:** `id`. **Opt:** `projectId`, `source`∈{`llm`,`rule-based`} |
-| `th0th_reject_proposal` | Reject a proposal by id (no edit applied). **Req:** `id`. **Opt:** `projectId`, `reason` |
+| `list_proposals` | List pending auto-improvement proposals, newest-first. **Req:** `projectId` |
+| `approve_proposal` | Approve a proposal by id; applies the memory edit. **Req:** `id`. **Opt:** `projectId`, `source`∈{`llm`,`rule-based`} |
+| `reject_proposal` | Reject a proposal by id (no edit applied). **Req:** `id`. **Opt:** `projectId`, `reason` |
 
 ### Checkpoints
 
 | Tool | Purpose |
 |------|---------|
-| `th0th_create_checkpoint` | Save task progress for later resumption. **Req:** `taskId`, `description`. **Opt:** `status`∈{`pending`,`in_progress`,`completed`,`failed`,`paused`}, `currentStep`, `progressPercent`, `totalSteps`, `completedSteps`, `checkpointType`∈{`manual`,`milestone`}, `agentId`, `projectId`, `memoryIds`[], `fileChanges`[], `decisions`[], `learnings`[], `nextAction`, `pendingValidations`[], `format` |
-| `th0th_list_checkpoints` | List saved checkpoints. **Opt:** `taskId`, `projectId`, `checkpointType`∈{`auto`,`manual`,`milestone`}, `includeExpired`(default false), `limit`(default 10), `format` |
-| `th0th_restore_checkpoint` | Restore a checkpoint and return its state + integrity checks. **Opt:** `checkpointId`, `taskId`(restore latest for task), `format` |
+| `create_checkpoint` | Save task progress for later resumption. **Req:** `taskId`, `description`. **Opt:** `status`∈{`pending`,`in_progress`,`completed`,`failed`,`paused`}, `currentStep`, `progressPercent`, `totalSteps`, `completedSteps`, `checkpointType`∈{`manual`,`milestone`}, `agentId`, `projectId`, `memoryIds`[], `fileChanges`[], `decisions`[], `learnings`[], `nextAction`, `pendingValidations`[], `format` |
+| `list_checkpoints` | List saved checkpoints. **Opt:** `taskId`, `projectId`, `checkpointType`∈{`auto`,`manual`,`milestone`}, `includeExpired`(default false), `limit`(default 10), `format` |
+| `restore_checkpoint` | Restore a checkpoint and return its state + integrity checks. **Opt:** `checkpointId`, `taskId`(restore latest for task), `format` |
 
 ---
 
@@ -381,7 +381,7 @@ falls back to its rule-based path.
 
 ## Passive Capture (Claude Code hooks)
 
-Passive capture streams Claude Code lifecycle events into th0th as Observations,
+Passive capture streams Claude Code lifecycle events into massa-th0th as Observations,
 so the agent's behaviour is recorded without any change to how you prompt.
 
 - **Fire-and-forget:** each hook `curl`s the endpoint with a **2s timeout** and
@@ -409,7 +409,7 @@ so the agent's behaviour is recorded without any change to how you prompt.
 
 3. Start the API: `bun run dev:api` (defaults to `http://localhost:3333`).
 4. Run a Claude Code session — Observation rows appear in
-   `~/.rlm/observations.db` and are consolidated into memories only when
+   `~/.massa-th0th-data/observations.db` and are consolidated into memories only when
    `RLM_LLM_ENABLED=true`; otherwise they're stored raw and the bridge silently
    skips.
 
@@ -417,13 +417,13 @@ so the agent's behaviour is recorded without any change to how you prompt.
 
 | Variable | Default | Notes |
 |----------|---------|-------|
-| `TH0TH_API_BASE` | `http://localhost:3333` | Tools API base URL |
-| `TH0TH_API_KEY` | _(none)_ | Optional auth key |
-| `TH0TH_PROJECT_ID` | cwd basename | Project the observations attach to |
+| `MASSA_TH0TH_API_BASE` | `http://localhost:3333` | Tools API base URL |
+| `MASSA_TH0TH_API_KEY` | _(none)_ | Optional auth key |
+| `MASSA_TH0TH_PROJECT_ID` | cwd basename | Project the observations attach to |
 
 ### Non-Claude hosts
 
-Use the MCP tool `th0th_hook_ingest`, or POST directly to
+Use the MCP tool `hook_ingest`, or POST directly to
 `/api/v1/hook/batch` with `{ events: [...] }` — useful for Docker deployments
 where the repo (and hook scripts) aren't on the host filesystem.
 
@@ -444,7 +444,7 @@ bun run dev:api
 # then open http://localhost:3333/ui
 ```
 
-> The `dev:ui` script was removed — `@th0th-ai/ui-client` (its target) did not
+> The `dev:ui` script was removed — `@massa-th0th/ui-client` (its target) did not
 > exist. The web UI is served exclusively via `dev:api` at `/ui`.
 
 ---
@@ -548,7 +548,7 @@ curl -X POST http://localhost:3333/api/v1/proposal/list \
 
 ## Configuration
 
-Config file: `~/.config/th0th/config.json` (auto-created on first run).
+Config file: `~/.config/massa-th0th/config.json` (auto-created on first run).
 The canonical annotated reference for every environment variable is
 [`.env.example`](./.env.example) — mirror it into `.env` and edit there.
 
@@ -598,7 +598,7 @@ rows default **OFF** and degrade silently when disabled.
 | — | `WEB_UI_ENABLED` | `true` | on |
 
 > **Note:** `compression.llm` is a deprecated alias of top-level `llm` (same env
-> vars). There is a known drift between the typed `Th0thConfig` interface and the
+> vars). There is a known drift between the typed `MassaTh0thConfig` interface and the
 > runtime loader — the loader reads `llm`/`hooks`/`memory`/`search` from env
 > correctly even though the TS interface doesn't yet declare them. Tracked as a
 > separate code follow-up.
@@ -607,19 +607,19 @@ rows default **OFF** and degrade silently when disabled.
 
 ```bash
 # Show current configuration
-npx @th0th-ai/mcp-client --config-show
+npx @massa-th0th/mcp-client --config-show
 
 # Show config file path
-npx @th0th-ai/mcp-client --config-path
+npx @massa-th0th/mcp-client --config-path
 
 # Show config directory
-npx @th0th-ai/mcp-client --config-dir
+npx @massa-th0th/mcp-client --config-dir
 
 # Initialize configuration
-npx @th0th-ai/mcp-client --config-init
+npx @massa-th0th/mcp-client --config-init
 
 # Show help
-npx @th0th-ai/mcp-client --help
+npx @massa-th0th/mcp-client --help
 ```
 
 ### Embedding Providers
@@ -636,16 +636,16 @@ For detailed configuration management, use the config CLI:
 
 ```bash
 # Initialize with specific provider
-npx @th0th-ai/mcp-client --config-init                          # Ollama (default)
-npx @th0th-ai/mcp-client --config-init --mistral your-api-key   # Mistral
-npx @th0th-ai/mcp-client --config-init --openai your-api-key    # OpenAI
+npx @massa-th0th/mcp-client --config-init                          # Ollama (default)
+npx @massa-th0th/mcp-client --config-init --mistral your-api-key   # Mistral
+npx @massa-th0th/mcp-client --config-init --openai your-api-key    # OpenAI
 
 # Switch provider
-npx @th0th-ai/mcp-client --config-init --mistral your-api-key
-npx @th0th-ai/mcp-client --config-init --ollama-model qwen3-embedding
+npx @massa-th0th/mcp-client --config-init --mistral your-api-key
+npx @massa-th0th/mcp-client --config-init --ollama-model qwen3-embedding
 
 # Set specific configuration values
-npx @th0th-ai/mcp-client --config-set embedding.dimensions 4096
+npx @massa-th0th/mcp-client --config-set embedding.dimensions 4096
 ```
 
 ---
@@ -664,9 +664,9 @@ npx @th0th-ai/mcp-client --config-set embedding.dimensions 4096
 | `bun run lint` | Lint code |
 | `bun run type-check` | Type checking |
 | `bun run diagnose` | Validate full stack (Ollama, database, embeddings) |
-| `bun run bench:fixture` | Run the th0th retrieval fixture benchmark |
+| `bun run bench:fixture` | Run the massa-th0th retrieval fixture benchmark |
 
-> **`dev:ui` was removed.** Its target (`@th0th-ai/ui-client`) did not exist.
+> **`dev:ui` was removed.** Its target (`@massa-th0th/ui-client`) did not exist.
 > The Web UI is served by the Tools API at `http://localhost:3333/ui` — run it
 > with `bun run dev:api`.
 
@@ -675,7 +675,7 @@ npx @th0th-ai/mcp-client --config-set embedding.dimensions 4096
 ## Architecture
 
 ```
-th0th/
+massa-th0th/
 ├── apps/
 │   ├── mcp-client/           # MCP Server (stdio) — 35 tools
 │   ├── tools-api/            # REST API (port 3333) + Web UI at /ui

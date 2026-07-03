@@ -44,9 +44,9 @@ Tests derive from ACs (spec.md) and assert spec-defined outcomes.
 
 ## Task 4 — MCP tools + API route + core barrel
 - `apps/mcp-client/src/tool-definitions.ts`:
-  - `th0th_list_proposals` (POST `/api/v1/proposal/list`).
-  - `th0th_approve_proposal` (POST `/api/v1/proposal/approve`).
-  - `th0th_reject_proposal` (POST `/api/v1/proposal/reject`).
+  - `list_proposals` (POST `/api/v1/proposal/list`).
+  - `approve_proposal` (POST `/api/v1/proposal/approve`).
+  - `reject_proposal` (POST `/api/v1/proposal/reject`).
 - `apps/tools-api/src/routes/proposals.ts` (NEW):
   - Elysia prefix `/api/v1/proposal`; 3 POST handlers; 423 disabled; 400
     missing projectId/id; 200 `{success, data}`. Swagger tag `proposals`.
@@ -88,6 +88,6 @@ Tests derive from ACs (spec.md) and assert spec-defined outcomes.
 - Commit: `test(auto-improve): cover detect/list/approve/auto-approve/reject/degrade + validation`.
 
 ## Gate (per task 5)
-- `bun run --filter @th0th-ai/core test` ≥ 791 pass / 0 fail / 46 skip (no regression).
+- `bun run --filter @massa-th0th/core test` ≥ 791 pass / 0 fail / 46 skip (no regression).
 - `bun run type-check` clean (5/5).
 - Discrimination mutant killed.

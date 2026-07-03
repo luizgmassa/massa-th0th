@@ -9,7 +9,7 @@
  * Updates the symbol_files fingerprint table on success.
  */
 
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { getVectorStore } from "../../../data/vector/vector-store-factory.js";
 import { getSymbolRepository } from "../../../data/sqlite/symbol-repository-factory.js";
 import type {

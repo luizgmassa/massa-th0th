@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>th0th — Memory Browser (read-only)</title>
+    <title>massa-th0th — Memory Browser (read-only)</title>
     <link rel="stylesheet" href="styles.css" />
     <!-- no-FOUC theme bootstrap: apply persisted theme before stylesheet paints. -->
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("th0th-ui-theme");
+          var t = localStorage.getItem("massa-th0th-ui-theme");
           if (t === "dark" || t === "light") {
             document.documentElement.setAttribute("data-theme", t);
           }
@@ -19,7 +19,7 @@
   </head>
   <body>
     <header class="topbar">
-      <div class="brand">th0th <span class="muted">memory browser</span></div>
+      <div class="brand">massa-th0th <span class="muted">memory browser</span></div>
       <nav class="nav">
         <a href="#/projects">Projects</a>
         <a href="#/memory">Memory</a>
@@ -49,7 +49,7 @@
       <div class="loading">Loading…</div>
     </main>
     <footer class="footer muted">
-      Read-only · refresh to see new data · served by the th0th Tools API
+      Read-only · refresh to see new data · served by the massa-th0th Tools API
     </footer>
     <script type="module" src="app.js" defer></script>
   </body>

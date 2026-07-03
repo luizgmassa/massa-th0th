@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 /**
- * th0th Tools API
+ * massa-th0th Tools API
  *
- * API REST com ElysiaJS que expõe todas as ferramentas do th0th.
+ * API REST com ElysiaJS que expõe todas as ferramentas do massa-th0th.
  * Separada do protocolo MCP para permitir múltiplos clientes.
  *
  * Local-First: Funciona 100% offline com Ollama + SQLite.
  */
 
-import "@th0th-ai/shared/config";
+import "@massa-th0th/shared/config";
 
 import { Elysia } from "elysia";
 import { node } from "@elysiajs/node";
@@ -32,9 +32,9 @@ import { proposalRoutes } from "./routes/proposals.js";
 import { webUiRoutes } from "./routes/web-ui.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
-import { getHealthChecker, searchSessionHook, coRetrievalHook } from "@th0th-ai/core";
+import { getHealthChecker, searchSessionHook, coRetrievalHook } from "@massa-th0th/core";
 
-const PORT = process.env.TH0TH_API_PORT || 3333;
+const PORT = process.env.MASSA_TH0TH_API_PORT || 3333;
 
 const app = new Elysia({ adapter: node() })
   .use(cors())
@@ -42,7 +42,7 @@ const app = new Elysia({ adapter: node() })
     swagger({
       documentation: {
         info: {
-          title: "th0th Tools API",
+          title: "massa-th0th Tools API",
           version: "1.0.0",
           description:
             "Semantic context, memory, and code search tooling API. Consumed by the MCP Client and other clients.",
@@ -74,7 +74,7 @@ const app = new Elysia({ adapter: node() })
               type: "apiKey",
               in: "header",
               name: "x-api-key",
-              description: "API key — set TH0TH_API_KEY on the server. Omit when running locally without a key configured.",
+              description: "API key — set MASSA_TH0TH_API_KEY on the server. Omit when running locally without a key configured.",
             },
           },
         },
@@ -102,16 +102,16 @@ const app = new Elysia({ adapter: node() })
   .use(webUiRoutes)
   .get("/health", () => ({
     status: "ok",
-    service: "th0th-tools-api",
+    service: "massa-th0th-tools-api",
     version: "1.0.0",
     timestamp: new Date().toISOString(),
   }))
   .listen(PORT);
 
 searchSessionHook.register();
-coRetrievalHook.register(); // active only when TH0TH_CO_RETRIEVAL_HOOK=true
+coRetrievalHook.register(); // active only when MASSA_TH0TH_CO_RETRIEVAL_HOOK=true
 
-console.log(`th0th Tools API running at http://localhost:${PORT}`);
+console.log(`massa-th0th Tools API running at http://localhost:${PORT}`);
 console.log(`Swagger docs at http://localhost:${PORT}/swagger`);
 
 // Graceful shutdown
@@ -119,7 +119,7 @@ for (const signal of ['SIGTERM', 'SIGINT'] as const) {
   process.on(signal, async () => {
     console.log(`${signal} received, shutting down gracefully...`);
     try {
-      const { disconnectPrisma } = await import('@th0th-ai/core/services');
+      const { disconnectPrisma } = await import('@massa-th0th/core/services');
       await disconnectPrisma();
     } catch {}
     process.exit(0);

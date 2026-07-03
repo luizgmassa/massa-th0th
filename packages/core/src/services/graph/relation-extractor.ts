@@ -14,7 +14,7 @@ import {
   MemoryRelationType,
   ExtractedRelation,
   logger,
-} from "@th0th-ai/shared";
+} from "@massa-th0th/shared";
 import { EmbeddingService } from "../embeddings/index.js";
 import { GraphStore } from "./graph-store.js";
 import { getMemoryRepository } from "../../data/memory/memory-repository-factory.js";

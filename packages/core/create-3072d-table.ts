@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import '@th0th-ai/shared/config';
+import '@massa-th0th/shared/config';
 import { getPgPool } from './src/data/db-connection.js';
 
 async function main() {

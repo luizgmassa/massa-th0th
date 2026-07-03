@@ -8,7 +8,7 @@
  *   - Token-overlap Jaccard as a cheap fallback that works with what we have today.
  */
 
-import type { SearchResult } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
 import type { AgentSession } from "../types.js";
 
 const TOKEN_RE = /[a-z0-9_]{2,}/g;

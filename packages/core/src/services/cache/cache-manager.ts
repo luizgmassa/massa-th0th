@@ -4,10 +4,10 @@
  * Hierarchical cache implementation (L1: Memory, L2: SQLite, L3: Remote)
  */
 
-import { ICacheManager, CacheStats } from '@th0th-ai/shared';
+import { ICacheManager, CacheStats } from '@massa-th0th/shared';
 import { CacheEntry as CacheEntryModel } from '../../models/CacheEntry.js';
-import { CacheLevel } from '@th0th-ai/shared';
-import { logger } from '@th0th-ai/shared';
+import { CacheLevel } from '@massa-th0th/shared';
+import { logger } from '@massa-th0th/shared';
 import { L1MemoryCache } from './l1-memory-cache.js';
 import { L2SQLiteCache } from './l2-sqlite-cache.js';
 

@@ -4,7 +4,7 @@
  * When two session memories are stored in the same search session, they
  * co-occur semantically. This hook creates or strengthens a RELATES_TO
  * edge between them in the GraphStore, making those memories surface
- * together in future neighborhood queries (th0th_optimized_context).
+ * together in future neighborhood queries (optimized_context).
  *
  * Architecture decisions vs. the original spec:
  *  - Uses GraphStore (SQLite) not Prisma — edges already live there.
@@ -14,7 +14,7 @@
  *    task_succeeded) have no emitter in the current system.
  *  - No decay job — out of scope for MVP; edges are bounded by the
  *    saturation cap instead.
- *  - Opt-in via TH0TH_CO_RETRIEVAL_HOOK=true — safe rollout.
+ *  - Opt-in via MASSA_TH0TH_CO_RETRIEVAL_HOOK=true — safe rollout.
  *
  * Timing:
  *  SearchSessionHook stores Memory(B), then emits "memory:session-stored".
@@ -22,7 +22,7 @@
  *  event, queries recent session memories → finds Memory(A), links A↔B.
  */
 
-import { logger, MemoryRelationType } from "@th0th-ai/shared";
+import { logger, MemoryRelationType } from "@massa-th0th/shared";
 import { eventBus } from "../events/event-bus.js";
 import type { EventMap } from "../events/event-bus.js";
 import { GraphStore } from "../graph/graph-store.js";
@@ -95,7 +95,7 @@ export class CoRetrievalHook {
     payload: EventMap["memory:session-stored"],
   ): Promise<void> {
     // Feature flag — opt-in only; any value other than "true" keeps it off
-    if (process.env.TH0TH_CO_RETRIEVAL_HOOK !== "true") return;
+    if (process.env.MASSA_TH0TH_CO_RETRIEVAL_HOOK !== "true") return;
 
     const { memoryId, projectId, sessionId } = payload;
 

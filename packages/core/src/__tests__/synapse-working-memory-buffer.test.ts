@@ -3,8 +3,8 @@ import {
   WorkingMemoryBuffer,
   DEFAULT_BUFFER_CONFIG,
 } from "../services/synapse/buffer/working-memory-buffer.js";
-import type { SearchResult } from "@th0th-ai/shared";
-import { SearchSource } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
+import { SearchSource } from "@massa-th0th/shared";
 
 function r(id: string, score: number, content?: string): SearchResult {
   return {

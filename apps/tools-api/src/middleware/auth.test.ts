@@ -10,16 +10,16 @@ function buildApp() {
 }
 
 describe("authMiddleware", () => {
-  const saved = process.env.TH0TH_API_KEY;
+  const saved = process.env.MASSA_TH0TH_API_KEY;
 
   afterEach(() => {
-    if (saved === undefined) delete process.env.TH0TH_API_KEY;
-    else process.env.TH0TH_API_KEY = saved;
+    if (saved === undefined) delete process.env.MASSA_TH0TH_API_KEY;
+    else process.env.MASSA_TH0TH_API_KEY = saved;
   });
 
   // ── dev mode (no key configured) ─────────────────────────────
-  describe("dev mode — TH0TH_API_KEY not set", () => {
-    beforeEach(() => { delete process.env.TH0TH_API_KEY; });
+  describe("dev mode — MASSA_TH0TH_API_KEY not set", () => {
+    beforeEach(() => { delete process.env.MASSA_TH0TH_API_KEY; });
 
     test("allows requests without header", async () => {
       const app = buildApp();
@@ -35,8 +35,8 @@ describe("authMiddleware", () => {
   });
 
   // ── production mode (key configured) ─────────────────────────
-  describe("production mode — TH0TH_API_KEY=test-key", () => {
-    beforeEach(() => { process.env.TH0TH_API_KEY = "test-key"; });
+  describe("production mode — MASSA_TH0TH_API_KEY=test-key", () => {
+    beforeEach(() => { process.env.MASSA_TH0TH_API_KEY = "test-key"; });
 
     test("returns 401 with no header", async () => {
       const app = buildApp();

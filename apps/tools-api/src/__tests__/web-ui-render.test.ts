@@ -115,7 +115,7 @@ describe("web-ui dark mode (R8-RENDER-01)", () => {
     const next = ui.toggleTheme(doc, store);
     expect(next).toBe("dark");
     expect(doc.documentElement.getAttribute("data-theme")).toBe("dark");
-    expect(store.raw["th0th-ui-theme"]).toBe("dark");
+    expect(store.raw["massa-th0th-ui-theme"]).toBe("dark");
   });
 
   test("toggleTheme flips dark→light", () => {
@@ -128,7 +128,7 @@ describe("web-ui dark mode (R8-RENDER-01)", () => {
 
   test("initTheme applies persisted dark from store", () => {
     const doc = fakeDoc(null);
-    const store = fakeStore({ "th0th-ui-theme": "dark" });
+    const store = fakeStore({ "massa-th0th-ui-theme": "dark" });
     const theme = ui.initTheme(doc, store);
     expect(theme).toBe("dark");
     expect(doc.documentElement.getAttribute("data-theme")).toBe("dark");

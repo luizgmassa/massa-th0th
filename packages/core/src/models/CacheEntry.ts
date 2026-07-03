@@ -4,7 +4,7 @@
  * Represents a cached item in the hierarchical cache system
  */
 
-import { CacheEntry as ICacheEntry, CacheLevel } from '@th0th-ai/shared';
+import { CacheEntry as ICacheEntry, CacheLevel } from '@massa-th0th/shared';
 
 export class CacheEntry<T = unknown> implements ICacheEntry<T> {
   key: string;

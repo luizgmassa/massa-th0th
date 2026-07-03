@@ -11,8 +11,8 @@
  * - Automatic invalidation on index updates
  */
 
-import { SearchResult } from "@th0th-ai/shared";
-import { logger } from "@th0th-ai/shared";
+import { SearchResult } from "@massa-th0th/shared";
+import { logger } from "@massa-th0th/shared";
 import { Database } from "bun:sqlite";
 import crypto from "crypto";
 import path from "path";
@@ -58,7 +58,7 @@ export class SearchCache {
   private readonly DEFAULT_TTL = 3600; // 1 hour in seconds
 
   constructor(dbPath?: string) {
-    const defaultPath = path.join(os.homedir(), ".rlm", "search-cache.db");
+    const defaultPath = path.join(os.homedir(), ".massa-th0th-data", "search-cache.db");
     const finalPath = dbPath || defaultPath;
 
     // Ensure directory exists

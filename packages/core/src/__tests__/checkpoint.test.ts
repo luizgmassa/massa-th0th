@@ -17,7 +17,7 @@ import {
   CheckpointType,
   TaskStatus,
   type TaskState,
-} from "@th0th-ai/shared";
+} from "@massa-th0th/shared";
 import fs from "fs";
 import path from "path";
 import os from "os";
@@ -25,8 +25,8 @@ import os from "os";
 // ── Mock config and logger ────────────────────────────────────
 let tmpDir: string;
 
-mock.module("@th0th-ai/shared", () => {
-  const actual = require("@th0th-ai/shared");
+mock.module("@massa-th0th/shared", () => {
+  const actual = require("@massa-th0th/shared");
   return {
     ...actual,
     CheckpointType: actual.CheckpointType,
@@ -35,9 +35,9 @@ mock.module("@th0th-ai/shared", () => {
       get: (key: string) => {
         if (key === "dataDir") return tmpDir;
         const defaults: Record<string, any> = {
-          vectorStore: { type: "sqlite", dbPath: "/tmp/th0th-test-vs.db", collectionName: "test", embeddingModel: "default" },
-          keywordSearch: { dbPath: "/tmp/th0th-test-kw.db", ftsVersion: "fts5" },
-          cache: { l1: { maxSize: 1024, defaultTTL: 60 }, l2: { dbPath: "/tmp/th0th-test-cache.db", maxSize: 1024, defaultTTL: 60 }, embedding: { dbPath: "/tmp/th0th-test-emb-cache.db", maxAgeHours: 1 } },
+          vectorStore: { type: "sqlite", dbPath: "/tmp/massa-th0th-test-vs.db", collectionName: "test", embeddingModel: "default" },
+          keywordSearch: { dbPath: "/tmp/massa-th0th-test-kw.db", ftsVersion: "fts5" },
+          cache: { l1: { maxSize: 1024, defaultTTL: 60 }, l2: { dbPath: "/tmp/massa-th0th-test-cache.db", maxSize: 1024, defaultTTL: 60 }, embedding: { dbPath: "/tmp/massa-th0th-test-emb-cache.db", maxAgeHours: 1 } },
           security: { maxInputLength: 10000, sanitizeInputs: true, maxIndexSize: 1000, maxFileSize: 1048576, allowedExtensions: [".ts"], excludePatterns: [] },
         };
         return defaults[key];
@@ -93,7 +93,7 @@ describe("CheckpointManager", () => {
   let manager: CheckpointManager;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-test-ckpt-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-test-ckpt-"));
     (CheckpointManager as any).instance = null;
     manager = new CheckpointManager();
   });
@@ -456,7 +456,7 @@ describe("AutoCheckpointer", () => {
   let autoCheckpointer: AutoCheckpointer;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "th0th-test-autocp-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-test-autocp-"));
     (CheckpointManager as any).instance = null;
     (AutoCheckpointer as any).instance = null;
     autoCheckpointer = new AutoCheckpointer({

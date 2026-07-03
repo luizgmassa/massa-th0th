@@ -9,7 +9,7 @@
  * (constructed from config.vectorStore.dbPath). We seed it directly via
  * `upsertFile` / clear via `clearProject` for the skip test — the singleton is
  * the SAME instance DiscoverStage uses, so the read-after-write is consistent.
- * No `mock.module("@th0th-ai/shared")`.
+ * No `mock.module("@massa-th0th/shared")`.
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
@@ -25,7 +25,7 @@ import { eventBus } from "../services/events/event-bus.js";
 const TEST_PROJECT = "p7e-etl-probe";
 
 async function makeTempProject(files: Record<string, string>): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "th0th-etl-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-etl-"));
   await Promise.all(
     Object.entries(files).map(async ([rel, content]) => {
       const fp = path.join(dir, rel);

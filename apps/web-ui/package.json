@@ -1,8 +1,8 @@
 {
-  "name": "@th0th-ai/web-ui",
-  "version": "0.1.0",
+  "name": "@massa-th0th/web-ui",
+  "version": "1.0.0",
   "private": true,
-  "description": "th0th read-only memory + search web browser (served via Tools API)",
+  "description": "massa-th0th read-only memory + search web browser (served via Tools API)",
   "type": "module",
   "scripts": {
     "type-check": "tsc --noEmit"

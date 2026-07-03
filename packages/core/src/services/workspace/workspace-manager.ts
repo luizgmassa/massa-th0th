@@ -8,7 +8,7 @@
  * Subscribes to EventBus to auto-update status on indexing lifecycle events.
  */
 
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { getSymbolRepository } from "../../data/sqlite/symbol-repository-factory.js";
 import type { WorkspaceRow, WorkspaceStatus } from "../../data/sqlite/symbol-repository.js";
 import { eventBus } from "../events/event-bus.js";

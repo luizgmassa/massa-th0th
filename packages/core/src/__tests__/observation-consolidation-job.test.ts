@@ -1,7 +1,7 @@
 /**
  * ObservationConsolidationJob tests (Phase 3 bridge).
  *
- * Test-isolation rule (Phase 1/2): do NOT `mock.module("@th0th-ai/shared")`.
+ * Test-isolation rule (Phase 1/2): do NOT `mock.module("@massa-th0th/shared")`.
  * Inject a fake LlmSurface, a fake store, and a fake memory repo that captures
  * inserts. Use ctor overrides (minObservations etc.) so no shared config is
  * relied upon.

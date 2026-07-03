@@ -6,13 +6,13 @@
  *
  * Resolution strategy (TS/JS):
  *   1. Relative imports (./  ../) → path.resolve + extension probing
- *   2. Workspace aliases (@th0th-ai/core, etc.) → read tsconfig.json paths
+ *   2. Workspace aliases (@massa-th0th/core, etc.) → read tsconfig.json paths
  *   3. Everything else → external (npm), resolvedPath = null
  */
 
 import path from "path";
 import fs from "fs";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import type {
   EtlStageContext,
   ParsedFile,
@@ -197,7 +197,7 @@ export class ResolveStage {
 
   /**
    * Parse tsconfig.json compilerOptions.paths into a flat alias list.
-   * Handles standard monorepo setups like { "@th0th-ai/core/*": ["packages/core/src/*"] }.
+   * Handles standard monorepo setups like { "@massa-th0th/core/*": ["packages/core/src/*"] }.
    */
   private loadTsConfigPaths(projectPath: string, packageBase?: string): TsPathAlias[] {
     const aliases: TsPathAlias[] = [];
@@ -211,7 +211,7 @@ export class ResolveStage {
       const paths: Record<string, string[]> = tsconfig?.compilerOptions?.paths ?? {};
 
       for (const [alias, targets] of Object.entries(paths)) {
-        // "@th0th-ai/core/*" → prefix "@th0th-ai/core"
+        // "@massa-th0th/core/*" → prefix "@massa-th0th/core"
         const prefix = alias.replace(/\/\*$/, "");
         aliases.push({ 
           prefix, 

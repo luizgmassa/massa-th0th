@@ -5,16 +5,16 @@
  * Creates embeddings and FTS5 indexes for all relevant files.
  *
  * Returns a jobId immediately and processes indexing in background.
- * Use th0th_get_index_status(jobId) to check progress.
+ * Use get_index_status(jobId) to check progress.
  *
  * Now powered by the 4-stage ETL Pipeline:
  *   discover → parse → resolve → load
  */
 
-import { IToolHandler } from "@th0th-ai/shared";
-import { ToolResponse } from "@th0th-ai/shared";
+import { IToolHandler } from "@massa-th0th/shared";
+import { ToolResponse } from "@massa-th0th/shared";
 import { ContextualSearchRLM } from "../services/search/contextual-search-rlm.js";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { indexJobTracker } from "../services/jobs/index-job-tracker.js";
 import { etlPipeline } from "../services/etl/pipeline.js";
 import path from "path";
@@ -114,7 +114,7 @@ export class IndexProjectTool implements IToolHandler {
           projectPath,
           status: "started",
           message:
-            "Indexing started in background. Use th0th_get_index_status(jobId) to check progress.",
+            "Indexing started in background. Use get_index_status(jobId) to check progress.",
         },
       };
     } catch (error) {

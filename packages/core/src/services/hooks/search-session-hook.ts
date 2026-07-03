@@ -5,7 +5,7 @@
  * stores a lightweight session memory for every search that returns results.
  *
  * This creates an "intermediate memory" layer that bridges ephemeral search
- * context (lost on compaction) and explicit persistent memories (th0th_remember).
+ * context (lost on compaction) and explicit persistent memories (remember).
  *
  * Design decisions:
  *  - Non-blocking: store failures are logged but never surfaced to callers.
@@ -15,7 +15,7 @@
  *  - Prunes the dedup map when it grows beyond MAX_DEDUP_ENTRIES to avoid leaks.
  */
 
-import { logger, MemoryType } from "@th0th-ai/shared";
+import { logger, MemoryType } from "@massa-th0th/shared";
 import { eventBus } from "../events/event-bus.js";
 import type { EventMap } from "../events/event-bus.js";
 import { MemoryController } from "../../controllers/memory-controller.js";

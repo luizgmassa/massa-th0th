@@ -2,7 +2,7 @@
 /**
  * Symbol Benchmark (symbol-benchmark.ts)
  *
- * Mede a qualidade e performance do Symbol Graph sobre o próprio projeto th0th.
+ * Mede a qualidade e performance do Symbol Graph sobre o próprio projeto massa-th0th.
  *
  * Métricas coletadas:
  *   - listDefinitions  : latência p50/p95, total de símbolos indexados
@@ -15,7 +15,7 @@
  *
  * Argumentos:
  *   --projectPath   Caminho absoluto do projeto a indexar (padrão: cwd)
- *   --projectId     ID do projeto no Symbol Graph (padrão: "th0th-bench")
+ *   --projectId     ID do projeto no Symbol Graph (padrão: "massa-th0th-bench")
  *   --k             Top-K para hit-rate (padrão: 3)
  *   --forceReindex  Limpar índice antes de indexar (padrão: false)
  *   --json          Saída em JSON puro (padrão: false, modo pretty)
@@ -136,7 +136,7 @@ function parseArgs(argv: string[]): CliOptions {
 
   return {
     projectPath: path.resolve(args.get("projectPath") || process.cwd()),
-    projectId: args.get("projectId") || "th0th-bench",
+    projectId: args.get("projectId") || "massa-th0th-bench",
     k: Number(args.get("k") || "3"),
     forceReindex: args.get("forceReindex") === "true",
     jsonOutput: args.get("json") === "true",
@@ -170,7 +170,7 @@ function measure<T>(fn: () => Promise<T>): Promise<{ result: T; ms: number }> {
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 /**
- * Símbolos que devem existir no projeto th0th.
+ * Símbolos que devem existir no projeto massa-th0th.
  * Se o benchmark for usado em outro projeto, apenas os que existirem serão contados.
  *
  * Cada fixture declara:
@@ -220,7 +220,7 @@ async function main(): Promise<void> {
 
   if (!opts.jsonOutput) {
     console.log("\n╔══════════════════════════════════════════════╗");
-    console.log("║         th0th Symbol Graph Benchmark          ║");
+    console.log("║         massa-th0th Symbol Graph Benchmark          ║");
     console.log("╚══════════════════════════════════════════════╝");
     console.log(`Project path : ${opts.projectPath}`);
     console.log(`Project ID   : ${opts.projectId}`);

@@ -8,8 +8,8 @@ Four independent defects/gaps block correctness and reachability today: (1) MCP 
 ## Goals
 - [ ] 0a: MCP upload collection uses the shared canonical extension list (no silent truncation).
 - [ ] 0b: autoReindex max-files is config-driven (default 200), all three cap sites derive from it, `allowFullReindex:false` kept.
-- [ ] 0c: `th0th_memory_update` + `th0th_memory_delete` MCP tools + API routes work end-to-end; delete severs graph edges.
-- [ ] 0d: `th0th_list_checkpoints`, `th0th_create_checkpoint`, `th0th_restore_checkpoint` reachable via MCP + API.
+- [ ] 0c: `memory_update` + `memory_delete` MCP tools + API routes work end-to-end; delete severs graph edges.
+- [ ] 0d: `list_checkpoints`, `create_checkpoint`, `restore_checkpoint` reachable via MCP + API.
 
 ## Out of Scope
 | Feature | Reason |
@@ -43,14 +43,14 @@ Open questions: none unresolved-and-unmarked.
 - Independent Test: extend `packages/core/src/__tests__/search-controller.test.ts`; assert cap read from config.
 
 ### P1-0c: Memory update + delete ⭐
-1. WHEN `th0th_memory_update` called with id+content THEN system SHALL update content, re-embed, re-index FTS, return updated memory.
+1. WHEN `memory_update` called with id+content THEN system SHALL update content, re-embed, re-index FTS, return updated memory.
 2. WHEN update includes importance/tags THEN system SHALL update those fields (tags merge when `mergeTags:true`).
-3. WHEN `th0th_memory_delete` called with id THEN system SHALL hard-delete the row AND sever all its GraphStore edges.
+3. WHEN `memory_delete` called with id THEN system SHALL hard-delete the row AND sever all its GraphStore edges.
 4. WHEN update/delete targets a missing id THEN system SHALL return `success:false` with a clear error.
 - Independent Test: new `packages/core/src/__tests__/memory-crud.test.ts` (SQLite repo update/deleteById + edge severance via MemoryGraphService).
 
 ### P1-0d: Checkpoint tools exposed ⭐
-1. WHEN MCP lists tools THEN `th0th_list_checkpoints`, `th0th_create_checkpoint`, `th0th_restore_checkpoint` SHALL appear.
+1. WHEN MCP lists tools THEN `list_checkpoints`, `create_checkpoint`, `restore_checkpoint` SHALL appear.
 2. WHEN each is called THEN it SHALL hit its API route and delegate to the existing core tool handler (no new logic).
 - Independent Test: new `apps/tools-api/src/__tests__/checkpoint-routes.test.ts` (or mcp-client test) asserting routes 200 + delegate.
 

@@ -1,15 +1,15 @@
 ---
-description: Show the th0th project map for an indexed workspace
+description: Show the massa-th0th project map for an indexed workspace
 argument-hint: "[projectId]"
-allowed-tools: ["mcp__th0th__th0th_project_map", "mcp__th0th__th0th_list_projects"]
+allowed-tools: ["mcp__massa-th0th__project_map", "mcp__massa-th0th__list_projects"]
 ---
 
-Show a project map using th0th.
+Show a project map using massa-th0th.
 
-If the user provided `$1` as an argument, use it as the `id` (projectId) for `mcp__th0th__th0th_project_map`.
+If the user provided `$1` as an argument, use it as the `id` (projectId) for `mcp__massa-th0th__project_map`.
 
 Otherwise:
-1. Call `mcp__th0th__th0th_list_projects` to see indexed projects.
+1. Call `mcp__massa-th0th__list_projects` to see indexed projects.
 2. If exactly one project is indexed, use it automatically.
 3. If multiple, ask the user which one.
 4. If zero, tell the user to run `/index` first.

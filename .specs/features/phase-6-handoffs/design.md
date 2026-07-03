@@ -180,7 +180,7 @@ Subscribes to `observation:ingested`. On a payload with
 `svc.listPending(payload.projectId, <targetAgent derived from payload>)`
 and records (via `logger.info`) how many pending handoffs were found.
 The deterministic surfacing primitive is `listPending` itself — the
-agent / MCP caller invokes `th0th_handoff_list_pending` (or the service
+agent / MCP caller invokes `handoff_list_pending` (or the service
 directly) to fetch them. The injector is observability + a future
 auto-surface hook; it never blocks the session-start path and never
 throws. When the Phase-3 hook is not installed, `observation:ingested`
@@ -239,11 +239,11 @@ Default-off + silent-degrade (NF3).
 ## 9. MCP tools + route (R4)
 
 ### `apps/mcp-client/src/tool-definitions.ts`
-Four entries (mirror the `th0th_bootstrap` shape):
-- `th0th_handoff_begin` → POST `/api/v1/handoff/begin`.
-- `th0th_handoff_accept` → POST `/api/v1/handoff/accept`.
-- `th0th_handoff_cancel` → POST `/api/v1/handoff/cancel`.
-- `th0th_handoff_list_pending` → POST `/api/v1/handoff/list`.
+Four entries (mirror the `bootstrap` shape):
+- `handoff_begin` → POST `/api/v1/handoff/begin`.
+- `handoff_accept` → POST `/api/v1/handoff/accept`.
+- `handoff_cancel` → POST `/api/v1/handoff/cancel`.
+- `handoff_list_pending` → POST `/api/v1/handoff/list`.
 
 ### `apps/tools-api/src/routes/handoff.ts`
 Elysia prefix `/api/v1/handoff`. Four POST handlers mirroring
@@ -272,7 +272,7 @@ dep; R7 polish inherits `llm.enabled`).
 - The single P6-SEARCH-01 block resets the `MemoryRepository` singleton
   to a temp dataDir (mirrors Phase-4 P4-SEARCH-01) and restores it in
   `afterEach`.
-- No `mock.module("@th0th-ai/shared")`.
+- No `mock.module("@massa-th0th/shared")`.
 
 A separate `handoff-repository.test.ts` exercises `SqliteHandoffStore`
 with an explicit temp `dbPath` (mirrors

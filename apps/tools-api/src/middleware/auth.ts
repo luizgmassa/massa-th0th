@@ -17,7 +17,7 @@ export const authMiddleware = new Elysia({ name: "auth" }).onBeforeHandle(
       return;
     }
 
-    const apiKey = process.env.TH0TH_API_KEY;
+    const apiKey = process.env.MASSA_TH0TH_API_KEY;
 
     // If no API key configured, allow all requests (dev mode)
     if (!apiKey) {

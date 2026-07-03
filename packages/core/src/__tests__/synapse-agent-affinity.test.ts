@@ -1,8 +1,8 @@
 import { describe, test, expect } from "bun:test";
 import { computeAgentAffinity } from "../services/synapse/scoring/agent-affinity.js";
 import { SessionRegistry } from "../services/synapse/session/session-registry.js";
-import type { SearchResult } from "@th0th-ai/shared";
-import { SearchSource } from "@th0th-ai/shared";
+import type { SearchResult } from "@massa-th0th/shared";
+import { SearchSource } from "@massa-th0th/shared";
 
 function r(id: string, agentId?: string): SearchResult {
   return {

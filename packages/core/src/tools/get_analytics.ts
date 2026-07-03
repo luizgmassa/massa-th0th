@@ -4,10 +4,10 @@
  * Retrieves search analytics and performance metrics
  */
 
-import { IToolHandler } from "@th0th-ai/shared";
-import { ToolResponse } from "@th0th-ai/shared";
+import { IToolHandler } from "@massa-th0th/shared";
+import { ToolResponse } from "@massa-th0th/shared";
 import { getSearchAnalytics } from "../services/search/analytics-factory.js";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 
 interface GetAnalyticsParams {
   type: "summary" | "project" | "query" | "cache" | "recent";

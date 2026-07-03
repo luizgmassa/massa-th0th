@@ -24,7 +24,7 @@
 
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import { MemoryLevel, MemoryType } from "@th0th-ai/shared";
+import { MemoryLevel, MemoryType } from "@massa-th0th/shared";
 import {
   getHandoffStore,
   newHandoffId,

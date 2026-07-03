@@ -18,7 +18,7 @@
  *     `merged=0, batchesCreated=0` and no error propagated.
  */
 
-import { logger, MemoryLevel, MemoryType, MemoryRelationType } from "@th0th-ai/shared";
+import { logger, MemoryLevel, MemoryType, MemoryRelationType } from "@massa-th0th/shared";
 import { randomUUID } from "crypto";
 import { getMemoryRepository } from "../../data/memory/memory-repository-factory.js";
 import { getGraphStore } from "../graph/graph-store-factory.js";

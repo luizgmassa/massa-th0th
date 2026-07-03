@@ -7,7 +7,7 @@ Slug: `phase-3-hook-capture`. Workflow: `spec-driven` (TLC v3). Plan ref:
 
 ## Problem
 
-Memory in massa-th0th is **manual** today: an agent must call `th0th_remember`
+Memory in massa-th0th is **manual** today: an agent must call `remember`
 explicitly. The killer feature borrowed from `ai-memory` is *passive capture* —
 lifecycle events (session start, user prompts, tool calls, compaction, session
 end) arrive as fire-and-forget hooks and are turned into structured memories
@@ -33,7 +33,7 @@ IN:
   (observations still stored).
 - Claude Code hook scripts (`SessionStart`, `UserPromptSubmit`, `PostToolUse`,
   `Stop`) that `curl` the endpoint, under `apps/claude-plugin/hooks/`.
-- Optional MCP tool `th0th_hook_ingest` for non-Claude hosts.
+- Optional MCP tool `hook_ingest` for non-Claude hosts.
 - New `hooks` config block (default-on for ingestion; LLM-driven consolidation
   inherits the existing `llm.enabled` gate).
 
@@ -142,7 +142,7 @@ for the four Claude Code lifecycle hooks that map to our events:
 `SessionStart`→`session-start`, `UserPromptSubmit`→`user-prompt`,
 `PostToolUse`→`post-tool-use`, `Stop`→`session-end`. Each script `curl`s the
 local endpoint with a JSON body. Scripts read the API base URL + optional API
-key from env (`TH0TH_API_BASE`, `TH0TH_API_KEY`) and degrade silently (exit 0,
+key from env (`MASSA_TH0TH_API_BASE`, `MASSA_TH0TH_API_KEY`) and degrade silently (exit 0,
 no output on stdout) if `curl` is unavailable or the endpoint is down — never
 block the agent.
 

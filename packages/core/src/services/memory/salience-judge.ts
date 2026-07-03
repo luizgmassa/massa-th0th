@@ -19,8 +19,8 @@
  */
 
 import { z } from "zod";
-import { config, logger } from "@th0th-ai/shared";
-import type { MemoryType } from "@th0th-ai/shared";
+import { config, logger } from "@massa-th0th/shared";
+import type { MemoryType } from "@massa-th0th/shared";
 import type { QueryLlmSurface } from "../search/query-understanding.js";
 import { llm as defaultLlmHandle } from "./llm-client.js";
 

@@ -5,7 +5,7 @@
  * Defaults to SQLite for local-first mode.
  */
 
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 import { SymbolRepositoryPg } from "./symbol-repository-pg.js";
 import { symbolRepository, SymbolRepository } from "./symbol-repository.js";
 

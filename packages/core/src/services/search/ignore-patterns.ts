@@ -6,7 +6,7 @@
 import fs from "fs/promises";
 import path from "path";
 import ignoreModule, { type Ignore } from "ignore";
-import { logger } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
 
 const ignore = (ignoreModule as unknown as { default: typeof ignoreModule }).default ?? ignoreModule;
 

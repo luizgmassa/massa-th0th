@@ -13,8 +13,8 @@ import {
   getHookService,
   ValidationError,
   QueueSaturatedError,
-} from "@th0th-ai/core";
-import { config, logger } from "@th0th-ai/shared";
+} from "@massa-th0th/core";
+import { config, logger } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
 
 let cachedService: ReturnType<typeof getHookService> | null = null;

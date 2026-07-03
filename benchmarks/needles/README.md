@@ -1,6 +1,6 @@
-# th0th Needles Benchmark
+# massa-th0th Needles Benchmark
 
-Needle-in-haystack harness for measuring th0th's semantic search recall against
+Needle-in-haystack harness for measuring massa-th0th's semantic search recall against
 real codebases.
 
 ## Layout
@@ -18,7 +18,7 @@ benchmarks/needles/
 ```
 fixtures/<project>.json ──┐
                           ├─▶ [E] harness                ─▶ reports/<project>-results.json
-                          │   (Claude calls th0th_search per needle)
+                          │   (Claude calls search per needle)
                           │                                       │
                           │                                       ▼
                           └────────────────────────▶ [T] scorer.ts ─▶ <project>.md + <project>.evaluations.json
@@ -26,7 +26,7 @@ fixtures/<project>.json ──┐
 
 - **E (Extract)** — the harness iterates over `fixtures/<project>.json` and,
   for each needle, calls
-  `mcp__th0th__th0th_search(query, projectId=<project>, maxResults=10)`.
+  `mcp__massa-th0th__search(query, projectId=<project>, maxResults=10)`.
   Raw responses are accumulated into `reports/<project>-results.json` in the
   format documented at the top of `scorer.ts`.
 - **T (Transform/Load)** — `scorer.ts` computes `hit@1/3/5/10`, `MRR`, and
@@ -39,7 +39,7 @@ fixtures/<project>.json ──┐
 
 1. Put a fixture at `fixtures/<projectId>.json` following the same shape as
    `sicad.json` (see "Schema" below).
-2. Make sure the project is indexed by th0th (`mcp__th0th__th0th_index` with
+2. Make sure the project is indexed by massa-th0th (`mcp__massa-th0th__index` with
    `projectPath` and `projectId` matching the fixture).
 3. Run the harness (today: a Claude Code session that loops the queries).
 4. Score:

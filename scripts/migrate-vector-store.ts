@@ -7,7 +7,7 @@
  * Usage: bun run scripts/migrate-vector-store.ts <postgres-url>
  * 
  * Example:
- *   bun run scripts/migrate-vector-store.ts postgresql://user:pass@localhost:5432/th0th
+ *   bun run scripts/migrate-vector-store.ts postgresql://user:pass@localhost:5432/massa_th0th
  */
 
 import { sqliteVectorStore } from '../packages/core/src/data/vector/sqlite-vector-store.js';
@@ -58,7 +58,7 @@ const postgresUrl = process.argv[2];
 
 if (!postgresUrl) {
   console.error('Usage: bun run scripts/migrate-vector-store.ts <postgres-url>');
-  console.error('Example: bun run scripts/migrate-vector-store.ts postgresql://user:pass@localhost:5432/th0th');
+  console.error('Example: bun run scripts/migrate-vector-store.ts postgresql://user:pass@localhost:5432/massa_th0th');
   process.exit(1);
 }
 

@@ -4,8 +4,8 @@
  * Two-level cache for search results using PostgreSQL.
  */
 
-import { SearchResult } from "@th0th-ai/shared";
-import { logger } from "@th0th-ai/shared";
+import { SearchResult } from "@massa-th0th/shared";
+import { logger } from "@massa-th0th/shared";
 import crypto from "crypto";
 import { getPgPool, getSqliteDb, DbConfig } from "../../data/db-connection.js";
 import type { Pool } from "pg";

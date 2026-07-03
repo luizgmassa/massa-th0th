@@ -7,7 +7,7 @@
 
 import { Pool, PoolConfig } from 'pg';
 import { Database } from 'bun:sqlite';
-import { logger } from '@th0th-ai/shared';
+import { logger } from '@massa-th0th/shared';
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
@@ -79,7 +79,7 @@ export function getSqliteDb(dbName: string): Database {
   const existing = sqliteConnections.get(dbName);
   if (existing) return existing;
   
-  const defaultDir = path.join(os.homedir(), '.rlm');
+  const defaultDir = path.join(os.homedir(), '.massa-th0th-data');
   const dbPath = path.join(defaultDir, `${dbName}.db`);
   
   if (!fs.existsSync(defaultDir)) {

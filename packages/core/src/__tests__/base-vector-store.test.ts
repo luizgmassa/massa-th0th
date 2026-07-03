@@ -21,7 +21,7 @@ mock.module("../services/embeddings/index.js", () => ({
   ),
 }));
 
-import { SearchResult, VectorDocument, VectorStoreStats, ProjectInfo, IVectorCollection } from "@th0th-ai/shared";
+import { SearchResult, VectorDocument, VectorStoreStats, ProjectInfo, IVectorCollection } from "@massa-th0th/shared";
 import { BaseVectorStore } from "../data/vector/base-vector-store.js";
 
 /**

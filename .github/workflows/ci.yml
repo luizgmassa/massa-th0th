@@ -39,9 +39,9 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: th0th
-          POSTGRES_PASSWORD: th0th_password
-          POSTGRES_DB: th0th
+          POSTGRES_USER: massa_th0th
+          POSTGRES_PASSWORD: massa_th0th_password
+          POSTGRES_DB: massa_th0th
         ports:
           - 5432:5432
         options: >-
@@ -64,7 +64,7 @@ jobs:
           target: api
           push: false
           load: true
-          tags: th0th-api:test
+          tags: massa-th0th-api:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -75,18 +75,18 @@ jobs:
           target: mcp
           push: false
           load: true
-          tags: th0th-mcp:test
+          tags: massa-th0th-mcp:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Start API container
         run: |
-          docker run -d --name th0th-api \
+          docker run -d --name massa-th0th-api \
             --network host \
-            -e DATABASE_URL="postgresql://th0th:th0th_password@localhost:5432/th0th" \
+            -e DATABASE_URL="postgresql://massa_th0th:massa_th0th_password@localhost:5432/massa_th0th" \
             -e NODE_ENV=test \
             -p 3333:3333 \
-            th0th-api:test
+            massa-th0th-api:test
 
       - name: Wait for API to be ready
         run: |
@@ -98,7 +98,7 @@ jobs:
             sleep 1
           done
           echo "API did not become ready in 20s"
-          docker logs th0th-api
+          docker logs massa-th0th-api
           exit 1
 
       - name: Health check
@@ -112,4 +112,4 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker rm -f th0th-api 2>/dev/null || true
+        run: docker rm -f massa-th0th-api 2>/dev/null || true

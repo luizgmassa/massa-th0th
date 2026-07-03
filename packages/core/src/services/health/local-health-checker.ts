@@ -1,7 +1,7 @@
 /**
  * Local Health Checker
  *
- * Verifica a saúde de todos os serviços locais do th0th.
+ * Verifica a saúde de todos os serviços locais do massa-th0th.
  * Usado para garantir que o sistema funciona 100% offline (local-first).
  *
  * Serviços verificados:
@@ -10,8 +10,8 @@
  * - Data directory (permissões de leitura/escrita)
  */
 
-import { logger } from "@th0th-ai/shared";
-import { config } from "@th0th-ai/shared";
+import { logger } from "@massa-th0th/shared";
+import { config } from "@massa-th0th/shared";
 import path from "path";
 import fs from "fs/promises";
 import { existsSync } from "fs";

@@ -47,7 +47,7 @@ Atomic, one commit per task. Conventional Commits. Never `git push`.
   - P2-CACHE-01/02 (reuse / TTL eviction / size cap).
 - Degradation + retrieval-quality tests (P2-DEGRADE-01/02, P2-FANOUT-01/02,
   P2-QUALITY-01): use `_setLlmEnabledForTesting` + fake surface; do NOT
-  mock `@th0th-ai/shared`.
+  mock `@massa-th0th/shared`.
 - **Verify:** `bun run test` green (new tests pass, baseline intact).
 - **Commit:** `test(search): cover query rewrite, HyDE, degradation, quality`.
 

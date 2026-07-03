@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================
-#  th0th - Shared CLI utilities
+#  massa-th0th - Shared CLI utilities
 #  Source this file from other scripts — do not run directly.
 #
 #  Usage:
 #    source "$(dirname "${BASH_SOURCE[0]}")/banner.sh"
-#    th0th_banner
+#    massa_th0th_banner
 # ============================================================
 
 # ── Colours ──────────────────────────────────────────────────
@@ -22,26 +22,26 @@ die()  { err "$*"; exit 1; }
 
 # ── Version detection ─────────────────────────────────────────
 # Resolves project root from the location of this file (scripts/).
-_TH0TH_BANNER_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd 2>/dev/null)"
+_MASSA_TH0TH_BANNER_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd 2>/dev/null)"
 
-_th0th_detect_version() {
-  [ -n "${TH0TH_VERSION:-}" ] && return
-  local pkg="${_TH0TH_BANNER_ROOT}/package.json"
+_massa_th0th_detect_version() {
+  [ -n "${MASSA_TH0TH_VERSION:-}" ] && return
+  local pkg="${_MASSA_TH0TH_BANNER_ROOT}/package.json"
   if [ -f "$pkg" ]; then
     if command -v node &>/dev/null; then
-      TH0TH_VERSION="$(node -e "process.stdout.write(require('${pkg}').version)" 2>/dev/null)"
+      MASSA_TH0TH_VERSION="$(node -e "process.stdout.write(require('${pkg}').version)" 2>/dev/null)"
     elif command -v python3 &>/dev/null; then
-      TH0TH_VERSION="$(python3 -c "import json; print(json.load(open('${pkg}'))['version'],end='')" 2>/dev/null)"
+      MASSA_TH0TH_VERSION="$(python3 -c "import json; print(json.load(open('${pkg}'))['version'],end='')" 2>/dev/null)"
     elif command -v jq &>/dev/null; then
-      TH0TH_VERSION="$(jq -r .version "${pkg}" 2>/dev/null)"
+      MASSA_TH0TH_VERSION="$(jq -r .version "${pkg}" 2>/dev/null)"
     fi
   fi
-  TH0TH_VERSION="${TH0TH_VERSION:-?}"
+  MASSA_TH0TH_VERSION="${MASSA_TH0TH_VERSION:-?}"
 }
 
 # ── Banner ────────────────────────────────────────────────────
-th0th_banner() {
-  _th0th_detect_version
+massa_th0th_banner() {
+  _massa_th0th_detect_version
   cat << EOF
 
               ██             ██████               ██
@@ -54,8 +54,8 @@ th0th_banner() {
     ███████  ███   ████    ████████     ███████░ ████  ████
      ░████  █████  █████    █████         ████   ████░ █████
 
-   Ancient knowledge keeper for modern code.  v${TH0TH_VERSION}
-   https://github.com/S1LV4/th0th
+   Ancient knowledge keeper for modern code.  v${MASSA_TH0TH_VERSION}
+   https://github.com/S1LV4/massa-th0th
 
 EOF
 }

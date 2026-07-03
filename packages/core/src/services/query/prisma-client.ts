@@ -3,7 +3,7 @@
  * Fornece uma instância única do PrismaClient configurada com o adapter correto
  */
 
-import { config, logger } from "@th0th-ai/shared";
+import { config, logger } from "@massa-th0th/shared";
 import path from "path";
 import { PrismaClient } from "../../generated/prisma/index.js";
 
@@ -74,7 +74,7 @@ export function getPrismaClient(): PrismaClient {
         );
       }
       const dataDir = config.get("dataDir");
-      const th0thDbPath = path.join(dataDir, "th0th.db");
+      const th0thDbPath = path.join(dataDir, "massa-th0th.db");
 
       const adapter = new PrismaBunSqlite({
         url: `file:${th0thDbPath}`,

@@ -1,21 +1,21 @@
 /**
  * Workspace Routes
  *
- * GET    /api/v1/workspace/list            ← list all workspaces (th0th_list_projects)
+ * GET    /api/v1/workspace/list            ← list all workspaces (list_projects)
  * GET    /api/v1/workspace/:id             ← get single workspace details
  * DELETE /api/v1/workspace/:id             ← remove workspace + symbol data
  * POST   /api/v1/workspace/:id/reindex     ← force reindex
  *
- * GET    /api/v1/symbol/definitions        ← th0th_search_definitions
- * GET    /api/v1/symbol/references         ← th0th_get_references
- * GET    /api/v1/symbol/definition         ← th0th_go_to_definition
+ * GET    /api/v1/symbol/definitions        ← search_definitions
+ * GET    /api/v1/symbol/references         ← get_references
+ * GET    /api/v1/symbol/definition         ← go_to_definition
  */
 
 import {
   IndexProjectTool,
   symbolGraphService,
   workspaceManager,
-} from "@th0th-ai/core";
+} from "@massa-th0th/core";
 import { Elysia, t } from "elysia";
 import fs from "fs/promises";
 import path from "path";

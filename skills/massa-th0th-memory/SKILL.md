@@ -1,15 +1,15 @@
 ---
-name: th0th-memory
-description: Mandatory rules for using th0th semantic search, compression, memory, and symbol graph tools. Prioritize th0th tools over native tools (Glob, Grep, Read) to explore and understand code. Triggers on tasks involving code search, context compression, storing decisions, symbol navigation, or retrieving project knowledge.
+name: massa-th0th-memory
+description: Mandatory rules for using massa-th0th semantic search, compression, memory, and symbol graph tools. Prioritize massa-th0th tools over native tools (Glob, Grep, Read) to explore and understand code. Triggers on tasks involving code search, context compression, storing decisions, symbol navigation, or retrieving project knowledge.
 license: MIT
 metadata:
   author: S1LV4
   version: "2.0.0"
 ---
 
-# th0th-memory Skill
+# massa-th0th-memory Skill
 
-Mandatory rules for using th0th tools. Prioritize semantic search, compression, memory, and symbol graph tools over native tools (Glob, Grep, Read) to explore and understand code.
+Mandatory rules for using massa-th0th tools. Prioritize semantic search, compression, memory, and symbol graph tools over native tools (Glob, Grep, Read) to explore and understand code.
 
 ## When to Apply
 
@@ -27,37 +27,37 @@ Reference these guidelines when:
 
 | Priority | Tool | Use |
 |----------|------|-----|
-| 1 | `th0th_index` | Index project before searching (returns jobId for background jobs) |
-| 2 | `th0th_index_status` | Poll background indexing job status by jobId |
-| 3 | `th0th_search` | Semantic + keyword search with filters |
-| 4 | `th0th_optimized_context` | Search + compress in one call (max token efficiency) |
-| 5 | `th0th_search_definitions` | Find symbol definitions (functions, classes, types) |
-| 6 | `th0th_get_references` | Find all usages of a symbol across the project |
-| 7 | `th0th_go_to_definition` | Jump to a symbol's definition with context |
-| 8 | `th0th_list_projects` | List all indexed projects and their status |
-| 9 | `th0th_reset_project` | Delete all indexed data for a project (vectors, symbols, memories) |
-| 10 | `th0th_remember` | Store important information in persistent memory |
-| 11 | `th0th_recall` | Retrieve memories from previous sessions |
-| 12 | `th0th_compress` | Reduce context size (70-98%) |
-| 13 | `th0th_analytics` | Usage patterns and metrics |
-| 14 | `th0th_read_file` | Read file/line-range with symbol metadata (prefer over Read when you have lineStart/lineEnd) |
-| 15 | `th0th_project_map` | One-shot project overview: PageRank backbone, symbol counts, language distribution |
-| 16 | `th0th_synapse_session` | Create/resume Synapse cognitive session (task alignment, agent affinity, working memory) |
-| 17 | `th0th_synapse_prime` | Seed Synapse buffer with recalled memories before searching |
-| 18 | `th0th_synapse_access` | Record file access for affinity scoring (call after reading/editing a file) |
-| 19 | `th0th_symbol_snippet` | Get raw code snippet by file + line range |
-| 20 | `th0th_memory_list` | Browse memories by type/importance without a query (audit mode) |
-| 21 | `th0th_reindex` | Force full reindex (when autoReindex/50-file limit is insufficient) |
-| 22 | Glob/Grep/Read | Only when th0th doesn't find what you need |
+| 1 | `index` | Index project before searching (returns jobId for background jobs) |
+| 2 | `index_status` | Poll background indexing job status by jobId |
+| 3 | `search` | Semantic + keyword search with filters |
+| 4 | `optimized_context` | Search + compress in one call (max token efficiency) |
+| 5 | `search_definitions` | Find symbol definitions (functions, classes, types) |
+| 6 | `get_references` | Find all usages of a symbol across the project |
+| 7 | `go_to_definition` | Jump to a symbol's definition with context |
+| 8 | `list_projects` | List all indexed projects and their status |
+| 9 | `reset_project` | Delete all indexed data for a project (vectors, symbols, memories) |
+| 10 | `remember` | Store important information in persistent memory |
+| 11 | `recall` | Retrieve memories from previous sessions |
+| 12 | `compress` | Reduce context size (70-98%) |
+| 13 | `analytics` | Usage patterns and metrics |
+| 14 | `read_file` | Read file/line-range with symbol metadata (prefer over Read when you have lineStart/lineEnd) |
+| 15 | `project_map` | One-shot project overview: PageRank backbone, symbol counts, language distribution |
+| 16 | `synapse_session` | Create/resume Synapse cognitive session (task alignment, agent affinity, working memory) |
+| 17 | `synapse_prime` | Seed Synapse buffer with recalled memories before searching |
+| 18 | `synapse_access` | Record file access for affinity scoring (call after reading/editing a file) |
+| 19 | `symbol_snippet` | Get raw code snippet by file + line range |
+| 20 | `memory_list` | Browse memories by type/importance without a query (audit mode) |
+| 21 | `reindex` | Force full reindex (when autoReindex/50-file limit is insufficient) |
+| 22 | Glob/Grep/Read | Only when massa-th0th doesn't find what you need |
 
 ## Tool Reference
 
-### 1. th0th_index
+### 1. index
 
-Index a project directory for semantic search. Returns immediately with a `jobId`; polling is optional (use `th0th_index_status`).
+Index a project directory for semantic search. Returns immediately with a `jobId`; polling is optional (use `index_status`).
 
 ```
-th0th_index({
+index({
   projectPath: "/home/user/my-project",
   projectId: "my-project",
   forceReindex: false,
@@ -66,27 +66,27 @@ th0th_index({
 })
 ```
 
-### 2. th0th_index_status
+### 2. index_status
 
-Poll a background indexing job by the `jobId` returned from `th0th_index`.
+Poll a background indexing job by the `jobId` returned from `index`.
 
 ```
-th0th_index_status({
+index_status({
   jobId: "job_abc123"
 })
 ```
 
 **CRITICAL — polling discipline (mandatory):**
 
-Never call `th0th_index_status` in a tight loop. Choose one strategy:
+Never call `index_status` in a tight loop. Choose one strategy:
 
 **Strategy A — single Bash sleep loop (preferred for normal tasks):**
 ```bash
-# TH0TH_API_URL is set by the MCP server environment; falls back to localhost:3333
-TH0TH_API_URL="${TH0TH_API_URL:-http://localhost:3333}"
+# MASSA_TH0TH_API_URL is set by the MCP server environment; falls back to localhost:3333
+MASSA_TH0TH_API_URL="${MASSA_TH0TH_API_URL:-http://localhost:3333}"
 
 for i in $(seq 1 40); do
-  result=$(curl -s "$TH0TH_API_URL/api/v1/project/index/status/JOB_ID")
+  result=$(curl -s "$MASSA_TH0TH_API_URL/api/v1/project/index/status/JOB_ID")
   status=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data']['status'])")
   progress=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'].get('progress',0))")
   echo "[$i] status=$status progress=$progress%"
@@ -97,24 +97,24 @@ done
 
 **Strategy B — ScheduleWakeup (only inside /loop mode):**
 ```
-ScheduleWakeup({ delaySeconds: 30, reason: "waiting for th0th indexing job JOB_ID", prompt: "<<autonomous-loop-dynamic>>" })
+ScheduleWakeup({ delaySeconds: 30, reason: "waiting for massa-th0th indexing job JOB_ID", prompt: "<<autonomous-loop-dynamic>>" })
 ```
-Then on the next wake-up call `th0th_index_status` once and repeat or finish.
+Then on the next wake-up call `index_status` once and repeat or finish.
 
 **Never do this:**
 ```
-# BAD: calling th0th_index_status repeatedly in successive turns without sleeping
-th0th_index_status(...)  # turn 1
-th0th_index_status(...)  # turn 2 — WRONG, wastes context and burns turns
-th0th_index_status(...)  # turn 3 — WRONG
+# BAD: calling index_status repeatedly in successive turns without sleeping
+index_status(...)  # turn 1
+index_status(...)  # turn 2 — WRONG, wastes context and burns turns
+index_status(...)  # turn 3 — WRONG
 ```
 
-### 3. th0th_search
+### 3. search
 
 Semantic + keyword search with RRF (Reciprocal Rank Fusion).
 
 ```
-th0th_search({
+search({
   query: "JWT authentication middleware",
   projectId: "my-project",
   maxResults: 10,
@@ -132,14 +132,14 @@ th0th_search({
 - `"full"` — includes full file content; use when you need to read code.
 - `"enriched"` — full content + `fileImports` + `parentSymbol` in every result; best for deep dives without extra tool calls. Use `chunkIndex`/`totalChunks` to navigate adjacent chunks.
 
-### 4. th0th_optimized_context
+### 4. optimized_context
 
 Search + compress in one call. Maximum token efficiency.
 
 **Always pass `sessionId`** to activate the session file cache. On repeated calls within the same conversation, unchanged file chunks are replaced with a compact reference token (~8 tokens) instead of full content, saving 50-70% of input tokens in long sessions.
 
 ```
-th0th_optimized_context({
+optimized_context({
   query: "how does authentication work?",
   projectId: "my-project",
   sessionId: "<stable identifier for the current conversation>",
@@ -150,12 +150,12 @@ th0th_optimized_context({
 
 The response includes `metadata.tokensSavedBySessionCache` and `data.sessionCacheHits` so you can observe the savings.
 
-### 5. th0th_search_definitions
+### 5. search_definitions
 
 Find symbol definitions (functions, classes, variables, types, interfaces, exports) in an indexed project.
 
 ```
-th0th_search_definitions({
+search_definitions({
   projectId: "my-project",
   query: "UserService",       // substring match, case-insensitive
   kind: "class,function",    // comma-separated: function,class,variable,type,interface,export
@@ -165,12 +165,12 @@ th0th_search_definitions({
 })
 ```
 
-### 6. th0th_get_references
+### 6. get_references
 
 Find all usages of a symbol across the project. Returns file paths, line numbers, reference kinds (`call`, `import`, `type_ref`, `extend`, `implement`), and code context.
 
 ```
-th0th_get_references({
+get_references({
   projectId: "my-project",
   symbolName: "UserService",
   fqn: "services/user.ts#UserService",  // disambiguates when name is shared
@@ -178,34 +178,34 @@ th0th_get_references({
 })
 ```
 
-### 7. th0th_go_to_definition
+### 7. go_to_definition
 
 Jump to a symbol's definition. Disambiguates using calling file context.
 
 ```
-th0th_go_to_definition({
+go_to_definition({
   projectId: "my-project",
   symbolName: "getPrismaClient",
   fromFile: "src/controllers/search-controller.ts"
 })
 ```
 
-### 8. th0th_list_projects
+### 8. list_projects
 
 List all indexed projects and their current status.
 
 ```
-th0th_list_projects({
+list_projects({
   status: "all"   // pending | indexing | indexed | error | all
 })
 ```
 
-### 9. th0th_reset_project
+### 9. reset_project
 
 Delete all indexed data for a project. Each scope is independent and defaults to `true`.
 
 ```
-th0th_reset_project({
+reset_project({
   projectId: "my-project",
   clearVectors: true,    // remove vector embeddings (semantic search index)
   clearSymbols: true,    // remove symbol graph (definitions, references, imports, centrality)
@@ -214,18 +214,18 @@ th0th_reset_project({
 ```
 
 **When to use:**
-- Before a full reindex to ensure a clean slate (`th0th_reset_project` → `th0th_index`)
+- Before a full reindex to ensure a clean slate (`reset_project` → `index`)
 - To free space from a project that is no longer needed
 - To clear stale data after a major refactor
 
 **Response includes:** `vectorsDeleted`, `symbolsCleared`, `memoriesDeleted` counts.
 
-### 10. th0th_remember
+### 10. remember
 
 Store important information in persistent memory.
 
 ```
-th0th_remember({
+remember({
   content: "Using PostgreSQL for user data",
   type: "decision",
   importance: 0.8,
@@ -237,12 +237,12 @@ th0th_remember({
 })
 ```
 
-### 11. th0th_recall
+### 11. recall
 
 Search stored memories from previous sessions.
 
 ```
-th0th_recall({
+recall({
   query: "database decisions",
   types: ["decision"],
   limit: 10,
@@ -254,12 +254,12 @@ th0th_recall({
 })
 ```
 
-### 12. th0th_compress
+### 12. compress
 
 Compress context (keeps structure, removes details).
 
 ```
-th0th_compress({
+compress({
   content: "...large code...",
   strategy: "code_structure",
   targetRatio: 0.7,
@@ -267,12 +267,12 @@ th0th_compress({
 })
 ```
 
-### 13. th0th_analytics
+### 13. analytics
 
 Usage patterns, cache performance, metrics.
 
 ```
-th0th_analytics({
+analytics({
   type: "summary",   // summary | project | query | cache | recent
   projectId: "my-project",
   limit: 10
@@ -302,39 +302,39 @@ th0th_analytics({
 
 ```
 Need to find code?
-  → th0th_search with responseMode:"summary" (first)
+  → search with responseMode:"summary" (first)
   → Glob/Grep/Read (fallback only)
 
 Need to navigate symbols?
-  → th0th_go_to_definition (jump to definition)
-  → th0th_get_references (find all usages)
-  → th0th_search_definitions (list matching symbols)
+  → go_to_definition (jump to definition)
+  → get_references (find all usages)
+  → search_definitions (list matching symbols)
 
 Need to understand architecture?
-  → th0th_recall (check memories first)
-  → th0th_search (explore code)
-  → th0th_search_definitions (enumerate public API)
+  → recall (check memories first)
+  → search (explore code)
+  → search_definitions (enumerate public API)
 
 Found important pattern/decision?
-  → th0th_remember (store for future sessions)
+  → remember (store for future sessions)
 
 Context too large?
-  → th0th_compress (reduce tokens)
+  → compress (reduce tokens)
 
 Maximum efficiency needed?
-  → th0th_optimized_context (search + compress + session cache)
+  → optimized_context (search + compress + session cache)
 
 Need to check indexed projects?
-  → th0th_list_projects (see status, file counts, last indexed)
+  → list_projects (see status, file counts, last indexed)
 
 Indexing taking long?
-  → th0th_index_status (poll jobId from th0th_index)
+  → index_status (poll jobId from index)
   → WAIT between polls: use a single Bash sleep loop (15s intervals) or ScheduleWakeup in /loop mode
-  → NEVER call th0th_index_status in successive turns without sleeping first
+  → NEVER call index_status in successive turns without sleeping first
 
 Need a clean slate before reindexing?
-  → th0th_reset_project (wipe vectors + symbols + memories)
-  → th0th_index (reindex from scratch)
+  → reset_project (wipe vectors + symbols + memories)
+  → index (reindex from scratch)
 ```
 
 ## Installation
@@ -342,12 +342,12 @@ Need a clean slate before reindexing?
 ### One-command (recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/S1LV4/th0th/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/S1LV4/massa-th0th/main/install.sh | bash
 ```
 
-Supports three modes (select interactively or override with `TH0TH_MODE`):
+Supports three modes (select interactively or override with `MASSA_TH0TH_MODE`):
 
-| Mode | `TH0TH_MODE` | Requirements | Best for |
+| Mode | `MASSA_TH0TH_MODE` | Requirements | Best for |
 |------|--------------|--------------|---------|
 | Docker | `docker` | Docker | Production, quick start |
 | Docker build | `build` | Docker + Git | Custom builds, local changes |
@@ -356,13 +356,13 @@ Supports three modes (select interactively or override with `TH0TH_MODE`):
 Non-interactive example:
 
 ```bash
-TH0TH_MODE=docker TH0TH_API_PORT=4000 TH0TH_NO_START=1 \
-  curl -fsSL https://raw.githubusercontent.com/S1LV4/th0th/main/install.sh | bash
+MASSA_TH0TH_MODE=docker MASSA_TH0TH_API_PORT=4000 MASSA_TH0TH_NO_START=1 \
+  curl -fsSL https://raw.githubusercontent.com/S1LV4/massa-th0th/main/install.sh | bash
 ```
 
 ## Configuration
 
-Config file: `~/.config/th0th/config.json` (auto-created on first run)
+Config file: `~/.config/massa-th0th/config.json` (auto-created on first run)
 
 ### Embedding Providers
 
@@ -376,13 +376,13 @@ Config file: `~/.config/th0th/config.json` (auto-created on first run)
 ### Quick Config Commands
 
 ```bash
-npx @th0th-ai/mcp-client --config-show                          # print current config
-npx @th0th-ai/mcp-client --config-path                          # show config file path
-npx @th0th-ai/mcp-client --config-init                          # init with Ollama defaults
-npx @th0th-ai/mcp-client --config-init --mistral YOUR_KEY       # init with Mistral
-npx @th0th-ai/mcp-client --config-init --openai YOUR_KEY        # init with OpenAI
-npx @th0th-ai/mcp-client --config-init --ollama-model bge-m3    # switch Ollama model
-npx @th0th-ai/mcp-client --config-set embedding.dimensions 1024 # set specific value
+npx @massa-th0th/mcp-client --config-show                          # print current config
+npx @massa-th0th/mcp-client --config-path                          # show config file path
+npx @massa-th0th/mcp-client --config-init                          # init with Ollama defaults
+npx @massa-th0th/mcp-client --config-init --mistral YOUR_KEY       # init with Mistral
+npx @massa-th0th/mcp-client --config-init --openai YOUR_KEY        # init with OpenAI
+npx @massa-th0th/mcp-client --config-init --ollama-model bge-m3    # switch Ollama model
+npx @massa-th0th/mcp-client --config-set embedding.dimensions 1024 # set specific value
 ```
 
 ### Validate Stack
