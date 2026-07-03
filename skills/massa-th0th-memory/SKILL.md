@@ -349,9 +349,9 @@ Supports three modes (select interactively or override with `MASSA_TH0TH_MODE`):
 
 | Mode | `MASSA_TH0TH_MODE` | Requirements | Best for |
 |------|--------------|--------------|---------|
-| Docker | `docker` | Docker | Production, quick start |
-| Docker build | `build` | Docker + Git | Custom builds, local changes |
-| From source | `source` | Git + Bun | Development, contributors |
+| Docker | `docker` | Docker | Production, quick start (~5GB RAM, Docker/colima) |
+| Docker build | `build` | Docker + Git | Custom builds, local changes (~5GB RAM, Docker/colima) |
+| From source | `source` | Git + Bun | Development (SQLite / Native PG / Docker) |
 
 Non-interactive example:
 
@@ -368,8 +368,8 @@ Config file: `~/.config/massa-th0th/config.json` (auto-created on first run)
 
 | Provider | Default Model | Dimensions | Cost |
 |----------|---------------|------------|------|
-| **Ollama** (default) | `bge-m3` | 1024 | Free |
-| Ollama alt | `qwen3-embedding` | 4096 | Free |
+| **Ollama** (default) | `qwen3-embedding:8b` | 4096 | Free |
+| Ollama alt | `bge-m3` | 1024 | Free |
 | **Mistral** | `mistral-embed` | — | $$ |
 | **OpenAI** | `text-embedding-3-small` | — | $$ |
 
@@ -381,8 +381,8 @@ npx @massa-th0th/mcp-client --config-path                          # show config
 npx @massa-th0th/mcp-client --config-init                          # init with Ollama defaults
 npx @massa-th0th/mcp-client --config-init --mistral YOUR_KEY       # init with Mistral
 npx @massa-th0th/mcp-client --config-init --openai YOUR_KEY        # init with OpenAI
-npx @massa-th0th/mcp-client --config-init --ollama-model bge-m3    # switch Ollama model
-npx @massa-th0th/mcp-client --config-set embedding.dimensions 1024 # set specific value
+npx @massa-th0th/mcp-client --config-init --ollama-model qwen3-embedding:8b    # switch Ollama model
+npx @massa-th0th/mcp-client --config-set embedding.dimensions 4096 # set specific value
 ```
 
 ### Validate Stack
@@ -393,7 +393,8 @@ bun run diagnose   # checks Ollama, database, embeddings, migration status
 
 ## Deployment Notes
 
-- **Docker mode**: PostgreSQL + auto-migration via entrypoint script on container startup. Uses `bge-m3` / 1024d by default.
+- **Docker mode** (colima + Docker, ~5GB RAM): PostgreSQL + auto-migration via entrypoint script on container startup. Uses `qwen3-embedding:8b` / 4096d by default.
+- **Native PostgreSQL (macOS)**: ~100MB RAM, no Docker. Run `./scripts/setup-native-postgres.sh` (brew install postgresql@17 + pgvector) or pick it in `setup-local-first.sh`. Migrations: `cd packages/core && bunx prisma migrate deploy`.
 - **Source mode**: SQLite via `prisma-adapter-bun-sqlite`. Run `bun run diagnose` after setup.
 - **WSL / Linux**: Ollama connectivity via `host.docker.internal:host-gateway` in `docker-compose.yml`.
-- **PostgreSQL**: Set `DATABASE_URL=postgresql://...` and `POSTGRES_PASSWORD`. Migrations run automatically on `docker compose up`.
+- **PostgreSQL (native or Docker)**: set `DATABASE_URL` + `POSTGRES_PASSWORD`. Migrations run automatically on `docker compose up` (Docker) or via `bunx prisma migrate deploy` (native).

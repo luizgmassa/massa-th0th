@@ -18,9 +18,13 @@ Installs interactively. Three modes:
 
 | Mode | Requires | Best for |
 |------|----------|----------|
-| **Docker** (default) | Docker | Production, quick start |
-| **Docker build** | Docker + Git | Custom builds, local changes |
-| **Source** | Git + Bun | Development, contributors |
+| **Docker** (default) | Docker | Production, quick start (PostgreSQL via Docker/colima, ~5GB RAM) |
+| **Docker build** | Docker + Git | Custom builds, local changes (PostgreSQL via Docker/colima, ~5GB RAM) |
+| **Source** | Git + Bun | Development (SQLite / Native PostgreSQL ~100MB / Docker PostgreSQL) |
+
+> ⚠️ **Docker modes run PostgreSQL through Docker/colima and reserve ~5GB RAM.**
+> For native PostgreSQL (~100MB, no Docker), use **Source mode** (`./scripts/setup-local-first.sh`)
+> and pick **Native PostgreSQL** at the database prompt.
 
 Non-interactive (CI/scripted):
 
@@ -41,7 +45,7 @@ bun install
 # 2. Setup (100% offline with Ollama)
 ./scripts/setup-local-first.sh
 # - Installs/starts Ollama
-# - Pulls bge-m3 embedding model (1024 dimensions) and qwen2.5-coder:7b
+# - Pulls qwen3-embedding:8b embedding model (4096 dimensions) and qwen3.5:9b
 # - Creates .env with defaults
 # - Runs bun run diagnose to validate the stack
 
@@ -51,6 +55,20 @@ bun run start:api
 ```
 
 Verify: `curl http://localhost:3333/health`
+
+#### Native PostgreSQL (macOS, recommended over Docker)
+
+Instead of Docker (~5GB RAM), run PostgreSQL natively (~100MB):
+
+```bash
+# setup-local-first.sh option 1 does this automatically, or run standalone:
+./scripts/setup-native-postgres.sh      # brew install postgresql@17 + pgvector, create role/db, migrate
+
+# .env then contains:
+#   DATABASE_URL=postgresql://massa_th0th:massa_th0th_password@localhost:5432/massa_th0th
+```
+
+Linux/WSL: install `postgresql` + `postgresql-*-pgvector` from your distro, create the role/db/extension, then set `DATABASE_URL`. Or use Docker (option 3, ~5GB RAM).
 
 > **Tip:** Run `bun run diagnose` at any time to validate Ollama connectivity,
 > database access, embedding generation, and migration status.
@@ -348,8 +366,8 @@ curl -fsSL https://ollama.com/install.sh | sh
 ollama serve
 
 # Pull models
-ollama pull bge-m3              # embeddings (1024 dims)
-ollama pull qwen2.5-coder:7b    # completion (consolidation, rerank, query rewrite)
+ollama pull qwen3-embedding:8b    # embeddings (4096 dims)
+ollama pull qwen3.5:9b            # completion (consolidation, rerank, query rewrite)
 ```
 
 ### Validate the stack
@@ -365,7 +383,7 @@ status.
 RLM_LLM_ENABLED=true
 RLM_LLM_BASE_URL=http://localhost:11434/v1
 RLM_LLM_API_KEY=ollama
-RLM_LLM_MODEL=qwen2.5-coder:7b
+RLM_LLM_MODEL=qwen3.5:9b
 ```
 
 With `RLM_LLM_ENABLED=true` you get: hook→memory consolidation, handoff-summary
@@ -373,9 +391,10 @@ polish, query understanding (rewrite + HyDE), LLM-judge rerank, and auto
 importance scoring. Set it `false` (the default) and every one of those silently
 falls back to its rule-based path.
 
-> **Embeddings caveat:** `bge-m3` is batched at 8 — larger batches can crash on
-> CPU. The server caps batches accordingly; just be aware if you drive the
-> embedding endpoint directly with 50+ inputs.
+> **Embeddings note:** `qwen3-embedding:8b` (4096d) gives stronger recall than
+> `bge-m3` but is slower — bulk indexing a large corpus takes minutes. The old
+> bge-m3 batch-8 crash cap no longer applies; switch to `bge-m3` (1024d) for
+> speed if its recall quality is sufficient for your use case.
 
 ---
 
@@ -559,13 +578,18 @@ rows default **OFF** and degrade silently when disabled.
 
 | Key | Env var | Default | State |
 |-----|---------|---------|-------|
+| `database.url` | `DATABASE_URL` | _(unset → SQLite)_ | PostgreSQL connection string (native or Docker) |
+| `database.vectorStoreType` | `VECTOR_STORE_TYPE` | auto (from DATABASE_URL) | `postgres`/`sqlite` |
+| `database.postgresPassword` | `POSTGRES_PASSWORD` | `massa_th0th_password` | Docker postgres container |
+| `database.port` | `MASSA_TH0TH_POSTGRES_PORT` | `5432` | host port (Docker) |
+| `database.backend` | `MASSA_TH0TH_DB_BACKEND` | _(interactive)_ | installer: `native`/`docker`/`sqlite` |
 | `llm.enabled` | `RLM_LLM_ENABLED` | `false` | **OFF** |
 | `llm.baseUrl` | `RLM_LLM_BASE_URL` | `http://localhost:11434/v1` | — |
 | `llm.apiKey` | `RLM_LLM_API_KEY` | `ollama` | — |
-| `llm.model` | `RLM_LLM_MODEL` | `qwen2.5-coder:7b` | — |
+| `llm.model` | `RLM_LLM_MODEL` | `qwen3.5:9b` | — |
 | `llm.temperature` | `RLM_LLM_TEMPERATURE` | `0.2` | — |
-| `llm.maxOutputTokens` | `RLM_LLM_MAX_OUTPUT_TOKENS` | `2000` | — |
-| `llm.timeoutMs` | `RLM_LLM_TIMEOUT_MS` | `30000` | — |
+| `llm.maxOutputTokens` | `RLM_LLM_MAX_OUTPUT_TOKENS` | `8000` | — |
+| `llm.timeoutMs` | `RLM_LLM_TIMEOUT_MS` | `90000` | — |
 | `memory.bootstrap.enabled` | `BOOTSTRAP_ENABLED` | `true` | on (rule-based) |
 | `memory.bootstrap.maxSeedMemories` | `BOOTSTRAP_MAX_SEED_MEMORIES` | `8` | — |
 | `memory.bootstrap.centralityLimit` | `BOOTSTRAP_CENTRALITY_LIMIT` | `10` | — |
@@ -626,7 +650,7 @@ npx @massa-th0th/mcp-client --help
 
 | Provider | Model | Cost | Quality |
 |----------|-------|------|---------|
-| **Ollama** (default) | qwen3-embedding, bge-m3, nomic-embed-text | Free | Good-Excellent |
+| **Ollama** (default) | qwen3-embedding:8b (also bge-m3, nomic-embed-text) | Free | Good-Excellent |
 | **Mistral** | mistral-embed, codestral-embed | $$ | Great |
 | **OpenAI** | text-embedding-3-small | $$ | Great |
 

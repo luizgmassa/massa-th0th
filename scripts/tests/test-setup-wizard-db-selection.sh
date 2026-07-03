@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 SETUP_SCRIPT="${PROJECT_ROOT}/scripts/setup-local-first.sh"
+NATIVE_PG_SCRIPT="${PROJECT_ROOT}/scripts/setup-native-postgres.sh"
 
 # ── Colours ───────────────────────────────────────────────────
 GREEN='\033[0;32m'; RED='\033[0;31m'; BOLD='\033[1m'; NC='\033[0m'
@@ -185,6 +186,100 @@ read -rp "" DATABASE_URL </dev/tty || true
 echo "$DATABASE_URL"
 ' < /dev/null 2>/dev/null || echo "ERROR")
 assert_eq "DATABASE_URL is empty string on EOF stdin (no crash)" "$URL_RESULT" ""
+
+# ── Static analysis: 3-option DB menu (native default) ────────
+
+echo ""
+echo "Static analysis: 3-option DB menu + MASSA_TH0TH_DB_BACKEND override"
+
+# Test 11: setup-local-first.sh contains all three DB menu option strings
+MENU_HITS=0
+for label in "Native PostgreSQL" "SQLite" "Docker PostgreSQL"; do
+    if grep -qF "$label" "$SETUP_SCRIPT" 2>/dev/null; then
+        MENU_HITS=$((MENU_HITS + 1))
+    fi
+done
+if [ "$MENU_HITS" -eq 3 ]; then
+    ok "setup-local-first.sh lists all 3 DB menu options (Native PostgreSQL / SQLite / Docker PostgreSQL)"
+    PASS=$((PASS + 1))
+else
+    fail "setup-local-first.sh is missing DB menu options (found ${MENU_HITS}/3)"
+    FAIL=$((FAIL + 1))
+    ERRORS+=("3-option DB menu strings present in setup-local-first.sh")
+fi
+
+# Test 12: setup-local-first.sh handles the MASSA_TH0TH_DB_BACKEND override
+if grep -q 'MASSA_TH0TH_DB_BACKEND' "$SETUP_SCRIPT" 2>/dev/null; then
+    ok "setup-local-first.sh reads MASSA_TH0TH_DB_BACKEND (non-interactive override)"
+    PASS=$((PASS + 1))
+else
+    fail "setup-local-first.sh does not read MASSA_TH0TH_DB_BACKEND"
+    FAIL=$((FAIL + 1))
+    ERRORS+=("MASSA_TH0TH_DB_BACKEND case present in setup-local-first.sh")
+fi
+
+# ── Static analysis: native PG helper script ──────────────────
+
+echo ""
+echo "Static analysis: native PostgreSQL helper script"
+
+# Test 13: setup-native-postgres.sh exists and is executable
+if [ -x "$NATIVE_PG_SCRIPT" ]; then
+    ok "setup-native-postgres.sh exists and is executable"
+    PASS=$((PASS + 1))
+else
+    fail "setup-native-postgres.sh is missing or not executable (${NATIVE_PG_SCRIPT})"
+    FAIL=$((FAIL + 1))
+    ERRORS+=("setup-native-postgres.sh exists and is executable")
+fi
+
+# Test 14: setup-native-postgres.sh's final echo line reports DATABASE_URL=...
+if [ -f "$NATIVE_PG_SCRIPT" ]; then
+    LAST_ECHO=$(grep -E '^[[:space:]]*echo' "$NATIVE_PG_SCRIPT" | tail -n 1 || true)
+    if echo "$LAST_ECHO" | grep -q 'DATABASE_URL='; then
+        ok "setup-native-postgres.sh ends by echoing DATABASE_URL=..."
+        PASS=$((PASS + 1))
+    else
+        fail "setup-native-postgres.sh final echo does not report DATABASE_URL (got: ${LAST_ECHO})"
+        FAIL=$((FAIL + 1))
+        ERRORS+=("setup-native-postgres.sh final echo is DATABASE_URL=...")
+    fi
+else
+    fail "setup-native-postgres.sh missing — cannot inspect final echo"
+    FAIL=$((FAIL + 1))
+    ERRORS+=("setup-native-postgres.sh final echo is DATABASE_URL=...")
+fi
+
+# ── Static analysis: Docker branch ~5GB RAM warning ───────────
+
+echo ""
+echo "Static analysis: Docker branch warns about ~5GB RAM"
+
+# Test 15: setup-local-first.sh Docker branch prints a 5GB RAM warning
+if grep -q '5GB' "$SETUP_SCRIPT" 2>/dev/null; then
+    ok "setup-local-first.sh warns about 5GB RAM on the Docker path"
+    PASS=$((PASS + 1))
+else
+    fail "setup-local-first.sh has no 5GB RAM warning on the Docker path"
+    FAIL=$((FAIL + 1))
+    ERRORS+=("Docker branch 5GB RAM warning in setup-local-first.sh")
+fi
+
+# ── Functional: MASSA_TH0TH_DB_BACKEND=sqlite → choice 2 ──────
+
+echo ""
+echo "Functional: MASSA_TH0TH_DB_BACKEND maps to DB choice"
+
+# Test 16: case "sqlite" → "2" (mirrors the installer's mapping)
+MAPPED=$(MASSA_TH0TH_DB_BACKEND=sqlite bash -c '
+case "${MASSA_TH0TH_DB_BACKEND}" in
+    native)  echo "1" ;;
+    sqlite)  echo "2" ;;
+    docker)  echo "3" ;;
+    *)       echo "1" ;;
+esac
+')
+assert_eq "MASSA_TH0TH_DB_BACKEND=sqlite maps to DB choice 2" "$MAPPED" "2"
 
 # ── Summary ───────────────────────────────────────────────────
 

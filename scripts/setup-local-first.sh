@@ -14,7 +14,7 @@ set -e
 source "$(dirname "${BASH_SOURCE[0]}")/banner.sh"
 massa_th0th_banner
 # ---- Step 1: Check Ollama ----
-echo -e "${BOLD}[1/4] Checking Ollama...${NC}"
+echo -e "${BOLD}[1/5] Checking Ollama...${NC}"
 
 OLLAMA_URL="${OLLAMA_HOST:-http://localhost:11434}"
 OLLAMA_HAS_CLI=false
@@ -75,9 +75,9 @@ fi
 
 # ---- Step 2: Pull embedding models ----
 echo ""
-echo -e "${BOLD}[2/4] Pulling embedding models...${NC}"
+echo -e "${BOLD}[2/5] Pulling embedding models...${NC}"
 
-EMBEDDING_MODEL="${OLLAMA_EMBEDDING_MODEL:-bge-m3}"
+EMBEDDING_MODEL="${OLLAMA_EMBEDDING_MODEL:-qwen3-embedding:8b}"
 
 # Check if model is already available via API
 MODEL_EXISTS=$(curl -s "${OLLAMA_URL}/api/tags" 2>/dev/null | python3 -c "
@@ -108,7 +108,7 @@ else
 fi
 
 # Pull the local-first LLM model (consolidation, rerank, query rewrite).
-LLM_MODEL="${RLM_LLM_MODEL:-qwen2.5-coder:7b}"
+LLM_MODEL="${RLM_LLM_MODEL:-qwen3.5:9b}"
 LLM_EXISTS=$(curl -s "${OLLAMA_URL}/api/tags" 2>/dev/null | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
@@ -141,19 +141,51 @@ echo ""
 echo -e "${BOLD}[3/5] Database selection...${NC}"
 echo ""
 echo -e "  Choose your database backend:"
-echo -e "    ${BLUE}1)${NC} SQLite (default, zero-config, local-first)"
-echo -e "    ${BLUE}2)${NC} PostgreSQL + pgvector (better performance for large datasets)"
+echo -e "    ${BLUE}1)${NC} Native PostgreSQL  (recommended, ~100MB RAM, no Docker)"
+echo -e "    ${BLUE}2)${NC} SQLite             (zero-config, brute-force search; fine for small repos)"
+echo -e "    ${BLUE}3)${NC} Docker PostgreSQL  (colima + Docker, ~5GB RAM)"
 echo ""
-read -rp "  Enter your choice [1]: " DB_CHOICE </dev/tty || true
-DB_CHOICE=${DB_CHOICE:-1}
+# Non-interactive override (mirrors MASSA_TH0TH_MODE in install.sh)
+case "${MASSA_TH0TH_DB_BACKEND:-}" in
+    native) DB_CHOICE=1 ;;
+    sqlite) DB_CHOICE=2 ;;
+    docker) DB_CHOICE=3 ;;
+    *)
+        read -rp "  Enter your choice [1]: " DB_CHOICE </dev/tty || true
+        DB_CHOICE=${DB_CHOICE:-1}
+        ;;
+esac
 
 USE_POSTGRES=false
 DATABASE_URL=""
 
-if [ "$DB_CHOICE" = "2" ]; then
+if [ "$DB_CHOICE" = "1" ]; then
+    # ---- Native PostgreSQL (macOS / Homebrew) ----
+    echo ""
+    NATIVE_HELPER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/setup-native-postgres.sh"
+    if [ -x "$NATIVE_HELPER" ]; then
+        if NATIVE_OUTPUT="$("$NATIVE_HELPER" 2>&1)"; then
+            echo "$NATIVE_OUTPUT"
+            DATABASE_URL="$(printf '%s\n' "$NATIVE_OUTPUT" | sed -n 's/^DATABASE_URL=//p' | head -1)"
+            USE_POSTGRES=true
+            echo -e "  ${GREEN}✓${NC} Native PostgreSQL ready"
+        else
+            echo "$NATIVE_OUTPUT" >&2
+            echo -e "  ${YELLOW}⚠${NC} Native PostgreSQL setup failed. Provide a connection URL (blank = SQLite):"
+            read -rp "  DATABASE_URL: " DATABASE_URL </dev/tty || true
+            [ -n "$DATABASE_URL" ] && USE_POSTGRES=true
+        fi
+    else
+        echo -e "  ${YELLOW}⚠${NC} Native helper not found ($NATIVE_HELPER). Provide a connection URL (blank = SQLite):"
+        read -rp "  DATABASE_URL: " DATABASE_URL </dev/tty || true
+        [ -n "$DATABASE_URL" ] && USE_POSTGRES=true
+    fi
+elif [ "$DB_CHOICE" = "3" ]; then
+    # ---- Docker PostgreSQL (colima + Docker) ----
     USE_POSTGRES=true
     echo ""
-    echo -e "  ${YELLOW}⚠${NC} PostgreSQL requires Docker or a running PostgreSQL instance"
+    echo -e "  ${YELLOW}⚠${NC} Docker PostgreSQL runs via colima + Docker and reserves ~5GB RAM."
+    echo -e "  ${YELLOW}⚠${NC} For a lighter native PostgreSQL (~100MB, no Docker), re-run and choose option 1."
     echo ""
     
     # Check if docker is available
@@ -273,8 +305,8 @@ DATABASE_URL=${DATABASE_URL}
 
 # Ollama Configuration (Local)
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_EMBEDDING_MODEL=bge-m3
-OLLAMA_EMBEDDING_DIMENSIONS=1024
+OLLAMA_EMBEDDING_MODEL=qwen3-embedding:8b
+OLLAMA_EMBEDDING_DIMENSIONS=4096
 
 # Vector Database (file-based)
 VECTOR_DB_PATH=./data/chroma
@@ -298,8 +330,8 @@ ENVEOF
 
 # Ollama Configuration (Local)
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_EMBEDDING_MODEL=bge-m3
-OLLAMA_EMBEDDING_DIMENSIONS=1024
+OLLAMA_EMBEDDING_MODEL=qwen3-embedding:8b
+OLLAMA_EMBEDDING_DIMENSIONS=4096
 
 # Database Paths (relative to project root)
 VECTOR_DB_PATH=./data/chroma
@@ -359,7 +391,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
     "provider": "ollama",
     "model": "${EMBEDDING_MODEL}",
     "baseURL": "${OLLAMA_URL}",
-    "dimensions": 1024
+    "dimensions": 4096
   },
   "compression": {
     "enabled": true,

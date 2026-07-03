@@ -153,10 +153,10 @@ select_mode() {
   # echo -e "     Pull pre-built images from DockerHub. Requires Docker only." >&2
   # echo ""                                                                 >&2
   echo -e "  ${CYAN}1)${NC} ${BOLD}Docker build${NC}"                    >&2
-  echo -e "     Clone the repo and build Docker images locally."          >&2
+  echo -e "     Clone the repo and build Docker images locally (PostgreSQL via Docker/colima, ~5GB RAM)." >&2
   echo ""                                                                 >&2
   echo -e "  ${CYAN}2)${NC} ${BOLD}From source${NC}"                     >&2
-  echo -e "     Clone the repo and run directly with Bun (dev/contributor mode)." >&2
+  echo -e "     Clone the repo and run with Bun. Pick SQLite, Native PostgreSQL (~100MB), or Docker at setup." >&2
   echo ""                                                                 >&2
   read -rp "  Enter your choice [1]: " choice <>/dev/tty
   case "${choice:-1}" in
@@ -171,6 +171,7 @@ preflight_docker() {
   require_cmd docker  "Install Docker: https://docs.docker.com/get-docker/"
   docker info &>/dev/null || die "Docker daemon is not running. Start Docker and retry."
   ok "Docker $(docker --version | awk '{print $3}' | tr -d ',')"
+  warn "Docker mode runs PostgreSQL through colima + Docker (~5GB RAM). For a lighter native PostgreSQL, use Source mode + Native PostgreSQL."
 }
 
 preflight_bun() {
@@ -264,7 +265,7 @@ write_env() {
   # auto-importance call a 404 instead of taking the rule-based silent-degrade
   # path (which only applies when the flag is false). Search rerank and query
   # understanding stay off — they're latency-sensitive and a separate opt-in.
-  local llm_model="qwen2.5-coder:7b"
+  local llm_model="qwen3.5:9b"
   local llm_enabled=false
   if ollama_has_model "$llm_model" "$ollama_url"; then
     llm_enabled=true
@@ -294,8 +295,8 @@ DATABASE_URL=${db_url}
 
 # ── Embeddings (Ollama - local, free) ────────────────────────
 OLLAMA_BASE_URL=${ollama_url}
-OLLAMA_EMBEDDING_MODEL=bge-m3
-OLLAMA_EMBEDDING_DIMENSIONS=1024
+OLLAMA_EMBEDDING_MODEL=qwen3-embedding:8b
+OLLAMA_EMBEDDING_DIMENSIONS=4096
 
 # ── Optional: Cloud embedding providers ─────────────────────
 #EMBEDDING_PROVIDER=google
@@ -307,14 +308,14 @@ LOG_LEVEL=info
 ENABLE_METRICS=true
 
 # ── Local-first LLM (Ollama); default OFF, silent degrade ──
-# Auto-set ON by install.sh only when qwen2.5-coder:7b is pulled in Ollama.
+# Auto-set ON by install.sh only when qwen3.5:9b is pulled in Ollama.
 RLM_LLM_ENABLED=${llm_enabled}
 RLM_LLM_BASE_URL=http://localhost:11434/v1
 RLM_LLM_API_KEY=ollama
 RLM_LLM_MODEL=${llm_model}
 RLM_LLM_TEMPERATURE=0.2
-RLM_LLM_MAX_OUTPUT_TOKENS=2000
-RLM_LLM_TIMEOUT_MS=30000
+RLM_LLM_MAX_OUTPUT_TOKENS=8000
+RLM_LLM_TIMEOUT_MS=90000
 
 # ── Passive capture ───────────────────────────────────────────
 HOOKS_ENABLED=true
@@ -346,7 +347,7 @@ AUTO_IMPROVE_MIN_FILE_HITS=3
 AUTO_IMPROVE_MIN_FIX_HITS=2
 
 # ── Auto importance/salience (LLM) ────────────────────────────
-# Auto-set ON by install.sh only when qwen2.5-coder:7b is pulled in Ollama.
+# Auto-set ON by install.sh only when qwen3.5:9b is pulled in Ollama.
 AUTO_IMPORTANCE_ENABLED=${llm_enabled}
 
 # ── Search quality knobs ──────────────────────────────────────
