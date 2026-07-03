@@ -199,6 +199,17 @@ check_ollama() {
   fi
 }
 
+# Echo success (0) iff $1 (model tag) is present in Ollama's /api/tags at $2.
+# Used to auto-enable LLM-gated features only when the model is actually pulled,
+# not merely when the server is reachable.
+ollama_has_model() {
+  local model="$1" url="$2"
+  [ -z "$url" ] && return 1
+  local esc_model="${model//./\\.}"
+  curl -sf --connect-timeout 2 "${url}/api/tags" 2>/dev/null \
+    | grep -Eq "\"name\"[[:space:]]*:[[:space:]]*\"${esc_model}\""
+}
+
 # ── .env writer ───────────────────────────────────────────────
 write_env() {
   local dir="$1"
@@ -213,6 +224,20 @@ write_env() {
   if [ -f "$env_file" ]; then
     warn ".env already exists at ${env_file} — skipping (delete it to regenerate)"
     return
+  fi
+
+  # Auto-enable LLM-gated features only when the configured model is actually
+  # pulled in Ollama. Reachable-but-missing-model would make consolidation and
+  # auto-importance call a 404 instead of taking the rule-based silent-degrade
+  # path (which only applies when the flag is false). Search rerank and query
+  # understanding stay off — they're latency-sensitive and a separate opt-in.
+  local llm_model="qwen2.5-coder:7b"
+  local llm_enabled=false
+  if ollama_has_model "$llm_model" "$ollama_url"; then
+    llm_enabled=true
+    ok "LLM consolidation + auto-importance auto-enabled (${llm_model} detected at ${ollama_url})"
+  else
+    info "LLM features off — pull the model to enable: ollama pull ${llm_model}"
   fi
 
   cat > "$env_file" << ENVEOF
@@ -244,11 +269,12 @@ OLLAMA_EMBEDDING_DIMENSIONS=1024
 LOG_LEVEL=info
 ENABLE_METRICS=true
 
-# ── Local-first LLM (Ollama); all default OFF, silent degrade ──
-RLM_LLM_ENABLED=false
+# ── Local-first LLM (Ollama); default OFF, silent degrade ──
+# Auto-set ON by install.sh only when qwen2.5-coder:7b is pulled in Ollama.
+RLM_LLM_ENABLED=${llm_enabled}
 RLM_LLM_BASE_URL=http://localhost:11434/v1
 RLM_LLM_API_KEY=ollama
-RLM_LLM_MODEL=qwen2.5-coder:7b
+RLM_LLM_MODEL=${llm_model}
 RLM_LLM_TEMPERATURE=0.2
 RLM_LLM_MAX_OUTPUT_TOKENS=2000
 RLM_LLM_TIMEOUT_MS=30000
@@ -283,7 +309,8 @@ AUTO_IMPROVE_MIN_FILE_HITS=3
 AUTO_IMPROVE_MIN_FIX_HITS=2
 
 # ── Auto importance/salience (LLM) ────────────────────────────
-AUTO_IMPORTANCE_ENABLED=false
+# Auto-set ON by install.sh only when qwen2.5-coder:7b is pulled in Ollama.
+AUTO_IMPORTANCE_ENABLED=${llm_enabled}
 
 # ── Search quality knobs ──────────────────────────────────────
 SEARCH_QUERY_UNDERSTANDING_ENABLED=false
