@@ -256,6 +256,10 @@ export const memoryRoutes = new Elysia({ prefix: "/api/v1/memory" })
           const conditions: string[] = [];
           const params: unknown[] = [];
           if (body.type) { conditions.push("type = ?"); params.push(body.type); }
+          if (body.projectId) { conditions.push("project_id = ?"); params.push(body.projectId); }
+          if (body.userId) { conditions.push("user_id = ?"); params.push(body.userId); }
+          if (body.sessionId) { conditions.push("session_id = ?"); params.push(body.sessionId); }
+          if (body.agentId) { conditions.push("agent_id = ?"); params.push(body.agentId); }
           if (body.level !== undefined && body.level !== null) {
             conditions.push("level = ?");
             params.push(body.level);
@@ -265,10 +269,11 @@ export const memoryRoutes = new Elysia({ prefix: "/api/v1/memory" })
           total = (db.prepare(`SELECT COUNT(*) as n FROM memories ${where}`).get(...params) as any).n;
           rows = db.prepare(`SELECT id, content, type, level, user_id, session_id, project_id, agent_id, importance, tags, created_at, access_count, last_accessed FROM memories ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset) as MemoryRow[];
         } else {
-          // PostgreSQL path — search method
+          // PostgreSQL path — search method (supports projectId scoping).
           const all = await repo.search({
             types: body.type ? [body.type] : undefined,
             minImportance: body.minImportance ?? 0,
+            projectId: body.projectId,
             includePersistent: true,
             limit: 10000,
           });
@@ -303,6 +308,10 @@ export const memoryRoutes = new Elysia({ prefix: "/api/v1/memory" })
             t.Literal("pattern"),
           ]),
         ),
+        projectId: t.Optional(t.String({ description: "Scope to a projectId" })),
+        userId: t.Optional(t.String({ description: "Scope to a userId" })),
+        sessionId: t.Optional(t.String({ description: "Scope to a sessionId" })),
+        agentId: t.Optional(t.String({ description: "Scope to an agentId" })),
         limit: t.Optional(t.Number({ default: 50, maximum: 500 })),
         offset: t.Optional(t.Number({ default: 0 })),
         minImportance: t.Optional(

@@ -27,7 +27,11 @@ interface RawMemory {
   project_id: string | null;
   agent_id: string | null;
   importance: number;
-  tags: string[] | null; // PostgreSQL text[] → pg driver returns JS string[]
+  // PostgreSQL text[] — under @prisma/adapter-pg the driver returns this as the
+  // Postgres array-literal STRING `{"a","b"}` (not a JS array), because the
+  // adapter does not map OID 1009 (text[]) to a native type. `parsePgTextArray`
+  // converts that literal into a JS string[]. `null` stays null/[].
+  tags: string[] | string | null;
   embedding: Buffer | null;
   metadata: unknown | null;
   created_at: Date;
@@ -36,6 +40,63 @@ interface RawMemory {
   last_accessed: Date | null;
   pinned: boolean | number | null; // Phase 1
   deleted_at: Date | null; // Phase 1
+}
+
+/**
+ * Parse a PostgreSQL text[] literal into a JS string[].
+ *
+ * The pg driver under @prisma/adapter-pg returns `text[]` columns as the raw
+ * Postgres array-literal string, e.g. `{alpha,beta}` or `{"with,comma","quote"}`
+ * (with inner quotes/escapes). Prisma cannot map OID 1009 natively, so we do it
+ * here. Accepts: a JS array (passthrough), a Postgres literal string, or null.
+ *
+ * Examples:
+ *   parsePgTextArray(["a","b"])          → ["a","b"]
+ *   parsePgTextArray(`{alpha,beta}`)     → ["alpha","beta"]
+ *   parsePgTextArray(`{"a,b","c"}`)      → ["a,b","c"]
+ *   parsePgTextArray(`{}`)               → []
+ *   parsePgTextArray(null)               → []
+ */
+function parsePgTextArray(v: string[] | string | null | undefined): string[] {
+  if (v == null) return [];
+  if (Array.isArray(v)) return v.map(String);
+  if (typeof v !== "string") return [];
+  const s = v.trim();
+  if (s === "{}" || s === "") return [];
+  // Must be wrapped in braces.
+  if (!(s.startsWith("{") && s.endsWith("}"))) return [];
+  const inner = s.slice(1, -1);
+  // No members (shouldn't happen after the {} check, but be safe).
+  if (inner === "") return [];
+  const out: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  let escape = false;
+  for (let i = 0; i < inner.length; i++) {
+    const ch = inner[i];
+    if (escape) {
+      cur += ch;
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (ch === "," && !inQuotes) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  out.push(cur);
+  // Treat the unquoted token `NULL` (case-insensitive) as empty/null element.
+  return out.map((t) => (t.toUpperCase() === "NULL" && !inQuotes ? "" : t));
 }
 
 export class MemoryRepositoryPg {
@@ -58,7 +119,7 @@ export class MemoryRepositoryPg {
 
   /** Convert a raw DB row to the MemoryRow interface used by the rest of the app. */
   private toMemoryRow(m: RawMemory): MemoryRow {
-    const tagsArr = Array.isArray(m.tags) ? m.tags : [];
+    const tagsArr = parsePgTextArray(m.tags);
     return {
       id: m.id,
       content: m.content,
