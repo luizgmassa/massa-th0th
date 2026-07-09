@@ -40,8 +40,8 @@
       "query": "fator multiplicador aplicado a resultados de keyword search quando a query parece código",
       "expected": {
         "filePath": "packages/core/src/services/search/contextual-search-rlm.ts",
-        "lineStart": 720,
-        "lineEnd": 727
+        "lineStart": 968,
+        "lineEnd": 976
       },
       "rationale": "isCodeQuery + KEYWORD_BOOST=2.5 hardcoded inline; heurística não é exposta como config."
     },
@@ -52,8 +52,8 @@
       "query": "proporção entre score RRF e similaridade vetorial bruta na composição do score final",
       "expected": {
         "filePath": "packages/core/src/services/search/contextual-search-rlm.ts",
-        "lineStart": 793,
-        "lineEnd": 795
+        "lineStart": 1042,
+        "lineEnd": 1047
       },
       "rationale": "70/30 split (rrfNormalized * 0.7 + vectorSimilarity * 0.3) sem constantes nomeadas."
     },
@@ -64,8 +64,8 @@
       "query": "bônus aplicado no ranking final para arquivos com alta centralidade no graph",
       "expected": {
         "filePath": "packages/core/src/services/search/contextual-search-rlm.ts",
-        "lineStart": 797,
-        "lineEnd": 804
+        "lineStart": 1049,
+        "lineEnd": 1056
       },
       "rationale": "combinedScore * (1 + 0.2 * centralityScore). Multiplicador 0.2 nu, sem constante."
     },
@@ -76,8 +76,8 @@
       "query": "filtro de score mínimo aplicado na similaridade vetorial bruta e não no score normalizado por RRF",
       "expected": {
         "filePath": "packages/core/src/services/search/contextual-search-rlm.ts",
-        "lineStart": 620,
-        "lineEnd": 636
+        "lineStart": 778,
+        "lineEnd": 798
       },
       "rationale": "Decisão crítica: minScore usa _rrfRawVectorScore quando disponível porque RRF normaliza top=1.0."
     },
@@ -88,8 +88,8 @@
       "query": "lógica que ignora chaves dentro de strings, regex ou comentários ao contar profundidade de bloco",
       "expected": {
         "filePath": "packages/core/src/services/search/smart-chunker.ts",
-        "lineStart": 612,
-        "lineEnd": 630
+        "lineStart": 631,
+        "lineEnd": 646
       },
       "rationale": "netBraceDelta strip prévio. Crítico para arquivos com regex literais (parsers, validadores) — drift de depth quebra chunking."
     },
@@ -100,8 +100,8 @@
       "query": "regra que impede que chunks de código com rótulo semântico sejam mesclados com vizinhos pequenos",
       "expected": {
         "filePath": "packages/core/src/services/search/smart-chunker.ts",
-        "lineStart": 678,
-        "lineEnd": 690
+        "lineStart": 708,
+        "lineEnd": 715
       },
       "rationale": "Métodos curtos (3-4L getter/setter) têm label = não devem ser absorvidos pelo merge anti-fragmentação."
     },
@@ -112,8 +112,8 @@
       "query": "fallback que usa chunking fixo quando arquivo markdown não tem nenhum heading",
       "expected": {
         "filePath": "packages/core/src/services/search/smart-chunker.ts",
-        "lineStart": 166,
-        "lineEnd": 175
+        "lineStart": 185,
+        "lineEnd": 193
       },
       "rationale": "Sem essa regra, README sem ## vira 1 mega-chunk que matcha qualquer query (bias .md descoberto no benchmark Sicad)."
     },
@@ -160,8 +160,8 @@
       "query": "alerta emitido quando troca de modelo de embedding deixa chunks de outro tamanho dimensional órfãos",
       "expected": {
         "filePath": "packages/core/src/data/vector/postgres-vector-store.ts",
-        "lineStart": 138,
-        "lineEnd": 175
+        "lineStart": 137,
+        "lineEnd": 181
       },
       "rationale": "detectOrphanedChunks varre tabelas vector_documents_*d e avisa se houver dados em dim antiga. Bug silencioso comum."
     },

@@ -420,3 +420,35 @@ model VectorDocument4096 {
   @@index([projectId])
   @@map("vector_documents_4096d")
 }
+
+// ========================================
+// Index Jobs (Phase 1, T9 — PG parity for the job store)
+// Runtime state for async indexing jobs. SQLite-canonical via SqliteJobStore
+// (index-jobs.db); this model provides PG parity so a Postgres deployment can
+// keep jobs in the same backend as the rest of the data plane. The factory
+// (getJobStore) selects PgJobStore when DATABASE_URL is postgres, else
+// SqliteJobStore. Timestamps are BigInt ms-epochs (parity with SymbolFile.mtime
+// and the SQLite store's INTEGER epoch columns).
+// ========================================
+model IndexJob {
+  jobId         String  @id @map("job_id")
+  projectId     String  @map("project_id")
+  projectPath   String  @map("project_path")
+  status        String // pending | running | completed | failed
+  current       Int     @default(0)
+  total         Int     @default(0)
+  percentage    Int     @default(0)
+  filesIndexed  Int?    @map("files_indexed")
+  chunksIndexed Int?    @map("chunks_indexed")
+  errors        Int?
+  duration      Int?
+  error         String?
+  createdAt     BigInt  @map("created_at")
+  startedAt     BigInt? @map("started_at")
+  completedAt   BigInt? @map("completed_at")
+  heartbeatAt   BigInt? @map("heartbeat_at")
+
+  @@index([projectId])
+  @@index([status])
+  @@map("index_jobs")
+}

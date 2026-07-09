@@ -28,6 +28,8 @@ import {
   pollUntil,
   resetProject,
   isSearchable,
+  isSharedIndexWarm,
+  SHARED_PROBE_QUERIES,
   ensureSharedIndex,
   SHARED_PID,
   RUN_STAMP,
@@ -353,6 +355,21 @@ describe.skipIf(!READY)("T9 N7 — search during active reindex (no torn-cache c
     "search on SHARED_PID returns coherent non-empty results while a tiny reindex runs",
     async () => {
       const shared = await ensureSharedIndex();
+
+      // N7-local warmup: the memoized ensureSharedIndex gate may have settled
+      // on a borderline-warm snapshot for earlier consumers. Re-assert THIS
+      // test's own precondition right before the concurrent-reindex stress:
+      // poll until N7's exact probe query ("ContextualSearchRLM mutex queue
+      // serialization") returns ≥1 hit on SHARED_PID. Short timeout (120s)
+      // since the strong gate already ran; this only guards against a
+      // borderline-memoized settle, not a cold start.
+      const N7_QUERY = SHARED_PROBE_QUERIES[0];
+      const warm = await pollUntil(() => isSearchable(shared, N7_QUERY), {
+        timeoutMs: 120_000,
+        intervalMs: 3_000,
+      });
+      console.log(`[N7] warmup probe for "${N7_QUERY}" on ${shared} → ${warm ? "hit" : "miss"}`);
+      expect(warm).toBe(true);
 
       // Kick off a tiny throwaway reindex (does NOT touch SHARED_PID — uses a
       // separate throwaway projectId so the shared index is untouched).

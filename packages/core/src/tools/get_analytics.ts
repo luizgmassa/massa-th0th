@@ -31,7 +31,8 @@ export class GetAnalyticsTool implements IToolHandler {
       },
       projectId: {
         type: "string",
-        description: "Project ID (required for type='project' or 'cache')",
+        description:
+          "Project ID. Required for type='project'. Optional for type='cache' (omit for global cache stats across all projects; provide to scope to one project). Optional for type='query'/'recent'.",
       },
       query: {
         type: "string",

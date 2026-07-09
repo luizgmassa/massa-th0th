@@ -60,6 +60,14 @@ export interface ChunkerConfig {
    * below the embedding provider's maxChars to avoid truncation.
    */
   maxChunkChars: number;
+  /**
+   * Number of lines of overlap between adjacent code chunks. Each chunk's tail
+   * extends this many lines into the next chunk's territory, so a concept that
+   * straddles a chunk boundary is embedded in BOTH chunks (boundary-recall
+   * insurance). 0 disables overlap (legacy behavior). Only applied to the
+   * semantic code path (chunkCode), not fixed/markdown/json/yaml chunkers.
+   */
+  chunkOverlapLines: number;
 }
 
 const DEFAULT_CONFIG: ChunkerConfig = {
@@ -69,6 +77,7 @@ const DEFAULT_CONFIG: ChunkerConfig = {
   fixedChunkSize: 50,
   addFileContext: true,
   maxChunkChars: 7500, // 90% of 8000 char Ollama maxChars default, leaves room for file-context prefix
+  chunkOverlapLines: 4, // adjacent code chunks share 4 lines (boundary-recall insurance)
 };
 
 /**
@@ -512,7 +521,20 @@ function chunkCode(content: string, cfg: ChunkerConfig): Chunk[] {
 
   for (let b = 0; b < boundaries.length; b++) {
     const start = realStarts[b];
-    const end = b + 1 < realStarts.length ? realStarts[b + 1] : lines.length;
+    // Extend this chunk's tail into the next chunk's territory by
+    // `chunkOverlapLines` so adjacent chunks share those lines. This keeps a
+    // concept that straddles a boundary embedded in BOTH chunks (boundary
+    // recall). Clamp to lines.length and to just before the NEXT boundary's
+    // declaration line (don't pull the next symbol's `function foo(` into this
+    // chunk's tail — that would muddy this chunk's label signal).
+    let end: number;
+    if (b + 1 < realStarts.length) {
+      const nextBoundaryLine = boundaries[b + 1].line;
+      const overlapCeiling = Math.min(nextBoundaryLine, lines.length);
+      end = Math.min(realStarts[b + 1] + cfg.chunkOverlapLines, overlapCeiling, lines.length);
+    } else {
+      end = lines.length;
+    }
     const slice = lines.slice(start, end);
     if (!slice.some((l) => l.trim())) continue;
     const label = boundaries[b].container

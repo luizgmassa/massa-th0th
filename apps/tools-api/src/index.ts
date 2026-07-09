@@ -9,6 +9,12 @@
  */
 
 import "@massa-th0th/shared/config";
+import { assertDedicatedDbAllowed } from "@massa-th0th/shared/config";
+
+// Fail fast if a DEDICATE-flagged process would bind the shared production DB.
+// Must run AFTER env loading and BEFORE any DB/client initialization. No-op
+// unless MASSA_TH0TH_DEDICATED=1, so the normal :3333 shared stack is unaffected.
+assertDedicatedDbAllowed();
 
 import { Elysia } from "elysia";
 import { node } from "@elysiajs/node";
@@ -33,8 +39,17 @@ import { webUiRoutes } from "./routes/web-ui.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
 import { getHealthChecker, searchSessionHook, coRetrievalHook } from "@massa-th0th/core";
+import { indexJobTracker } from "@massa-th0th/core/services";
 
 const PORT = process.env.MASSA_TH0TH_API_PORT || 3333;
+
+// Stale-job reaper config. A job whose heartbeat hasn't been refreshed within
+// this window is flipped to `failed` by the in-process reaper interval below.
+// Generous default (5 min): healthy indexes emit progress far more often than
+// that, and a real index finishes well within the window.
+const JOB_STALE_MS = Number(process.env.MASSA_TH0TH_JOB_STALE_MS) || 300_000;
+const JOB_REAPER_INTERVAL_MS =
+  Number(process.env.MASSA_TH0TH_JOB_REAPER_INTERVAL_MS) || 60_000;
 
 const app = new Elysia({ adapter: node() })
   .use(cors())
@@ -114,10 +129,30 @@ coRetrievalHook.register(); // active only when MASSA_TH0TH_CO_RETRIEVAL_HOOK=tr
 console.log(`massa-th0th Tools API running at http://localhost:${PORT}`);
 console.log(`Swagger docs at http://localhost:${PORT}/swagger`);
 
+// Stale-job reaper: periodically flip any `running` job whose heartbeat is
+// older than JOB_STALE_MS to `failed`. This covers the case where an indexing
+// job hangs (e.g. an Ollama stall) or crashes mid-flight while the server keeps
+// running — without it, the job row would stay pinned at `running` for the
+// lifetime of this process (the existing restart-time recovery only fires on
+// the NEXT process start). Healthy jobs keep heartbeating via progress emits,
+// so they are never reaped.
+const jobReaperTimer = setInterval(() => {
+  try {
+    const reaped = indexJobTracker.reapStaleJobs(JOB_STALE_MS);
+    if (reaped > 0) {
+      console.log(`[job-reaper] reaped ${reaped} stale running job(s) (staleMs=${JOB_STALE_MS})`);
+    }
+  } catch (err) {
+    console.error(`[job-reaper] error:`, err instanceof Error ? err.message : err);
+  }
+}, JOB_REAPER_INTERVAL_MS);
+jobReaperTimer.unref?.(); // never keep the event loop alive solely for the reaper
+
 // Graceful shutdown
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
   process.on(signal, async () => {
     console.log(`${signal} received, shutting down gracefully...`);
+    clearInterval(jobReaperTimer);
     try {
       const { disconnectPrisma } = await import('@massa-th0th/core/services');
       await disconnectPrisma();

@@ -257,6 +257,38 @@ export async function isSearchable(
   }
 }
 
+/**
+ * Distinct probe queries targeting different known symbols/files in the shared
+ * repo. Each must return ≥1 hit at minScore 0.05 for the index to be considered
+ * GENUINELY warm (not a single borderline file that crept past the old 1-probe
+ * gate). Queries are chosen to be strongly findable by the hybrid
+ * keyword+vector search: each names a real exported symbol / file in the repo.
+ */
+export const SHARED_PROBE_QUERIES: readonly string[] = [
+  // services/search/contextual-search-rlm.ts — the original N7 query.
+  "ContextualSearchRLM mutex queue serialization",
+  // services/symbol/centrality.ts — computePageRank export.
+  "computePageRank centrality graph",
+  // data/vector/postgres-vector-store.ts — addDocuments sub-batch path.
+  "postgres vector store addDocuments transaction",
+] as const;
+
+/**
+ * Strong multi-probe readiness gate for the shared index. Returns true only
+ * when EVERY probe query in {@link SHARED_PROBE_QUERIES} returns ≥1 hit. This
+ * prevents the old single-probe gate from declaring the store warm on a single
+ * borderline file long before the full-repo index has materialized.
+ */
+export async function isSharedIndexWarm(
+  projectId: string = SHARED_PID,
+  queries: readonly string[] = SHARED_PROBE_QUERIES,
+): Promise<boolean> {
+  for (const q of queries) {
+    if (!(await isSearchable(projectId, q))) return false;
+  }
+  return true;
+}
+
 let _sharedPromise: Promise<string> | null = null;
 
 /**
@@ -271,19 +303,59 @@ export function ensureSharedIndex(): Promise<string> {
 
 async function doSharedIndex(): Promise<string> {
   assertE2ePrefix(SHARED_PID);
-  if (await isSearchable(SHARED_PID)) return SHARED_PID;
+  // Strong gate: require every probe query to hit. If already richly warm,
+  // reuse without re-indexing. (This supersedes the old 1-probe short-circuit
+  // which could pass on a single borderline file before the full-repo index
+  // had materialized.)
+  if (await isSharedIndexWarm(SHARED_PID)) return SHARED_PID;
 
-  await httpPost("/api/v1/project/index", {
+  const start = await httpPost<any>("/api/v1/project/index", {
     projectPath: PROJECT_PATH,
     projectId: SHARED_PID,
     forceReindex: true,
   });
+  const jobId: string | undefined = start?.data?.jobId ?? start?.jobId;
 
-  const ok = await pollUntil(() => isSearchable(SHARED_PID), {
+  // Job-status path: poll the index JOB to a terminal state. This is the
+  // definitive settle signal when the indexJobTracker cooperates. The known
+  // OOM-tracker caveat means this may never reach "completed"/"failed" on a
+  // fully cold dedicated stack, so it is best-effort: we race it against the
+  // strong data-plane gate below and resolve as soon as BOTH have settled (or
+  // the job reaches terminal, whichever framing applies).
+  let jobTerminal = false;
+  if (jobId) {
+    jobTerminal = await pollUntil(
+      async () => {
+        try {
+          const s = await httpGet<any>(`/api/v1/project/index/status/${jobId}`);
+          const st = s?.data?.status;
+          return st === "indexed" || st === "completed" || st === "failed";
+        } catch {
+          return false;
+        }
+      },
+      { timeoutMs: 600_000, intervalMs: 5_000 },
+    );
+  }
+
+  // Strong data-plane gate: never resolve until every probe query returns ≥1
+  // hit. This is the load-bearing requirement — the store must be richly warm
+  // before N7 (and every other consumer) relies on it. If the job-status path
+  // never went terminal (tracker caveat), this gate alone still guards us.
+  const warm = await pollUntil(() => isSharedIndexWarm(SHARED_PID), {
     timeoutMs: 600_000,
     intervalMs: 5_000,
   });
-  if (!ok) throw new Error(`shared index ${SHARED_PID} never became searchable`);
+  if (!warm) {
+    throw new Error(
+      `shared index ${SHARED_PID} never became richly searchable ` +
+        `(jobId=${jobId ?? "none"}, jobTerminal=${jobTerminal})`,
+    );
+  }
+  console.log(
+    `[ensureSharedIndex] ${SHARED_PID} warm (jobId=${jobId ?? "none"}, ` +
+      `jobTerminal=${jobTerminal}); ${SHARED_PROBE_QUERIES.length} probe queries all hit.`,
+  );
   return SHARED_PID;
 }
 

@@ -375,60 +375,123 @@ launched from the repo root silently binds to the shared DB unless
 This is what tripped the prior verify agent. Future dedicated/verify stacks
 MUST set `DATABASE_URL` explicitly.
 
-### Problems still occurring / next steps
+### Residual-fix rollout (2026-07-09, T1–T9b) — all RESOLVED + verified GREEN
 
-**Shared stack now LIVE with the fixes (2026-07-06 go-live).** The real system
-at `:3333` was rebuilt (`packages/core` + `packages/shared` dist) and restarted.
-Verified live: `GET /api/v1/symbol/definitions?…search=ContextualSearchRLM&kind=class`
-returns only the `ContextualSearchRLM` class (the #5 PG filter is active),
-confirming the fresh `@massa-th0th/core` dist is served. Server-side fixes #5,
-#9, #11 are active; #14's code is active too. (MCP-client-only fixes —
-BUG-SYN-4/1/2/3, #10, #12 — take effect for any host that rebuilds + relaunches
-the MCP client.)
+A second pass closed every item previously listed under "Problems still
+occurring / next steps". All 14 e2e files pass on the live `:3333` / real-PG
+stack (0 fail). Per-item resolution:
 
-**✅ #14 migration applied to the shared DB (2026-07-06).** Migration
-`20260706105826_drop_symbol_refs_target_fqn_not_null` is now applied to the
-shared `massa_th0th` DB — `symbol_references.target_fqn` is nullable (`YES`) and
-the row is recorded in `_prisma_migrations`. The earlier code/DB mismatch (code
-live, constraint still NOT NULL) is resolved; re-indexing files with unresolved
-imports no longer risks a NOT NULL violation. Applied via the repo-local prisma
-(run from `packages/core/` so `prisma.config.ts` loads the root `.env` — note:
-`bunx prisma` resolves a broken global `~/node_modules/prisma`, so use
-`packages/core/node_modules/.bin/prisma migrate deploy`). The app does not
-auto-migrate on boot; migrations must be applied explicitly after each deploy.
+- **#12 (MCP `bootstrap` proxy-timeout) — FIXED (T1).** Root cause was NOT a
+  proxy slowdown: the MCP SDK `Client` default request timeout is 60 s
+  (`DEFAULT_REQUEST_TIMEOUT_MSEC`), shorter than bootstrap's legitimate ~90 s
+  path (the LLM seed call burns its 90 s `AbortSignal` then degrades to
+  rule-based — see side finding "thinking-model"). `_mcp.ts` now forwards
+  `MASSA_TH0TH_PROXY_TIMEOUT_MS` to the child env and `mcpCall` passes
+  `{timeout: MCP_CLIENT_TIMEOUT_MS}` (150 s) to `callTool`. The bootstrap MCP
+  matrix now FAILs on a real timeout (re-throws) instead of `skipMatrix`-
+  swallowing it. `11.lifecycle` 20 pass / 0 fail; matrix green.
+- **N7 (search-during-reindex) — FIXED (T2).** `_helpers.ts` adds a strong
+  `isSharedIndexWarm` 3-probe gate; `doSharedIndex` awaits the index JOB to
+  terminal AND the strong gate; N7 has a local warmup. `15.nfr` 10 pass / 0
+  fail; N7 green on the warm stack.
+- **`.env` footgun — FIXED (T3).** New `packages/shared/src/config/db-guard.ts`
+  `assertDedicatedDbAllowed()` refuses to bind the shared DB `massa_th0th` when
+  `MASSA_TH0TH_DEDICATED=1`; called at tools-api startup; `16.destructive`
+  `IS_DEDICATED_URL` now also requires the flag. Refuse confirmed live.
+- **#15 (analytics `cache` projectId) — FIXED (T4).** Schema description
+  corrected (cache projectId optional → global stats when absent, scoped when
+  present); F83 asserts both global + scoped success. `12.observability` 24
+  pass / 0 fail.
+- **#16 (`read_file` inputSchema drift) — FIXED (T5).** MCP schema now
+  advertises `offset`/`limit`/`targetRatio`/`format`; E27 asserts them.
+  `08.search` 36 pass / 0 fail.
+- **#17 (`maxResults:0`) — FIXED (T6).** `contextual-search-rlm.ts` `||`→`??` +
+  early `return []`; E4 asserts empty.
+- **#18 (search-quality) — FIXED (T7).** `smart-chunker.ts` adds
+  `chunkOverlapLines:4`; needle fixture line-ranges refreshed. Baseline lifted
+  hit@1 0.357→0.500, hit@5 0.571→0.786, MRR 0.443→0.604. Floors raised to
+  0.36/0.64/0.47 (all ≥ old 0.28/0.57/0.4 — quality lift, not a carve-out).
+  `14.needles` deterministic (zero rank drift across runs).
+- **OOM residual (crashed job can't signal) — FIXED (T8).** Added
+  `heartbeat_at` to the job store + a server-side reaper `setInterval`
+  (`MASSA_TH0TH_JOB_STALE_MS`, 5 min default; `MASSA_TH0TH_JOB_REAPER_INTERVAL_MS`,
+  60 s) that flips stale `running` jobs to `failed` without a restart. Stale→
+  failed proven live; healthy jobs untouched. `02.indexing` 19 pass / 0 fail
+  (F9b green).
 
-**#12 (MCP `bootstrap` proxy-timeout) — live-verify still deferred.** Client
-timeout budget raised + env-tunable (`MASSA_TH0TH_PROXY_TIMEOUT_MS`, 120 s
-default) in Batch A; type-checked. Not re-asserted live — `11.lifecycle.test.ts`
-was outside the 6-file targeted set. Next step: run the `bootstrap` MCP matrix
-against a slow model (e.g. `qwen3.5:9b`) on a dedicated stack and assert it
-completes within budget.
+**T9 — job store now follows the one-backend rule (PG-or-SQLite).** Previously
+`getJobStore()` always returned `SqliteJobStore`, so a PG deployment ran BOTH
+PG (data) + SQLite (`index-jobs.db`) for jobs. New `PgJobStore`
+(`packages/core/src/services/jobs/index-job-store-pg.ts`) implements the
+`JobStore` interface via raw SQL on the shared prisma client (no second pool;
+avoids the Prisma 7.7 adapter-pg `isObjectEnumValue` incompatibility, matching
+`MemoryRepositoryPg`). `getJobStore()` selects it when `DATABASE_URL` is
+postgres (mirroring `memory-repository-factory.ts`); `SqliteJobStore` remains
+the local-first default. New prisma model `IndexJob` + migration
+`20260707100000_add_index_jobs_pg` (BIGINT ms-epoch timestamps + `heartbeat_at`)
+applied to the shared DB. T8's heartbeat + reaper work identically on PG.
+Verified: e2e jobs land in PG `index_jobs` (status `completed`, `heartbeat_at`
+populated); the SQLite `index-jobs.db` is no longer written on this deployment.
+Unit tests: `index-job-store.test.ts` (SQLite, 7) + new
+`index-job-store-pg.test.ts` (PG, 12) — 19 pass.
 
-**N7 (search-during-reindex) — environmental fail on the dedicated stack.**
-Failed on the fresh dedicated DB because the `e2e-th0th-shared` vector store
-was not fully warm during the file-by-file run. Not a #4–#14 regression. Next
-step: re-verify N7 on a fully-warm stack.
+**T9b — PgJobStore write-ordering race FIXED.** Initial PgJobStore did
+fire-and-forget `void persist(job)` with no per-jobId serialization, so rapid
+saves (pending→running→…→completed) could commit out of order and leave the PG
+row stuck at a non-terminal state (observed: `completed` settled at
+`running/30`). Added a per-jobId serialized write chain (`inflight` map) so
+same-job writes commit in call order (different jobIds stay concurrent); the
+sync mirror read path is unchanged. Verified: after a full lifecycle + drain,
+the PG row's final on-disk status is `completed`; post-e2e PG shows 14
+`completed`, 0 stuck `running`.
 
-**`.env` footgun — open operational risk.** See above; dedicated/verify stacks
-must override `DATABASE_URL`. Mitigation idea: remove the repo-root `.env`
-default, or have tools-api refuse to bind `massa_th0th` when a
-`MASSA_TH0TH_DEDICATED` flag is set.
+### Side findings / possible bugs (OPEN — follow-ups, not blockers for this rollout)
 
-**Residual NOTES (pre-existing, NOT part of the 11-bug rollout, still open):**
-- `#15` `analytics` `cache` type does not require `projectId` (`12.observability` F83).
-- `#16` `read_file` inputSchema advertises fewer params than the runtime accepts (`offset`/`limit`/`format`/`targetRatio`) (`08.search` E27).
-- `#17` `maxResults:0` is treated as the default (~9), not "zero results" (`08.search` E4).
-- `#18` search-quality: 5/14 needles miss (hit@1 0.357, hit@5 0.571, MRR 0.443) — `contextual-search-rlm.ts` chunking/embedding weakness (`14.needles`).
+- **[HIGH] Default LLM `qwen3.5:9b` is a thinking model** — returns output in
+  `message.reasoning` with `content=""`/`finish_reason:"length"`. Every
+  structured-object LLM call (bootstrap seed, salience judge, consolidator,
+  query-understanding, reranker, handoff, jobs) reads `content`, never the
+  reasoning channel → burns its full 90 s `AbortSignal.timeout` then silently
+  degrades to rule-based/fallback. This is the underlying reason `bootstrap`
+  takes ~90 s (not seconds), and why enabling the (default-off) LLM
+  query-understanding/reranker search-quality levers would not reliably help.
+  Ollama itself is healthy (~4 s bare completion). Fix: pin a non-thinking
+  default model for structured-output calls, OR parse `message.reasoning` when
+  `content` is empty in the provider wrapper
+  (`packages/core/src/services/memory/llm-client.ts:70`). (Root-caused in T1.)
+- **[med] `read_file` `format` is a runtime no-op** —
+  `packages/core/src/tools/read_file.ts:134` reads `format = p.format || "json"`
+  but never uses it; the response body is always JSON-shaped even for
+  `format:"toon"`. The param is honored at the schema/contract level (T5) but
+  the handler ignores it.
+- **[med] `adsads/` junk path indexed in `e2e-th0th-shared`** — needle N11's
+  top hit is `adsads/packages/core/src/services/etl/stage-context.ts`. A
+  stray/typo'd directory was indexed into the shared project. Audit the
+  indexed file list / `projectPath` and drop the junk prefix.
+- **[low] `.env` guard gaps** — `POSTGRES_VECTOR_URL` is not guarded by
+  `assertDedicatedDbAllowed` (only `DATABASE_URL` is); a dedicated stack
+  setting `POSTGRES_VECTOR_URL` to the shared DB independently would slip
+  through. Also `apps/mcp-client/src/api-client.ts:25`
+  `Number(process.env.MASSA_TH0TH_PROXY_TIMEOUT_MS) || 120000` treats `"0"` as
+  falsy → silently falls back to 120 s.
+- **[low] `PgJobStore` crash-recovery / `markStaleRunningFailed` is globally
+  unscoped** (`index-job-store-pg.ts:123-127, 268`) — `UPDATE ... WHERE
+  status='running'` has no `project_id`/process-owner or heartbeat-age
+  predicate. Parity with the SQLite store (same global behavior), so not a
+  regression, but in a MULTI-process deployment one process starting up would
+  flip another live process's in-flight jobs to `failed`. A narrow
+  reaper-vs-terminal-save race also remains (the reaper's UPDATE bypasses the
+  per-jobId serialized chain). Single-process `:3333` is unaffected.
+- **[low] `PgJobStore` hydration clears the mirror unconditionally**
+  (`index-job-store-pg.ts:145`) — a `save()` whose fire-and-forget write hasn't
+  landed yet is erased from the mirror when hydration completes; a subsequent
+  sync `get()` returns null until the write lands. Mitigated by pre-warming
+  hydration on first use.
 
-**OOM residual (acknowledged, out of scope for #11).** The `indexJobTracker`
-fix makes terminal-state reliable for jobs that complete, but a job that
-OOM-crashes mid-flight still cannot signal. The shared-index strategy (one
-`e2e-th0th-shared`, heavy tests run one at a time) remains the workaround; the
-full suite on a memory-constrained box still OOMs.
-
-**Committed 2026-07-06 (bug-fix rollout):** 15 source/test files + new migration
-`20260706105826_drop_symbol_refs_target_fqn_not_null/` + this COVERAGE update.
-`packages/core/dist` and `apps/mcp-client/dist` are rebuilt locally but
-**gitignored** (build artifacts — not in the commit; each deploy rebuilds them).
-Migration #14 has been applied to the shared DB; **all 11 fixes are now fully
-live on `:3333`** (code + DB schema aligned).
+**Committed 2026-07-09 (residual-fix rollout T1–T9b):** source/test/migration
+changes across `packages/core`, `packages/shared`, `apps/tools-api`,
+`apps/mcp-client`, the e2e suite, the needle fixture, + new migration
+`20260707100000_add_index_jobs_pg/` + new `db-guard.ts` / `index-job-store-pg.ts`,
++ this COVERAGE update. `dist` artifacts are rebuilt locally but gitignored
+(each deploy rebuilds them). Migration applied to the shared DB; **all residual
+items are now resolved and live on `:3333`** (code + DB schema aligned).

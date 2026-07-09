@@ -29,6 +29,14 @@ export interface IndexJob {
   createdAt: Date;
   startedAt?: Date;
   completedAt?: Date;
+  /**
+   * Heartbeat timestamp: refreshed on every progress emit and when the job
+   * enters `running`. Used by `reapStaleJobs` to detect a job that has hung
+   * (e.g. an Ollama stall or a mid-flight crash) while the server is still
+   * alive — flipping it to `failed` within the server's lifetime, instead of
+   * waiting for the next process restart to recover it.
+   */
+  heartbeatAt?: Date;
 }
 
 /**
@@ -114,8 +122,11 @@ export class IndexJobTracker {
 
     job.status = status;
 
-    if (status === "running" && !job.startedAt) {
-      job.startedAt = new Date();
+    if (status === "running") {
+      if (!job.startedAt) job.startedAt = new Date();
+      // Seed the heartbeat the moment a job enters `running` so the reaper has
+      // a baseline before the first progress emit.
+      job.heartbeatAt = new Date();
     }
 
     if (status === "completed" || status === "failed") {
@@ -125,10 +136,13 @@ export class IndexJobTracker {
   }
 
   /**
-   * Update job progress
+   * Update job progress. Piggybacks the heartbeat: every progress emit refreshes
+   * `heartbeatAt`, which is what `reapStaleJobs` checks. This keeps a healthy
+   * (actively-progressing) job from ever being reaped while catching jobs whose
+   * progress has gone silent.
    */
   updateProgress(jobId: string, current: number, total: number): void {
-    const job = this.jobs.get(jobId);
+    const job = this.jobs.get(jobId) ?? this.getJob(jobId);
     if (!job) return;
 
     job.progress = {
@@ -136,7 +150,67 @@ export class IndexJobTracker {
       total,
       percentage: total > 0 ? Math.round((current / total) * 100) : 0,
     };
+    job.heartbeatAt = new Date();
     try { this.store?.save(job); } catch { /* best-effort */ }
+  }
+
+  /**
+   * Tick ONLY the heartbeat (no progress change). Use when you want to signal
+   * "still alive" between progress emits (e.g. a long single-file parse that
+   * doesn't increment the file counter).
+   */
+  heartbeat(jobId: string): void {
+    const job = this.jobs.get(jobId) ?? this.getJob(jobId);
+    if (!job) return;
+    job.heartbeatAt = new Date();
+    try { this.store?.save(job); } catch { /* best-effort */ }
+  }
+
+  /**
+   * Reap stale `running` jobs: flip any job whose heartbeat is older than
+   * `staleMs` (or, as a fallback for jobs with no heartbeat, whose `startedAt`
+   * is older than `staleMs`) to `failed`. Covers the case where a job hangs or
+   * crashes mid-flight while the server keeps running — the existing
+   * restart-time `markStaleRunningFailed` only fires on the NEXT process start,
+   * which never happens during a long-lived test suite.
+   *
+   * Returns the count of reaped jobs.
+   */
+  reapStaleJobs(staleMs: number): number {
+    if (!this.store) return 0;
+    let running: IndexJob[] = [];
+    try {
+      running = this.store.listRunning();
+    } catch {
+      return 0;
+    }
+    if (running.length === 0) return 0;
+
+    const now = Date.now();
+    const cutoff = now - staleMs;
+    let reaped = 0;
+    for (const job of running) {
+      const hbMs = job.heartbeatAt?.getTime();
+      const startedMs = job.startedAt?.getTime();
+      // Stale if heartbeat is older than the cutoff. Fallback for jobs with no
+      // heartbeat yet: stale if startedAt is older than the cutoff (covers the
+      // theoretical window between createJob and the first running/heartbeat).
+      const stale =
+        (hbMs != null && hbMs < cutoff) ||
+        (hbMs == null && startedMs != null && startedMs < cutoff);
+      if (!stale) continue;
+
+      logger.warn(
+        `indexJobTracker: reaping stale running job ${job.jobId} (heartbeatAt=${job.heartbeatAt?.toISOString() ?? "n/a"}, startedAt=${job.startedAt?.toISOString() ?? "n/a"}, staleMs=${staleMs})`,
+        { jobId: job.jobId, projectId: job.projectId, staleMs },
+      );
+      // Promote into the hot cache so setResult mutates the same object the
+      // next getJob() will return, then flip to failed with a clear cause.
+      this.jobs.set(job.jobId, job);
+      this.setResult(job.jobId, undefined, "heartbeat stale (possible crash/OOM)");
+      reaped++;
+    }
+    return reaped;
   }
 
   /**

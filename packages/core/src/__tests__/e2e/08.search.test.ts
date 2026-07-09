@@ -41,11 +41,11 @@
  *    to a read-only suite — skipped with reasons.
  *  - E7 (Ollama-degenerate) needs Ollama down — destructive, skipped.
  *  - E29 (HybridSearch vs ContextualSearchRLM RRF) is internal — skipped.
- *  - E27 schema drift: read_file's advertised inputSchema
- *    (apps/mcp-client/src/tool-definitions.ts ~line 718) lacks offset/limit/
- *    format/targetRatio that the runtime exposes (apps/tools-api/src/routes/
- *    file.ts:33-59). The test calls read_file with ONLY advertised params and
- *    documents the drift in a console.log.
+ *  - E27 schema drift FIXED: read_file's advertised inputSchema
+ *    (apps/mcp-client/src/tool-definitions.ts) now mirrors the runtime route
+ *    (apps/tools-api/src/routes/file.ts:33-59) — offset/limit/targetRatio/
+ *    format were added alongside the legacy lineStart/lineEnd pair. The test
+ *    now asserts these params take effect at the contract level.
  */
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import {
@@ -754,8 +754,10 @@ describe.skipIf(!READY)("T3 search & context", () => {
   );
 
   test(
-    "E4: maxResults:0 and maxResults:10000 → bounded behavior, no crash",
+    "E4: maxResults:0 → empty results; omitted → default; 10000 → bounded",
     async () => {
+      // FIXED contract: maxResults:0 means literally zero results (previously
+      // `0 || 10` coerced it to the default ~10).
       const zero = await searchProject({
         query: "mutex",
         projectId: pid,
@@ -763,9 +765,23 @@ describe.skipIf(!READY)("T3 search & context", () => {
         format: "json",
       });
       expect(zero?.success).toBe(true);
-      // The server treats maxResults:0 as "default" rather than literally 0;
-      // either way, no crash and an array is returned.
       expect(Array.isArray(zero?.data?.results)).toBe(true);
+      expect(zero?.data?.results).toEqual([]);
+      expect((zero?.data?.results ?? []).length).toBe(0);
+
+      // Omitted maxResults → default (~10). When the shared index is warm for a
+      // real query like "mutex", this should return non-empty, proving the
+      // default-when-absent path is unchanged.
+      const omitted = await searchProject({
+        query: "mutex",
+        projectId: pid,
+        format: "json",
+      });
+      expect(omitted?.success).toBe(true);
+      const omittedResults = omitted?.data?.results ?? [];
+      expect(Array.isArray(omittedResults)).toBe(true);
+      // Shared index is expected to be warm for "mutex"; assert non-empty.
+      expect(omittedResults.length).toBeGreaterThan(0);
 
       const huge = await searchProject({
         query: "mutex",
@@ -809,31 +825,85 @@ describe.skipIf(!READY)("T3 search & context", () => {
 
   // ── Schema drift findings ──────────────────────────────────────────────
 
-  test("E27: read_file honors advertised inputSchema (documents offset/limit/format/targetRatio drift)", async () => {
-    // The MCP read_file inputSchema (apps/mcp-client/src/tool-definitions.ts
-    // ~line 718) advertises ONLY: filePath, projectId, lineStart, lineEnd,
-    // compress, includeSymbols, includeImports. The runtime
-    // (apps/tools-api/src/routes/file.ts:33-59) ALSO accepts offset, limit,
-    // format, targetRatio. We assert the server honors the ADVERTISED params
-    // cleanly; the unadvertised extras are documented as drift.
-    const r = await readFileApi({
-      filePath: "packages/core/src/controllers/search-controller.ts",
+  test("E27: read_file honors advertised inputSchema (asserts offset/limit/format/targetRatio)", async () => {
+    // Schema drift FIXED: read_file's advertised inputSchema now mirrors the
+    // runtime route (apps/tools-api/src/routes/file.ts:33-59), so MCP clients
+    // can reach offset/limit/format/targetRatio. This test asserts the four
+    // params take effect at the contract level.
+    const filePath = "packages/core/src/controllers/search-controller.ts";
+
+    // --- offset/limit: sub-range must correspond to that line window ---
+    const sub = await readFileApi({
+      filePath,
       projectId: pid,
-      lineStart: 1,
-      lineEnd: 3,
+      offset: 10,
+      limit: 5,
       compress: false,
-      includeSymbols: true,
-      includeImports: true,
     });
-    expect(r?.success).toBe(true);
-    expect(typeof r?.data?.content).toBe("string");
+    expect(sub?.success).toBe(true);
+    const subData = sub?.data ?? {};
+    expect(typeof subData.content).toBe("string");
+    // The content is formatted "  <n>: ..." — extract the line numbers present.
+    const subLineNums = String(subData.content)
+      .split("\n")
+      .map((l) => parseInt(l.replace(/^\s+/, ""), 10))
+      .filter((n) => Number.isFinite(n));
+    expect(subLineNums.length).toBeGreaterThan(0);
+    // Every returned line number must be within [10, 14] (offset 10 + limit 5).
+    for (const n of subLineNums) {
+      expect(n).toBeGreaterThanOrEqual(10);
+      expect(n).toBeLessThanOrEqual(14);
+    }
+    // The selected line count reported in metadata must respect the limit.
+    expect(subData.lineRange?.selected).toBeLessThanOrEqual(5);
+
+    // offset/limit must differ from a no-range (full-file) read: the full file
+    // has more lines than the 5-line sub-range.
+    const full = await readFileApi({
+      filePath,
+      projectId: pid,
+      compress: false,
+    });
+    expect(full?.success).toBe(true);
+    expect(full?.data?.lineRange?.selected).toBeGreaterThan(subData.lineRange.selected);
+
+    // --- format:"toon": param accepted (contract-level) ---
+    // Note: the handler accepts `format` but currently does not branch on it —
+    // the response body is JSON-shaped either way. We assert the param is
+    // accepted without error (schema contract), which is what the inputSchema
+    // fix guarantees to MCP clients.
+    const toon = await readFileApi({
+      filePath,
+      projectId: pid,
+      offset: 1,
+      limit: 3,
+      compress: false,
+      format: "toon",
+    });
+    expect(toon?.success).toBe(true);
+    expect(typeof toon?.data?.content).toBe("string");
+
+    // --- targetRatio: param accepted (contract-level) ---
+    // targetRatio only influences behavior when compress:true on a >100-line
+    // file (the slow LLM path — see F32). To keep this test fast and
+    // non-flaky, we assert the param is accepted without error on a small
+    // range (compress:false), proving the schema/route honors it.
+    const ratio = await readFileApi({
+      filePath,
+      projectId: pid,
+      offset: 1,
+      limit: 3,
+      compress: false,
+      targetRatio: 0.5,
+    });
+    expect(ratio?.success).toBe(true);
+
     console.log(
-      "[T3:E27] Schema drift documented: read_file inputSchema advertises " +
-        "{filePath, projectId, lineStart, lineEnd, compress, includeSymbols, " +
-        "includeImports} but the runtime also accepts {offset, limit, format, " +
-        "targetRatio} (apps/tools-api/src/routes/file.ts:33-59). Clients using " +
-        "the advertised schema cannot reach the offset/limit/targetRatio/format " +
-        "code paths via MCP.",
+      "[T3:E27] Schema drift FIXED: read_file inputSchema now advertises " +
+        "offset/limit/targetRatio/format (apps/mcp-client/src/tool-definitions.ts). " +
+        "Asserted offset+limit returns the correct [10,14] window and differs " +
+        "from a full-file read; format:toon and targetRatio accepted at the " +
+        "contract level.",
     );
   }, 60_000);
 

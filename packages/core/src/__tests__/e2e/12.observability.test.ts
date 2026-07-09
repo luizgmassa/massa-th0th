@@ -199,15 +199,28 @@ describe.skipIf(!READY)("T11 — Observability", () => {
       expect(typeof r?.error).toBe("string");
     }, 30_000);
 
-    test("F83 cache without projectId → documents actual behavior (no hard error)", async () => {
-      // Verified live: cache path does NOT validate projectId (unlike project).
-      // It calls getCachePerformance(undefined) and returns success with a
-      // possibly-empty result. Assert it does not throw + envelope shape.
+    test("F83 cache without projectId → global cache stats (success)", async () => {
+      // #15: cache is intentionally dual-mode — global stats when projectId
+      // omitted, scoped when provided. Unlike "project", "cache" does NOT
+      // validate projectId. Assert the GLOBAL success contract.
       const r = await httpPost<any>("/api/v1/analytics", { type: "cache" });
       console.log(`[T11:F83:cache-noId] ${JSON.stringify(r).slice(0, 300)}`);
-      expect(r).toBeTypeOf("object");
-      // Either success:true with a result, or success:false with an error.
-      expect(typeof r?.success).toBe("boolean");
+      expect(r?.success).toBe(true);
+      expect(r?.data?.type).toBe("cache");
+      expect(r?.data?.result).toBeDefined();
+    }, 30_000);
+
+    test("F83 cache WITH projectId → scoped cache stats (success)", async () => {
+      // #15: providing projectId scopes cache stats to one project.
+      const r = await httpPost<any>("/api/v1/analytics", {
+        type: "cache",
+        projectId: SID,
+      });
+      console.log(`[T11:F83:cache-withId] ${JSON.stringify(r).slice(0, 300)}`);
+      expect(r?.success).toBe(true);
+      expect(r?.data?.type).toBe("cache");
+      expect(r?.data?.projectId).toBe(SID);
+      expect(r?.data?.result).toBeDefined();
     }, 30_000);
 
     // ── Matrix (bucket C: no format flag) ──────────────────────────────────

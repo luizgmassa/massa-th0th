@@ -515,7 +515,8 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
         projectId: {
           type: "string",
-          description: "Project ID (required for type='project' or 'cache')",
+          description:
+            "Project ID. Required for type='project'. Optional for type='cache' (omit for global cache stats across all projects; provide to scope to one project). Optional for type='query'/'recent'.",
         },
         query: {
           type: "string",
@@ -725,9 +726,13 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       properties: {
         filePath: { type: "string", description: "File path (absolute or relative to project root)" },
         projectId: { type: "string", description: "Project ID for symbol metadata" },
+        offset: { type: "number", description: "1-indexed start line (alternative to lineStart)" },
+        limit: { type: "number", description: "Number of lines to return (alternative to lineEnd)" },
         lineStart: { type: "number", description: "First line to read (1-indexed)" },
         lineEnd: { type: "number", description: "Last line to read (1-indexed)" },
         compress: { type: "boolean", description: "Auto-compress content > 100 lines (default: true)", default: true },
+        targetRatio: { type: "number", description: "Compression target ratio (0.3 = 70% reduction)", default: 0.3 },
+        format: { type: "string", enum: ["json", "toon"], description: "Output format", default: "json" },
         includeSymbols: { type: "boolean", description: "Include symbol definitions/references (default: true)", default: true },
         includeImports: { type: "boolean", description: "Extract file imports (default: true)", default: true },
       },

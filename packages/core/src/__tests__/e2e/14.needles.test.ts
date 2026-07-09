@@ -29,12 +29,17 @@
  *    stability).
  *
  * OBSERVED_BASELINE (warm shared index, qwen3-embedding:8b, PostgreSQL):
- *   hit@1  = 0.357  (5/14)
- *   hit@3  = 0.500  (7/14)
- *   hit@5  = 0.571  (8/14)
- *   hit@10 = 0.571  (8/14)
- *   MRR    = 0.443
- * Floors below are derived from that baseline at ~80% (rounded down) so a
+ *   T7 lift (fixture refresh + chunk overlap):
+ *     hit@1  = 0.500  (7/14)
+ *     hit@3  = 0.643  (9/14)
+ *     hit@5  = 0.714  (10/14)
+ *     hit@10 = 0.714  (10/14)
+ *     MRR    = 0.586
+ *   Pre-T7 (stale fixture ranges, no overlap):
+ *     hit@1  = 0.357  (5/14)
+ *     hit@5  = 0.571  (8/14)
+ *     MRR    = 0.443
+ * Floors below are derived from the T7 baseline at ~80% (rounded down) so a
  * catastrophic regression trips the test while normal embed jitter does not.
  * Determinism: two sequential sweeps on the warm index produced IDENTICAL
  * per-needle ranks (zero rank drift) — embedding cache yields stable ranking.
@@ -285,20 +290,25 @@ describe.skipIf(!READY)("T10 needles benchmark", () => {
       // is tolerated by the spec. Surface it but don't fail on it.
 
       // ── F-NEEDLE-1: conservative regression floors ──────────────────────
-      // OBSERVED_BASELINE (warm shared index, this host):
-      //   hit@1 = 0.357 (5/14)  hit@3 = 0.500 (7/14)
-      //   hit@5 = 0.571 (8/14)  hit@10= 0.571 (8/14)
-      //   MRR   = 0.443
+      // OBSERVED_BASELINE (T7 lift: fixture refresh + chunk overlap; warm shared
+      // index, this host; two sequential sweeps identical):
+      //   hit@1 = 0.500 (7/14)  hit@3 = 0.643 (9/14)
+      //   hit@5 = 0.714 (10/14) hit@10= 0.714 (10/14)
+      //   MRR   = 0.586
       // Floors set at ~80% of baseline (rounded DOWN to the nearest whole
       // needle so the test only trips on a real regression, not jitter):
-      //   hit@1 ≥ 4/14 ≈ 0.286 → floor 0.28
-      //   hit@5 ≥ 7/14 ≈ 0.500 → floor 0.57 (kept at observed since 8/14 → 0.571)
-      //   MRR  ≥ 0.40
+      //   hit@1 ≥ 5/14 ≈ 0.357 → floor 0.36   (was 0.28 pre-T7)
+      //   hit@5 ≥ 9/14 ≈ 0.643 → floor 0.64   (was 0.57 pre-T7)
+      //   MRR  ≥ 0.47              (was 0.40 pre-T7)
+      // Pre-T7 floors (0.28/0.57/0.4) were derived from a stale-fixture
+      // baseline (0.357/0.571/0.443); the T7 fixture refresh + chunk overlap
+      // lifted quality ~40% on hit@1, so the floors rise with it. Every new
+      // floor is ≥ its pre-T7 value — this is a quality lift, not a carve-out.
       // We assert against the FIRST run (warm cache); if run #1 dipped, run #2
       // almost certainly dipped too, so this is the right gate.
-      const HIT1_FLOOR = 0.28;
-      const HIT5_FLOOR = 0.57;
-      const MRR_FLOOR = 0.4;
+      const HIT1_FLOOR = 0.36;
+      const HIT5_FLOOR = 0.64;
+      const MRR_FLOOR = 0.47;
 
       console.log("\n=== T10 regression floors ===");
       console.log(`  hit@1 ${sweep1.hitAt1.toFixed(3)} ≥ ${HIT1_FLOOR}  → ${sweep1.hitAt1 >= HIT1_FLOOR ? "PASS" : "FAIL"}`);

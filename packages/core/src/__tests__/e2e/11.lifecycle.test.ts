@@ -246,6 +246,7 @@ describe.skipIf(!READY)("T8 — Lifecycle", () => {
       });
 
       let mcpRes: any;
+      const t0 = Date.now();
       try {
         mcpRes = await mcpCall(mcp!.client, "bootstrap", {
           projectId: SID,
@@ -253,9 +254,21 @@ describe.skipIf(!READY)("T8 — Lifecycle", () => {
           force: true,
         });
       } catch (e: any) {
+        // Finding #12: a timeout-shaped failure is a proxy regression and MUST
+        // fail the test (the MCP bootstrap path must not silently swallow proxy
+        // timeouts). Only a clearly non-timeout transport error may skip.
+        const isTimeout =
+          e?.name === "AbortError" ||
+          e?.name === "TimeoutError" ||
+          /timeout|abort|timed out/i.test(e?.message ?? "");
+        if (isTimeout) {
+          throw new Error(
+            `bootstrap MCP proxy timed out (finding #12 regression): ${e?.message ?? e}`,
+          );
+        }
         if (
           skipMatrix(
-            `MCP bootstrap call failed (BUG-SYN-4 proxy or transport): ${String(
+            `MCP bootstrap call failed (non-timeout transport error): ${String(
               e?.message ?? e,
             ).slice(0, 200)}`,
           )
@@ -264,15 +277,15 @@ describe.skipIf(!READY)("T8 — Lifecycle", () => {
         return;
       }
 
-      if (mcpRes?.success !== true) {
-        if (
-          skipMatrix(
-            `MCP bootstrap did not return success: ${JSON.stringify(mcpRes).slice(0, 200)}`,
-          )
-        )
-          return;
-        return;
-      }
+      // Hard assertion (finding #12): a non-success envelope from MCP bootstrap
+      // is a regression, not a skip condition.
+      expect(mcpRes?.success).toBe(true);
+
+      // Soft timing backstop (finding #12): the MCP bootstrap should stay within
+      // the proxy timeout budget + a generous slack margin (LLM/embedding jitter).
+      const proxyBudgetMs = Number(process.env.MASSA_TH0TH_PROXY_TIMEOUT_MS ?? "120000");
+      const elapsedMs = Date.now() - t0;
+      expect(elapsedMs).toBeLessThanOrEqual(proxyBudgetMs + 60_000);
 
       // Seed memories include volatile ids/timestamps/embeddings → compare only
       // the {success} envelope flag (and that both transports agree on

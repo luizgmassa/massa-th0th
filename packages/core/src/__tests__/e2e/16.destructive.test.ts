@@ -76,7 +76,9 @@ import {
 const DESTRUCTIVE = process.env.RUN_E2E_DESTRUCTIVE === "1";
 const DEFAULT_API = "http://localhost:3333";
 const IS_DEDICATED_URL =
-  !!process.env.MASSA_TH0TH_API_URL && process.env.MASSA_TH0TH_API_URL !== DEFAULT_API;
+  !!process.env.MASSA_TH0TH_API_URL &&
+  process.env.MASSA_TH0TH_API_URL !== DEFAULT_API &&
+  process.env.MASSA_TH0TH_DEDICATED === "1";
 
 // Shared availability probe; reused across gated tests that need it.
 let _avail: Availability | null = null;

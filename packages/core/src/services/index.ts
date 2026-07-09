@@ -35,6 +35,10 @@ export type {
   ServiceStatus,
 } from "./health/local-health-checker.js";
 
+// Jobs (async indexing job tracker + stale-job reaper)
+export { IndexJobTracker, indexJobTracker } from "./jobs/index-job-tracker.js";
+export type { IndexJob } from "./jobs/index-job-tracker.js";
+
 // Pricing (local-first with cache)
 export {
   ModelsDevClient,

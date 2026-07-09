@@ -564,11 +564,26 @@ export class ContextualSearchRLM {
     } = {},
   ): Promise<SearchResult[]> {
     await this.ensureInitialized();
-    const maxResults = options.maxResults || 10;
+    const maxResults = options.maxResults ?? 10;
     const minScore = options.minScore ?? 0.3;
     const explainScores = options.explainScores || false;
     const includeFilters = options.includeFilters;
     const excludeFilters = options.excludeFilters;
+
+    // Honor an explicit maxResults:0 as "zero results" (previously `|| 10`
+    // coerced 0 → 10). Short-circuit here, BEFORE the cache probe and vector/
+    // keyword fan-out, so 0 doesn't do unnecessary work or hit a degenerate
+    // `maxResults * 2 === 0` vector call. Returns the same empty shape the
+    // function uses on a no-hit search / caught-error path.
+    if (maxResults <= 0) {
+      logger.debug("maxResults <= 0 — returning empty result set", {
+        query,
+        projectId,
+        maxResults,
+      });
+      return [];
+    }
+
     const startTime = performance.now(); // Use performance.now() for sub-millisecond precision
 
     logger.debug("Starting contextual search", {

@@ -765,3 +765,12 @@ export {
   initConfig,
   getConfigForEnv,
 } from "./config-loader";
+
+// DEDICATED-stack DB guard — fails fast if a dedicated-flagged process would
+// bind the shared production DB name (`massa_th0th`). See db-guard.ts.
+export {
+  SHARED_DB_NAME,
+  getDbName,
+  isSharedDb,
+  assertDedicatedDbAllowed,
+} from "./db-guard";

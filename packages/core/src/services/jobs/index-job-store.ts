@@ -20,6 +20,8 @@ export interface JobStore {
   get(jobId: string): IndexJob | null;
   listByProject(projectId: string): IndexJob[];
   listAll(): IndexJob[];
+  /** List all jobs currently in `running` status (for the stale-job reaper). */
+  listRunning(): IndexJob[];
   /** Crash recovery: mark stale `running` jobs as `failed`. */
   markStaleRunningFailed(): number;
   delete(jobId: string): void;
@@ -41,6 +43,7 @@ interface JobRow {
   created_at: number;
   started_at: number | null;
   completed_at: number | null;
+  heartbeat_at: number | null;
 }
 
 function rowToJob(r: JobRow): IndexJob {
@@ -63,6 +66,7 @@ function rowToJob(r: JobRow): IndexJob {
     createdAt: new Date(r.created_at),
     startedAt: r.started_at != null ? new Date(r.started_at) : undefined,
     completedAt: r.completed_at != null ? new Date(r.completed_at) : undefined,
+    heartbeatAt: r.heartbeat_at != null ? new Date(r.heartbeat_at) : undefined,
   };
 }
 
@@ -99,11 +103,21 @@ export class SqliteJobStore implements JobStore {
         error        TEXT,
         created_at   INTEGER NOT NULL,
         started_at   INTEGER,
-        completed_at INTEGER
+        completed_at INTEGER,
+        heartbeat_at INTEGER
       );
       CREATE INDEX IF NOT EXISTS idx_jobs_project ON index_jobs(project_id);
       CREATE INDEX IF NOT EXISTS idx_jobs_status ON index_jobs(status);
     `);
+    // Idempotent migration: add heartbeat_at to pre-existing DB files.
+    // SQLite has no ADD COLUMN IF NOT EXISTS, so wrap and ignore the
+    // "duplicate column name" error on DBs that already have the column.
+    try {
+      this.db.exec(`ALTER TABLE index_jobs ADD COLUMN heartbeat_at INTEGER`);
+    } catch (e) {
+      const msg = (e as Error)?.message ?? "";
+      if (!msg.includes("duplicate column name")) throw e;
+    }
     // Crash recovery: run once on first open.
     if (!this.recovered) {
       this.db
@@ -125,8 +139,8 @@ export class SqliteJobStore implements JobStore {
         `INSERT INTO index_jobs (
           job_id, project_id, project_path, status, current, total, percentage,
           files_indexed, chunks_indexed, errors, duration, error,
-          created_at, started_at, completed_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          created_at, started_at, completed_at, heartbeat_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(job_id) DO UPDATE SET
           status = excluded.status,
           current = excluded.current,
@@ -138,7 +152,8 @@ export class SqliteJobStore implements JobStore {
           duration = excluded.duration,
           error = excluded.error,
           started_at = excluded.started_at,
-          completed_at = excluded.completed_at`,
+          completed_at = excluded.completed_at,
+          heartbeat_at = excluded.heartbeat_at`,
       ).run(
         job.jobId,
         job.projectId,
@@ -155,6 +170,7 @@ export class SqliteJobStore implements JobStore {
         job.createdAt.getTime(),
         job.startedAt?.getTime() ?? null,
         job.completedAt?.getTime() ?? null,
+        job.heartbeatAt?.getTime() ?? null,
       );
     } catch (e) {
       logger.warn("JobStore.save failed (best-effort)", {
@@ -197,6 +213,18 @@ export class SqliteJobStore implements JobStore {
     }
   }
 
+  listRunning(): IndexJob[] {
+    try {
+      const db = this.getDB();
+      const rows = db
+        .prepare(`SELECT * FROM index_jobs WHERE status = 'running'`)
+        .all() as JobRow[];
+      return rows.map(rowToJob);
+    } catch {
+      return [];
+    }
+  }
+
   markStaleRunningFailed(): number {
     try {
       const db = this.getDB();
@@ -229,10 +257,26 @@ let cachedStore: JobStore | null = null;
 
 export function getJobStore(): JobStore {
   if (cachedStore) return cachedStore;
+  const databaseUrl = process.env.DATABASE_URL;
+  const isPostgres =
+    databaseUrl?.startsWith("postgresql://") ||
+    databaseUrl?.startsWith("postgres://");
   try {
-    cachedStore = new SqliteJobStore();
+    // One-backend rule: follow DATABASE_URL the same way the memory / symbol /
+    // vector factories do. Postgres → PgJobStore (jobs in the same DB as the
+    // data plane); otherwise SQLite-canonical (index-jobs.db).
+    if (isPostgres) {
+      const { PgJobStore } = require("./index-job-store-pg.js") as {
+        PgJobStore: new () => JobStore;
+      };
+      cachedStore = new PgJobStore();
+      logger.info("Using PostgreSQL JobStore");
+    } else {
+      cachedStore = new SqliteJobStore();
+    }
   } catch (e) {
-    logger.warn("SqliteJobStore unavailable — using no-op job store", {
+    logger.warn("JobStore unavailable — using no-op job store", {
+      backend: isPostgres ? "postgres" : "sqlite",
       error: (e as Error).message,
     });
     cachedStore = new NoopJobStore();
@@ -249,6 +293,7 @@ class NoopJobStore implements JobStore {
   get(): IndexJob | null { return null; }
   listByProject(): IndexJob[] { return []; }
   listAll(): IndexJob[] { return []; }
+  listRunning(): IndexJob[] { return []; }
   markStaleRunningFailed(): number { return 0; }
   delete(): void {}
 }
