@@ -113,7 +113,10 @@ export function getMaxChars(providerPrefix: string, model: string): number {
   if (bare.startsWith("text-embedding-3")) return 8000;
   if (bare.startsWith("gemini-embedding")) return 8000;
   if (bare.startsWith("mistral-embed") || bare.startsWith("codestral-embed")) return 8000;
-  if (bare.startsWith("embed-v-4")) return 500000; 
+  if (bare.startsWith("embed-v-4")) return 500000;
+  // transformers.js local models (all-MiniLM-L6-v2 etc.) have a 512-token
+  // context window (~2000 chars at ~4 chars/token with headroom).
+  if (bare.includes("all-minilm") || bare.includes("minilm")) return 2000;
   return 4000;
 }
 
@@ -248,6 +251,54 @@ export const embeddingProviders: Record<string, EmbeddingProviderConfig> = {
     };
   })(),
 
+  /**
+   * Local in-process provider (roadmap A5): transformers.js ONNX runtime, no
+   * model server, no API key, fully offline after first model download.
+   *
+   * OPT-IN by default (priority 100) so the existing Ollama default path is
+   * untouched. Select it with `EMBEDDING_PROVIDER=transformers` (priority 1).
+   * `transformers` is the canonical id; `local` is accepted as an alias in
+   * the provider map for ergonomics.
+   */
+  transformers: (() => {
+    const model =
+      process.env.TRANSFORMERS_EMBEDDING_MODEL || "Xenova/all-MiniLM-L6-v2";
+    return {
+      provider: "transformers",
+      model,
+      dimensions: Number(
+        process.env.TRANSFORMERS_EMBEDDING_DIMENSIONS || "384",
+      ),
+      priority: process.env.EMBEDDING_PROVIDER === "transformers" ? 1 : 100,
+      timeout: 300000, // 5 minutes (first-run model download can be slow)
+      maxRetries: 1,
+      maxChars: getMaxChars("TRANSFORMERS", model),
+      rateLimits: getRateLimits("TRANSFORMERS"),
+    };
+  })(),
+
+  /**
+   * `local` alias → same backing config as `transformers`. Kept as a separate
+   * entry (not a self-reference, which can't run during object construction)
+   * so `EMBEDDING_PROVIDER=local` resolves in the fallback chain.
+   */
+  local: (() => {
+    const model =
+      process.env.TRANSFORMERS_EMBEDDING_MODEL || "Xenova/all-MiniLM-L6-v2";
+    return {
+      provider: "transformers",
+      model,
+      dimensions: Number(
+        process.env.TRANSFORMERS_EMBEDDING_DIMENSIONS || "384",
+      ),
+      priority: process.env.EMBEDDING_PROVIDER === "local" ? 1 : 100,
+      timeout: 300000,
+      maxRetries: 1,
+      maxChars: getMaxChars("TRANSFORMERS", model),
+      rateLimits: getRateLimits("TRANSFORMERS"),
+    };
+  })(),
+
   // === DISABLED PROVIDERS (uncomment and configure to enable) ===
   
   /*
@@ -297,6 +348,11 @@ export function hasApiKey(providerName: string): boolean {
 
   // Ollama doesn't need an API key (local)
   if (config.provider === "ollama") {
+    return true;
+  }
+
+  // transformers.js local provider runs in-process; no API key needed.
+  if (config.provider === "transformers") {
     return true;
   }
 

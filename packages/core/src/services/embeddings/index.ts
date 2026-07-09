@@ -43,12 +43,14 @@ export interface CreateProviderOptions {
    * Provider to use:
    * - 'auto': Try providers by priority until one works (Ollama first)
    * - 'ollama': Ollama local embeddings (768D, free, local-first)
+   * - 'transformers' / 'local': In-process transformers.js ONNX embeddings
+   *   (384D, fully offline after first model download — roadmap A5)
    * - 'mistralText': Mistral text embeddings (1024D)
    * - 'mistralCode': Mistral code embeddings (1536D)
    *
    * Default: 'auto'
    */
-  provider?: "auto" | "ollama" | "mistralText" | "mistralCode";
+  provider?: "auto" | "ollama" | "transformers" | "local" | "mistralText" | "mistralCode";
 
   /**
    * Enable transparent caching using SHA-256 content hashing

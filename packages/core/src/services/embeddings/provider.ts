@@ -22,6 +22,7 @@ import type { EmbeddingProviderConfig } from "./config.js";
 import { metrics } from "../monitoring/metrics.js";
 import { EmbeddingRateLimiter } from "./rate-limiter.js";
 import { logger } from "@massa-th0th/shared";
+import { LocalTransformersEmbeddingProvider } from "./providers/local-transformers.js";
 
 /**
  * Base interface for embedding providers
@@ -700,12 +701,22 @@ export class AISDKEmbeddingProvider implements EmbeddingProvider {
 }
 
 /**
- * Factory function to create embedding providers from configuration
+ * Factory function to create embedding providers from configuration.
+ *
+ * Dispatches to the local transformers.js provider for `provider: "transformers"`
+ * (roadmap A5); every other provider type uses the Vercel-AI-SDK-backed
+ * AISDKEmbeddingProvider.
  */
 export function createProvider(
   config: EmbeddingProviderConfig,
   providerId: string,
 ): EmbeddingProvider {
+  if (config.provider === "transformers") {
+    // Static import is fine: LocalTransformersEmbeddingProvider only pulls the
+    // (large) ONNX runtime via a dynamic import() inside ensureModel(), so
+    // merely importing the class costs nothing.
+    return new LocalTransformersEmbeddingProvider(config, providerId);
+  }
   return new AISDKEmbeddingProvider(config, providerId);
 }
 
