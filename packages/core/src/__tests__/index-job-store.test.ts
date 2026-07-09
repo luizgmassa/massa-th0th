@@ -71,12 +71,14 @@ describe("SqliteJobStore — round-trip", () => {
 
 describe("SqliteJobStore — crash recovery", () => {
   test("on first open, stale `running` jobs are marked `failed` (process restart)", () => {
-    // First instance: write a running job, then drop the handle (simulate crash).
+    // First instance: write a running job with a STALE heartbeat (older than
+    // the default 5-min threshold), then drop the handle (simulate crash).
+    const stale = new Date(Date.now() - 600_000); // 10 min ago
     const store1 = new SqliteJobStore(dbPath);
     store1.save({
       jobId: "stuck", projectId: "p", projectPath: "/", status: "running",
       progress: { current: 3, total: 10, percentage: 30 },
-      createdAt: new Date(),
+      createdAt: stale, startedAt: stale, heartbeatAt: stale,
     });
 
     // New instance over the same file: recovery runs on open.

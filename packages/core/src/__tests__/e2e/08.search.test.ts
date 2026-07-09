@@ -867,11 +867,10 @@ describe.skipIf(!READY)("T3 search & context", () => {
     expect(full?.success).toBe(true);
     expect(full?.data?.lineRange?.selected).toBeGreaterThan(subData.lineRange.selected);
 
-    // --- format:"toon": param accepted (contract-level) ---
-    // Note: the handler accepts `format` but currently does not branch on it —
-    // the response body is JSON-shaped either way. We assert the param is
-    // accepted without error (schema contract), which is what the inputSchema
-    // fix guarantees to MCP clients.
+    // --- format:"toon": response body must be a TOON-encoded string ---
+    // The handler branches on `format` and encodes `result` via
+    // @toon-format/toon when format==="toon". We assert `data` is a
+    // non-empty string (TOON output), not the JSON object shape.
     const toon = await readFileApi({
       filePath,
       projectId: pid,
@@ -881,7 +880,22 @@ describe.skipIf(!READY)("T3 search & context", () => {
       format: "toon",
     });
     expect(toon?.success).toBe(true);
-    expect(typeof toon?.data?.content).toBe("string");
+    expect(typeof toon?.data).toBe("string");
+    expect((toon?.data as string).length).toBeGreaterThan(0);
+
+    // --- format:"json" (default): response body must be a JSON object ---
+    const json = await readFileApi({
+      filePath,
+      projectId: pid,
+      offset: 1,
+      limit: 3,
+      compress: false,
+      format: "json",
+    });
+    expect(json?.success).toBe(true);
+    expect(typeof json?.data).toBe("object");
+    expect(json?.data).not.toBeNull();
+    expect(typeof json?.data?.content).toBe("string");
 
     // --- targetRatio: param accepted (contract-level) ---
     // targetRatio only influences behavior when compress:true on a >100-line

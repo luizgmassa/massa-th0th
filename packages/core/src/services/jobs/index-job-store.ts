@@ -10,6 +10,7 @@
  */
 
 import { config, logger } from "@massa-th0th/shared";
+import { parsePositiveIntEnv } from "@massa-th0th/shared/config";
 import { Database } from "bun:sqlite";
 import fs from "fs";
 import path from "path";
@@ -75,6 +76,20 @@ export class SqliteJobStore implements JobStore {
   private dbPath: string;
   private recovered = false;
 
+  /**
+   * Stale-heartbeat cutoff (ms-epoch): running jobs whose
+   * `COALESCE(heartbeat_at, started_at)` is older than this are considered
+   * stale (crashed / orphaned) and may be flipped to `failed`. Parity with
+   * PgJobStore: sourced from MASSA_TH0TH_JOB_STALE_MS (default 300000).
+   */
+  private staleHeartbeatCutoffMs(now: number = Date.now()): number {
+    const staleMs = parsePositiveIntEnv(
+      process.env.MASSA_TH0TH_JOB_STALE_MS,
+      300_000,
+    );
+    return now - staleMs;
+  }
+
   constructor(dbPath?: string) {
     const dataDir = config.get("dataDir") as string;
     this.dbPath = dbPath ?? path.join(dataDir, "index-jobs.db");
@@ -118,14 +133,21 @@ export class SqliteJobStore implements JobStore {
       const msg = (e as Error)?.message ?? "";
       if (!msg.includes("duplicate column name")) throw e;
     }
-    // Crash recovery: run once on first open.
+    // Crash recovery: run once on first open. Only flip running jobs whose
+    // heartbeat (or started_at fallback) is older than the stale threshold —
+    // parity with PgJobStore. Single-process SQLite is low-risk, but matching
+    // the predicate keeps the two backends behaviorally identical.
     if (!this.recovered) {
+      const now = Date.now();
+      const cutoff = this.staleHeartbeatCutoffMs(now);
       this.db
         .prepare(
           `UPDATE index_jobs SET status = 'failed', error = 'process restart', completed_at = ?
-           WHERE status = 'running'`,
+           WHERE status = 'running'
+             AND COALESCE(heartbeat_at, started_at) IS NOT NULL
+             AND COALESCE(heartbeat_at, started_at) < ?`,
         )
-        .run(Date.now());
+        .run(now, cutoff);
       this.recovered = true;
     }
     logger.info("SqliteJobStore initialized", { dbPath: this.dbPath });
@@ -228,13 +250,17 @@ export class SqliteJobStore implements JobStore {
   markStaleRunningFailed(): number {
     try {
       const db = this.getDB();
+      const now = Date.now();
+      const cutoff = this.staleHeartbeatCutoffMs(now);
       const result = db
         .prepare(
           `UPDATE index_jobs
            SET status = 'failed', error = 'process restart', completed_at = ?
-           WHERE status = 'running'`,
+           WHERE status = 'running'
+             AND COALESCE(heartbeat_at, started_at) IS NOT NULL
+             AND COALESCE(heartbeat_at, started_at) < ?`,
         )
-        .run(Date.now());
+        .run(now, cutoff);
       if (result.changes > 0) {
         logger.info("JobStore crash recovery", { staleRunningFailed: result.changes });
       }

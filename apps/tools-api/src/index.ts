@@ -9,7 +9,7 @@
  */
 
 import "@massa-th0th/shared/config";
-import { assertDedicatedDbAllowed } from "@massa-th0th/shared/config";
+import { assertDedicatedDbAllowed, parsePositiveIntEnv } from "@massa-th0th/shared/config";
 
 // Fail fast if a DEDICATE-flagged process would bind the shared production DB.
 // Must run AFTER env loading and BEFORE any DB/client initialization. No-op
@@ -46,10 +46,14 @@ const PORT = process.env.MASSA_TH0TH_API_PORT || 3333;
 // Stale-job reaper config. A job whose heartbeat hasn't been refreshed within
 // this window is flipped to `failed` by the in-process reaper interval below.
 // Generous default (5 min): healthy indexes emit progress far more often than
-// that, and a real index finishes well within the window.
-const JOB_STALE_MS = Number(process.env.MASSA_TH0TH_JOB_STALE_MS) || 300_000;
-const JOB_REAPER_INTERVAL_MS =
-  Number(process.env.MASSA_TH0TH_JOB_REAPER_INTERVAL_MS) || 60_000;
+// that, and a real index finishes well within the window. `0`/negative/garbage
+// are floored to the default (a 0ms stale-window would flip everything to
+// failed instantly; a 0ms interval would be a tight loop).
+const JOB_STALE_MS = parsePositiveIntEnv(process.env.MASSA_TH0TH_JOB_STALE_MS, 300_000);
+const JOB_REAPER_INTERVAL_MS = parsePositiveIntEnv(
+  process.env.MASSA_TH0TH_JOB_REAPER_INTERVAL_MS,
+  60_000,
+);
 
 const app = new Elysia({ adapter: node() })
   .use(cors())

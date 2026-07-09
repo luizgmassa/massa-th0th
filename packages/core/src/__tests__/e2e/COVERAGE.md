@@ -445,48 +445,147 @@ sync mirror read path is unchanged. Verified: after a full lifecycle + drain,
 the PG row's final on-disk status is `completed`; post-e2e PG shows 14
 `completed`, 0 stuck `running`.
 
+### Side-findings fix rollout (2026-07-09, Tasks A–E) — all RESOLVED + verified GREEN
+
+A third pass closed 5 of the 6 OPEN side findings (the `adsads/` junk-path
+item was intentionally deferred). Each fix landed in its own isolated
+sub-agent against the live `:3333` / real-PG stack, then a final verify
+sub-agent re-ran the cross-cutting E2E sweep (02/08/11/05 → 100 pass / 2 skip /
+0 fail) + targeted live probes. Per-item resolution:
+
+- **[HIGH] thinking-model structured-output — FIXED (A).** Root cause refined:
+  `qwen3.5:9b` over the Vercel AI SDK uses Ollama's OpenAI **Responses API**
+  (`/responses`); on budget-exhausting prompts the answer lands in
+  `result.reasoning` (or `e.response.body.output[].summary[].text` on a thrown
+  `AI_NoObjectGeneratedError`) with `content=""`. `llm-client.ts` `llmComplete`/
+  `llmObject` read only `content` → silently degraded. (Note: the documented
+  `finish_reason:"length"` signature did NOT reproduce on this stack — every
+  empty-content case was `finish_reason:"stop"`; the fix keys on empty content,
+  so it covers both.) Fix in `packages/core/src/services/memory/llm-client.ts`:
+  (1) best-effort thinking-disable (`think:false` via a `createOpenAI` fetch
+  wrapper + `providerOptions.openai.responseFormat` for object calls) gated by
+  new env `RLM_LLM_DISABLE_THINK` (default `1`) — helps on easy prompts but is
+  NOT the load-bearing fix (proven ineffective on hard prompts for this SDK
+  path); (2) **reasoning-channel recovery** (`_reasoningToText` +
+  `_extractJsonObject`) before returning `{ok:false}` — this is the real fix.
+  Default model unchanged (`qwen3.5:9b`). Added `disableThink` to the `llm`
+  config type in `packages/shared/src/config/index.ts`. Unit:
+  `llm-client.test.ts` 15 pass. Live: `llm.object` returns valid object (was
+  90 s + empty); `11.lifecycle` 20/2/0.
+- **[med] `read_file` `format` no-op — FIXED (B).**
+  `packages/core/src/tools/read_file.ts` now imports `encode as toTOON` from
+  `@toon-format/toon` and returns `format === "toon" ? {success,data:toTOON(result)}
+  : {success,data:result}`, matching the 8 sibling tools. `inputSchema` default
+  stays `"json"`. E2E `08.search` E27 strengthened to assert `typeof
+  toon.data === "string"` (was only asserting `data.content` string, which the
+  JSON object also satisfied). Live: toon→string, json→object; `08.search` 36/0.
+- **[low] `.env` guard gaps — FIXED (C).**
+  `packages/shared/src/config/db-guard.ts` `assertDedicatedDbAllowed()` now
+  also checks the effective vector URL = `POSTGRES_VECTOR_URL || DATABASE_URL`
+  and refuses if either resolves to `massa_th0th`. New shared helper
+  `packages/shared/src/config/int-env.ts` `parsePositiveIntEnv(raw, default,
+  {allowZero?})`. `apps/mcp-client/src/api-client.ts:25` proxy timeout now
+  honors explicit `0` (disable) via `{allowZero:true}`. Reaper knobs
+  `apps/tools-api/src/index.ts:50,52` (`MASSA_TH0TH_JOB_STALE_MS`,
+  `MASSA_TH0TH_JOB_REAPER_INTERVAL_MS`) migrated to the helper with floor
+  semantics (0/negative → default — a 0 ms reaper window would be catastrophic).
+  `packages/shared/tsconfig.json` now excludes `src/**/__tests__` (matches
+  core). Unit: `db-guard.test.ts` 11 pass. Live: `MASSA_TH0TH_DEDICATED=1` +
+  isolated `DATABASE_URL` + shared `POSTGRES_VECTOR_URL` → refuses to bind.
+- **[low] `PgJobStore` reaper/crash-recovery globally unscoped + chain-bypass
+  race — FIXED (D).** No migration needed (`heartbeat_at` already exists). Both
+  bare UPDATEs (crash-recovery in `ensureHydrated()` and
+  `markStaleRunningFailed()`) in `packages/core/src/services/jobs/index-job-store-pg.ts`
+  now carry a heartbeat-age predicate
+  `WHERE status='running' AND COALESCE(heartbeat_at, started_at) IS NOT NULL
+  AND COALESCE(heartbeat_at, started_at) < ${cutoff}` where
+  `cutoff = nowMs - MASSA_TH0TH_JOB_STALE_MS` (default 300000). A live process
+  with a fresh heartbeat is never flipped → multi-process hazard closed, zero
+  behavior change at single-process `:3333`. The chain-bypass race is closed by
+  the `status='running'` filter (a job that reached terminal via `save()` is
+  non-running in PG once its inflight persist commits, ordered by the per-jobId
+  chain). SQLite parity applied (`index-job-store.ts`). Unit: PgJobStore 16 →
+  then 17 pass (D + E); `02.indexing` 19/0.
+- **[low] `PgJobStore` hydration clears mirror unconditionally — FIXED (E).**
+  `ensureHydrated()` no longer calls `mirror.clear()`. It builds a fresh map
+  from the DB snapshot (DB = source of truth, overwrite), then re-applies any
+  existing mirror entry whose `jobId` is in the `inflight` map (pending
+  serialized write) and absent from the DB set — so a fire-and-forget `save()`
+  whose `persist()` hasn't landed survives hydration. `get()` read path
+  unchanged. Unit: PgJobStore 17 pass incl. new hydration-merge test;
+  `02.indexing` 19/0. (SQLite store has no in-memory mirror — not affected,
+  no counterpart needed.)
+
+**Verify (2026-07-09):** rebuilt `packages/shared` + `packages/core` +
+`apps/mcp-client`, restarted `:3333` (pid 93523). E2E sweep `02.indexing` 19/0,
+`08.search` 36/0, `11.lifecycle` 20/2, `05.memory` 25/0 — 100 pass / 2 skip /
+0 fail vs baselines. Probes: `llm.object` valid object no-timeout; `read_file`
+toon=string/json=object; dedicated-vector boot refuses; PG `index_jobs` 42
+completed / 0 failed (no spurious reaper kills). Unit aggregate 39 pass (A 15 +
+D-pg 17 + D-sqlite 7) + C 11.
+
 ### Side findings / possible bugs (OPEN — follow-ups, not blockers for this rollout)
 
-- **[HIGH] Default LLM `qwen3.5:9b` is a thinking model** — returns output in
-  `message.reasoning` with `content=""`/`finish_reason:"length"`. Every
-  structured-object LLM call (bootstrap seed, salience judge, consolidator,
-  query-understanding, reranker, handoff, jobs) reads `content`, never the
-  reasoning channel → burns its full 90 s `AbortSignal.timeout` then silently
-  degrades to rule-based/fallback. This is the underlying reason `bootstrap`
-  takes ~90 s (not seconds), and why enabling the (default-off) LLM
-  query-understanding/reranker search-quality levers would not reliably help.
-  Ollama itself is healthy (~4 s bare completion). Fix: pin a non-thinking
-  default model for structured-output calls, OR parse `message.reasoning` when
-  `content` is empty in the provider wrapper
-  (`packages/core/src/services/memory/llm-client.ts:70`). (Root-caused in T1.)
-- **[med] `read_file` `format` is a runtime no-op** —
-  `packages/core/src/tools/read_file.ts:134` reads `format = p.format || "json"`
-  but never uses it; the response body is always JSON-shaped even for
-  `format:"toon"`. The param is honored at the schema/contract level (T5) but
-  the handler ignores it.
+- **[med] `th0th_compress` still burns the full 90 s timeout (distinct from
+  the structured-output fix in A).** During `05.memory` / `11.lifecycle` runs
+  the tools-api log emits recurring
+  `[WARN] llmComplete failed — degrading to non-LLM path {"error":"The operation timed out."}`
+  ~every 90 s. Root cause: compress
+  (`packages/core/src/services/compression/code-compressor.ts:103` →
+  `llm-client.ts` `llmComplete`) sends **large code-context prompts**; qwen3.5:9b
+  thinking on big input exceeds the 90 s **wall-clock** budget —
+  `AbortSignal.timeout(90000)` fires before any response returns. Fix A's
+  reasoning-channel recovery CANNOT help here (it only fires on a *returned*
+  empty-content response, not a hard timeout with no response). Impact:
+  compress silently degrades to regex → latency + quality leak, not correctness
+  (still returns a value). Levers: separate compress timeout knob
+  (`COMPRESSION_LLM_TIMEOUT_MS` > 90 s), shrink compress input chunks, or route
+  compress to a non-thinking model (disable-thinking was proven ineffective for
+  this SDK path in A, so a model swap is the real lever). (Found in verify.)
 - **[med] `adsads/` junk path indexed in `e2e-th0th-shared`** — needle N11's
   top hit is `adsads/packages/core/src/services/etl/stage-context.ts`. A
   stray/typo'd directory was indexed into the shared project. Audit the
-  indexed file list / `projectPath` and drop the junk prefix.
-- **[low] `.env` guard gaps** — `POSTGRES_VECTOR_URL` is not guarded by
-  `assertDedicatedDbAllowed` (only `DATABASE_URL` is); a dedicated stack
-  setting `POSTGRES_VECTOR_URL` to the shared DB independently would slip
-  through. Also `apps/mcp-client/src/api-client.ts:25`
-  `Number(process.env.MASSA_TH0TH_PROXY_TIMEOUT_MS) || 120000` treats `"0"` as
-  falsy → silently falls back to 120 s.
-- **[low] `PgJobStore` crash-recovery / `markStaleRunningFailed` is globally
-  unscoped** (`index-job-store-pg.ts:123-127, 268`) — `UPDATE ... WHERE
-  status='running'` has no `project_id`/process-owner or heartbeat-age
-  predicate. Parity with the SQLite store (same global behavior), so not a
-  regression, but in a MULTI-process deployment one process starting up would
-  flip another live process's in-flight jobs to `failed`. A narrow
-  reaper-vs-terminal-save race also remains (the reaper's UPDATE bypasses the
-  per-jobId serialized chain). Single-process `:3333` is unaffected.
-- **[low] `PgJobStore` hydration clears the mirror unconditionally**
-  (`index-job-store-pg.ts:145`) — a `save()` whose fire-and-forget write hasn't
-  landed yet is erased from the mirror when hydration completes; a subsequent
-  sync `get()` returns null until the write lands. Mitigated by pre-warming
-  hydration on first use.
+  indexed file list / `projectPath` and drop the junk prefix. (Deferred by
+  request this rollout.)
+- **[low] `read_file` relative `filePath` resolves against the API cwd, not
+  the repo root.** When a caller omits `projectId`, `read_file.ts` resolves
+  relative paths against the tools-api process cwd (`apps/tools-api/`), so a
+  relative `filePath: "packages/core/src/..."` 404s via the HTTP route. The e2e
+  suite sidesteps by always passing `projectId` (handler then resolves via the
+  workspace `project_path`). External HTTP callers hitting `/api/v1/file/read`
+  without `projectId` + a relative path hit this. Fix: resolve relative to repo
+  root when no `projectId`, or require absolute paths + document it. (Found in B.)
+- **[low] `Number(env) || fallback` falsy-`0` idiom survives in two more
+  places C did not touch.** (a) `packages/core/src/services/embeddings/config.ts:40-49,67-68`
+  — RPM/TPM/batch-size/max-chars knobs; literal `0` silently takes the fallback.
+  Low impact (throughput caps; 0 nonsensical). (b)
+  `packages/core/src/data/vector/vector-store-factory.ts:93-95` — `POSTGRES_HNSW_M`
+  etc. use bare `Number(env)` then truthy-gate via `if (hnswM)`, so `0`/`NaN`
+  are silently dropped (arguably correct here, but inconsistent now that
+  `parsePositiveIntEnv` exists). Fix: migrate both to the C helper. (Found in C.)
+- **[low] `llm-client.ts:67` hardcodes the `qwen3.5:9b` fallback string** —
+  `cfg?.model ?? "qwen3.5:9b"` in `getLlmConfig()`. Consistent with the current
+  config default, but if the default model ever changes in `config/index.ts:412`/
+  `:488`, this stale literal stays. Drift risk. Fix: derive the fallback from a
+  single shared constant. (Found in A.)
+- **[NOTE] `markStaleRunningFailed` returns the mirror-snapshot count, not the
+  actual UPDATE `rowCount`** (`index-job-store-pg.ts`). After D, this is now an
+  over-estimate in mixed fresh/stale scenarios (the mirror may hold
+  fresh-running jobs the heartbeat predicate won't flip). Fire-and-forget
+  semantics unchanged; no caller depends on the exact number. Return
+  `$executeRaw` `rowCount` if a precise count is ever needed. (Found in D.)
+- **[NOTE] Responses-API coupling in the LLM path.** qwen3.5:9b over the Vercel
+  AI SDK uses Ollama's OpenAI **Responses API** (`/responses`), not
+  `/chat/completions`; reasoning surfaces as `result.reasoning` or, on a thrown
+  `AI_NoObjectGeneratedError`, `e.response.body.output[].summary[].text`. Fix A's
+  `_reasoningToText` handles multiple shapes defensively, but if a future
+  Ollama drops/changes Responses-API support the reasoning shape shifts and the
+  helper's fallbacks would need re-validation. Non-blocking; note for any
+  Ollama upgrade. (Found in A.)
+- **[NOTE] `packages/shared` tsconfig now excludes `src/**/__tests__`** (added
+  in C, matches core's pattern) so db-guard/int-env tests don't compile into
+  dist or trigger `bun:test` type errors at build. If `packages/shared` ever
+  hosts non-excluded tests, add `bun-types` to devDeps. (Found in C.)
 
 **Committed 2026-07-09 (residual-fix rollout T1–T9b):** source/test/migration
 changes across `packages/core`, `packages/shared`, `apps/tools-api`,
@@ -495,3 +594,12 @@ changes across `packages/core`, `packages/shared`, `apps/tools-api`,
 + this COVERAGE update. `dist` artifacts are rebuilt locally but gitignored
 (each deploy rebuilds them). Migration applied to the shared DB; **all residual
 items are now resolved and live on `:3333`** (code + DB schema aligned).
+
+**Committed 2026-07-09 (side-findings fix rollout A–E):** source/test changes
+across `packages/core` (`llm-client.ts`, `read_file.ts`, `index-job-store-pg.ts`,
+`index-job-store.ts` + their tests), `packages/shared` (`db-guard.ts`, new
+`int-env.ts`, config type, tsconfig + new db-guard/int-env test),
+`apps/mcp-client` (`api-client.ts`), `apps/tools-api` (`index.ts` reaper knobs),
++ this COVERAGE update. No new migration (`heartbeat_at` reused). `dist`
+rebuilt locally (gitignored). All 5 fixes live + verified on `:3333`; the
+`adsads/` junk-path item + the new findings above remain OPEN.

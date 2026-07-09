@@ -11,6 +11,7 @@
 
 import { IToolHandler, ToolResponse, estimateTokens } from "@massa-th0th/shared";
 import { logger } from "@massa-th0th/shared";
+import { encode as toTOON } from "@toon-format/toon";
 import { CodeCompressor } from "../services/compression/code-compressor.js";
 import { SymbolGraphService } from "../services/symbol/symbol-graph.service.js";
 import { workspaceManager } from "../services/workspace/workspace-manager.js";
@@ -244,10 +245,9 @@ export class ReadFileTool implements IToolHandler {
         );
       }
 
-      return {
-        success: true,
-        data: result,
-      };
+      return format === "toon"
+        ? { success: true, data: toTOON(result) }
+        : { success: true, data: result };
     } catch (error) {
       logger.error("Failed to read file", error as Error, {
         filePath: p.filePath,

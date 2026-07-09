@@ -22,6 +22,7 @@
  */
 
 import { logger } from "@massa-th0th/shared";
+import { parsePositiveIntEnv } from "@massa-th0th/shared/config";
 import { getPrismaClient } from "../../services/query/prisma-client.js";
 import type { PrismaClient } from "../../generated/prisma/index.js";
 import type { IndexJob } from "./index-job-tracker.js";
@@ -116,6 +117,21 @@ export class PgJobStore implements JobStore {
   }
 
   /**
+   * Stale-heartbeat cutoff (ms-epoch): running jobs whose
+   * `COALESCE(heartbeat_at, started_at)` is older than this are considered
+   * stale (crashed / orphaned) and may be flipped to `failed`. Sourced from
+   * the same env knob the live reaper uses (MASSA_TH0TH_JOB_STALE_MS, default
+   * 300000), so a live process with a fresh heartbeat is never touched.
+   */
+  private staleHeartbeatCutoffMs(now: number = Date.now()): number {
+    const staleMs = parsePositiveIntEnv(
+      process.env.MASSA_TH0TH_JOB_STALE_MS,
+      300_000,
+    );
+    return now - staleMs;
+  }
+
+  /**
    * Best-effort hydrate the mirror from PG + run crash recovery once. Resolves
    * (never rejects) — failures log a warn and leave the mirror empty; the
    * tracker's own in-memory Map remains the authoritative hot cache.
@@ -132,10 +148,17 @@ export class PgJobStore implements JobStore {
         if (!this.recovered) {
           try {
             const now = Date.now();
+            // Only flip running jobs whose heartbeat (or started_at fallback)
+            // is older than the stale threshold. A live process with a fresh
+            // heartbeat is never flipped — closes the multi-process hazard
+            // where one process's startup would flip another's in-flight jobs.
+            const cutoff = this.staleHeartbeatCutoffMs(now);
             const result = await prisma.$executeRaw`
               UPDATE index_jobs
               SET status = 'failed', error = 'process restart', completed_at = ${now}::bigint
               WHERE status = 'running'
+                AND COALESCE(heartbeat_at, started_at) IS NOT NULL
+                AND COALESCE(heartbeat_at, started_at) < ${cutoff}::bigint
             `;
             this.recovered = true;
             if (typeof result === "number" && result > 0) {
@@ -150,14 +173,36 @@ export class PgJobStore implements JobStore {
             });
           }
         }
-        // Hydrate: pull all rows into the mirror.
+        // Hydrate: pull all rows into the mirror. MERGE instead of clear+rebuild
+        // so a save() whose fire-and-forget persist() has not yet committed to PG
+        // at the instant this SELECT runs is not erased from the mirror. Without
+        // this, get() (mirror-only, no DB fallback) would return null for that
+        // job until its write lands — a transient hole in the sync read path.
         const rows = await prisma.$queryRaw<JobRow[]>`
           SELECT * FROM index_jobs
         `;
-        this.mirror.clear();
-        for (const row of rows) {
-          this.mirror.set(row.job_id, rowToJob(row));
+        // Snapshot the in-flight jobIds (persists not yet committed) BEFORE
+        // rebuilding. These are the jobs whose save() updated the mirror but
+        // whose DB row may be absent from `rows`.
+        const inflightJobIds = new Set(this.inflight.keys());
+        const dbJobIds = new Set<string>();
+        for (const row of rows) dbJobIds.add(row.job_id);
+        // Build the new mirror from DB rows (committed state is source of truth
+        // → overwrites any older in-memory copy).
+        const next: Map<string, IndexJob> = new Map();
+        for (const row of rows) next.set(row.job_id, rowToJob(row));
+        // Re-apply any in-flight save whose row is NOT in the DB snapshot: the
+        // persist hasn't landed yet, so the in-memory copy is strictly newer and
+        // must survive. A jobId that is both in DB AND in-flight already has its
+        // committed row in `next` — the DB row wins (source of truth).
+        for (const jobId of inflightJobIds) {
+          if (!dbJobIds.has(jobId)) {
+            const existing = this.mirror.get(jobId);
+            if (existing) next.set(jobId, existing);
+          }
         }
+        // Swap the rebuilt mirror in atomically (one assignment, no clear gap).
+        this.mirror = next;
         this.hydrated = true;
         logger.info("PgJobStore hydrated", { rows: this.mirror.size });
       } catch (e) {
@@ -302,10 +347,19 @@ export class PgJobStore implements JobStore {
       try {
         const prisma = this.getClient();
         const now = Date.now();
+        // Heartbeat-age predicate: only flip running jobs whose heartbeat (or
+        // started_at fallback) is older than the stale threshold. A live process
+        // with a fresh heartbeat is never flipped — closes the multi-process
+        // hazard. The `status='running'` filter also means a job that already
+        // reached a terminal state via save() (whose terminal persist is ordered
+        // by the per-jobId inflight chain) cannot be matched here.
+        const cutoff = this.staleHeartbeatCutoffMs(now);
         await prisma.$executeRaw`
           UPDATE index_jobs
           SET status = 'failed', error = 'process restart', completed_at = ${now}::bigint
           WHERE status = 'running'
+            AND COALESCE(heartbeat_at, started_at) IS NOT NULL
+            AND COALESCE(heartbeat_at, started_at) < ${cutoff}::bigint
         `;
       } catch (e) {
         logger.warn("PgJobStore markStaleRunningFailed failed (best-effort)", {

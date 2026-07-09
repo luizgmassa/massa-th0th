@@ -86,6 +86,7 @@ export interface ServerConfig {
     temperature: number;
     maxOutputTokens: number;
     timeoutMs: number;
+    disableThink: boolean;
   };
 
   // Memory-quality configuration (Phase 1).
@@ -163,6 +164,7 @@ export interface ServerConfig {
       temperature: number;
       maxOutputTokens: number;
       timeoutMs: number;
+      disableThink: boolean;
       prompt?: string;
     };
   };
@@ -413,6 +415,11 @@ export const defaultConfig: ServerConfig = {
     temperature: envNum("RLM_LLM_TEMPERATURE", 0.2),
     maxOutputTokens: envNum("RLM_LLM_MAX_OUTPUT_TOKENS", 8000),
     timeoutMs: envNum("RLM_LLM_TIMEOUT_MS", 90000),
+    // qwen3 thinking models return their answer in the reasoning channel; the
+    // content channel can come back empty when thinking consumes the token
+    // budget. disableThink (a) asks Ollama to stop thinking (best-effort) and
+    // (b) enables the reasoning-channel fallback in llm-client.ts. Default "1".
+    disableThink: envBool("RLM_LLM_DISABLE_THINK", true),
   },
 
   memory: {
@@ -489,6 +496,7 @@ export const defaultConfig: ServerConfig = {
       temperature: envNum("RLM_LLM_TEMPERATURE", 0.2),
       maxOutputTokens: envNum("RLM_LLM_MAX_OUTPUT_TOKENS", 8000),
       timeoutMs: envNum("RLM_LLM_TIMEOUT_MS", 90000),
+      disableThink: envBool("RLM_LLM_DISABLE_THINK", true),
       prompt: process.env.RLM_LLM_PROMPT || undefined,
     },
   },
@@ -774,3 +782,7 @@ export {
   isSharedDb,
   assertDedicatedDbAllowed,
 } from "./db-guard";
+
+// Integer env-var parser — fixes the falsy-`0` footgun in `Number(env) || d`.
+export { parsePositiveIntEnv } from "./int-env";
+export type { ParseIntEnvOptions } from "./int-env";

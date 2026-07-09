@@ -5,6 +5,8 @@
  * Implementa retry, timeout e error handling.
  */
 
+import { parsePositiveIntEnv } from "@massa-th0th/shared/config";
+
 export interface ApiClientConfig {
   baseUrl: string;
   apiKey?: string;
@@ -22,7 +24,18 @@ export class ApiClient {
     this.baseUrl =
       config?.baseUrl || process.env.MASSA_TH0TH_API_URL || "http://localhost:3333";
     this.apiKey = config?.apiKey || process.env.MASSA_TH0TH_API_KEY || "";
-    this.timeoutMs = config?.timeoutMs || Number(process.env.MASSA_TH0TH_PROXY_TIMEOUT_MS) || 120000;
+    // Proxy timeout: an explicit `config.timeoutMs` (incl. 0 = disable) wins.
+    // Otherwise parse MASSA_TH0TH_PROXY_TIMEOUT_MS with allowZero so `=0`
+    // means "no timeout" rather than silently becoming 120000ms. Unset /
+    // garbage / negative fall back to 120000.
+    this.timeoutMs =
+      typeof config?.timeoutMs === "number"
+        ? config.timeoutMs
+        : parsePositiveIntEnv(
+            process.env.MASSA_TH0TH_PROXY_TIMEOUT_MS,
+            120000,
+            { allowZero: true },
+          );
     this.maxRetries = config?.maxRetries || 2;
   }
 

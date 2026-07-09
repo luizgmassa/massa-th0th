@@ -269,14 +269,16 @@ describe.skipIf(!DB_AVAILABLE)("PgJobStore — unit tests on PostgreSQL", () => 
     });
   });
 
-  // ── crash recovery (new instance hydrates + flips running → failed) ──────
+  // ── crash recovery (new instance hydrates + flips stale running → failed) ─
 
   describe("crash recovery", () => {
     test("on first hydration, stale `running` jobs are recovered as `failed`", async () => {
       const pid = testProjectId();
       const jobId = randomUUID();
       // Insert a running row directly into PG (simulates a crashed process).
-      const createdAt = Date.now();
+      // The heartbeat predicate requires COALESCE(heartbeat_at, started_at) to
+      // be older than the stale threshold, so use a stale started_at.
+      const staleStartedAt = Date.now() - 600_000; // 10 min ago > default 5 min
       await prisma.$executeRaw`
         INSERT INTO index_jobs (
           job_id, project_id, project_path, status, current, total, percentage,
@@ -286,7 +288,7 @@ describe.skipIf(!DB_AVAILABLE)("PgJobStore — unit tests on PostgreSQL", () => 
           ${jobId}, ${pid}, ${"/crash"}, ${"running"},
           ${3}::int, ${10}::int, ${30}::int,
           NULL, NULL, NULL, NULL, NULL,
-          ${createdAt}::bigint, NULL, NULL, NULL
+          ${staleStartedAt}::bigint, ${staleStartedAt}::bigint, NULL, NULL
         )
       `;
       expect(await pgGetRow(jobId)).not.toBeNull();
@@ -307,6 +309,33 @@ describe.skipIf(!DB_AVAILABLE)("PgJobStore — unit tests on PostgreSQL", () => 
       expect(row.status).toBe("failed");
       expect(row.error).toMatch(/process restart/);
       expect(Number(row.completed_at)).toBeGreaterThan(0);
+    });
+
+    test("fresh-heartbeat `running` jobs are NOT flipped by crash recovery", async () => {
+      const pid = testProjectId();
+      const jobId = randomUUID();
+      // A running job with a FRESH heartbeat (just now) — a live process's
+      // in-flight job. Crash recovery must not touch it.
+      const now = Date.now();
+      await prisma.$executeRaw`
+        INSERT INTO index_jobs (
+          job_id, project_id, project_path, status, current, total, percentage,
+          files_indexed, chunks_indexed, errors, duration, error,
+          created_at, started_at, completed_at, heartbeat_at
+        ) VALUES (
+          ${jobId}, ${pid}, ${"/live"}, ${"running"},
+          ${5}::int, ${10}::int, ${50}::int,
+          NULL, NULL, NULL, NULL, NULL,
+          ${now}::bigint, ${now}::bigint, NULL, ${now}::bigint
+        )
+      `;
+
+      const store = new PgJobStore();
+      store.get(jobId);
+      // Let the fire-and-forget recovery + hydration settle.
+      await new Promise((r) => setTimeout(r, 300));
+      const row = await pgGetRow(jobId);
+      expect(row.status).toBe("running");
     });
 
     test("completed/pending jobs are NOT touched by recovery", async () => {
@@ -349,6 +378,106 @@ describe.skipIf(!DB_AVAILABLE)("PgJobStore — unit tests on PostgreSQL", () => 
       const pendRow = await pgGetRow(pendId);
       expect(doneRow.status).toBe("completed");
       expect(pendRow.status).toBe("pending");
+    });
+  });
+
+  // ── markStaleRunningFailed — heartbeat-scoped (Task D) ───────────────────
+  //
+  // markStaleRunningFailed must only flip running jobs whose heartbeat (or
+  // started_at fallback) is older than MASSA_TH0TH_JOB_STALE_MS. A live process
+  // with a fresh heartbeat is never flipped; terminal jobs are never touched.
+
+  describe("markStaleRunningFailed — heartbeat-scoped", () => {
+    test("does NOT flip a fresh-heartbeat `running` job", async () => {
+      const store = new PgJobStore();
+      await hydrateStore(store);
+      const pid = testProjectId();
+      const now = Date.now();
+      const fresh = makeJob({
+        projectId: pid,
+        status: "running",
+        startedAt: new Date(now),
+        heartbeatAt: new Date(now),
+      });
+      store.save(fresh);
+      await waitForPGRow(fresh.jobId);
+
+      store.markStaleRunningFailed();
+      // Let the fire-and-forget UPDATE settle.
+      await new Promise((r) => setTimeout(r, 200));
+      const row = await pgGetRow(fresh.jobId);
+      expect(row.status).toBe("running");
+    });
+
+    test("flips a stale-heartbeat `running` job to `failed`", async () => {
+      const store = new PgJobStore();
+      await hydrateStore(store);
+      const pid = testProjectId();
+      const stale = new Date(Date.now() - 600_000); // 10 min ago > default 5 min
+      const jobId = randomUUID();
+      const staleJob = makeJob({
+        jobId,
+        projectId: pid,
+        status: "running",
+        startedAt: stale,
+        heartbeatAt: stale,
+      });
+      store.save(staleJob);
+      await waitForPGRow(jobId);
+      expect(store.get(jobId)?.status).toBe("running");
+
+      store.markStaleRunningFailed();
+      // Poll the PG row until the fire-and-forget UPDATE lands.
+      let row: any = null;
+      const deadline = Date.now() + 3000;
+      while (Date.now() < deadline) {
+        row = await pgGetRow(jobId);
+        if (row && row.status === "failed") break;
+        await new Promise((r) => setTimeout(r, 25));
+      }
+      expect(row).not.toBeNull();
+      expect(row.status).toBe("failed");
+      expect(row.error).toMatch(/process restart/);
+    });
+
+    test("does NOT touch terminal (completed/failed/pending) jobs", async () => {
+      const store = new PgJobStore();
+      await hydrateStore(store);
+      const pid = testProjectId();
+      const stale = new Date(Date.now() - 600_000);
+      const completed = makeJob({
+        projectId: pid,
+        status: "completed",
+        startedAt: stale,
+        heartbeatAt: stale,
+        completedAt: new Date(),
+      });
+      const failed = makeJob({
+        projectId: pid,
+        status: "failed",
+        startedAt: stale,
+        heartbeatAt: stale,
+        completedAt: new Date(),
+        error: "prior failure",
+      });
+      const pending = makeJob({
+        projectId: pid,
+        status: "pending",
+      });
+      store.save(completed);
+      store.save(failed);
+      store.save(pending);
+      await Promise.all([
+        waitForPGRow(completed.jobId),
+        waitForPGRow(failed.jobId),
+        waitForPGRow(pending.jobId),
+      ]);
+
+      store.markStaleRunningFailed();
+      await new Promise((r) => setTimeout(r, 250));
+      expect((await pgGetRow(completed.jobId)).status).toBe("completed");
+      expect((await pgGetRow(failed.jobId)).status).toBe("failed");
+      expect((await pgGetRow(pending.jobId)).status).toBe("pending");
     });
   });
 
@@ -433,6 +562,71 @@ describe.skipIf(!DB_AVAILABLE)("PgJobStore — unit tests on PostgreSQL", () => 
       expect(loaded).toBeDefined();
       expect(loaded!.status).toBe("failed");
       expect(loaded!.error).toMatch(/heartbeat stale/i);
+    });
+  });
+
+  // ── hydration merge (in-flight save survives ensureHydrated) ─────────────
+  //
+  // ensureHydrated() reads a DB snapshot and rebuilds the mirror. A save()
+  // whose fire-and-forget persist() has not yet committed at the instant the
+  // hydration SELECT runs is absent from the snapshot. The fix MERGES instead
+  // of clear+rebuild, so an in-flight save is preserved and get() returns it
+  // during the commit window (no transient null).
+
+  describe("hydration merge — in-flight save survives ensureHydrated", () => {
+    test("a save() whose persist has not landed survives a concurrent hydration (get returns the job, not null)", async () => {
+      const store = new PgJobStore();
+      // Hold the persist so its DB row is NOT committed when hydration's SELECT
+      // runs. We intercept by monkey-patching persist() to wait on a gate. The
+      // inflight map entry is set synchronously inside save(), so it's already
+      // present when we force hydration below.
+      const pid = testProjectId();
+      const job = makeJob({
+        projectId: pid,
+        status: "running",
+        progress: { current: 4, total: 10, percentage: 40 },
+      });
+      let releasePersist: () => void = () => {};
+      const persistGate = new Promise<void>((resolve) => {
+        releasePersist = resolve;
+      });
+      const origPersist = (store as any).persist.bind(store);
+      (store as any).persist = async (j: IndexJob) => {
+        await persistGate;
+        return origPersist(j);
+      };
+
+      // save() updates the mirror synchronously and chains the (gated) persist.
+      store.save(job);
+      // The inflight map MUST now hold this jobId (persist is in flight).
+      expect((store as any).inflight.has(job.jobId)).toBe(true);
+
+      // Force hydration: reset hydrated flags + trigger ensureHydrated. The DB
+      // snapshot does NOT yet contain this job (persist is gated), so a naive
+      // clear+rebuild would erase it from the mirror.
+      (store as any).hydrated = false;
+      (store as any).hydrating = null;
+      const hydrateP = (store as any).ensureHydrated();
+      // Let the SELECT run against a DB without our job's row.
+      await new Promise((r) => setTimeout(r, 120));
+
+      // FIX ASSERTION: get() must still return the in-flight job (not null).
+      const during = store.get(job.jobId);
+      expect(during).not.toBeNull();
+      expect(during!.jobId).toBe(job.jobId);
+      expect(during!.status).toBe("running");
+      expect(during!.progress.percentage).toBe(40);
+
+      // Release the held persist; hydration (if still awaiting) also resolves.
+      releasePersist();
+      await hydrateP;
+      await store.__drain(job.jobId);
+
+      // After the persist lands, get() still returns correct state.
+      const after = store.get(job.jobId);
+      expect(after).not.toBeNull();
+      expect(after!.jobId).toBe(job.jobId);
+      expect(after!.status).toBe("running");
     });
   });
 
