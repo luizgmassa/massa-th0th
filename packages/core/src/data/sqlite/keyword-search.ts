@@ -34,10 +34,14 @@ export class KeywordSearch implements IKeywordSearch {
   private stmtFuzzyVocab!: ReturnType<Database['prepare']>;
   private trigramAvailable = false;
 
-  constructor() {
-    const keywordConfig = config.get('keywordSearch');
-    this.dbPath = keywordConfig.dbPath;
-    
+  constructor(options?: { dbPath?: string }) {
+    if (options?.dbPath) {
+      this.dbPath = options.dbPath;
+    } else {
+      const keywordConfig = config.get('keywordSearch');
+      this.dbPath = keywordConfig.dbPath;
+    }
+
     this.initialize();
   }
 

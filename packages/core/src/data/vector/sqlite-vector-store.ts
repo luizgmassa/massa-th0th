@@ -28,11 +28,15 @@ export class SQLiteVectorStore implements IVectorStore {
   private dbPath: string;
   private embeddingService: ChromaEmbeddingService;
 
-  constructor() {
-    const vectorConfig = config.get('vectorStore');
-    this.dbPath = vectorConfig.dbPath;
+  constructor(options?: { dbPath?: string }) {
+    if (options?.dbPath) {
+      this.dbPath = options.dbPath;
+    } else {
+      const vectorConfig = config.get('vectorStore');
+      this.dbPath = vectorConfig.dbPath;
+    }
     this.embeddingService = new ChromaEmbeddingService();
-    
+
     this.initialize();
   }
 

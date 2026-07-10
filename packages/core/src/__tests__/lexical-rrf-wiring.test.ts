@@ -20,7 +20,6 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { config } from "@massa-th0th/shared";
 import type { VectorDocument } from "@massa-th0th/shared";
 import { KeywordSearch } from "../data/sqlite/keyword-search.js";
 import { SQLiteVectorStore } from "../data/vector/sqlite-vector-store.js";
@@ -38,6 +37,10 @@ const PROJECT_ID = `p1t1-rrf-${process.pid}-${Date.now()}`;
 const SUITE_DB = path.join(
   os.tmpdir(),
   `rrf-suite-${process.pid}-${Date.now()}.db`,
+);
+const SUITE_VEC_DB = path.join(
+  os.tmpdir(),
+  `rrf-vec-${process.pid}-${Date.now()}.db`,
 );
 
 let search: ContextualSearchRLM;
@@ -69,13 +72,14 @@ function doc(
 }
 
 beforeAll(async () => {
-  // Point the keyword store at an isolated temp DB for this suite.
-  config.set("keywordSearch", {
-    ...config.get("keywordSearch"),
-    dbPath: SUITE_DB,
-  });
-  ks = new KeywordSearch();
-  vs = new SQLiteVectorStore();
+  // Construct the stores against isolated temp DBs via the constructor
+  // injection seam. This avoids mutating the global `config` singleton, which
+  // other suites (checkpoint/graph-store/graph-queries/concurrent-indexing)
+  // replace entirely via `mock.module("@massa-th0th/shared")` for the whole
+  // Bun process — making `config.set` undefined and any set/get here
+  // unreliable when run in the batch.
+  ks = new KeywordSearch({ dbPath: SUITE_DB });
+  vs = new SQLiteVectorStore({ dbPath: SUITE_VEC_DB });
   // Tiny cache + analytics stubs (real instances are heavier; the seam accepts
   // any object with the right shape).
   const cache = new SearchCache();
@@ -113,6 +117,7 @@ afterAll(async () => {
   } catch { /* ignore */ }
   for (const suffix of ["", "-wal", "-shm"]) {
     try { fs.unlinkSync(SUITE_DB + suffix); } catch { /* ignore */ }
+    try { fs.unlinkSync(SUITE_VEC_DB + suffix); } catch { /* ignore */ }
   }
 });
 
