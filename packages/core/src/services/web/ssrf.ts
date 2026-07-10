@@ -21,19 +21,32 @@
  * `CTX_FETCH_STRICT` toggle) — if a future task needs to fetch localhost it can
  * add an explicit allowlist.
  *
- * DNS-rebinding defense:
- *   1. Resolve the hostname and classify EACH resolved address.
- *   2. On fetch, walk redirects MANUALLY (do not let fetch auto-follow) and
- *      re-resolve + re-classify the hostname of every hop. An attacker can
- *      return a public IP for the first request, then 302 to an internal host
- *      whose DNS now resolves to 169.254.169.254. Manual redirect walking with
- *      per-hop resolution defeats this.
+ * DNS-rebinding defense (TOCTOU-safe):
+ *   1. Resolve the hostname ONCE and classify EACH resolved address.
+ *   2. PIN the connection to the already-classified resolved IP by rewriting
+ *      the fetch URL to the literal IP and setting the `Host` header to the
+ *      original hostname. This closes the TOCTOU: the fetch's own connect-time
+ *      DNS re-resolution is bypassed entirely because the URL host is now a
+ *      literal IP (no lookup occurs). An attacker cannot serve a public IP at
+ *      check-time and a private IP at connect-time for the SAME request — the
+ *      connect-time resolution never happens.
+ *      (The alternative — a custom undici `connect.lookup` hook — does NOT work
+ *      under bun: bun's native fetch ignores the undici Dispatcher entirely,
+ *      and even the bundled undici shim does not invoke `connect.lookup`. The
+ *      literal-IP + Host-header approach is the only one that works under bun
+ *      and is also portable to node/undici.)
+ *   3. On fetch, walk redirects MANUALLY (do not let fetch auto-follow) and
+ *      re-resolve + re-classify + re-PIN the hostname of every hop. An attacker
+ *      can return a public IP for the first request, then 302 to an internal
+ *      host whose DNS now resolves to 169.254.169.254. Manual redirect walking
+ *      with per-hop resolution+pinning defeats this.
  *
  * Exported seams:
  *   - classifyIp(ip) — pure IP classifier (tested directly with literals).
- *   - assertUrlSafe(url) — resolve + classify, throws on any blocked IP.
- *   - fetchWithSsrfGuard(url, opts) — fetch with manual redirect walk that
- *     re-runs assertUrlSafe at every Location hop.
+ *   - assertUrlSafe(url) — resolve + classify, returns pinned IP(s); throws on
+ *     any blocked IP.
+ *   - fetchWithSsrfGuard(url, opts) — fetch with DNS-pinned connect + manual
+ *     redirect walk that re-runs assertUrlSafe (and re-pins) at every hop.
  */
 
 import { lookup as dnsLookup } from "node:dns/promises";
@@ -154,12 +167,38 @@ export class SsrfBlockedError extends Error {
 }
 
 /**
+ * Result of `assertUrlSafe`: the connection-pin parameters the caller must use
+ * when issuing the fetch so the TOCTOU gap between check-time and connect-time
+ * DNS resolution is closed.
+ *
+ *   - `pinnedIp`: the already-classified IP literal to connect to (replaces the
+ *     hostname in the fetch URL). For a URL that already names a literal IP,
+ *     this is that same IP. For a hostname, this is the first public resolved
+ *     address.
+ *   - `originalHost`: the hostname to send in the `Host` header so virtual
+ *     hosting + TLS SNI still work. Equals the URL's hostname (brackets stripped
+ *     for IPv6). When the URL already names a literal IP, this equals pinnedIp
+ *     and no Host header rewrite is needed.
+ *   - `isLiteralIpUrl`: true when the original URL host was already an IP
+ *     literal (no DNS resolution occurred). Lets the caller skip the rewrite.
+ */
+export interface UrlSafetyResult {
+  pinnedIp: string;
+  originalHost: string;
+  isLiteralIpUrl: boolean;
+}
+
+/**
  * Resolve `hostname` and assert every resolved IP is public. Throws
  * `SsrfBlockedError` on the first blocked address. A hostname that resolves to
  * a MIX of public + private is still rejected (TOCTOU-safe: we re-resolve on
  * fetch, so even if the resolver rotates answers, every hop is checked).
+ *
+ * Returns the `UrlSafetyResult` (pinned IP + original hostname) so the caller
+ * can pin the fetch connection to the already-classified IP and close the
+ * TOCTOU between check-time and connect-time DNS resolution.
  */
-export async function assertUrlSafe(rawUrl: string): Promise<void> {
+export async function assertUrlSafe(rawUrl: string): Promise<UrlSafetyResult> {
   let parsed: URL;
   try {
     parsed = new URL(rawUrl);
@@ -192,7 +231,7 @@ export async function assertUrlSafe(rawUrl: string): Promise<void> {
         hostname,
       );
     }
-    return;
+    return { pinnedIp: hostname, originalHost: hostname, isLiteralIpUrl: true };
   }
 
   let records: { address: string }[];
@@ -222,6 +261,16 @@ export async function assertUrlSafe(rawUrl: string): Promise<void> {
       );
     }
   }
+
+  // Pin to the first classified-public IP. Every record was checked above, so
+  // the first is safe to connect to. (We do not round-robin across resolved
+  // IPs because only the one we pin is guaranteed classified; a later answer
+  // could be attacker-rotated between assert and connect.)
+  return {
+    pinnedIp: records[0].address,
+    originalHost: hostname,
+    isLiteralIpUrl: false,
+  };
 }
 
 /**
@@ -250,10 +299,18 @@ export interface FetchGuardOptions {
 }
 
 /**
- * Fetch a URL with the SSRF redirect-walk defense. Does NOT auto-follow: each
- * 3xx Location header is re-resolved + re-classified before the next hop. Any
- * blocked hop throws `SsrfBlockedError`. Capped at MAX_REDIRECTS to defeat
- * redirect loops.
+ * Fetch a URL with the SSRF DNS-pin + redirect-walk defense.
+ *
+ * TWO-LAYER DEFENSE (TOCTOU-safe):
+ *   1. DNS PIN: `assertUrlSafe` resolves the hostname once and classifies the
+ *      IP. We then rewrite the fetch URL to connect to that LITERAL IP and set
+ *      the `Host` header to the original hostname. Because the fetch URL's host
+ *      is now a literal IP, NO DNS lookup occurs at connect time — the attacker
+ *      cannot serve a different (private) IP at connect. bun's fetch honors the
+ *      `Host` header for both HTTP virtual hosting and HTTPS TLS SNI.
+ *   2. REDIRECT WALK: does NOT auto-follow. Each 3xx Location header is
+ *      re-resolved + re-classified + re-pinned before the next hop. Any blocked
+ *      hop throws `SsrfBlockedError`. Capped at MAX_REDIRECTS to defeat loops.
  *
  * Returns the final (non-redirect) Response. The caller reads the body.
  */
@@ -262,9 +319,10 @@ export async function fetchWithSsrfGuard(
   opts: FetchGuardOptions = {},
 ): Promise<Response> {
   const { timeoutMs = 30_000, signal, _compose } = opts;
-  await assertUrlSafe(rawUrl);
+  const safety = await assertUrlSafe(rawUrl);
 
   let url = rawUrl;
+  let pin = safety;
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const composed =
       _compose && signal
@@ -275,13 +333,23 @@ export async function fetchWithSsrfGuard(
               : signal
             : AbortSignal.timeout(timeoutMs));
 
+    // Build the DNS-pinned fetch URL + Host header. When the URL already names
+    // a literal IP (isLiteralIpUrl), no rewrite is needed — the connect-time
+    // DNS lookup is already absent. Otherwise, replace the hostname in the URL
+    // with the pinned classified IP and send the original hostname as Host.
+    const { fetchUrl, hostHeader } = pinConnection(url, pin);
+
     // `redirect: "manual"` keeps the Response opaque-redirect; we read the
     // Location header ourselves and re-validate the target.
-    const resp = await fetch(url, {
+    const resp = await fetch(fetchUrl, {
       redirect: "manual",
       signal: composed,
       // Conservative default headers — identify as a fetcher, not a browser.
-      headers: { "user-agent": "massa-th0th-fetch/1.0" },
+      // Host header pins virtual hosting + TLS SNI to the original hostname.
+      headers: {
+        "user-agent": "massa-th0th-fetch/1.0",
+        ...(hostHeader ? { host: hostHeader } : {}),
+      },
     });
 
     // 3xx with a Location → walk it.
@@ -303,8 +371,8 @@ export async function fetchWithSsrfGuard(
         );
       }
       logger.debug?.("ssrf redirect hop", { from: url, to: next, status: resp.status });
-      // Re-resolve + re-classify the NEXT hop's hostname (DNS may now differ).
-      await assertUrlSafe(next);
+      // Re-resolve + re-classify + re-pin the NEXT hop (DNS may now differ).
+      pin = await assertUrlSafe(next);
       url = next;
       continue;
     }
@@ -313,4 +381,30 @@ export async function fetchWithSsrfGuard(
   }
   // Unreachable: the loop either returns or throws on the last iteration.
   throw new SsrfBlockedError("redirect walk exhausted", url);
+}
+
+/**
+ * Build a DNS-pinned fetch URL + Host header from the original URL and the
+ * `UrlSafetyResult` (pinned IP + original hostname).
+ *
+ * When the URL already names a literal IP (`isLiteralIpUrl`), returns the URL
+ * unchanged with no Host header (no pinning needed — connect-time DNS is
+ * already absent). Otherwise, rewrites the URL's host to the pinned IP literal
+ * and returns the original hostname as the Host header value.
+ *
+ * IPv6 pinned IPs are bracketed in the URL (`http://[2606:4700::1]/`) per
+ * RFC 3986. The Host header uses the bare original hostname (no brackets — it
+ * was a hostname, not an IP, in the non-literal branch).
+ */
+function pinConnection(
+  url: string,
+  pin: UrlSafetyResult,
+): { fetchUrl: string; hostHeader: string | null } {
+  if (pin.isLiteralIpUrl) {
+    return { fetchUrl: url, hostHeader: null };
+  }
+  const parsed = new URL(url);
+  const ipIsV6 = pin.pinnedIp.includes(":");
+  parsed.hostname = ipIsV6 ? `[${pin.pinnedIp}]` : pin.pinnedIp;
+  return { fetchUrl: parsed.toString(), hostHeader: pin.originalHost };
 }

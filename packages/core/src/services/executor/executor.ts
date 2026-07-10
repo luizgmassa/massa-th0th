@@ -25,7 +25,7 @@
  */
 
 import { spawn, execSync, execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, realpathSync } from "node:fs";
 import { join, resolve, isAbsolute, relative } from "node:path";
 import { tmpdir } from "node:os";
 import {
@@ -276,16 +276,44 @@ export class PolyglotExecutor {
    * Read `path` into a sandboxed FILE_CONTENT var, then run `code` over it.
    * Enforces project-boundary containment + deny-glob before execution so a
    * stray path can't exfiltrate secrets by default.
+   *
+   * SYMLINK DEFENSE: the boundary + deny-glob checks run against the REALPATH
+   * of both the target file and the project root. A symlink inside the project
+   * root pointing to `/etc/passwd` or a non-deny-glob secrets file would
+   * otherwise pass both checks (its link path is under root and may not match
+   * a deny pattern), then `readFileSync` follows the symlink out of the
+   * project. Resolving symlinks first closes this bypass. If the target does
+   * not exist yet (realpathSync throws ENOENT), we fall back to the lexical
+   * absolute path so a missing-file error surfaces from the read, not a
+   * spurious "blocked" message.
    */
   async executeFile(opts: ExecuteFileOptions): Promise<ExecResult> {
     const { path: filePath, language, code } = opts;
     const root = this.#projectRootResolver();
     const absolutePath = resolve(root, filePath);
 
-    // Boundary: the resolved path MUST stay under the project root. Resolves
-    // `../` traversal and absolute paths alike. Only an explicit caller cwd
-    // override (execute_file does not expose one) could widen this.
-    const rel = relative(root, absolutePath);
+    // Resolve symlinks on BOTH the target and the root so a symlinked target
+    // that escapes the (possibly symlinked) root is caught. realpathSync
+    // resolves the FULL chain of links to the canonical filesystem path.
+    let realPath: string;
+    let realRoot: string;
+    try {
+      realPath = realpathSync(absolutePath);
+    } catch {
+      // Target doesn't exist (ENOENT) or is unreadable. Fall back to the
+      // lexical absolute path so the caller gets a clear "file not found"
+      // from the read attempt, not a misleading "blocked" error.
+      realPath = absolutePath;
+    }
+    try {
+      realRoot = realpathSync(root);
+    } catch {
+      realRoot = root;
+    }
+
+    // Boundary: the realpath MUST stay under the realpath root. Resolves
+    // `../` traversal, absolute paths, AND symlink escapes alike.
+    const rel = relative(realRoot, realPath);
     if (rel.startsWith("..") || isAbsolute(rel)) {
       const err: ExecResult = {
         stdout: "",
@@ -296,9 +324,15 @@ export class PolyglotExecutor {
       return err;
     }
 
-    // Deny-glob: refuse sensitive path patterns regardless of boundary.
+    // Deny-glob: refuse sensitive path patterns regardless of boundary. Check
+    // BOTH the lexical absolute path (catches a link named `.env` that points
+    // elsewhere) AND the realpath (catches a link pointing TO a secrets file).
     const lowerAbs = absolutePath.toLowerCase();
-    if (DENY_PATH_PATTERNS.some((p) => lowerAbs.includes(p))) {
+    const lowerReal = realPath.toLowerCase();
+    if (
+      DENY_PATH_PATTERNS.some((p) => lowerAbs.includes(p)) ||
+      DENY_PATH_PATTERNS.some((p) => lowerReal.includes(p))
+    ) {
       const err: ExecResult = {
         stdout: "",
         stderr: `Blocked: path "${filePath}" matches a deny-listed pattern (secrets/credentials).`,

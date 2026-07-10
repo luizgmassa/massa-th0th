@@ -157,7 +157,10 @@ describe("assertUrlSafe — scheme + DNS resolution", () => {
       "http://[2606:4700:4700::1111]/", // Cloudflare
       "http://[2001:4860:4860::8888]/", // Google
     ]) {
-      await expect(assertUrlSafe(u)).resolves.toBeUndefined();
+      // assertUrlSafe now returns UrlSafetyResult (pinned IP + host) instead
+      // of void; assert it resolves and pins to the literal IP.
+      const r = await assertUrlSafe(u);
+      expect(r.isLiteralIpUrl).toBe(true);
     }
   });
 
@@ -185,7 +188,11 @@ describe("assertUrlSafe — scheme + DNS resolution", () => {
       throw new Error("ENOTFOUND");
     });
     try {
-      await expect(assertUrlSafe("https://good.example/")).resolves.toBeUndefined();
+      // assertUrlSafe now returns the pinned IP + original hostname.
+      const r = await assertUrlSafe("https://good.example/");
+      expect(r.pinnedIp).toBe("93.184.216.34");
+      expect(r.originalHost).toBe("good.example");
+      expect(r.isLiteralIpUrl).toBe(false);
     } finally {
       restore();
     }
@@ -223,7 +230,9 @@ describe("fetchWithSsrfGuard — redirect-to-internal is blocked", () => {
     });
     globalThis.fetch = ((input: any) => {
       const url = typeof input === "string" ? input : input.toString();
-      if (url.startsWith("https://public-start.example/")) {
+      // After DNS pinning, the fetch URL is the literal pinned IP, not the
+      // hostname. The first hop pins to 93.184.216.34 (public-start).
+      if (url.startsWith("https://93.184.216.34/")) {
         return Promise.resolve(
           new Response(null, {
             status: 302,
@@ -713,8 +722,17 @@ describe("WebController — parallel fetch + serial index", () => {
 
   test("a failing URL does not abort siblings (allSettled shape)", async () => {
     const { controller } = makeController();
+    // Distinct pinned IPs per hostname so the fetch stub can tell them apart
+    // after DNS pinning rewrites the URL to a literal IP.
+    const dnsRestore = setDnsResolver(async (hostname) => {
+      if (hostname === "ok1.example") return [{ address: "93.184.216.34" }];
+      if (hostname === "fail.example") return [{ address: "93.184.216.35" }];
+      if (hostname === "ok2.example") return [{ address: "93.184.216.36" }];
+      return [{ address: "93.184.216.34" }];
+    });
     const fetchStub = stubFetch((url) => {
-      if (url.indexOf("fail") >= 0) {
+      // After pinning, the URL is the literal IP — fail.example pins to .35.
+      if (url.indexOf("93.184.216.35") >= 0) {
         return new Response("nope", { status: 500 });
       }
       return new Response("<html><body><p>ok</p></body></html>", {
@@ -738,6 +756,7 @@ describe("WebController — parallel fetch + serial index", () => {
       expect(res.success).toBe(false);
     } finally {
       fetchStub.restore();
+      dnsRestore();
       WebController.resetInstance();
     }
   });

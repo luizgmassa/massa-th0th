@@ -171,7 +171,12 @@ describe("PolyglotExecutor", () => {
   });
 
   (HAS_NODE ? test : test.skip)("execute_file allows an in-cwd non-sensitive path", async () => {
-    // package.json is at the repo root and not deny-listed.
+    // package.json is at the repo root (process.cwd()) and not deny-listed.
+    // Read the expected name from the same file the executor will read so the
+    // assertion is robust regardless of which package's cwd the test runs from.
+    const expectedName = JSON.parse(
+      require("node:fs").readFileSync(require("node:path").join(root, "package.json"), "utf-8"),
+    ).name;
     const result = await exec.executeFile({
       path: "package.json",
       language: "javascript",
@@ -179,8 +184,7 @@ describe("PolyglotExecutor", () => {
       timeout: 10_000,
     });
     expect(result.exitCode).toBe(0);
-    // process.cwd() is packages/core; its package.json name is the scoped one.
-    expect(result.stdout.trim()).toBe("@massa-th0th/core");
+    expect(result.stdout.trim()).toBe(expectedName);
   });
 });
 

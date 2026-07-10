@@ -19,6 +19,7 @@ export {
   type IpClass,
   type FetchGuardOptions,
   type DnsResolver,
+  type UrlSafetyResult,
 } from "./ssrf.js";
 
 export {
