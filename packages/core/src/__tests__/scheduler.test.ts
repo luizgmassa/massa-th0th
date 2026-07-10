@@ -592,12 +592,15 @@ describe("persistence across simulated restart", () => {
     });
     scheduler1.registerHandler("persist-kind" as JobKind, async () => {});
 
-    // Register a job via registerOrResumeJob.
+    // Register a job via registerOrResumeJob. Use a 10-min interval so the
+    // nextRunAt is comfortably in the future and not borderline (avoids flake
+    // under CI load where the resume call might happen >60s after firedAt).
+    const INTERVAL = 10 * 60_000;
     const job = scheduler1.registerOrResumeJob({
       id: "persist-1",
       name: "Persist Test",
       jobKind: "persist-kind" as JobKind,
-      schedule: { type: "interval", intervalMs: 60_000 },
+      schedule: { type: "interval", intervalMs: INTERVAL },
       nextRunAt: 0,
       enabled: true,
     });
@@ -605,14 +608,14 @@ describe("persistence across simulated restart", () => {
     // Simulate a run: set lastRunAt + advance nextRunAt.
     const firedAt = Date.now();
     job.lastRunAt = firedAt;
-    job.nextRunAt = firedAt + 60_000;
+    job.nextRunAt = firedAt + INTERVAL;
     store1.save(job);
 
     // Verify the store has the updated values.
     const persisted = store1.get("persist-1");
     expect(persisted).not.toBeNull();
     expect(persisted!.lastRunAt).toBe(firedAt);
-    expect(persisted!.nextRunAt).toBe(firedAt + 60_000);
+    expect(persisted!.nextRunAt).toBe(firedAt + INTERVAL);
 
     // "Restart": create a new store reading from the same backing.
     const store2: ScheduledJobStore = {
@@ -639,14 +642,14 @@ describe("persistence across simulated restart", () => {
       id: "persist-1",
       name: "Persist Test",
       jobKind: "persist-kind" as JobKind,
-      schedule: { type: "interval", intervalMs: 60_000 },
+      schedule: { type: "interval", intervalMs: INTERVAL },
       nextRunAt: 0,
       enabled: true,
     });
 
     expect(resumed.lastRunAt).toBe(firedAt);
     // nextRunAt is preserved because it's in the future (not past due).
-    expect(resumed.nextRunAt).toBe(firedAt + 60_000);
+    expect(resumed.nextRunAt).toBe(firedAt + INTERVAL);
   });
 
   test("schedule change recomputes nextRunAt on resume", () => {

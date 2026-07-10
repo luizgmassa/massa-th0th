@@ -17,6 +17,9 @@ export { CreateCheckpointTool } from "./create_checkpoint.js";
 export { RestoreCheckpointTool } from "./restore_checkpoint.js";
 export { ListCheckpointsTool } from "./list_checkpoints.js";
 
+// Session continuity (Phase 3 C1)
+export { CompactSnapshotTool } from "./compact_snapshot.js";
+
 // Symbol Graph tools
 export { ListProjectsTool } from "./list_projects.js";
 export { SearchDefinitionsTool } from "./search_definitions.js";

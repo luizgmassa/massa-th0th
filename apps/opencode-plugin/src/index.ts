@@ -538,7 +538,7 @@ export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, c
       }, "git-capture")
     },
 
-    // Compaction: fetch real memories and inject as context
+    // Compaction: fetch real memories and inject as context, + build snapshot
     // Hooks interface: experimental.session.compacting(input: { sessionID }, output: { context: string[], prompt?: string })
     "experimental.session.compacting": async (input, output) => {
       if (!apiAvailable) return
@@ -566,6 +566,25 @@ export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, c
         }
       } catch (err) {
         log("debug", "Failed to fetch memories for compaction", {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+
+      // Build + persist a reference-based compaction snapshot (Phase 3 C1).
+      // Fire-and-forget: the snapshot is a bounded TOC with runnable search
+      // calls — zero information loss, raw events stay in the observation store.
+      try {
+        await th0thFetch(
+          "/api/v1/hook/compact-snapshot",
+          {
+            sessionId: input.sessionID,
+            projectId,
+            persist: true,
+          },
+          5_000,
+        )
+      } catch (err) {
+        log("debug", "Failed to build compaction snapshot", {
           error: err instanceof Error ? err.message : String(err),
         })
       }

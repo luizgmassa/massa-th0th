@@ -13,6 +13,7 @@ import {
   getHookService,
   ValidationError,
   QueueSaturatedError,
+  CompactSnapshotTool,
 } from "@massa-th0th/core";
 import { config, logger } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
@@ -21,6 +22,12 @@ let cachedService: ReturnType<typeof getHookService> | null = null;
 function service() {
   if (!cachedService) cachedService = getHookService();
   return cachedService;
+}
+
+let cachedSnapshotTool: CompactSnapshotTool | null = null;
+function snapshotTool() {
+  if (!cachedSnapshotTool) cachedSnapshotTool = new CompactSnapshotTool();
+  return cachedSnapshotTool;
 }
 
 function hooksDisabled(): boolean {
@@ -127,6 +134,31 @@ export const hookRoutes = new Elysia({ prefix: "/api/v1/hook" })
         summary: "Ingest a batch of lifecycle events",
         description:
           "Atomic validation then admission of N events. Returns 202 + ids[]; 400/413 if ANY event is bad; 429 when saturated.",
+      },
+    },
+  )
+  .post(
+    "/compact-snapshot",
+    async ({ body }) => {
+      return await snapshotTool().handle(body);
+    },
+    {
+      body: t.Object({
+        sessionId: t.String({ description: "Session ID to build the snapshot for" }),
+        projectId: t.Optional(t.String({ description: "Project ID (defaults to 'default')" })),
+        persist: t.Optional(
+          t.Boolean({
+            default: false,
+            description:
+              "If true, persist the snapshot as an observation of category 'compaction-snapshots'",
+          }),
+        ),
+      }),
+      detail: {
+        ...EVENT_DETAIL,
+        summary: "Build a compaction snapshot for a session",
+        description:
+          "Builds a bounded (<~2KB) reference-based table-of-contents with runnable recall/search calls for the session's observations. Zero information loss — raw events stay in the store. Optionally persists the snapshot as an observation.",
       },
     },
   );

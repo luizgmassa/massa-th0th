@@ -872,6 +872,33 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
+    name: "compact_snapshot",
+    description:
+      "Build a reference-based compaction snapshot (bounded <~2KB table-of-contents with runnable recall/search calls) for the current session's observations. Zero information loss — raw events stay in the store; the snapshot points to them. Optionally persists the snapshot as an observation of category 'compaction-snapshots'. Use on /compact or PreCompact for session continuity.",
+    apiEndpoint: "/api/v1/hook/compact-snapshot",
+    apiMethod: "POST",
+    inputSchema: {
+      type: "object",
+      properties: {
+        sessionId: {
+          type: "string",
+          description: "Session ID to build the snapshot for",
+        },
+        projectId: {
+          type: "string",
+          description: "Project ID (defaults to 'default')",
+        },
+        persist: {
+          type: "boolean",
+          default: false,
+          description:
+            "If true, persist the snapshot as an observation of category 'compaction-snapshots'",
+        },
+      },
+      required: ["sessionId"],
+    },
+  },
+  {
     name: "bootstrap",
     description:
       "Scan a project (git log, README, docs, package manifests, top central files from PageRank) and create LLM-summarized seed memories so an agent begins with usable context. Idempotent — skips if already bootstrapped unless force=true. LLM-off degrades silently to rule-based seeds. Never throws.",

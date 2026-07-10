@@ -266,18 +266,25 @@ model MemoryEdge {
 // SQLite-canonical; this model provides PG parity so a Postgres deployment
 // can also store observations. The default local-first path uses the
 // SqliteObservationStore (observations.db) via the polymorphic factory.
+//
+// `source` = one of the six lifecycle event kinds (session-start, user-prompt,
+// pre-tool-use, post-tool-use, pre-compact, session-end) — the raw hook trigger.
+// `category` = derived semantic classification (~30 categories: files-read,
+// git-changes, tasks, errors, decisions, etc.) — see ObservationExtractor.
 // ========================================
 model Observation {
   id          String   @id
   projectId   String   @map("project_id")
   sessionId   String?  @map("session_id")
   source      String // one of the six lifecycle event kinds
+  category    String? // derived semantic category (Phase 3 C1); null = legacy
   payloadJson String   @map("payload_json")
   importance  Float
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@index([projectId, createdAt(sort: Desc)])
   @@index([sessionId])
+  @@index([sessionId, createdAt(sort: Desc)])
   @@map("observations")
 }
 

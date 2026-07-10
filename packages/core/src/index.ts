@@ -39,12 +39,14 @@ export {
   resetObservationStore,
   newObservationId,
   LIFECYCLE_EVENTS,
+  OBSERVATION_CATEGORIES,
 } from "./data/memory/observation-repository.js";
 export type { ObservationStore } from "./data/memory/observation-repository.js";
 export type {
   Observation,
   ObservationRow,
   LifecycleEventKind,
+  ObservationCategory,
 } from "./data/memory/observation-repository.js";
 export {
   HookService,
@@ -62,6 +64,17 @@ export {
   WriterQueue,
   QueueSaturatedError,
 } from "./services/hooks/writer-queue.js";
+// Phase 3 C1 — expanded taxonomy + compaction snapshot
+export {
+  extractCategory,
+  CATEGORY_LABELS,
+} from "./services/hooks/observation-extractor.js";
+export { CompactionSnapshotService } from "./services/hooks/compaction-snapshot-service.js";
+export type {
+  SnapshotBuildOptions,
+  SnapshotSection,
+  CompactionSnapshot,
+} from "./services/hooks/compaction-snapshot-service.js";
 
 // Phase 4 — repo bootstrap (seed memories)
 export {

@@ -22,7 +22,10 @@ import path from "path";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-/** The six lifecycle event kinds accepted by the hook ingestion pipeline. */
+/**
+ * The six lifecycle event kinds accepted by the hook ingestion pipeline.
+ * These are the raw hook trigger names (backward-compatible — never remove).
+ */
 export const LIFECYCLE_EVENTS = [
   "session-start",
   "user-prompt",
@@ -33,11 +36,76 @@ export const LIFECYCLE_EVENTS = [
 ] as const;
 export type LifecycleEventKind = (typeof LIFECYCLE_EVENTS)[number];
 
+/**
+ * Expanded observation category taxonomy (Phase 3, C1).
+ *
+ * While `source` is the raw hook trigger (one of LIFECYCLE_EVENTS), `category`
+ * is the *derived* semantic classification of what the observation captures.
+ * Ported fresh (not copied) from context-mode's ~30-category set. The extractor
+ * derives the category from (source, payload) — see ObservationExtractor.
+ *
+ * The 6 lifecycle kinds map to categories via extraction; legacy observations
+ * without a category fall back to "lifecycle-raw".
+ */
+export const OBSERVATION_CATEGORIES = [
+  // File / code activity
+  "files-read",
+  "files-written",
+  "file-search",
+  "tool-calls",
+  // Version control
+  "git-changes",
+  // Task / plan state
+  "tasks",
+  "plan-changes",
+  // Errors & resolution
+  "errors",
+  "error-resolution",
+  "iteration-loop",
+  // Decisions & constraints
+  "decisions",
+  "constraints",
+  "rejected-approaches",
+  // User interaction
+  "user-prompts",
+  "intent",
+  "goal",
+  "role",
+  "blocked-on",
+  // Rules & skills
+  "rules",
+  "skills-invoked",
+  "subagents-spawned",
+  // Environment
+  "env-changes",
+  "cwd-changes",
+  "session-settings",
+  // External references & data
+  "external-refs",
+  "web-fetch",
+  "searches",
+  // Memory & compaction
+  "memories-stored",
+  "compaction-snapshots",
+  "mcp-calls",
+  // Agent telemetry
+  "agent-findings",
+  "cost-telemetry",
+  // Fallback for legacy/uncategorized observations
+  "lifecycle-raw",
+] as const;
+export type ObservationCategory = (typeof OBSERVATION_CATEGORIES)[number];
+
 export interface Observation {
   id: string;
   projectId: string;
   sessionId: string | null;
   source: LifecycleEventKind;
+  /**
+   * Derived semantic category (Phase 3, C1). Optional for backward compat:
+   * legacy rows / stores that pre-date the column fall back to "lifecycle-raw".
+   */
+  category?: ObservationCategory;
   /** Stringified JSON payload (size-capped by the service before insert). */
   payloadJson: string;
   importance: number;
@@ -49,6 +117,7 @@ export interface ObservationRow {
   project_id: string;
   session_id: string | null;
   source: string;
+  category: string | null;
   payload_json: string;
   importance: number;
   created_at: number;
@@ -60,6 +129,7 @@ function rowToObservation(r: ObservationRow): Observation {
     projectId: r.project_id,
     sessionId: r.session_id,
     source: r.source as LifecycleEventKind,
+    category: (r.category as ObservationCategory | null) ?? undefined,
     payloadJson: r.payload_json,
     importance: r.importance,
     createdAt: r.created_at,
@@ -71,6 +141,8 @@ function rowToObservation(r: ObservationRow): Observation {
 export interface ObservationStore {
   insert(obs: Observation): void;
   listRecent(projectId: string, limit: number): Observation[];
+  /** List observations for a session (newest-first). Phase 3 C1 — for snapshots. */
+  listBySession(sessionId: string, limit: number): Observation[];
   countByProject(projectId: string): number;
   /** Test/diagnostic helper. */
   journalMode(): string;
@@ -86,6 +158,12 @@ export class MemoryObservationStore implements ObservationStore {
   listRecent(projectId: string, limit: number): Observation[] {
     return this.rows
       .filter((r) => r.projectId === projectId)
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, limit);
+  }
+  listBySession(sessionId: string, limit: number): Observation[] {
+    return this.rows
+      .filter((r) => r.sessionId === sessionId)
       .sort((a, b) => b.createdAt - a.createdAt)
       .slice(0, limit);
   }
@@ -140,25 +218,37 @@ export class SqliteObservationStore implements ObservationStore {
         project_id   TEXT NOT NULL,
         session_id   TEXT,
         source       TEXT NOT NULL,
+        category     TEXT,
         payload_json TEXT NOT NULL,
         importance   REAL NOT NULL,
         created_at   INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_obs_project_created ON observations(project_id, created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_obs_session ON observations(session_id);
+      CREATE INDEX IF NOT EXISTS idx_obs_session_created ON observations(session_id, created_at DESC);
     `);
+    // Migration: add category column if missing (existing DBs predating C1).
+    try {
+      const cols = db.query("PRAGMA table_info(observations)").all() as { name: string }[];
+      if (!cols.some((c) => c.name === "category")) {
+        db.exec("ALTER TABLE observations ADD COLUMN category TEXT");
+      }
+    } catch {
+      // PRAGMA table_info is safe; ignore any edge case.
+    }
   }
 
   insert(obs: Observation): void {
     const db = this.getDB();
     db.run(
-      `INSERT INTO observations (id, project_id, session_id, source, payload_json, importance, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO observations (id, project_id, session_id, source, category, payload_json, importance, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         obs.id,
         obs.projectId,
         obs.sessionId,
         obs.source,
+        obs.category ?? null,
         obs.payloadJson,
         obs.importance,
         obs.createdAt,
@@ -170,13 +260,27 @@ export class SqliteObservationStore implements ObservationStore {
     const db = this.getDB();
     const rows = db
       .query(
-        `SELECT id, project_id, session_id, source, payload_json, importance, created_at
+        `SELECT id, project_id, session_id, source, category, payload_json, importance, created_at
          FROM observations
          WHERE project_id = ?
          ORDER BY created_at DESC
          LIMIT ?`,
       )
       .all(projectId, Math.max(0, Math.floor(limit))) as ObservationRow[];
+    return rows.map(rowToObservation);
+  }
+
+  listBySession(sessionId: string, limit: number): Observation[] {
+    const db = this.getDB();
+    const rows = db
+      .query(
+        `SELECT id, project_id, session_id, source, category, payload_json, importance, created_at
+         FROM observations
+         WHERE session_id = ?
+         ORDER BY created_at DESC
+         LIMIT ?`,
+      )
+      .all(sessionId, Math.max(0, Math.floor(limit))) as ObservationRow[];
     return rows.map(rowToObservation);
   }
 

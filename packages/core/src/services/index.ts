@@ -126,6 +126,17 @@ export type { EventMap, EventName } from "./events/event-bus.js";
 // Hooks
 export { SearchSessionHook, searchSessionHook } from "./hooks/search-session-hook.js";
 export { CoRetrievalHook, coRetrievalHook } from "./hooks/co-retrieval-hook.js";
+export { extractCategory, CATEGORY_LABELS } from "./hooks/observation-extractor.js";
+export {
+  CompactionSnapshotService,
+  getCompactionSnapshotService,
+  resetCompactionSnapshotService,
+} from "./hooks/compaction-snapshot-service.js";
+export type {
+  SnapshotBuildOptions,
+  SnapshotSection,
+  CompactionSnapshot,
+} from "./hooks/compaction-snapshot-service.js";
 
 // Metrics (token savings observability)
 export { TokenMetrics } from "./metrics/token-metrics.js";

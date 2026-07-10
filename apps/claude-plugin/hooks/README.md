@@ -11,6 +11,7 @@ into a structured memory.
 | `user-prompt-submit.sh` | `UserPromptSubmit` | `user-prompt` |
 | `post-tool-use.sh` | `PostToolUse` | `post-tool-use` |
 | `stop.sh` | `Stop` | `session-end` |
+| `pre-compact.sh` | `PreCompact` | `pre-compact` + snapshot |
 
 ## Behavior
 
@@ -33,6 +34,7 @@ into a structured memory.
     "SessionStart":      [{ "command": "/abs/path/to/session-start.sh" }],
     "UserPromptSubmit":  [{ "command": "/abs/path/to/user-prompt-submit.sh" }],
     "PostToolUse":       [{ "command": "/abs/path/to/post-tool-use.sh" }],
+    "PreCompact":        [{ "command": "/abs/path/to/pre-compact.sh" }],
     "Stop":              [{ "command": "/abs/path/to/stop.sh" }]
   }
 }

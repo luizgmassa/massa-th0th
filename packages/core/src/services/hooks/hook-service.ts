@@ -26,6 +26,7 @@ import {
   type ObservationStore,
 } from "../../data/memory/observation-repository.js";
 import { QueueSaturatedError, WriterQueue } from "./writer-queue.js";
+import { extractCategory } from "./observation-extractor.js";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -192,6 +193,7 @@ export class HookService {
         projectId: ev.projectId,
         sessionId: ev.sessionId,
         source: ev.event,
+        category: extractCategory(ev.event, ev.payload),
         payloadJson: JSON.stringify(ev.payload),
         importance: ev.importance,
         createdAt: ev.ts,
@@ -251,6 +253,7 @@ export class HookService {
         projectId: ev.projectId,
         sessionId: ev.sessionId,
         source: ev.event,
+        category: extractCategory(ev.event, ev.payload),
         payloadJson: JSON.stringify(ev.payload),
         importance: ev.importance,
         createdAt: ev.ts,
