@@ -318,10 +318,29 @@ export class SqliteSessionStore implements SessionStore {
 
 let cachedStore: SessionStore | null = null;
 
-/** Returns a SqliteSessionStore, falling back to MemorySessionStore on failure. */
+/**
+ * Returns the durable SessionStore, selecting PG vs SQLite by DATABASE_URL
+ * (one-backend rule, mirroring getMemoryRepository / getScheduledJobStore).
+ * When DATABASE_URL is postgres, a PgSynapseSessionStore backs the registry
+ * (with an in-memory read mirror + write-through fire-and-forget); otherwise
+ * the SQLite store is used with an ephemeral MemorySessionStore fallback.
+ */
 export function getSessionStore(): SessionStore {
   if (cachedStore) return cachedStore;
+  const databaseUrl = process.env.DATABASE_URL;
+  const isPostgres =
+    databaseUrl?.startsWith("postgresql://") ||
+    databaseUrl?.startsWith("postgres://");
   try {
+    if (isPostgres) {
+      // Lazy require so bun:sqlite / pg adapter stay out of the wrong path.
+      const { PgSynapseSessionStore } = require("./session-store-pg.js") as {
+        PgSynapseSessionStore: new () => SessionStore;
+      };
+      cachedStore = new PgSynapseSessionStore();
+      logger.info("Using PostgreSQL SynapseSessionStore");
+      return cachedStore;
+    }
     cachedStore = new SqliteSessionStore();
     // Probe the DB opens; if it throws, fall back.
     (cachedStore as SqliteSessionStore).save({
@@ -334,8 +353,11 @@ export function getSessionStore(): SessionStore {
       accessHistoryLimit: 1,
     } as AgentSession);
     (cachedStore as SqliteSessionStore).delete("__probe__");
-  } catch {
-    logger.warn("SqliteSessionStore unavailable — using ephemeral MemorySessionStore");
+  } catch (e) {
+    logger.warn("SynapseSessionStore unavailable — using ephemeral MemorySessionStore", {
+      backend: isPostgres ? "postgres" : "sqlite",
+      error: (e as Error).message,
+    });
     cachedStore = new MemorySessionStore();
   }
   return cachedStore;

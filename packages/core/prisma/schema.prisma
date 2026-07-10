@@ -486,3 +486,46 @@ model ScheduledJob {
   @@index([nextRunAt])
   @@map("scheduled_jobs")
 }
+
+// ========================================
+// Synapse Sessions (Phase 3, C4 — PG parity for the Synapse session store)
+// Durable agent-session + working-memory buffer state for the cognitive
+// modulation layer. SQLite-canonical via SqliteSessionStore
+// (synapse-sessions.db); this model provides PG parity so a Postgres
+// deployment persists Synapse state across process restarts (one-backend
+// rule). The factory (getSessionStore) selects PgSynapseSessionStore when
+// DATABASE_URL is postgres, else SqliteSessionStore. Timestamps are BigInt
+// ms-epochs (parity with IndexJob/ScheduledJob and the SQLite store's INTEGER
+// epoch columns). The buffer snapshot is a best-effort JSON blob; the live
+// WorkingMemoryBuffer is a hot cache reconstructed fresh on load (refills
+// naturally as the agent works — see session-store.ts design note).
+// ========================================
+model SynapseSession {
+  sessionId           String  @id @map("session_id")
+  agentId             String  @map("agent_id")
+  workspaceId         String? @map("workspace_id")
+  taskContext         String? @map("task_context")
+  taskTokens          String? @map("task_tokens") // JSON array
+  taskEmbedding       Bytes?  @map("task_embedding") // Float32 buffer
+  ttlMs               BigInt  @map("ttl_ms")
+  createdAt           BigInt  @map("created_at")
+  expiresAt           BigInt  @map("expires_at")
+  accessHistoryLimit  Int     @map("access_history_limit")
+  bufferConfig        String? @map("buffer_config") // JSON
+  bufferSnapshot      String? @map("buffer_snapshot") // JSON (best-effort)
+  updatedAt           BigInt  @map("updated_at")
+
+  @@index([expiresAt])
+  @@map("synapse_sessions")
+}
+
+model SynapseAccessHistory {
+  sessionId       String @map("session_id")
+  memoryId        String @map("memory_id")
+  accessCount     Int    @map("access_count") @default(0)
+  lastAccessedAt  BigInt @map("last_accessed_at")
+
+  @@id([sessionId, memoryId])
+  @@index([sessionId])
+  @@map("synapse_access_history")
+}
