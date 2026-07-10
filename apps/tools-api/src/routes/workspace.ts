@@ -13,6 +13,7 @@
 
 import {
   IndexProjectTool,
+  GraphController,
   symbolGraphService,
   workspaceManager,
 } from "@massa-th0th/core";
@@ -27,6 +28,12 @@ function getIndexProjectTool(): IndexProjectTool {
     indexProjectTool = new IndexProjectTool();
   }
   return indexProjectTool;
+}
+
+let graphController: GraphController | null = null;
+function getGraphController(): GraphController {
+  if (!graphController) graphController = GraphController.getInstance();
+  return graphController;
 }
 
 export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
@@ -262,6 +269,85 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
       detail: {
         tags: ["symbol"],
         summary: "Go to definition of a symbol",
+      },
+    },
+  )
+
+  .get(
+    "/symbol/trace",
+    async ({ query }) => {
+      try {
+        const {
+          projectId,
+          function_name,
+          symbol,
+          qualifiedName,
+          direction,
+          mode,
+          depth,
+          include_tests,
+          edge_types,
+        } = query as Record<string, string | string[] | undefined>;
+
+        if (!projectId)
+          return { success: false, error: "projectId is required" };
+        const seed = (function_name ?? symbol ?? qualifiedName) as
+          | string
+          | undefined;
+        if (!seed)
+          return {
+            success: false,
+            error: "function_name (or symbol/qualifiedName) is required",
+          };
+
+        const result = await getGraphController().tracePath({
+          projectId,
+          function_name: function_name as string | undefined,
+          symbol: symbol as string | undefined,
+          qualifiedName: qualifiedName as string | undefined,
+          direction: direction as
+            | "outbound"
+            | "inbound"
+            | "both"
+            | undefined,
+          mode: mode as
+            | "calls"
+            | "data_flow"
+            | "cross_service"
+            | "all"
+            | undefined,
+          depth: depth ? parseInt(depth as string, 10) : undefined,
+          include_tests:
+            include_tests === undefined ? undefined : include_tests === "true",
+          edge_types: edge_types
+            ? (Array.isArray(edge_types) ? edge_types : (edge_types as string).split(","))
+                .filter(Boolean)
+                .map((t) => t.trim())
+            : undefined,
+        });
+
+        if (!result.found) {
+          return {
+            success: false,
+            error: `Symbol '${result.symbol}' not found in project '${result.projectId}'.`,
+            data: { hint: result.hint },
+          };
+        }
+
+        return { success: true, data: result.result };
+      } catch (error) {
+        return { success: false, error: (error as Error).message };
+      }
+    },
+    {
+      detail: {
+        tags: ["symbol"],
+        summary: "Trace path — BFS over typed edges (callers/callees/data-flow/cross-service)",
+        description:
+          "Traverse the code graph from a seed symbol following typed edges (CALLS/DATA_FLOWS/HTTP_CALLS/EMITS/LISTENS). " +
+          "Params: projectId, function_name (or symbol/qualifiedName), direction (outbound|inbound|both, default outbound), " +
+          "mode (calls|data_flow|cross_service|all, default calls), depth (default 3, max 6), include_tests (default false), " +
+          "edge_types (comma-separated override).",
       },
     },
   )

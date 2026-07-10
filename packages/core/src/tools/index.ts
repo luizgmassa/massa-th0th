@@ -26,6 +26,9 @@ export { SearchDefinitionsTool } from "./search_definitions.js";
 export { GetReferencesTool } from "./get_references.js";
 export { GoToDefinitionTool } from "./go_to_definition.js";
 
+// Symbol Graph traversal (Phase 4 D2)
+export { TracePathTool } from "./trace_path.js";
+
 // File tools
 export { ReadFileTool } from "./read_file.js";
 

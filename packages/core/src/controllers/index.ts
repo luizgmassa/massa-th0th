@@ -26,3 +26,6 @@ export type {
 } from "./context-controller.js";
 
 export { ExecutorController } from "./executor-controller.js";
+
+export { GraphController } from "./graph-controller.js";
+export type { TracePathInput, TracePathOutput } from "./graph-controller.js";

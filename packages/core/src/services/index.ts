@@ -109,6 +109,7 @@ export type { PipelineInput, EtlResult, EtlStage } from "./etl/index.js";
 // Symbol Graph
 export { symbolGraphService, SymbolGraphService } from "./symbol/symbol-graph.service.js";
 export { computePageRank } from "./symbol/centrality.js";
+export { TracePathService, tracePathService } from "./symbol/trace-path.js";
 export type {
   DefinitionResult,
   ReferenceResult,
@@ -118,6 +119,14 @@ export type {
   ListDefinitionsOptions,
   CentralityResult,
 } from "./symbol/symbol-graph.service.js";
+export type {
+  TracePathOptions,
+  TracePathResult,
+  TraceNode,
+  TraceEdge,
+  TraceDirection,
+  TraceMode,
+} from "./symbol/trace-path.js";
 
 // Events
 export { eventBus, EventBus } from "./events/event-bus.js";
