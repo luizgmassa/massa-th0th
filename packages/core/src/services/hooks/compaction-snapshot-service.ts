@@ -3,6 +3,12 @@
  *
  * Ported fresh (NOT copied) from context-mode's snapshot.ts approach.
  *
+ * This preserves SESSION continuity (what happened in the conversation), NOT
+ * index/task state. It is the complement of `CheckpointManager`
+ * (packages/core/src/services/checkpoint/checkpoint-manager.ts), which versions
+ * TASK execution state (progress, decisions, files) in memories.db. See
+ * `packages/core/src/services/SESSION-STATE.md` for the full reconciliation.
+ *
  * Design contract:
  *  - The snapshot is a TABLE OF CONTENTS, not inlined data. Each section
  *    contains a brief summary + a runnable search/recall/read_file call that

@@ -297,7 +297,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: "list_checkpoints",
     description:
-      "List saved task checkpoints. Filter by task ID, project, or type.",
+      "List saved task checkpoints (versioned TASK state). Filter by task ID, project, or type. These are task-progress snapshots, not session-continuity snapshots (see compact_snapshot).",
     apiEndpoint: "/api/v1/checkpoints/list",
     apiMethod: "POST",
     inputSchema: {
@@ -329,7 +329,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: "create_checkpoint",
     description:
-      "Create a checkpoint to save current task progress for later resumption.",
+      "Create a checkpoint to save current task progress — versioned TASK state (progress, decisions, files) for resumption or rollback. Distinct from compact_snapshot (SESSION continuity across /compact).",
     apiEndpoint: "/api/v1/checkpoints/create",
     apiMethod: "POST",
     inputSchema: {
@@ -404,7 +404,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: "restore_checkpoint",
     description:
-      "Restore a saved checkpoint and return its state plus integrity checks.",
+      "Restore a saved task checkpoint — returns TASK state (progress, decisions, agent state) plus memory/file integrity checks. Distinct from compact_snapshot (SESSION continuity, not task state).",
     apiEndpoint: "/api/v1/checkpoints/restore",
     apiMethod: "POST",
     inputSchema: {
@@ -874,7 +874,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: "compact_snapshot",
     description:
-      "Build a reference-based compaction snapshot (bounded <~2KB table-of-contents with runnable recall/search calls) for the current session's observations. Zero information loss — raw events stay in the store; the snapshot points to them. Optionally persists the snapshot as an observation of category 'compaction-snapshots'. Use on /compact or PreCompact for session continuity.",
+      "Build a reference-based compaction snapshot — bounded <~2KB table-of-contents with runnable recall/search calls for the current session's observations (SESSION continuity, not task state). Zero information loss — raw events stay in the store; the snapshot points to them. Distinct from checkpoints (which version TASK progress in memories.db). Optionally persists the snapshot as an observation of category 'compaction-snapshots'. Use on /compact or PreCompact for session continuity.",
     apiEndpoint: "/api/v1/hook/compact-snapshot",
     apiMethod: "POST",
     inputSchema: {

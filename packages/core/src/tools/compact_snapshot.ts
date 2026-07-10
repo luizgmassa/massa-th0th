@@ -6,6 +6,10 @@
  * with runnable search/recall calls — NOT inlined data. Zero information loss:
  * raw events stay in the observation store; the snapshot just points to them.
  *
+ * SESSION continuity, NOT task state. This is distinct from `create_checkpoint`
+ * (which versions TASK progress/decisions/files in memories.db). See
+ * `packages/core/src/services/SESSION-STATE.md` for the full reconciliation.
+ *
  * Optionally persists the snapshot itself as an observation of category
  * `compaction-snapshots` so it is available for future sessions.
  */
@@ -23,7 +27,12 @@ interface CompactSnapshotParams {
 export class CompactSnapshotTool implements IToolHandler {
   name = "compact_snapshot";
   description =
-    "Build a reference-based compaction snapshot (bounded table-of-contents with runnable search/recall calls) for the current session's observations. Zero information loss — raw events stay in the store; the snapshot points to them. Optionally persists the snapshot as an observation.";
+    "Build a reference-based compaction snapshot — bounded table-of-contents with " +
+    "runnable search/recall calls for the current session's observations (SESSION " +
+    "continuity, not task state). Zero information loss — raw events stay in the " +
+    "observation store; the snapshot points to them. Distinct from checkpoints " +
+    "(which version TASK progress in memories.db). Optionally persists the snapshot " +
+    "as an observation of category 'compaction-snapshots' in observations.db.";
   inputSchema = {
     type: "object",
     properties: {

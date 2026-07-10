@@ -4,6 +4,13 @@
  * CRUD operations for task checkpoints in SQLite.
  * Serializes task state as gzip-compressed JSON blobs.
  *
+ * This versions TASK/INDEX execution state (progress, decisions, files), NOT
+ * session continuity. It is the complement of `CompactionSnapshotService`
+ * (packages/core/src/services/hooks/compaction-snapshot-service.ts), which
+ * preserves SESSION continuity (a bounded TOC of lifecycle events) in
+ * observations.db. See `packages/core/src/services/SESSION-STATE.md` for the
+ * full reconciliation.
+ *
  * Follows the same singleton + raw-SQLite pattern as GraphStore.
  *
  * Performance Optimizations:

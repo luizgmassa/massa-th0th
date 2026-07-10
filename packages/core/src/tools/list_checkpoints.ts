@@ -24,7 +24,9 @@ interface ListCheckpointsParams {
 export class ListCheckpointsTool implements IToolHandler {
   name = "list_checkpoints";
   description =
-    "List saved task checkpoints. Filter by task ID, project, or type.";
+    "List saved task checkpoints (versioned TASK state). Filter by task ID, " +
+    "project, or type. These are task-progress snapshots, not session-continuity " +
+    "snapshots (see compact_snapshot).";
   inputSchema = {
     type: "object",
     properties: {

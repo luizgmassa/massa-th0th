@@ -46,7 +46,10 @@ interface CreateCheckpointParams {
 export class CreateCheckpointTool implements IToolHandler {
   name = "create_checkpoint";
   description =
-    "Create a checkpoint to save current task progress. Useful for long-running tasks to enable resumption.";
+    "Create a checkpoint to save current task progress — versioned TASK state " +
+    "(progress, decisions, files modified) for resumption or rollback. " +
+    "Distinct from compact_snapshot, which preserves SESSION continuity across /compact. " +
+    "Useful for long-running tasks to enable resumption.";
   inputSchema = {
     type: "object",
     properties: {

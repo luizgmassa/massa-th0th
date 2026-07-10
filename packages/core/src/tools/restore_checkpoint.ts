@@ -24,9 +24,10 @@ interface RestoreCheckpointParams {
 export class RestoreCheckpointTool implements IToolHandler {
   name = "restore_checkpoint";
   description =
-    "Restore a saved task checkpoint. Returns the full task state, " +
-    "integrity checks for referenced memories and files, and " +
-    "instructions for resuming the task.";
+    "Restore a saved task checkpoint — returns the full TASK state (progress, " +
+    "decisions, agent state), integrity checks for referenced memories and files, " +
+    "and instructions for resuming the task. Distinct from compact_snapshot " +
+    "(which preserves SESSION continuity, not task state).";
   inputSchema = {
     type: "object",
     properties: {
