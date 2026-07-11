@@ -211,7 +211,10 @@ export class ObservationConsolidationJob {
 
     // Store the summary as a memory. Reuse the polymorphic repository.
     const newId = `mem-${Date.now()}-${randomUUID().slice(0, 8)}`;
-    const importance = Math.min(1, Math.max(0.5, 0.7));
+    // Consolidated observations land at a fixed 0.7 importance (above the 0.5
+    // event-scan floor, below hand-curated decisions). No config knob yet — the
+    // prior min/max clamped a literal to itself, so this is equivalent.
+    const importance = 0.7;
     try {
       await Promise.resolve(
         this.memoryRepo.insert({

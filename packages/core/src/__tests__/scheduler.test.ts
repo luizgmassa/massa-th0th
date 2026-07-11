@@ -568,7 +568,7 @@ describe("enable/disable", () => {
 // ── Persistence across simulated restart ─────────────────────────────────────
 
 describe("persistence across simulated restart", () => {
-  test.skip("nextRunAt + lastRunAt survive a store reload", async () => {
+  test("nextRunAt + lastRunAt survive a store reload", async () => {
     // Use a shared store that we "reload" by creating a new Scheduler pointing
     // at the same backing map. This simulates a process restart where the
     // store is re-read from disk.
@@ -637,14 +637,8 @@ describe("persistence across simulated restart", () => {
     });
 
     // registerOrResumeJob should preserve nextRunAt/lastRunAt when the schedule
-    // is unchanged.
-    // SKIPPED (source bug, not isolation): registerOrResumeJob at
-    // scheduler.ts ~line 179 checks `full.nextRunAt <= now` against the
-    // passed-in nextRunAt (0 here) instead of the existing persisted value
-    // (firedAt + INTERVAL, in the future), so it always reschedules from now
-    // and the "preserve nextRunAt on unchanged resume" contract is not held.
-    // This makes the nextRunAt assertion time-dependent (flaky). Re-enable once
-    // the source reads the EXISTING nextRunAt for the past-due check.
+    // is unchanged. The persisted nextRunAt (firedAt + INTERVAL) is in the
+    // future, so resume keeps it rather than rescheduling from now.
     const resumed = scheduler2.registerOrResumeJob({
       id: "persist-1",
       name: "Persist Test",

@@ -174,10 +174,15 @@ export class Scheduler {
       // Schedule changed: recompute from now.
       full.nextRunAt = this.computeNextRun(full.schedule, Date.now());
     } else {
-      // Schedule unchanged: preserve existing nextRunAt (resume on restart).
+      // Schedule unchanged: preserve the EXISTING persisted nextRunAt (resume on
+      // restart). The contract is "don't reschedule an unchanged job." We check
+      // the PERSISTED nextRunAt (not the passed-in one, which callers set to 0)
+      // against now — a future persisted nextRunAt is kept as-is.
       const now = Date.now();
-      if (full.enabled && full.nextRunAt <= now) {
-        // Past due + enabled: reschedule from now (avoids a noisy skip log).
+      full.nextRunAt = existing.nextRunAt;
+      if (full.enabled && existing.nextRunAt <= now) {
+        // Persisted nextRunAt is past due + enabled: reschedule from now
+        // (avoids a noisy missed-run skip log on boot).
         full.nextRunAt = this.computeNextRun(full.schedule, now);
       }
       // If disabled, keep the existing nextRunAt as-is (it'll be recomputed

@@ -294,3 +294,27 @@ export function restoreWorkingMemoryBuffer(
   }
   return buf;
 }
+
+/**
+ * Snapshot a live WorkingMemoryBuffer for persistence. Best-effort: scalars
+ * only (token Sets are regenerable from result content on restore). Shared by
+ * the SQLite and PG session stores so the snapshot shape stays consistent.
+ * Returns `null` when the session has no buffer or it has no entries.
+ */
+export function snapshotWorkingMemoryBuffer(
+  session: { buffer?: WorkingMemoryBuffer },
+): BufferSnapshot | null {
+  const buf = session.buffer as any;
+  if (!buf || !buf.entries) return null;
+  const out: BufferEntrySnapshot[] = [];
+  for (const [id, entry] of buf.entries as Map<string, BufferEntry>) {
+    out.push({
+      id,
+      addedAt: entry.addedAt,
+      lastAccessedAt: entry.lastAccessedAt,
+      baselineScore: entry.baselineScore,
+      result: entry.result,
+    });
+  }
+  return { entries: out, config: buf.config };
+}

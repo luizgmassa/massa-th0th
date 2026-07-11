@@ -83,8 +83,17 @@ export const DEFAULT_HARD_CAP_BYTES = 10 * 1024 * 1024; // 10MB
 
 /**
  * Paths that `execute_file` refuses to read by default. Mirrors context-mode's
- * deny-glob: secrets, credentials, host-private key material. Matched as a
- * case-insensitive substring of the absolute target path.
+ * deny-glob: secrets, credentials, host-private key material.
+ *
+ * Matching is conservative but anchored to reduce false positives:
+ *   - Patterns containing a path separator ("/") are matched as case-insensitive
+ *     SUBSTRINGS of the full path (these identify sensitive directories like
+ *     `.ssh/` wherever they appear).
+ *   - Separator-free patterns (filename markers like `.env`, `id_rsa`,
+ *     `credentials`) are matched against the path's BASENAME with a leading
+ *     word-boundary, so `my_credentials_notes.md` / `user_permissions.ts` are
+ *     NOT blocked while `.env`, `id_rsa`, `credentials.json`, and
+ *     `aws-credentials` still are.
  */
 const DENY_PATH_PATTERNS = [
   ".ssh/",
@@ -102,6 +111,32 @@ const DENY_PATH_PATTERNS = [
   "secrets.yml",
   ".netrc",
 ];
+
+/**
+ * Test whether a (lowercased) absolute path matches a deny pattern. Directory
+ * patterns (containing "/") substring-match the full path; filename patterns
+ * match at a SEPARATOR boundary so a deny token embedded in a longer word
+ * (e.g. `my_credentials_notes.md`) is NOT flagged, while `aws-credentials`,
+ * `credentials.json`, `.env`, and `id_rsa.pub` still are.
+ *
+ * Boundary chars are `-`, `.`, `/`, and start-of-string. Underscore is treated
+ * as a WORD character (not a boundary), so `my_credentials_notes` does not
+ * match `credentials` — the token is part of a longer identifier.
+ */
+function matchesDenyPattern(lowerPath: string): boolean {
+  for (const p of DENY_PATH_PATTERNS) {
+    if (p.includes("/")) {
+      if (lowerPath.includes(p)) return true;
+    } else {
+      // Anchored regex: pattern must be preceded by start or a separator
+      // (not underscore) and followed by end or a separator.
+      const escaped = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = new RegExp(`(?:^|[-./])${escaped}(?:$|[-./])`);
+      if (re.test(lowerPath)) return true;
+    }
+  }
+  return false;
+}
 
 /** Resolve a sandbox temp dir that is NOT under the project working tree. */
 function sandboxTmpDir(): string {
@@ -329,12 +364,7 @@ export class PolyglotExecutor {
     // Deny-glob: refuse sensitive path patterns regardless of boundary. Check
     // BOTH the lexical absolute path (catches a link named `.env` that points
     // elsewhere) AND the realpath (catches a link pointing TO a secrets file).
-    const lowerAbs = absolutePath.toLowerCase();
-    const lowerReal = realPath.toLowerCase();
-    if (
-      DENY_PATH_PATTERNS.some((p) => lowerAbs.includes(p)) ||
-      DENY_PATH_PATTERNS.some((p) => lowerReal.includes(p))
-    ) {
+    if (matchesDenyPattern(absolutePath.toLowerCase()) || matchesDenyPattern(realPath.toLowerCase())) {
       const err: ExecResult = {
         stdout: "",
         stderr: `Blocked: path "${filePath}" matches a deny-listed pattern (secrets/credentials).`,
@@ -350,7 +380,9 @@ export class PolyglotExecutor {
 
   #clampTimeout(timeout: number | undefined): number {
     if (timeout === undefined) return DEFAULT_TIMEOUT_MS;
-    if (timeout <= 0) return DEFAULT_TIMEOUT_MS;
+    // Guard against NaN/Infinity/non-positive: setTimeout(NaN) coerces to 1ms
+    // and kills the process immediately. Fall back to the default.
+    if (!Number.isFinite(timeout) || timeout <= 0) return DEFAULT_TIMEOUT_MS;
     return Math.min(timeout, MAX_TIMEOUT_MS);
   }
 
@@ -495,6 +527,9 @@ export class PolyglotExecutor {
       proc.on("error", (err) => {
         clearTimeout(timer);
         if (resolved) return;
+        // Mark resolved so a subsequent "close" event (some Node versions emit
+        // both on ENOENT) cannot double-fire res().
+        resolved = true;
         res({
           stdout: "",
           stderr: err.message,

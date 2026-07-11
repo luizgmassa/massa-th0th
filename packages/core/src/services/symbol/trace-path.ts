@@ -299,16 +299,21 @@ export class TracePathService {
   ): Promise<void> {
     const visited = new Set<string>();
     // queue entries: the FQN to expand + its depth.
-    const queue: Array<{ fqn: string; depth: number }> = seeds.map((fqn) => ({ fqn, depth: 0 }));
+    // Mark visited ON ENQUEUE (not dequeue): hubs with many inbound edges would
+    // otherwise be enqueued once per incoming edge, each spawning a redundant
+    // DB getEdges round-trip before the dequeue-time dedupe catches it.
+    const queue: Array<{ fqn: string; depth: number }> = [];
+    for (const seed of seeds) {
+      if (visited.has(seed)) continue;
+      visited.add(seed);
+      queue.push({ fqn: seed, depth: 0 });
+    }
 
     while (queue.length > 0) {
       const { fqn, depth } = queue.shift()!;
-      if (visited.has(fqn)) continue;
       if (depth >= maxDepth) {
-        visited.add(fqn); // mark expanded to avoid re-queuing
-        continue;
+        continue; // already marked visited at enqueue; no re-queue possible
       }
-      visited.add(fqn);
 
       let edges: EdgeResult[] = [];
       try {
@@ -388,6 +393,9 @@ export class TracePathService {
             markTruncated();
             return;
           }
+          // Mark visited ON ENQUEUE so a hub referenced by N edges from the
+          // current frontier is queued at most once (no duplicate DB round-trips).
+          visited.add(otherFqn);
           queue.push({ fqn: otherFqn, depth: depth + 1 });
         }
       }

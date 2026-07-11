@@ -33,6 +33,7 @@ import type { PrismaClient } from "../../../generated/prisma/index.js";
 import type { AgentSession } from "../types.js";
 import {
   restoreWorkingMemoryBuffer,
+  snapshotWorkingMemoryBuffer,
   type BufferSnapshot,
   type WorkingMemoryBufferConfig,
 } from "../buffer/working-memory-buffer.js";
@@ -66,23 +67,6 @@ interface AccessRow {
 function toNum(v: number | bigint | null | undefined): number | null {
   if (v == null) return null;
   return typeof v === "bigint" ? Number(v) : v;
-}
-
-/** Best-effort buffer snapshot — scalars only (token Sets are regenerable). */
-function snapshotBuffer(session: AgentSession): unknown {
-  const buf = session.buffer as any;
-  if (!buf || !buf.entries) return null;
-  const out: any[] = [];
-  for (const [id, entry] of buf.entries as Map<string, any>) {
-    out.push({
-      id,
-      addedAt: entry.addedAt,
-      lastAccessedAt: entry.lastAccessedAt,
-      baselineScore: entry.baselineScore,
-      result: entry.result,
-    });
-  }
-  return { entries: out, config: buf.config };
 }
 
 export class PgSynapseSessionStore implements SessionStore {
@@ -244,7 +228,7 @@ export class PgSynapseSessionStore implements SessionStore {
         ? JSON.stringify(session.buffer.config)
         : null;
       const bufferSnapshot = session.buffer
-        ? JSON.stringify(snapshotBuffer(session))
+        ? JSON.stringify(snapshotWorkingMemoryBuffer(session))
         : null;
 
       await prisma.$executeRaw`
@@ -373,11 +357,12 @@ export class PgSynapseSessionStore implements SessionStore {
 
   /** Test helper: await in-flight writes. Not for production use. */
   async __drain(): Promise<void> {
-    // Wait for all current in-flight writes to settle.
-    while (this.inflight.size > 0) {
-      const pending = Array.from(this.inflight.values());
-      await Promise.allSettled(pending);
-    }
+    // Snapshot the pending set ONCE. Re-reading `this.inflight` in a loop would
+    // re-await writes that a concurrent caller repopulated during the drain,
+    // risking a hang under load. We only owe the caller that the writes
+    // in-flight at drain-start have settled.
+    const pending = Array.from(this.inflight.values());
+    if (pending.length > 0) await Promise.allSettled(pending);
     // A short settle delay covers any write queued during the drain.
     await new Promise((r) => setTimeout(r, 10));
   }

@@ -193,9 +193,6 @@ export function detectPackages(
   }
 
   // Fan-in/out between packages.
-  const pkgIndex = new Map([...pkgFiles.keys()].map((p, i) => [p, i] as const));
-  const pkgOut = new Set<string>();
-  const pkgIn = new Set<string>();
   const fanOut = new Map<string, Set<string>>();
   const fanIn = new Map<string, Set<string>>();
   for (const p of pkgFiles.keys()) {
@@ -209,9 +206,6 @@ export function detectPackages(
     fanOut.get(pf)?.add(pt);
     fanIn.get(pt)?.add(pf);
   }
-  void pkgIndex;
-  void pkgOut;
-  void pkgIn;
 
   const out: PackageInfo[] = [];
   for (const [name, pkgFileList] of pkgFiles) {
@@ -303,14 +297,17 @@ export function detectRoutes(
   opts: { maxResults?: number } = {},
 ): RouteInfo[] {
   const maxResults = opts.maxResults ?? 50;
+  // Dedup key = "<METHOD> <PATH>" across ALL sources so a `GET /x` http_call
+  // edge and a `GET /x` route-kind definition collapse into a single route.
   const seen = new Set<string>();
   const out: RouteInfo[] = [];
 
-  // (1) HTTP_CALL edges.
+  // (1) HTTP_CALL edges — richest signal, so they seed the dedup set first.
   for (const e of httpEdges) {
     const path = e.route;
     if (!path) continue;
-    const key = (e.method ?? "ANY") + " " + path;
+    const method = (e.method ?? "ANY").toUpperCase();
+    const key = method + " " + path;
     if (seen.has(key)) continue;
     seen.add(key);
     out.push({
@@ -321,28 +318,39 @@ export function detectRoutes(
     });
   }
 
-  // (2) route-kind definitions.
+  // (2) route-kind definitions. Normalize the def name into a method+path key
+  // so it dedupes against http_call edges for the same route. A def name like
+  // `GET /x` splits into method=GET, path=/x; a bare `/x` becomes ANY /x.
   for (const d of defs) {
     if (d.kind !== "route") continue;
-    const key = "DEF " + d.name;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push({ path: d.name, file: d.filePath, handler: d.name });
-  }
-
-  // (3) route-name patterns in any definition name.
-  for (const d of defs) {
-    const m = d.name.match(ROUTE_NAME_RE);
-    if (!m) continue;
-    const method = m[1].toUpperCase();
-    const path = m[2];
+    const parsed = parseRouteName(d.name);
+    const method = parsed?.method ?? "ANY";
+    const path = parsed?.path ?? d.name;
     const key = method + " " + path;
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ path, method, file: d.filePath, handler: d.name });
+    out.push({ path, method: parsed?.method, file: d.filePath, handler: d.name });
+  }
+
+  // (3) route-name patterns in any definition name (e.g. a handler named
+  // `GET /api/users`). Already covered by the cross-source dedup key.
+  for (const d of defs) {
+    const parsed = parseRouteName(d.name);
+    if (!parsed) continue;
+    const key = parsed.method + " " + parsed.path;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ path: parsed.path, method: parsed.method, file: d.filePath, handler: d.name });
   }
 
   return out.slice(0, maxResults);
+}
+
+/** Parse a `METHOD /path` string; return normalized {method, path} or null. */
+function parseRouteName(name: string): { method: string; path: string } | null {
+  const m = name.match(ROUTE_NAME_RE);
+  if (!m) return null;
+  return { method: m[1].toUpperCase(), path: m[2] };
 }
 
 // ─── Hotspots ────────────────────────────────────────────────────────────────
@@ -483,12 +491,10 @@ function commonPrefixLabel(files: string[]): string | null {
 export function classifyLayers(
   communities: CommunityInfo[],
   gv: GraphView,
-  files: string[],
   routes: RouteInfo[],
 ): LayerInfo[] {
   const routeFiles = new Set(routes.map((r) => r.file).filter(Boolean));
   const out: LayerInfo[] = [];
-  const seen = new Set<string>();
 
   for (const c of communities) {
     const memberFiles = c.topFiles.length > 0 ? c.topFiles : [];
@@ -531,11 +537,8 @@ export function classifyLayers(
       fileCount: c.size,
       reason,
     });
-    seen.add(c.label);
   }
 
-  // Also surface loose files not in any reported community (catch stragglers).
-  void files;
   return out.slice(0, 20);
 }
 
@@ -577,7 +580,7 @@ export function computeArchitectureMap(
   if (input.communities && input.communities.length > 0) {
     communityInfos = labelCommunities(input.files, gv, input.communities);
   }
-  const layers = classifyLayers(communityInfos, gv, input.files, routes);
+  const layers = classifyLayers(communityInfos, gv, routes);
 
   return { packages, entryPoints, routes, hotspots, communities: communityInfos, layers };
 }

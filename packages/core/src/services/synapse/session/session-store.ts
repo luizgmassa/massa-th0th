@@ -24,6 +24,7 @@ import path from "path";
 import type { AgentSession } from "../types.js";
 import {
   restoreWorkingMemoryBuffer,
+  snapshotWorkingMemoryBuffer,
   type BufferSnapshot,
   type WorkingMemoryBufferConfig,
 } from "../buffer/working-memory-buffer.js";
@@ -170,7 +171,7 @@ export class SqliteSessionStore implements SessionStore {
       const bufferConfig = session.buffer
         ? JSON.stringify(session.buffer.config)
         : null;
-      const bufferSnapshot = session.buffer ? JSON.stringify(this.snapshotBuffer(session)) : null;
+      const bufferSnapshot = session.buffer ? JSON.stringify(snapshotWorkingMemoryBuffer(session)) : null;
 
       db.prepare(
         `INSERT INTO synapse_sessions (
@@ -334,23 +335,6 @@ export class SqliteSessionStore implements SessionStore {
    */
   ensureReady(): Promise<void> {
     return Promise.resolve();
-  }
-
-  /** Best-effort buffer snapshot — scalars only (token Sets are regenerable). */
-  private snapshotBuffer(session: AgentSession): unknown {
-    const buf = session.buffer as any;
-    if (!buf || !buf.entries) return null;
-    const out: any[] = [];
-    for (const [id, entry] of buf.entries as Map<string, any>) {
-      out.push({
-        id,
-        addedAt: entry.addedAt,
-        lastAccessedAt: entry.lastAccessedAt,
-        baselineScore: entry.baselineScore,
-        result: entry.result,
-      });
-    }
-    return { entries: out, config: buf.config };
   }
 }
 

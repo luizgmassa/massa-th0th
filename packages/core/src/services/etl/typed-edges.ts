@@ -87,13 +87,15 @@ function extractHttpCalls(
   }
 
   // GraphQL: graphql(`query ...`), gql`...`, client.query({ query: ... })
-  const gqlRe = new RegExp(`\\b(?:graphql|gql)\\s*[(\`]`, "g");
+  // Capture group 1 = the actual client token (graphql | gql) so the matched
+  // name is surfaced instead of a dead fallback.
+  const gqlRe = new RegExp(`\\b(graphql|gql)\\s*[(\`]`, "g");
   while ((m = gqlRe.exec(content)) !== null) {
     const line = computeLine(content, m.index);
     edges.push({
       kind: "http_call",
       line,
-      symbolName: m[1] ?? "graphql",
+      symbolName: m[1],
       callerSymbol: callerAtLine(line),
       meta: { client: "graphql" },
     });

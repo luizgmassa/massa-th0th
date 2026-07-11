@@ -190,7 +190,11 @@ export async function fetchAndConvertOne(
       const ageMs = Date.now() - last;
       const windowMs = ttl ?? DEFAULT_FETCH_TTL_MS;
       if (ageMs < windowMs) {
-        return { kind: "cached", url, source: source || url, chunkCount: -1, ageMs };
+        // chunkCount 0 in the public result: the chunks are NOT re-returned on a
+        // cache hit (they were indexed on the original fetch). The earlier
+        // internal sentinel (-1) leaked into tool output; 0 reads correctly to
+        // callers as "no chunks in this response."
+        return { kind: "cached", url, source: source || url, chunkCount: 0, ageMs };
       }
     }
   }

@@ -55,6 +55,25 @@ describe("typed-edges extractor (pure function)", () => {
     expect(axiosEdge!.meta?.method).toBe("post");
   });
 
+  test("graphql/gql regex captures the client token (no dead fallback)", () => {
+    // graphql(`query ...`) and gql`...` must surface their actual token as
+    // symbolName. The prior non-capturing group made m[1] always undefined.
+    const src = `
+      export function runQueries() {
+        graphql(\`query { users { id } }\`);
+        return gql\`fragment X on Y { id }\`;
+      }
+    `;
+    const edges = extractTypedEdges(src, symbols);
+    const gqlEdges = edges.filter(
+      (e) => e.kind === "http_call" && e.meta?.client === "graphql",
+    );
+    expect(gqlEdges.length).toBeGreaterThanOrEqual(2);
+    const names = gqlEdges.map((e) => e.symbolName).sort();
+    // Both "graphql" and "gql" are captured — not a constant fallback.
+    expect(names).toEqual(expect.arrayContaining(["graphql", "gql"]));
+  });
+
   test("extracts EMITS edges with event names", () => {
     const src = `
       export function handleRequest(emitter) {

@@ -486,10 +486,13 @@ export class PgCheckpointStore implements ICheckpointStore {
 
   /** Test helper: await in-flight writes. Not for production use. */
   async __drain(): Promise<void> {
-    while (this.inflight.size > 0) {
-      const pending = Array.from(this.inflight.values());
-      await Promise.allSettled(pending);
-    }
+    // Snapshot the pending set ONCE. Re-reading `this.inflight` in a loop would
+    // re-await writes that a concurrent caller repopulated during the drain,
+    // risking a hang under load. We only owe the caller that the writes
+    // in-flight at drain-start have settled.
+    const pending = Array.from(this.inflight.values());
+    if (pending.length > 0) await Promise.allSettled(pending);
+    // A short settle delay covers any write queued during the drain.
     await new Promise((r) => setTimeout(r, 10));
   }
 

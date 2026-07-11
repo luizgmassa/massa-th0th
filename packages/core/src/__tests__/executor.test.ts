@@ -186,6 +186,39 @@ describe("PolyglotExecutor", () => {
     expect(result.exitCode).toBe(0);
     expect(result.stdout.trim()).toBe(expectedName);
   });
+
+  // deny-glob basename anchoring: the guard blocks sensitive BASENAMES but not
+  // legit files whose names merely CONTAIN a sensitive token as a substring.
+  test("execute_file deny-glob anchors on basename, not loose substring", async () => {
+    // These don't need to exist — the deny-glob fires before the read. We only
+    // assert the guard's accept/reject decision.
+    const blocked = [".env", "id_rsa", "credentials.json", "aws-credentials"];
+    for (const p of blocked) {
+      const r = await exec.executeFile({
+        path: p,
+        language: "javascript",
+        code: `console.log(FILE_CONTENT.length);`,
+        timeout: 5_000,
+      });
+      expect(r.exitCode).toBe(1);
+      expect(r.stderr).toMatch(/deny-listed pattern/);
+    }
+    // Legit files with a sensitive token as a SUBSTRING of a longer word must
+    // NOT be blocked by the basename-anchored guard. They'll fail later on the
+    // read (ENOENT) but with a different error, not the deny message.
+    const legit = ["my_credentials_notes.md", "user_permissions.ts"];
+    for (const p of legit) {
+      const r = await exec.executeFile({
+        path: p,
+        language: "javascript",
+        code: `console.log(FILE_CONTENT.length);`,
+        timeout: 5_000,
+      });
+      // Not deny-listed → the deny message must be absent. (exitCode may be 1
+      // from the missing-file read, which is fine.)
+      expect(r.stderr).not.toMatch(/deny-listed pattern/);
+    }
+  });
 });
 
 // ── Intent progressive disclosure ─────────────────────────────────────────

@@ -60,6 +60,15 @@ export interface WebControllerDeps {
 /** In-memory TTL cache map (url-key → indexedAt ms). Process-local; not durable. */
 type CacheMap = Map<string, number>;
 
+/**
+ * Maximum number of entries retained in the in-memory fetch cache. The cache is
+ * process-local and not durable; without a cap a long-running process fetching
+ * many distinct URLs grows memory without bound. Map preserves INSERTION order
+ * in JS, so the oldest entry is evicted first when the cap is hit. Re-touching
+ * an entry (re-mark) promotes it to most-recent via delete+set.
+ */
+const WEB_CACHE_MAX_ENTRIES = 512;
+
 export class WebController {
   private static instance: WebController | null = null;
   private readonly deps: WebControllerDeps;
@@ -111,9 +120,26 @@ export class WebController {
           this.deps.keywordSearch.index(chunk.id, chunk.content, chunk.metadata),
         ]);
       },
-      getLastIndexedAt: (key) => this.cache.get(key) ?? null,
-      markIndexed: (key, ts) => {
+      getLastIndexedAt: (key) => {
+        const ts = this.cache.get(key);
+        if (ts === undefined) return null;
+        // LRU touch: promote this key to most-recently-used so frequently-fetched
+        // URLs survive eviction. Map preserves insertion order, so delete+set
+        // reorders it to the end (newest).
+        this.cache.delete(key);
         this.cache.set(key, ts);
+        return ts;
+      },
+      markIndexed: (key, ts) => {
+        // Replace any existing entry so the key's insertion order is refreshed.
+        this.cache.delete(key);
+        this.cache.set(key, ts);
+        // Evict oldest (first-key) entries while over the cap.
+        while (this.cache.size > WEB_CACHE_MAX_ENTRIES) {
+          const oldest = this.cache.keys().next().value;
+          if (oldest === undefined) break;
+          this.cache.delete(oldest);
+        }
       },
     };
   }
