@@ -429,7 +429,10 @@ export class TracePathService {
   /**
    * Reconstruct readable call chains (root → leaf) from the edge set, scoped to
    * the seed roots. A leaf is any node that is never a `from` in the edge set.
-   * Chains are capped to keep output bounded.
+   *
+   * Bounded: the DFS carries a walk budget (MAX_CHAIN_WALKS) and stops as soon
+   * as enough chains are collected, so a dense hub topology cannot explode the
+   * recursion before the final `slice(0, 50)` cap.
    */
   private buildChains(seeds: string[], edges: TraceEdge[]): string[] {
     if (edges.length === 0) return [];
@@ -445,10 +448,19 @@ export class TracePathService {
       whoHasChild.add(e.from);
     }
 
+    const CHAIN_CAP = 50;
+    // Walk budget bounds the total number of recursive walk() invocations so a
+    // pathological fan-out (dense hub) can't blow up before the slice cap.
+    const MAX_WALKS = 5000;
     const chains: string[] = [];
     const seen = new Set<string>();
+    let walks = 0;
 
     const walk = (fqn: string, path: string[]) => {
+      // Stop once we have enough chains OR the walk budget is exhausted.
+      if (chains.length >= CHAIN_CAP) return;
+      if (walks >= MAX_WALKS) return;
+      walks++;
       const key = path.join("→");
       if (seen.has(key)) return;
       seen.add(key);
@@ -459,6 +471,7 @@ export class TracePathService {
         return;
       }
       for (const child of next) {
+        if (chains.length >= CHAIN_CAP || walks >= MAX_WALKS) return;
         // cycle guard inside a single chain
         if (path.includes(child)) {
           const cycled = [...path, `${this.fqnToName(child)}↺`];
@@ -470,11 +483,12 @@ export class TracePathService {
     };
 
     for (const seed of seeds) {
+      if (chains.length >= CHAIN_CAP) break;
       if (seedSet.has(seed) && whoHasChild.has(seed)) walk(seed, [seed]);
     }
 
     // Cap and dedupe-ish.
-    return chains.slice(0, 50);
+    return chains.slice(0, CHAIN_CAP);
   }
 }
 

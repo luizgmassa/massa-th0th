@@ -20,6 +20,7 @@ import {
 import { Elysia, t } from "elysia";
 import fs from "fs/promises";
 import path from "path";
+import { realpathSync } from "fs";
 
 let indexProjectTool: IndexProjectTool | null = null;
 
@@ -28,6 +29,40 @@ function getIndexProjectTool(): IndexProjectTool {
     indexProjectTool = new IndexProjectTool();
   }
   return indexProjectTool;
+}
+
+/**
+ * Parse a query-string numeric into a bounded integer. Non-numeric / out-of-
+ * range values fall back to `def` (never NaN), so a bad `?depth=abc` can't
+ * silently defeat a depth/limit bound. `min`/`max` are inclusive.
+ */
+function boundedInt(
+  raw: string | string[] | undefined,
+  def: number,
+  min: number,
+  max: number,
+): number {
+  if (raw == null) return def;
+  const s = Array.isArray(raw) ? raw[0] : raw;
+  if (s == null || s === "") return def;
+  const n = Number(s);
+  if (!Number.isFinite(n)) return def;
+  const i = Math.trunc(n);
+  return Math.max(min, Math.min(max, i));
+}
+
+/**
+ * Resolve a path to its canonical realpath, falling back to the lexical
+ * absolute path if the target doesn't exist (so the boundary check still
+ * compares consistent forms, and a missing path produces a clear downstream
+ * error rather than a spurious "blocked").
+ */
+function realpathSafe(p: string): string {
+  try {
+    return realpathSync(p);
+  } catch {
+    return path.resolve(p);
+  }
 }
 
 let graphController: GraphController | null = null;
@@ -169,7 +204,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           kind: kind ? kind.split(",") : undefined,
           file,
           exportedOnly: exportedOnly === "true",
-          limit: parseInt(limit, 10),
+          limit: boundedInt(limit, 20, 1, 500),
         });
 
         return {
@@ -211,7 +246,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           symbolName,
           fqn,
         );
-        const limited = refs.slice(0, parseInt(limit, 10));
+        const limited = refs.slice(0, boundedInt(limit, 50, 1, 1000));
 
         return {
           success: true,
@@ -316,7 +351,9 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
             | "cross_service"
             | "all"
             | undefined,
-          depth: depth ? parseInt(depth as string, 10) : undefined,
+          // Coerce + bound depth so a non-numeric `?depth=abc` can't become NaN
+          // and defeat the service's MAX_DEPTH (6) BFS bound. Default 3, [1,6].
+          depth: boundedInt(depth, 3, 1, 6),
           include_tests:
             include_tests === undefined ? undefined : include_tests === "true",
           edge_types: edge_types
@@ -383,6 +420,27 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
               "projectPath is required (absolute path to the working tree where git runs).",
           };
 
+        // Boundary: the caller-supplied projectPath must match (or be within)
+        // the workspace's registered project_path. This prevents a caller from
+        // pointing `git -C` at an arbitrary directory via the impact route.
+        // Both paths are realpath-resolved so symlinks can't bypass the check.
+        const workspace = await workspaceManager.getWorkspace(projectId);
+        if (!workspace) {
+          return { success: false, error: `Workspace '${projectId}' not found` };
+        }
+        const registeredRoot = realpathSafe(workspace.project_path);
+        const callerRoot = realpathSafe(projectPath);
+        const rel = path.relative(registeredRoot, callerRoot);
+        const escapes = rel.startsWith("..") || path.isAbsolute(rel);
+        if (registeredRoot !== callerRoot && escapes) {
+          return {
+            success: false,
+            error:
+              `projectPath "${projectPath}" is outside the registered workspace root ` +
+              `"${workspace.project_path}". Impact analysis is restricted to the workspace tree.`,
+          };
+        }
+
         const result = await getGraphController().analyzeImpact({
           projectId,
           projectPath,
@@ -438,12 +496,8 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
     async ({ params, query }) => {
       try {
         const projectId = params.id;
-        const centralityLimit = query.centralityLimit
-          ? parseInt(query.centralityLimit as string, 10)
-          : 20;
-        const recentLimit = query.recentLimit
-          ? parseInt(query.recentLimit as string, 10)
-          : 10;
+        const centralityLimit = boundedInt(query.centralityLimit as string | undefined, 20, 1, 500);
+        const recentLimit = boundedInt(query.recentLimit as string | undefined, 10, 1, 500);
 
         const map = await symbolGraphService.getProjectMap(projectId, {
           centralityLimit,
@@ -478,7 +532,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           return { success: false, error: "projectId is required" };
         }
 
-        const limit = query.limit ? parseInt(query.limit as string, 10) : 20;
+        const limit = boundedInt(query.limit as string | undefined, 20, 1, 500);
         const files = await symbolGraphService.getTopCentralFiles(
           projectId,
           limit,
@@ -528,9 +582,9 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           };
         }
 
-        const start = Math.max(1, parseInt(lineStart, 10));
+        const start = boundedInt(lineStart, 1, 1, 1_000_000);
         const end = lineEnd
-          ? Math.max(start, parseInt(lineEnd, 10))
+          ? boundedInt(lineEnd, start + 20, start, start + 10_000)
           : start + 20;
         const absolutePath = path.join(workspace.project_path, file);
         const content = await fs.readFile(absolutePath, "utf-8");

@@ -92,6 +92,13 @@ export class PgSynapseSessionStore implements SessionStore {
   private hydrated = false;
   private hydrating: Promise<void> | null = null;
   /**
+   * Epoch (ms) of the last failed hydration attempt. Rate-limits retries so a
+   * persistent PG error does not turn every op into a full `SELECT *` retry
+   * storm (hydrated stays false forever → ensureHydrated re-fires every call).
+   */
+  private hydrateFailedAt = 0;
+  private static readonly HYDRATE_RETRY_MS = 30_000;
+  /**
    * Per-sessionId serialized write chain. recordAccess fires frequently for one
    * session; without ordering, concurrent upserts on the same row have no
    * commit-order guarantee — an earlier touch could commit after a later one
@@ -116,6 +123,16 @@ export class PgSynapseSessionStore implements SessionStore {
   private ensureHydrated(): Promise<void> {
     if (this.hydrated) return Promise.resolve();
     if (this.hydrating) return this.hydrating;
+    // Rate-limit retries: if the last hydration attempt failed recently,
+    // skip the full SELECT and let the op proceed against the in-memory mirror.
+    // Without this, a persistent PG error turns every op into a full-table
+    // retry storm (hydrated stays false forever → ensureHydrated re-fires).
+    if (
+      this.hydrateFailedAt > 0 &&
+      Date.now() - this.hydrateFailedAt < PgSynapseSessionStore.HYDRATE_RETRY_MS
+    ) {
+      return Promise.resolve();
+    }
     this.hydrating = (async () => {
       try {
         const prisma = this.getClient();
@@ -146,10 +163,12 @@ export class PgSynapseSessionStore implements SessionStore {
         }
         this.mirror = next;
         this.hydrated = true;
+        this.hydrateFailedAt = 0;
         logger.info("PgSynapseSessionStore hydrated", {
           rows: this.mirror.size,
         });
       } catch (e) {
+        this.hydrateFailedAt = Date.now();
         logger.warn("PgSynapseSessionStore hydrate failed (best-effort)", {
           error: (e as Error).message,
         });

@@ -329,6 +329,14 @@ export class IndexManager {
 
   /**
    * Save index metadata to vector store
+   *
+   * The metadata doc is a marker (JSON payload in `content`), not a searchable
+   * vector. We still must supply an `embedding` whose length matches the
+   * backend's declared dimension: under PostgreSQL+pgvector the column is
+   * strictly typed (`vector(N)`), so a wrong-length vector throws a dimension
+   * mismatch. We resolve the actual dimension from `vectorStore.getStats()`
+   * (provider-driven: 384/768/1024/1536/3072/…) instead of hardcoding 4096,
+   * and fall back to a small value only when the backend doesn't report one.
    */
   private async saveIndexMetadata(metadata: IndexMetadata): Promise<void> {
     try {
@@ -336,12 +344,26 @@ export class IndexManager {
         metadata.projectId,
       );
 
+      // Resolve the real embedding dimension from the backend (PG reports the
+      // schema's vector(N); SQLite ignores length). Fall back to 768 (a common
+      // small-model default) only when the backend doesn't report one.
+      let dim = 768;
+      try {
+        const stats = await this.vectorStore.getStats(metadata.projectId);
+        if (stats && typeof stats.embeddingDimensions === "number" && stats.embeddingDimensions > 0) {
+          dim = stats.embeddingDimensions;
+        }
+      } catch {
+        // Stats unavailable — keep the fallback dim. The zero vector is only a
+        // marker; it never participates in similarity search.
+      }
+
       // Store as special metadata document with JSON in content
       await collection.add([
         {
           id: `_metadata:${metadata.projectId}`,
           content: JSON.stringify(metadata),
-          embedding: new Array(4096).fill(0), // Zero vector for metadata docs
+          embedding: new Array(dim).fill(0), // Zero vector for metadata docs
           metadata: {
             type: "_metadata",
             projectId: metadata.projectId,
@@ -349,7 +371,7 @@ export class IndexManager {
         },
       ]);
 
-      logger.debug("Saved index metadata", { projectId: metadata.projectId });
+      logger.debug("Saved index metadata", { projectId: metadata.projectId, dim });
     } catch (error) {
       logger.error("Failed to save index metadata", error as Error, {
         projectId: metadata.projectId,

@@ -98,6 +98,13 @@ const DEFAULT_DEPTH = 2;
 const MAX_DEPTH = 4;
 /** Cap on impacted-symbol results returned. */
 const MAX_IMPACTED = 100;
+/**
+ * Cap on the number of listDefinitionsByFile queries a single analyze() call
+ * may issue (across the whole reverse-import BFS). Without it, a dense hub
+ * topology can fan out into thousands of per-file definition queries even with
+ * a small depth. The cache dedupes repeats; this caps the unique-file work.
+ */
+const MAX_DEF_QUERIES = 500;
 /** Centrality weight in the risk formula (centrality ∈ [0,1]). */
 const W_CENTRALITY = 0.6;
 /** Proximity weight — closer hops weigh higher (proximity = 1/(depth+1)). */
@@ -160,8 +167,21 @@ export class ImpactAnalysisService {
     const changedFileSet = new Set(changedPaths);
     // changedSymbolByFile: file → [{fqn,name}] for reference-backbone traversal.
     const changedSymbols = new Map<string, { fqn: string; name: string }[]>();
+    // Per-analyze definitions cache: file → definitions. The reverse-import BFS
+    // calls listDefinitionsByFile per importer per hop; without a cache the same
+    // hub file gets re-queried on every changed-file frontier. The cache also
+    // bounds total unique-file queries at MAX_DEF_QUERIES so a pathological fan-
+    // out can't issue thousands of queries even at small depth.
+    const defCache = new Map<string, SymbolDefinition[]>();
+    const cachedDefs = async (file: string): Promise<SymbolDefinition[]> => {
+      if (defCache.has(file)) return defCache.get(file)!;
+      if (defCache.size >= MAX_DEF_QUERIES) return [];
+      const d = await this.listDefinitionsByFile(repo, projectId, file);
+      defCache.set(file, d);
+      return d;
+    };
     for (const file of changedPaths) {
-      const defs = await this.listDefinitionsByFile(repo, projectId, file);
+      const defs = await cachedDefs(file);
       const syms = defs.map((d) => ({
         fqn: d.id,
         name: d.name,
@@ -214,7 +234,9 @@ export class ImpactAnalysisService {
           if (visited.has(imp)) continue;
           visited.add(imp);
           // Symbols in the importer file are impacted (they may consume the change).
-          const consumerDefs = await this.listDefinitionsByFile(repo, projectId, imp);
+          // Use the per-analyze cache so a hub file imported by many changed
+          // files is queried once, not once-per-frontier.
+          const consumerDefs = await cachedDefs(imp);
           for (const d of consumerDefs) {
             if (TEST_FILE_RE.test(imp) && d.exported === false) continue;
             const c = (centrality.get(imp) ?? 0) / maxCentrality; // normalize 0–1
@@ -252,7 +274,7 @@ export class ImpactAnalysisService {
           if (r.from_file === file) continue; // self-reference in same file
           if (changedFileSet.has(r.from_file)) continue; // another changed file
           // Find a definition at the reference site to anchor the impact.
-          const siteDefs = await this.listDefinitionsByFile(repo, projectId, r.from_file);
+          const siteDefs = await cachedDefs(r.from_file);
           if (siteDefs.length === 0) continue;
           // Pick the definition nearest (after) the reference line.
           const anchor = siteDefs

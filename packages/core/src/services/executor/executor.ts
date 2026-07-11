@@ -259,6 +259,8 @@ export class PolyglotExecutor {
       const cmd = buildCommand(this.#runtimes, language, filePath);
 
       if (cmd[0] === "__rust_compile_run__") {
+        // #compileAndRunRust owns tmpDir cleanup (it always removes the dir in
+        // a finally, since both the compile-failure and run paths return early).
         return await this.#compileAndRunRust(filePath, tmpDir, timeout);
       }
 
@@ -376,25 +378,32 @@ export class PolyglotExecutor {
     // Compile rustc with its own (smaller) timeout so a hung compile can't
     // consume the whole runtime budget.
     try {
-      execFileSync("rustc", [srcPath, "-o", binPath], {
-        cwd,
-        timeout: Math.min(timeout, 60_000),
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error
-          ? ((err as { stderr?: string }).stderr ?? err.message)
-          : String(err);
-      return {
-        stdout: "",
-        stderr: `Compilation failed:\n${message}`,
-        exitCode: 1,
-        timedOut: false,
-      };
+      try {
+        execFileSync("rustc", [srcPath, "-o", binPath], {
+          cwd,
+          timeout: Math.min(timeout, 60_000),
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? ((err as { stderr?: string }).stderr ?? err.message)
+            : String(err);
+        return {
+          stdout: "",
+          stderr: `Compilation failed:\n${message}`,
+          exitCode: 1,
+          timedOut: false,
+        };
+      }
+      return await this.#spawn([binPath], cwd, cwd, timeout, false);
+    } finally {
+      // Always clean up the sandbox tmpDir (source + binary) regardless of
+      // compile success, compile failure, or runtime outcome. Without this,
+      // every Rust run leaked a `.massa-th0th-exec-*` dir under /tmp.
+      cleanupTmpDir(cwd);
     }
-    return this.#spawn([binPath], cwd, cwd, timeout, false);
   }
 
   #spawn(

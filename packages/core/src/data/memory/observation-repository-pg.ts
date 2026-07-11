@@ -88,6 +88,13 @@ export class PgObservationStore implements ObservationStore {
   private mirror: Map<string, Observation> = new Map();
   private hydrated = false;
   private hydrating: Promise<void> | null = null;
+  /**
+   * Epoch (ms) of the last failed hydration attempt. Used to rate-limit
+   * retries so a persistent PG error does not turn every op into a full
+   * `SELECT *` retry storm. We retry at most once per HYDRATE_RETRY_MS.
+   */
+  private hydrateFailedAt = 0;
+  private static readonly HYDRATE_RETRY_MS = 30_000;
 
   private getClient(): PrismaClient {
     if (!this.prisma) this.prisma = getPrismaClient();
@@ -103,6 +110,16 @@ export class PgObservationStore implements ObservationStore {
   private ensureHydrated(): Promise<void> {
     if (this.hydrated) return Promise.resolve();
     if (this.hydrating) return this.hydrating;
+    // Rate-limit retries: if the last hydration attempt failed recently,
+    // skip the full SELECT and let the op proceed against the in-memory mirror.
+    // Without this, a persistent PG error turns every op into a full-table
+    // retry storm (hydrated stays false forever → ensureHydrated re-fires).
+    if (
+      this.hydrateFailedAt > 0 &&
+      Date.now() - this.hydrateFailedAt < PgObservationStore.HYDRATE_RETRY_MS
+    ) {
+      return Promise.resolve();
+    }
     this.hydrating = (async () => {
       try {
         const prisma = this.getClient();
@@ -122,8 +139,12 @@ export class PgObservationStore implements ObservationStore {
         }
         this.mirror = next;
         this.hydrated = true;
+        this.hydrateFailedAt = 0;
         logger.info("PgObservationStore hydrated", { rows: this.mirror.size });
       } catch (e) {
+        // Record the failure so the backoff above suppresses the retry storm;
+        // the mirror stays as-is and the op proceeds against it.
+        this.hydrateFailedAt = Date.now();
         logger.warn("PgObservationStore hydrate failed (best-effort)", {
           error: (e as Error).message,
         });

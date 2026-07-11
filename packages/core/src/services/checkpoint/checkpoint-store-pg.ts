@@ -95,6 +95,13 @@ export class PgCheckpointStore implements ICheckpointStore {
   private mirror: Map<string, TaskCheckpoint> = new Map();
   private hydrated = false;
   private hydrating: Promise<void> | null = null;
+  /**
+   * Epoch (ms) of the last failed hydration attempt. Rate-limits retries so a
+   * persistent PG error does not turn every op into a full `SELECT *` retry
+   * storm (hydrated stays false forever → ensureHydrated re-fires every call).
+   */
+  private hydrateFailedAt = 0;
+  private static readonly HYDRATE_RETRY_MS = 30_000;
   /** Per-id serialized write chain so commits land in call order. */
   private inflight: Map<string, Promise<void>> = new Map();
 
@@ -111,6 +118,16 @@ export class PgCheckpointStore implements ICheckpointStore {
   private ensureHydrated(): Promise<void> {
     if (this.hydrated) return Promise.resolve();
     if (this.hydrating) return this.hydrating;
+    // Rate-limit retries: if the last hydration attempt failed recently,
+    // skip the full SELECT and let the op proceed against the in-memory mirror.
+    // Without this, a persistent PG error turns every op into a full-table
+    // retry storm (hydrated stays false forever → ensureHydrated re-fires).
+    if (
+      this.hydrateFailedAt > 0 &&
+      Date.now() - this.hydrateFailedAt < PgCheckpointStore.HYDRATE_RETRY_MS
+    ) {
+      return Promise.resolve();
+    }
     this.hydrating = (async () => {
       try {
         const prisma = this.getClient();
@@ -129,10 +146,12 @@ export class PgCheckpointStore implements ICheckpointStore {
         }
         this.mirror = next;
         this.hydrated = true;
+        this.hydrateFailedAt = 0;
         logger.info("PgCheckpointStore hydrated", {
           rows: this.mirror.size,
         });
       } catch (e) {
+        this.hydrateFailedAt = Date.now();
         logger.warn("PgCheckpointStore hydrate failed (best-effort)", {
           error: (e as Error).message,
         });
@@ -338,21 +357,27 @@ export class PgCheckpointStore implements ICheckpointStore {
 
   // ── Backend-aware memory existence ───────────────────────────────────────
 
+  /**
+   * KNOWN LIMITATION (PG): returns the input unchanged (assumes all referenced
+   * memories exist). The ICheckpointStore contract is SYNCHRONOUS
+   * (`countExistingMemoryIds(): string[]`), consumed synchronously by
+   * CheckpointManager.restoreCheckpoint. PG is inherently async (prisma
+   * `$queryRaw` returns a Promise we cannot await here without making
+   * restoreCheckpoint async, which would ripple up and change the public MCP
+   * tool response contract). So under PG the restore memory-integrity check is
+   * silently permissive: `missingMemoryIds` is always empty. SQLite runs a real
+   * `SELECT id FROM memories WHERE id IN (...)` and reports missing ids.
+   *
+   * A future fix that preserves the contract could maintain a PG-backed
+   * in-memory mirror of memory ids (hydrated alongside checkpoints) and check
+   * membership against it here; that mirror is out of scope for this store.
+   */
   countExistingMemoryIds(memoryIds: string[]): string[] {
     if (memoryIds.length === 0) return [];
     void this.ensureHydrated();
-    // Fire-and-forget query — but the restore integrity check is sync. To honor
-    // the sync contract we query PG within a sync call (the prisma client's
-    // $queryRaw returns a Promise we cannot await here). Best-effort: assume
-    // all referenced memories exist (the restore is never blocked); a caller
-    // that needs the precise set can use a PG-backed memory store directly.
-    // This matches the SQLite store's behavior when the memories table query
-    // fails (best-effort fallback there too).
-    this.chainWrite(`__memcheck__`, async () => {
-      // No-op: the existence query result is not observable from the sync
-      // restore path. Left intentionally best-effort to keep restore
-      // non-blocking under PG (mirrors the SQLite store's try/catch fallback).
-    });
+    // Best-effort: assume all referenced memories exist (the restore is never
+    // blocked). Mirrors the SQLite store's behavior when the memories table
+    // query fails (its try/catch fallback also returns the full input).
     return memoryIds;
   }
 

@@ -29,6 +29,14 @@ import type { ExecuteFileParams } from "../tools/execute_file.js";
 import type { BatchExecuteParams } from "../tools/batch_execute.js";
 
 /**
+ * Hard cap on the number of commands a single batch_execute call may run.
+ * Without it, a 100k-command payload would spin up 100k temp dirs upfront
+ * (each shell command gets its own sandbox tmp dir) and exhaust /tmp / fds.
+ * 256 is generous for real gather passes (typically <50) while bounding abuse.
+ */
+const MAX_BATCH_COMMANDS = 256;
+
+/**
  * Apply intent progressive disclosure to an ExecResult's stdout. When `intent`
  * is set AND stdout exceeds the threshold, replace stdout with the trimmed
  * intent summary + keep the raw output under a `truncated` field for audit.
@@ -159,6 +167,12 @@ export class ExecutorController {
     const { commands, concurrency, cwd, timeout } = params;
     if (!Array.isArray(commands) || commands.length === 0) {
       return { success: false, error: "commands must be a non-empty array." };
+    }
+    if (commands.length > MAX_BATCH_COMMANDS) {
+      return {
+        success: false,
+        error: `batch_execute accepts at most ${MAX_BATCH_COMMANDS} commands; received ${commands.length}. Split the batch or reduce the payload.`,
+      };
     }
 
     const effectiveConcurrency =
