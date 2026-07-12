@@ -116,15 +116,16 @@ broken tests. Breakdown by reason:
 |--------|------|----------------|------------|
 | **E2E live-stack** | `describe.skipIf(!READY)`, `READY = RUN_E2E==="1" && API_UP (:3333) && Ollama up` | ~250 (14 e2e suites) | `RUN_E2E=1 bun test src/__tests__/e2e/` from `packages/core`, with the tools-api + PG + Ollama running |
 | **E2E destructive** | `describe.skipIf(process.env.RUN_E2E_DESTRUCTIVE !== "1")` | ~15 (`16.destructive.test.ts`) | `RUN_E2E_DESTRUCTIVE=1 RUN_E2E=1 bun test src/__tests__/e2e/16.destructive.test.ts` (saturates/toggles global singletons — dedicated only) |
-| **PG-integration** | `describe.skipIf(!DB_AVAILABLE)`, `DB_AVAILABLE = DATABASE_URL` starts with `postgres` | ~10 (PgJobStore / PgObservationStore / PgSynapseSessionStore / PostgresVectorStore / PG-resume) | Run with `DATABASE_URL=postgresql://...` set (they pass, not skip, when PG is configured — as in the dev `.env`) |
-| **Phase-4 env sentinels** | `[D1/D2/D3/D4:SKIP]` — guard when the shared DB pool is dead or the live API is down | ~6 | Run the Phase-4 suite in isolation with `DATABASE_URL` set + API up; **these guards are now largely redundant** after the `disconnectPrisma` fix — candidate for removal (see OPEN) |
+| **PG-integration** | `describe.skipIf(!DB_AVAILABLE)`, `DB_AVAILABLE = DATABASE_URL` starts with `postgres` | ~10 (PgJobStore / PgObservationStore / PgSynapseSessionStore / PostgresVectorStore / PG-resume) | Run with `DATABASE_URL=postgresql://...` set (they pass, not skip, when PG is configured — as in the dev `.env`). **2026-07-12:** PostgresVectorStore gate aligned — all PG-integration suites now use one `DB_AVAILABLE` gate and run uniformly when `DATABASE_URL=postgres…` is set. |
+| **Phase-4 env sentinels** | `[D1/D2/D3/D4:SKIP]` — guard when the shared DB pool is dead or the live API is down | ~6 → 0 | **2026-07-12:** removed — `ENV_BROKEN`/`skipIfBroken` scaffolding stripped from all 4 Phase-4 suites; tests now run un-skipped in the default `DATABASE_URL=""` batch (60 pass / 0 fail / 0 skip). D3 keeps its own `DATABASE_URL=""` pin (FK-violation guard, separate concern). |
 | **LLM code-model routing** | `test.skipIf(!LLM_CFG_AVAILABLE)` | 2 | Run with `RLM_LLM_CODE_MODEL` configured (a code model distinct from the instruct default) |
 | **Named shared-infra destructive** | `test.skip("…: shared-infra destructive")` | 2 (`F87` saturate→429, `F88` disabled-hooks→423) | Covered by the dedicated destructive suite above |
 | **Internal / not-observable** | `test.skip("…: internal — not observable")` | 1 (`E20` matchThreshold/hitBoost buffer effect) | N/A — asserts internal state with no public surface; keep as documentation |
 
 **Net:** the ~250 e2e + ~15 destructive skips are by design (they need the live
-stack and are run separately in CI). The ~6 Phase-4 `Dx:SKIP` guards and the
-PG-integration skips are the only ones worth revisiting for the unit batch.
+stack and are run separately in CI). The Phase-4 `Dx:SKIP` guards were removed
+(2026-07-12); the PG-integration skips are the only remaining unit-batch skips
+worth revisiting.
 
 ---
 
@@ -172,12 +173,18 @@ PG-integration skips are the only ones worth revisiting for the unit batch.
 - **Fix:** audit the indexed file list / `projectPath`; drop the `adsads/`
   entries; re-index clean. Do NOT delete `e2e-th0th-shared` itself.
 
-### [low] Phase-4 `Dx:SKIP` env guards now largely redundant
+### [done] Phase-4 `Dx:SKIP` env guards now largely redundant (2026-07-12)
 - **Where:** `D1/D2/D3/D4:SKIP` sentinels in the Phase-4 integration tests.
 - **What:** these guarded against the shared PG pool being killed mid-batch by
   `disconnectPrisma()` — that debt is now fixed (commit `3cdd636`).
-- **Fix:** audit and remove the now-redundant guards so the Phase-4 integration
-  tests run in the default batch (raises the green count further).
+- **Resolution:** guards removed (`ENV_BROKEN`/`ENV_REASON`/`skipIfBroken`
+  machinery and all `if (skipIfBroken(...)) return;` early-returns stripped from
+  typed-edges / trace-path / impact-analysis / architecture-map). The Phase-4
+  integration tests now run un-skipped in the default `DATABASE_URL=""` batch
+  (60 pass / 0 fail / 0 skip). The D3 `DATABASE_URL=""` beforeAll/afterAll pin
+  is retained — it prevents PG FK violations on the throwaway fixture projectId,
+  a separate concern from the removed guards. D1/D2/D4 need no pin (verified
+  they pass even when a PG `.env` leaks).
 
 ### [done] Dep / type skew (2026-07-12)
 - `@types/node`: mcp-client `^22.10.5` → `^25.2.2` (aligned with core/tools-api).
