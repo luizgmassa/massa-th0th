@@ -96,6 +96,11 @@ function resetManagerSingleton(): void {
 }
 
 const ORIGINAL_DATABASE_URL = process.env.DATABASE_URL;
+// Aligned with the other PG-integration suites: run (not skip) when DATABASE_URL
+// is postgres. The PG describe below is gated on this; the SQLite describe
+// always runs. The ORIGINAL_DATABASE_URL save/restore in the test bodies is
+// independent of this gate and is left as-is (T4-owned).
+const DB_AVAILABLE = (ORIGINAL_DATABASE_URL ?? "").startsWith("postgres");
 
 /** Clean any rows this test created from PG (idempotent, scoped by taskId). */
 async function cleanupTaskRows(taskIds: string[]): Promise<void> {
@@ -130,7 +135,7 @@ async function cleanupMemoryRows(ids: string[]): Promise<void> {
 
 // ── Tests ───────────────────────────────────────────────────────────────
 
-describe("PgCheckpointStore (structural gap #16)", () => {
+describe.skipIf(!DB_AVAILABLE)("PgCheckpointStore (structural gap #16)", () => {
   const createdTaskIds: string[] = [];
   /** Prefix for memory rows inserted by the SF2 falsifier; cleaned up in afterEach. */
   const MEM_PREFIX = "mem_sf2_ckpt_";

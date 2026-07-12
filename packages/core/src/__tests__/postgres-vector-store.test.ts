@@ -6,7 +6,7 @@
  * 
  * For full integration tests with a real PostgreSQL instance, see:
  *   postgres-vector-store.integration.test.ts
- *   Run with: RUN_POSTGRES_TESTS=1 bun test postgres-vector-store.integration.test.ts
+ *   Run with: DATABASE_URL=postgresql://... bun test postgres-vector-store.integration.test.ts
  */
 
 import { describe, test, expect } from "bun:test";

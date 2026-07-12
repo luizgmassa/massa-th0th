@@ -3,29 +3,29 @@
  *
  * These tests require a running PostgreSQL instance with pgvector.
  * Run with: docker-compose -f docker-compose.test.yml up -d
- * 
+ *
  * Connection: postgresql://test:test@localhost:5433/massa_th0th_test
- * 
- * Skip these tests in CI if PostgreSQL is not available:
- *   SKIP_POSTGRES_TESTS=1 bun test
- * 
- * Or run explicitly:
- *   RUN_POSTGRES_TESTS=1 bun test postgres-vector-store.integration.test.ts
+ *
+ * Gate: like the other PG-integration suites, this suite runs (not skips) when
+ *   DATABASE_URL points at postgres, and skips otherwise. To force a different
+ *   PG connection for this suite specifically, set POSTGRES_TEST_URL.
+ *   Run with: DATABASE_URL=postgresql://... bun test postgres-vector-store.integration.test.ts
  */
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from "bun:test";
 import { SearchSource } from "@massa-th0th/shared";
 
-// Only run if explicitly enabled (requires PostgreSQL running)
-const RUN_TESTS = process.env.RUN_POSTGRES_TESTS === "1";
-const POSTGRES_URL = process.env.POSTGRES_TEST_URL || "postgresql://test:test@localhost:5433/massa_th0th_test";
+// Aligned with the other PG-integration suites: gate on DATABASE_URL so all PG
+// suites run uniformly when PG is configured (not the old RUN_POSTGRES_TESTS opt-in).
+const DB_AVAILABLE = (process.env.DATABASE_URL ?? "").startsWith("postgres");
+const POSTGRES_URL = process.env.POSTGRES_TEST_URL || process.env.DATABASE_URL || "postgresql://test:test@localhost:5433/massa_th0th_test";
 
 // These tests need real embeddings, so we don't mock the embedding service
 // Make sure OLLAMA_URL is set or embeddings are available
 
 import { PostgresVectorStore } from "../data/vector/postgres-vector-store.js";
 
-describe.skipIf(!RUN_TESTS)("PostgresVectorStore Integration", () => {
+describe.skipIf(!DB_AVAILABLE)("PostgresVectorStore Integration", () => {
   let store: PostgresVectorStore;
 
   beforeAll(async () => {
