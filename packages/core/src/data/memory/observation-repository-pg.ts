@@ -160,6 +160,17 @@ export class PgObservationStore implements ObservationStore {
     this.mirror.set(obs.id, obs);
     void this.ensureHydrated();
     // Fire-and-forget persist (best-effort, matching PgScheduledJobStore).
+    //
+    // Ordering caveat (2026-07-12): two concurrent inserts that share the same
+    // `obs.id` fire two independent async IIFEs with no per-id serialization
+    // (unlike PgJobStore's inflight chain). Either can commit first, so the
+    // last-writer-wins ON CONFLICT update may land in call-disorder — the row
+    // ends up reflecting whichever upsert committed last, not necessarily the
+    // most recent call. `__drain()` is only a 10 ms settle, not a flush, so it
+    // does not guarantee commit ordering either. Impact is low and bounded:
+    // observations are best-effort telemetry, ids are normally unique per
+    // event, and the in-memory mirror (the sync read path) is already correct.
+    // The nondeterminism only affects same-id concurrent writes to PG.
     void (async () => {
       try {
         const prisma = this.getClient();

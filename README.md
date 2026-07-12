@@ -661,6 +661,23 @@ rows default **OFF** and degrade silently when disabled.
 > correctly even though the TS interface doesn't yet declare them. Tracked as a
 > separate code follow-up.
 
+### Operational knobs
+
+These are not part of the typed config object — they are read directly from the
+process environment at boot, so they do not appear in `~/.config/massa-th0th/config.json`.
+They are documented here (not in `.env.example`) because they are operational
+guards for dedicated/verify stacks and the in-process background workers, not
+user-tunable settings for a normal shared-stack deployment. Set them in the
+shell environment or the dedicated stack's `.env`.
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `MASSA_TH0TH_DEDICATED` | _(unset)_ | When `1`, the dedicated-stack DB guard (`packages/shared/src/config/db-guard.ts`) refuses to bind the shared `massa_th0th` database — a process that expects an isolated, disposable DB fails fast at startup instead of silently corrupting the shared stack. No-op when unset. |
+| `MASSA_TH0TH_JOB_STALE_MS` | `300000` (5 min) | A background index job whose heartbeat hasn't been refreshed within this window is flipped to `failed` by the in-process reaper. Healthy indexes emit progress far more often than this. `0`/negative/garbage are floored to the default (a 0 ms window would fail everything instantly). |
+| `MASSA_TH0TH_JOB_REAPER_INTERVAL_MS` | `60000` (60 s) | How often the stale-job reaper sweeps. Floored to the default on `0`/negative/garbage (a 0 ms interval would be a tight loop). |
+| `MASSA_TH0TH_PROXY_TIMEOUT_MS` | `120000` (120 s) | Per-call timeout for the MCP client proxying a tool call to the Tools API. Covers long-running tools (e.g. `bootstrap`'s ~90 s LLM-seed path). `0` disables the timeout (infinite wait). |
+| `MASSA_TH0TH_SCHEDULER_ENABLED` | `false` | Master switch for the in-process cron-like scheduler (`packages/core/src/services/scheduler`). When `false` the scheduler never starts and no periodic jobs (consolidation, decay-sweep, auto-improve, observation-bridge) fire. Set `true` to opt in; individual job kinds still need their own enable flags. |
+
 ### Quick Config Commands
 
 ```bash

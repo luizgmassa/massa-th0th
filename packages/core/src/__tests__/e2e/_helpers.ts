@@ -295,6 +295,13 @@ let _sharedPromise: Promise<string> | null = null;
  * Ensure the shared repo index exists and is searchable; return its projectId.
  * Idempotent: if a probe query already returns hits, reuse without re-indexing.
  * Cached per-process; the stable SHARED_PID also persists across invocations.
+ *
+ * Cold-DB caveat (2026-07-12): on a cold/dedicated stack the shared workspace
+ * `e2e-th0th-shared` can report `indexed` (251 files) while `vector_documents`
+ * is 0 rows — the symbol graph is warm but the vectors haven't been seeded.
+ * Vectors re-seed on demand; a full re-index to warm them takes ~95 s. The
+ * strong-probe gate below forces this re-index, so callers of
+ * `ensureSharedIndex` block until the store is richly searchable.
  */
 export function ensureSharedIndex(): Promise<string> {
   if (!_sharedPromise) _sharedPromise = doSharedIndex();
