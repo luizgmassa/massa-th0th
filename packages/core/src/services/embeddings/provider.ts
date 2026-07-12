@@ -338,6 +338,40 @@ export class AISDKEmbeddingProvider implements EmbeddingProvider {
   }
 
   /**
+   * POST to an Ollama endpoint with an AbortController tied to the provider
+   * timeout.
+   *
+   * Why: when the Ollama runner wedges (model stuck mid-inference), it accepts
+   * the TCP connection but never responds. A bare `fetch` with no signal stays
+   * pending indefinitely, so `queueOllamaRequest`'s `try/finally` never reaches
+   * `finally` and the serialization mutex is held forever — every subsequent
+   * embed queues behind it and the whole index job hangs (only the stale-job
+   * reaper recovers it, minutes later). The outer `withTimeout` rejects its own
+   * race promise at the deadline but cannot cancel the dangling fetch.
+   *
+   * Arming an AbortController here guarantees the fetch settles (rejects with
+   * AbortError) at the deadline: the mutex releases, `withRetry` can retry or
+   * surface the error, and the job fails fast instead of hanging.
+   */
+  private async ollamaFetch(
+    endpoint: string,
+    body: Record<string, unknown>,
+  ): Promise<Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeout);
+    try {
+      return await fetch(`${this.baseURL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
    * Embed a single text query
    */
   async embedQuery(text: string): Promise<number[]> {
@@ -353,14 +387,10 @@ export class AISDKEmbeddingProvider implements EmbeddingProvider {
               if (this.providerType === "ollama") {
                 return this.queueOllamaRequest(async () => {
                   const inputText = this.sanitizeText(this.truncateText(text));
-                  
-                  const response = await fetch(`${this.baseURL}/api/embed`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      model: this.model,
-                      input: inputText,
-                    }),
+
+                  const response = await this.ollamaFetch("/api/embed", {
+                    model: this.model,
+                    input: inputText,
                   });
 
                   if (!response.ok) {
@@ -511,13 +541,9 @@ export class AISDKEmbeddingProvider implements EmbeddingProvider {
           () =>
             withRetry(
               async () => {
-                const response = await fetch(`${this.baseURL}/api/embed`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    model: this.model,
-                    input: texts.map((t) => this.sanitizeText(this.truncateText(t))),
-                  }),
+                const response = await this.ollamaFetch("/api/embed", {
+                  model: this.model,
+                  input: texts.map((t) => this.sanitizeText(this.truncateText(t))),
                 });
 
                 if (!response.ok) {
