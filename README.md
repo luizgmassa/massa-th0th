@@ -264,7 +264,7 @@ restore_checkpoint { checkpointId: "<cp-id>" }
 
 ## Available Tools
 
-35 tools total. Grouped below; each row lists **Req:** required and
+42 tools total. Grouped below; each row lists **Req:** required and
 **Opt:** optional params.
 
 ### Indexing & Search
@@ -277,7 +277,8 @@ restore_checkpoint { checkpointId: "<cp-id>" }
 | `reindex` | Force full reindex after a large refactor |
 | `reset_project` | Delete all indexed data for a project (vectors, symbols, memories) |
 | `list_projects` | List all indexed projects with status and file counts |
-| `project_map` | One-shot project summary: stats, top files by PageRank, symbol distribution |
+| `project_map` | One-shot architecture summary: stats, top files by PageRank, symbol distribution, packages, entry points, routes, hotspots, and Louvain file-import communities |
+| `fetch_and_index` | Fetch URL(s) → HTML→markdown / JSON key-path → index (SSRF-guarded, TTL-cached). **Req:** `url` (or `requests`[]). **Opt:** `source`, `concurrency`, `force`, `ttl` |
 
 ### Symbol Graph
 
@@ -288,6 +289,20 @@ restore_checkpoint { checkpointId: "<cp-id>" }
 | `go_to_definition` | Jump to definition with file + line context |
 | `symbol_snippet` | Get raw code snippet by file + line range |
 | `read_file` | Read a file with symbol metadata and imports. A relative `filePath` requires a `projectId` (resolves vs the workspace) or an absolute path |
+| `trace_path` | Trace a call / data-flow / cross-service path from a symbol over typed edges (BFS, depth-capped, cycle-guarded). **Req:** `function_name` (or `qualifiedName`), `project`. **Opt:** `direction`∈{outbound,inbound,both}, `mode`∈{calls,data_flow,cross_service,all}, `depth`, `include_tests`, `edge_types`[] |
+| `impact_analysis` | Git-diff → impacted symbols via reverse import/reference traversal, ranked by centrality risk. **Req:** `project`. **Opt:** `scope`∈{unstaged,staged,committed}, `base_branch`, `since`, `depth`, `paths`[] |
+
+### Code Execution (Sandbox)
+
+Polyglot sandbox for "think in code" — run analysis in a detected runtime instead of loading raw data into context.
+
+> **Trust model: local-dev only.** `execute`/`execute_file`/`batch_execute` run user-supplied code on the host as the current user. Containment is best-effort (timeout + process-group kill, env-denylist, project-boundary + deny-glob + symlink-realpath guard). This is **not** OS-level isolation — do not expose the Tools API to untrusted/multi-tenant clients without an outer container/VM.
+
+| Tool | Description |
+|------|-------------|
+| `execute` | Run code in a detected runtime (node/bun/deno/python/ruby/go/rust/php/perl/r/shell). **Req:** `language`, `code`. **Opt:** `timeout`, `background`, `cwd`, `intent` (large output auto-indexes + returns only matching sections) |
+| `execute_file` | Read a file into a sandboxed var and run code over it (project-boundary + deny-glob + symlink guarded). **Req:** `path`, `language`, `code`. **Opt:** `timeout`, `intent` |
+| `batch_execute` | Run N shell commands in parallel (order-preserved, concurrency-capped at 256). **Req:** `commands`[]. **Opt:** `queries`, `timeout`, `concurrency`, `cwd`, `query_scope` |
 
 ### Memory & Lifecycle
 
@@ -301,6 +316,7 @@ restore_checkpoint { checkpointId: "<cp-id>" }
 | `optimized_context` | Search + compress in one call (max token efficiency) |
 | `analytics` | Usage patterns, cache performance, metrics |
 | `compress` | Compress context (keeps structure, removes detail) |
+| `compact_snapshot` | Build a bounded (<2KB) reference-based session compaction snapshot — a table of contents of lifecycle events with runnable `recall`/`search` calls (zero-loss across `/compact`). **Req:** `sessionId`. **Opt:** `projectId`, `persist` |
 
 ### Synapse (Cognitive Layer)
 

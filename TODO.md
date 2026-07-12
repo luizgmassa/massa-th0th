@@ -1,131 +1,213 @@
 # TODO — massa-th0th
 
-Living task list for the next round of implementations, bug fixes, and open
-findings. Source of truth for the OPEN items is
-[`packages/core/src/__tests__/e2e/COVERAGE.md`](./packages/core/src/__tests__/e2e/COVERAGE.md)
-(“Still OPEN” section). Severity: `high` = data loss / core path broken,
+Living task list. Severity: `high` = data loss / core path broken,
 `med` = feature silently wrong, `low` = cosmetic / hardening, `note` = info.
 
-Last updated: 2026-07-09.
+Companion docs: [`COVERAGE.md`](./packages/core/src/__tests__/e2e/COVERAGE.md)
+(e2e per-item ledger) and [`SESSION-STATE.md`](./packages/core/src/services/SESSION-STATE.md)
+(checkpoint vs compaction-snapshot split).
+
+Last updated: 2026-07-12.
 
 ---
 
-## Recently completed (2026-07-09) — context only, do NOT redo
+## Status snapshot
 
-Three serial sub-agent rollouts landed on the live `:3333` / real-PG stack (all
-verified GREEN):
+- **Build:** clean `bun run build` → 5/5 packages green.
+- **Unit suite:** `cd packages/core && bun test` → **1289 pass / 0 fail / 284 skip**
+  (stable across 8+ consecutive runs). Skip breakdown below.
+- **Tools:** 42 MCP tools (was 35).
 
-- **Rollout 3 (A–E):** thinking-model reasoning-channel recovery, `read_file`
-  `format` no-op, `.env`/db-guard vector-URL guard + `parsePositiveIntEnv`
-  helper, `PgJobStore` reaper crash-recovery scoping + hydration-merge race.
-- **Rollout 4 (T1–T6):** **LLM per-task model routing** — default swapped
-  `qwen3.5:9b` → `qwen2.5:7b-instruct` (instruct) + `qwen2.5-coder:7b` (code
-  sites: bootstrap/reranker/compress) via per-call `modelRole`; `DEFAULT_LLM_MODEL`
-  constant dedup; `markStaleRunningFailed` real `rowCount`; Responses-API
-  empty-recovery WARN; falsy-0 env-parse migration; `read_file` require-absolute;
-  shared `@types/bun` + `test` script. Closed 7 OPEN findings.
-- **Rollout 5:** `read_file` cache-key includes option flags (e2e F33 fix);
-  `@types/bun` skew aligned.
+---
 
-See COVERAGE.md for full per-item detail. Both qwen2.5 models are pulled into
-Ollama; `.env` pins `RLM_LLM_MODEL=qwen2.5:7b-instruct` +
-`RLM_LLM_CODE_MODEL=qwen2.5-coder:7b`.
+## Completed (2026-07-12) — context only, do NOT redo
+
+A multi-wave sub-agent rollout landed Phase 4 (deep graph) + structural gaps +
+security hardening + test-isolation fixes, all on `main`, all verified GREEN.
+
+### Phase 4 — deep code graph
+- **D1 typed edges** — ETL now emits `CALLS` / `DATA_FLOWS` / `HTTP_CALLS` /
+  `EMITS` / `LISTENS` / `IMPORTS` (extended `symbol_references.ref_kind` + a
+  `meta` JSON column, SQLite + PG parity).
+- **D2 `trace_path`** — BFS/DFS traversal over typed edges
+  (`calls`/`data_flow`/`cross_service`, in/out/both, depth-capped, cycle-guarded).
+- **D3 `impact_analysis`** — git-diff → reverse import/reference traversal →
+  impacted symbols ranked by centrality risk.
+- **D4 architecture map** — `project_map` enriched with packages, entry points,
+  routes, hotspots, layers, and **Louvain community detection** over the
+  file-import graph (caps + label-propagation fallback).
+- D5 (Cypher subset) — **deferred** (large, optional).
+
+### Structural gaps closed
+- **Graph-store unification** — shared `IGraphStore` (async), both stores conform,
+  `MemoryGraphService` routes through `getGraphStore()` → **graph works on PG
+  now** (was SQLite-only); also fixed the long-standing A3 batch flakiness.
+- **PG parity** — `PgObservationStore`, `PgCheckpointStore` (+ Prisma model),
+  `PgSynapseSessionStore` (with working-memory buffer reconstruction on load +
+  awaited hydration).
+- **`@huggingface/transformers` v3** — offline embedding provider migrated off
+  the deprecated `@xenova/transformers`.
+- **Observation-consolidation bridge wired** into `getHookService` (was NoopBridge).
+- **opencode-plugin** now emits lifecycle observations (6 event kinds → hook_ingest).
+- **Security** — SSRF guard pins DNS (literal-IP + Host, no connect-time DNS,
+  closing the DNS-rebinding TOCTOU); `execute_file` resolves symlinks via
+  realpath before the boundary/deny-glob check.
+
+### Hardening (MEDIUM + LOW + test isolation)
+- **MEDIUMs fixed:** Rust temp-dir leak (`finally` cleanup), `batch_execute` cap
+  (256), dim-agnostic metadata embedding (was hardcoded 4096), `ensureHydrated`
+  retry-storm rate-limit (3 PG stores), `/symbol/trace` depth validation,
+  `/symbol/impact` `projectPath` boundary check, `impact_analysis` def-cache +
+  query cap, `trace_path` `buildChains` walk-budget.
+- **LOWs fixed:** WebController LRU cap (512), `clampTimeout(NaN)` finite-guard,
+  TTL cache-hit sentinel (`-1`→`0`), deny-glob basename anchoring (fewer false
+  positives), `proc.on("error")` double-fire guard, `__drain` snapshot-once,
+  BFS visited-on-enqueue, GraphQL regex capture, shared `snapshotWorkingMemoryBuffer`,
+  dead-code removal in `classifyLayers`, route cross-source dedup,
+  observation-consolidation no-op `Math.min/max` simplified.
+- **Real correctness bug fixed:** scheduler `registerOrResumeJob` now preserves
+  the persisted `nextRunAt` on resume (was comparing the passed-in `0`).
+- **Test isolation fixed:** removed the `disconnectPrisma()` pool-kill from 6
+  test files (was cascading "Cannot use a pool after end" across the batch);
+  pinned `DATABASE_URL=""` for SQLite-canonical suites that Bun's `.env`
+  auto-load was routing to PG. Batch went 1259→1289 pass / 0 fail.
+
+Commits (`0acfc05..75b7394`): 15 atomic commits. See `git log` for detail.
+
+---
+
+## Skipped unit tests (284) — why they skip and how to run them
+
+The unit batch reports **284 skip / 0 fail**. Skips are intentional gates, not
+broken tests. Breakdown by reason:
+
+| Reason | Gate | Count (approx) | How to run |
+|--------|------|----------------|------------|
+| **E2E live-stack** | `describe.skipIf(!READY)`, `READY = RUN_E2E==="1" && API_UP (:3333) && Ollama up` | ~250 (14 e2e suites) | `RUN_E2E=1 bun test src/__tests__/e2e/` from `packages/core`, with the tools-api + PG + Ollama running |
+| **E2E destructive** | `describe.skipIf(process.env.RUN_E2E_DESTRUCTIVE !== "1")` | ~15 (`16.destructive.test.ts`) | `RUN_E2E_DESTRUCTIVE=1 RUN_E2E=1 bun test src/__tests__/e2e/16.destructive.test.ts` (saturates/toggles global singletons — dedicated only) |
+| **PG-integration** | `describe.skipIf(!DB_AVAILABLE)`, `DB_AVAILABLE = DATABASE_URL` starts with `postgres` | ~10 (PgJobStore / PgObservationStore / PgSynapseSessionStore / PostgresVectorStore / PG-resume) | Run with `DATABASE_URL=postgresql://...` set (they pass, not skip, when PG is configured — as in the dev `.env`) |
+| **Phase-4 env sentinels** | `[D1/D2/D3/D4:SKIP]` — guard when the shared DB pool is dead or the live API is down | ~6 | Run the Phase-4 suite in isolation with `DATABASE_URL` set + API up; **these guards are now largely redundant** after the `disconnectPrisma` fix — candidate for removal (see OPEN) |
+| **LLM code-model routing** | `test.skipIf(!LLM_CFG_AVAILABLE)` | 2 | Run with `RLM_LLM_CODE_MODEL` configured (a code model distinct from the instruct default) |
+| **Named shared-infra destructive** | `test.skip("…: shared-infra destructive")` | 2 (`F87` saturate→429, `F88` disabled-hooks→423) | Covered by the dedicated destructive suite above |
+| **Internal / not-observable** | `test.skip("…: internal — not observable")` | 1 (`E20` matchThreshold/hitBoost buffer effect) | N/A — asserts internal state with no public surface; keep as documentation |
+
+**Net:** the ~250 e2e + ~15 destructive skips are by design (they need the live
+stack and are run separately in CI). The ~6 Phase-4 `Dx:SKIP` guards and the
+PG-integration skips are the only ones worth revisiting for the unit batch.
 
 ---
 
 ## OPEN findings (bug fixes)
 
-### [med] `adsads/` junk path indexed in `e2e-th0th-shared`
+### [med] D1 typed-edge extraction is TS/JS + same-file only
+- **Where:** `packages/core/src/services/etl/typed-edges.ts`; resolve stage.
+- **What:** CALL edges are extracted for **same-file** calls only — cross-file
+  callee resolution is incomplete, so inbound `trace_path` across files is
+  sparse. No typed edges are emitted from `.test.ts` files. Multi-language
+  breadth is out of scope (TS/JS only).
+- **Fix:** complete cross-file callee resolution in the resolve stage; index
+  edges from test files behind the `include_tests` toggle. Multi-language
+  tree-sitter is a larger separate effort.
+
+### [med] `read_file` `fileCache` unbounded growth
+- **Where:** `packages/core/src/tools/read_file.ts:121` (`fileCache: Map`).
+- **What:** no size cap / eviction — only TTL freshness. Each distinct
+  `{filePath, includeSymbols, includeImports, projectId, relativePath}` combo
+  is its own entry; an adversarial caller cycling keys grows the map for the
+  process lifetime.
+- **Fix:** LRU / max-size bound (mirror the WebController 512-cap pattern).
+
+### [med] `countExistingMemoryIds` no-op under PG
+- **Where:** `packages/core/src/services/checkpoint/checkpoint-store-pg.ts:341`.
+- **What:** PG restore memory-integrity check returns the input unchanged
+  (`missingMemoryIds` always empty); SQLite runs the real
+  `SELECT id FROM memories WHERE id IN (...)`. The sync `restoreCheckpoint`
+  contract can't await an async PG query.
+- **Fix:** needs the restore path to become async (MCP tool contract change) OR
+  a PG-backed in-memory mirror of memory ids. Documented in code for now.
+
+### [med] Benchmark the qwen2.5 swap on LLM-judge paths
+- **What:** the model swap (`qwen3.5:9b` → `qwen2.5:7b-instruct` + coder) is live
+  but LLM-judge quality (consolidator / salience / reranker) is unmeasured —
+  `14.needles` is deterministic and does not exercise the judge.
+- **Fix:** fixture of known-dup + known-distinct memory batches; score merge
+  precision/recall head-to-head vs the old model.
+
+### [low] `adsads/` junk path indexed in `e2e-th0th-shared`
 - **Where:** shared index `e2e-th0th-shared`; surfaces as needle N11 top hit
   `adsads/packages/core/src/services/etl/stage-context.ts`.
-- **What:** a stray/typo’d directory (`adsads/`) got indexed into the shared
-  project at some point.
-- **Fix:** audit the indexed file list / `projectPath` for the shared project;
-  drop the `adsads/` prefix entries; re-index clean. Deferred across all three
-  rollouts by request.
-- **Note:** do NOT delete `e2e-th0th-shared` itself (it’s the OOM-workaround
-  shared index). Selectively remove only the junk paths.
+- **Fix:** audit the indexed file list / `projectPath`; drop the `adsads/`
+  entries; re-index clean. Do NOT delete `e2e-th0th-shared` itself.
 
-### [low] `read_file` `fileCache` unbounded growth
-- **Where:** `packages/core/src/tools/read_file.ts:121` (`fileCache: Map`,
-  `CACHE_TTL = 60000`).
-- **What:** no size cap / eviction — only TTL freshness. After the cache-key
-  fix each distinct `{filePath, includeSymbols, includeImports, projectId,
-  relativePath}` combo is its own entry, so an adversarial caller cycling
-  `projectId`/`relativePath` against many files grows the map for the process
-  lifetime.
-- **Fix:** add an LRU / max-size bound (evict oldest on insert). Keep TTL.
+### [low] PG symbol repo lacks `findImporters` (reverse-import query)
+- **Where:** `packages/core/src/data/sqlite/symbol-repository-pg.ts:746` has only
+  forward `findDependencies`; SQLite has `findImporters`.
+- **What:** `impact_analysis` works around it by reversing `allImportEdges`
+  client-side, but PG consumers of "who imports file X?" have no direct query.
+- **Fix:** add PG `findImporters` parity.
 
-### [low] `@types/node` major-version skew
-- **Where:** `apps/mcp-client` `^22.10.5` vs `packages/core` `^25.2.2`
-  (`packages/shared` has none).
-- **What:** 22 vs 25 across the monorepo.
-- **Fix:** align in a dedicated dependency pass (bump mcp-client to `^25.x` if
-  its Node target allows, or standardize on a shared floor). Check
-  `apps/opencode-plugin` (`^22.10.5`) too.
+### [low] `findEdges` filters `fromSymbol` by file, not caller FQN
+- **Where:** `symbol-repository.ts:453` / `symbol-repository-pg.ts:814`.
+- **What:** `getEdges(fromSymbol)` returns file-level results; `trace_path`
+  works around it with client-side `meta.callerFqn` filtering.
+- **Fix:** push the caller-FQN filter into the query.
 
-### [low] `dotenv` patch + classification skew
-- **Where:** `packages/shared` `^17.2.3` (declared a `dependency`) vs
-  `packages/core` `^17.2.4` (declared a `devDependency`).
-- **Fix:** align the version AND the dep/devDep classification (shared ships it
-  as a runtime dep; core re-imports it — likely core should not declare it at
-  all, or both should be consistent). Same dep pass as above.
+### [low] Phase-4 `Dx:SKIP` env guards now largely redundant
+- **Where:** `D1/D2/D3/D4:SKIP` sentinels in the Phase-4 integration tests.
+- **What:** these guarded against the shared PG pool being killed mid-batch by
+  `disconnectPrisma()` — that debt is now fixed (commit `3cdd636`).
+- **Fix:** audit and remove the now-redundant guards so the Phase-4 integration
+  tests run in the default batch (raises the green count further).
 
-### [note] dead `||` fallback in `read_file`
-- **Where:** `packages/core/src/tools/read_file.ts:385`
-  (`cached.metadata || await extractMetadata(...)`).
-- **What:** never fires (metadata always set on cache write). Harmless after
-  the cache-key fix; cosmetic dead code.
-- **Fix:** delete the `||` branch or restructure. Trivial.
+### [low] Dep / type skew
+- `@types/node`: mcp-client `^22.10.5` vs core `^25.2.2` (shared has none).
+- `dotenv`: shared `^17.2.3` (dep) vs core `^17.2.4` (devDep).
+- **Fix:** align in a dedicated dependency pass.
 
-### [note] `e2e-th0th-shared` `vector_documents` empty on the live DB
-- **Where:** live `massa_th0th` PG — workspace `e2e-th0th-shared` row claims
-  `indexed` (251 files) but `vector_documents` is 0 rows (only `symbol_files` /
-  `search_cache` survived).
-- **What:** vectors re-seed on demand (02.indexing did so cleanly in ~95 s).
-  Explains N7-class environmental fragility on a cold/dedicated stack. Not a
-  correctness issue.
-- **Fix:** none required; re-index to warm if a cold stack misbehaves. Worth a
-  one-line note in the e2e README if it keeps recurring.
+### [note] `e2e-th0th-shared` vectors empty on a cold live DB
+- **What:** workspace claims `indexed` (251 files) but `vector_documents` is 0
+  rows on a cold/dedicated stack; vectors re-seed on demand (~95 s).
+- **Fix:** none required; re-index to warm. Worth a one-line e2e README note.
+
+### [note] observation same-id concurrent insert ordering
+- **Where:** `observation-repository-pg.ts:158` (fire-and-forget async IIFE).
+- **What:** two concurrent same-id upserts can commit out of order;
+  `__drain()` is a 10 ms settle, not a flush. Low impact (best-effort
+  telemetry); nondeterministic only for same-id concurrent writes.
 
 ---
 
-## LLM model-swap follow-ups (post-Rollout-4)
+## Deferred / out of scope
 
-The swap to non-thinking qwen2.5 models is live and verified, but two quality
-questions remain open (Rollout 4 measured `14.needles`, which is deterministic
-and does NOT exercise the LLM judge — so LLM-judge quality is unmeasured):
-
-- **[med] Benchmark the model swap on LLM-judge paths.** Run a consolidator +
-  salience-judge + reranker eval head-to-head (`qwen2.5:7b-instruct` vs the old
-  `qwen3.5:9b`). Real risk per the COVERAGE model-selection analysis: the
-  consolidator may miss subtle semantic dupes or merge non-dupes → cumulative
-  memory pollution. Build a small fixture (known-dup + known-distinct memory
-  batches) and score merge precision/recall.
-- **[low] Native `format: json_schema` constrained decoding.** Ollama supports
-  native JSON-schema constrained decoding; the AI-SDK `generateObject` path
-  could leverage it for stricter schema adherence on all 11 sites. Analysis in
-  COVERAGE.md (“LLM model-selection analysis”). Optional hardening.
+- **D5 Cypher subset** — declarative graph query engine. Large; revisit only if
+  D1–D4 graph depth justifies it.
+- **Multi-language tree-sitter breadth** — massa-th0th is TS/JS-centric; 158-lang
+  breadth (à la codebase-memory-mcp) is a separate effort.
+- **OS-level sandbox for `execute`/`execute_file`/`batch_execute`** — current
+  containment is best-effort (timeout, env-denylist, boundary + symlink guard),
+  NOT isolation. Needs container/VM infra to safely expose to untrusted clients.
+- **Native `format: json_schema` constrained decoding** — Ollama supports it;
+  could tighten schema adherence on all LLM sites. Optional.
 
 ---
 
 ## Tech-debt / docs (lower priority)
 
-- **Config-interface drift** (noted in README §Configuration): the typed
-  `MassaTh0thConfig` TS interface doesn’t yet declare `llm`/`hooks`/`memory`/
-  `search` even though the runtime loader reads them from env. The loader works
-  correctly; the interface is stale. Tracked as a separate code follow-up.
+- **Config-interface drift** — the typed `MassaTh0thConfig` TS interface doesn't
+  declare `llm`/`hooks`/`memory`/`search`/`synapse`/`scheduler` even though the
+  runtime loader reads them. Loader works; interface is stale.
 - **`compression.llm` deprecated alias** still mirrored in
-  `packages/shared/src/config/index.ts` (now also carries `codeModel` for shape
-  parity). Schedule removal after one release.
-- **E2e ops knobs undocumented in README:** `MASSA_TH0TH_DEDICATED` (db-guard),
-  `MASSA_TH0TH_JOB_STALE_MS` / `MASSA_TH0TH_JOB_REAPER_INTERVAL_MS` (job reaper),
-  `MASSA_TH0TH_PROXY_TIMEOUT_MS` (MCP proxy). All in `.env.example`; consider a
-  short “Operational knobs” README subsection.
+  `packages/shared/src/config/index.ts`. Schedule removal after one release.
+- **E2E ops knobs undocumented in README** — `MASSA_TH0TH_DEDICATED`,
+  `MASSA_TH0TH_JOB_STALE_MS` / `_JOB_REAPER_INTERVAL_MS`,
+  `MASSA_TH0TH_PROXY_TIMEOUT_MS`, `MASSA_TH0TH_SCHEDULER_ENABLED`. All in
+  `.env.example`; add a short "Operational knobs" README subsection.
+- **Dead `||` fallback in `read_file`** (`read_file.ts:385`) — never fires;
+  cosmetic.
 
 ---
 
-## E2E suite quick-reference (for anyone running the suite)
+## E2E suite quick-reference
 
 - Dir: `packages/core/src/__tests__/e2e/`. Run: `RUN_E2E=1 bun test src/__tests__/e2e/`
   (from `packages/core`). Override API: `MASSA_TH0TH_API_URL`.
@@ -134,9 +216,6 @@ and does NOT exercise the LLM judge — so LLM-judge quality is unmeasured):
   — do NOT delete between runs.
 - Full-repo index never completes; concurrent indexes OOM — rely on the shared
   index strategy in `_helpers.ts`.
-- Baselines (post all rollouts): `02.indexing` 19/0, `05.memory` 25/0,
-  `08.search` 36/0, `11.lifecycle` 20/2, `12.observability` 24/1, `14.needles`
-  0.500/0.786/0.604, `15.nfr` ≥9/≤2/0.
-- `.env` footgun: `bun` auto-loads repo-root `.env` (`DATABASE_URL → massa_th0th`,
-  the shared DB). Dedicated/verify stacks MUST set `DATABASE_URL` explicitly
-  (and `MASSA_TH0TH_DEDICATED=1` to engage the db-guard).
+- `.env` footgun: `bun` auto-loads repo-root `.env`. Dedicated/verify stacks
+  MUST set `DATABASE_URL` explicitly (and `MASSA_TH0TH_DEDICATED=1` for the
+  db-guard). SQLite-canonical **unit** suites pin `DATABASE_URL=""`.
