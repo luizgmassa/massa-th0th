@@ -477,4 +477,45 @@ describe("trace_path", () => {
       await fs.rm(dir, { recursive: true, force: true });
     }
   }, 30000);
+
+  // ── caller-FQN SQL pushdown (SF5) ────────────────────────────────────────
+  // findEdges now narrows fromSymbol='path#Name' to edges whose meta.callerFqn
+  // equals that FQN, so a seed for chain.ts#alpha returns ONLY alpha's edges
+  // (not every call edge in chain.ts, which would also include beta→gamma).
+
+  test("getEdges(fromSymbol='chain.ts#alpha') returns only alpha's call edges", async () => {
+    const dir = await makeTempProject(FIXTURE);
+    try {
+      await indexFixture(dir, "d2-fqn-filter-1");
+      if (skipIfBroken("caller-FQN SQL filter")) return;
+
+      // Query edges originating from chain.ts#alpha specifically.
+      const edges = await symbolGraphService.getEdges(TEST_PROJECT, {
+        types: ["call"],
+        direction: "outgoing",
+        fromSymbol: "chain.ts#alpha",
+      });
+
+      // Every returned call edge must carry callerFqn === chain.ts#alpha.
+      expect(edges.length).toBeGreaterThan(0);
+      for (const e of edges) {
+        expect(e.meta?.callerFqn).toBe("chain.ts#alpha");
+      }
+
+      // Contrast: a file-only query (no '#Name') returns ALL call edges in
+      // chain.ts, which includes the beta→gamma edge. The beta→gamma edge
+      // must NOT appear in the caller-FQN-filtered set above.
+      const fileEdges = await symbolGraphService.getEdges(TEST_PROJECT, {
+        types: ["call"],
+        direction: "outgoing",
+        fromSymbol: "chain.ts",
+      });
+      const fileCallers = new Set(fileEdges.map((e) => e.meta?.callerFqn));
+      expect(fileCallers.has("chain.ts#beta")).toBe(true);
+      // The caller-filtered set is strictly narrower than the file set.
+      expect(edges.length).toBeLessThan(fileEdges.length);
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  }, 30000);
 });

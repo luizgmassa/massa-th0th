@@ -451,11 +451,16 @@ export class SymbolRepository {
       params.push(opts.fromFile);
     }
     if (opts.fromSymbol && (direction === "outgoing" || direction === "both")) {
-      // fromSymbol is a FQN 'rel/path.ts#Name' — match callerFqn in meta OR
-      // rows whose from_file matches the FQN's file path.
-      const [file] = opts.fromSymbol.split("#");
+      // fromSymbol is a FQN 'rel/path.ts#Name'. Always constrain by file; when
+      // a '#Name' segment is present, also push the caller-FQN predicate into
+      // the query via the meta JSON column so only that caller's edges return.
+      const [file, name] = opts.fromSymbol.split("#");
       conditions.push("from_file = ?");
       params.push(file);
+      if (name) {
+        conditions.push("json_extract(meta, '$.callerFqn') = ?");
+        params.push(opts.fromSymbol);
+      }
     }
     if (opts.toSymbol && (direction === "incoming" || direction === "both")) {
       conditions.push("target_fqn = ?");

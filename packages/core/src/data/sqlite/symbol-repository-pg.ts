@@ -750,6 +750,18 @@ export class SymbolRepositoryPg {
     return this.getImportsFrom(projectId, fromFile);
   }
 
+  /** Reverse-import query: files that import `filePath` (PG parity with SQLite). */
+  async findImporters(
+    projectId: string,
+    filePath: string,
+  ): Promise<SymbolImport[]> {
+    const p = getPrismaClient();
+    const rows = await p.$queryRaw<ImpRaw[]>`
+      SELECT * FROM symbol_imports WHERE project_id = ${projectId} AND to_file = ${filePath}
+    `;
+    return rows.map(mapImp);
+  }
+
   /** References matching by target FQN. */
   async findReferencesByFqn(
     projectId: string,
@@ -812,10 +824,17 @@ export class SymbolRepositoryPg {
       idx++;
     }
     if (opts.fromSymbol && (direction === "outgoing" || direction === "both")) {
-      const [file] = opts.fromSymbol.split("#");
+      const [file, name] = opts.fromSymbol.split("#");
       conditions.push(`from_file = $${idx}::text`);
       params.push(file);
       idx++;
+      // When a '#Name' segment is present, push the caller-FQN predicate into
+      // the query via the meta JSONB column (mirrors SQLite json_extract).
+      if (name) {
+        conditions.push(`meta->>'callerFqn' = $${idx}::text`);
+        params.push(opts.fromSymbol);
+        idx++;
+      }
     }
     // types IN clause
     if (opts.types && opts.types.length > 0) {

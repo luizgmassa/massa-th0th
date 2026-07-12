@@ -329,16 +329,18 @@ export class TracePathService {
 
       for (const e of edges) {
         // ── Symbol-level filtering ─────────────────────────────────────────
-        // `findEdges` filters `fromSymbol` by FILE, not by caller FQN (a
-        // pre-existing D1 limitation — see SIDE FINDING #1). So a query for
-        // chain.ts#alpha returns every call edge in chain.ts. We refine to
-        // symbol-level here: only follow an edge when it genuinely originates
-        // from (outbound) or terminates at (inbound) the current FQN.
+        // The caller-FQN predicate is now pushed into the SQL layer
+        // (`findEdges` filters `meta.callerFqn` when the seed FQN carries a
+        // `#Name`), so outbound edges returned here already originate from the
+        // current FQN when the extractor stamped a callerFqn. We keep only a
+        // defensive assert: an edge whose callerFqn is present AND mismatches
+        // must not have passed the SQL filter — drop it defensively rather
+        // than `continue` on the common path.
         if (dir === "outbound") {
           const caller = e.meta?.callerFqn;
-          // When the extractor stamped a callerFqn, require an exact match.
-          // When it did not (rare for non-call edges), fall back to accepting
-          // the edge so unresolved-but-plausible hops still surface.
+          // Defensive only: the SQL filter already excluded mismatches when
+          // the seed FQN had a '#Name'. Edges with no callerFqn (non-call
+          // typed edges) are still accepted so unresolved hops surface.
           if (typeof caller === "string" && caller && caller !== fqn) continue;
         } else {
           // Inbound: the edge must target the current FQN exactly.
