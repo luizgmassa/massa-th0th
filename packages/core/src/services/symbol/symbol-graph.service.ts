@@ -157,6 +157,14 @@ export interface GetProjectMapOptions {
 export class SymbolGraphService {
   private static instance: SymbolGraphService | null = null;
   private projectRootCache: Map<string, string> = new Map();
+  /**
+   * Maximum entries retained in projectRootCache. Without a cap, an adversarial
+   * caller cycling distinct projectIds grows the map for the process lifetime.
+   * Map preserves INSERTION order in JS; we promote a key to most-recently-used
+   * on GET via delete+set, and evict the oldest key on SET while over the cap.
+   * Mirrors ReadFileTool's FILE_CACHE_MAX_ENTRIES / evictOldest pattern.
+   */
+  private readonly PROJECT_ROOT_CACHE_MAX_ENTRIES = 512;
 
   private constructor() {}
 
@@ -630,10 +638,16 @@ export class SymbolGraphService {
 
   private async getProjectRoot(projectId: string): Promise<string | null> {
     const cached = this.projectRootCache.get(projectId);
-    if (cached) return cached;
+    if (cached) {
+      // LRU touch: promote this key to most-recently-used.
+      this.projectRootCache.delete(projectId);
+      this.projectRootCache.set(projectId, cached);
+      return cached;
+    }
     try {
       const workspace = await workspaceManager.getWorkspace(projectId);
       if (workspace?.project_path) {
+        this.evictOldestProjectRoot();
         this.projectRootCache.set(projectId, workspace.project_path);
         return workspace.project_path;
       }
@@ -641,6 +655,19 @@ export class SymbolGraphService {
       // best-effort — return null on failure
     }
     return null;
+  }
+
+  /**
+   * Evict the oldest (first-inserted) entries from projectRootCache until it is
+   * under PROJECT_ROOT_CACHE_MAX_ENTRIES. Called BEFORE the new insert so the cap
+   * is honored post-insert with a single iteration.
+   */
+  private evictOldestProjectRoot(): void {
+    while (this.projectRootCache.size >= this.PROJECT_ROOT_CACHE_MAX_ENTRIES) {
+      const oldest = this.projectRootCache.keys().next().value;
+      if (oldest === undefined) break;
+      this.projectRootCache.delete(oldest);
+    }
   }
 }
 
