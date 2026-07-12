@@ -141,6 +141,10 @@ worth revisiting.
 - **Done (2026-07-12):** both `fileCache` and `projectRootCache` are now
   512-cap LRU (`FILE_CACHE_MAX_ENTRIES`, `evictOldest`), with delete+set
   promotion on GET. Moved to Completed.
+- **Side-finding (2026-07-12):** sibling unbounded map
+  `SymbolGraphService.projectRootCache` (`symbol-graph.service.ts`) capped with
+  the same 512 LRU pattern (`PROJECT_ROOT_CACHE_MAX_ENTRIES`,
+  `evictOldestProjectRoot`, GET promotion + SET eviction). T3 side-finding.
 
 ### [med] `countExistingMemoryIds` no-op under PG — DONE (2026-07-12)
 - **Where:** `packages/core/src/services/checkpoint/checkpoint-store-pg.ts`.
