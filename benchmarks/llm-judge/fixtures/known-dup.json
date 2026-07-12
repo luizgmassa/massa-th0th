@@ -1,0 +1,98 @@
+{
+  "version": "1.0.0",
+  "description": "Memory entries clustered into true semantic duplicate groups. Each group's members paraphrase the same underlying fact/decision and SHOULD be judged as duplicates (merge). A correct judge scores every intra-group pair as 'duplicate' (areDuplicates=true). Inter-group pairs and entries vs distractors SHOULD be judged distinct.",
+  "distractors": [
+    {
+      "id": "D1",
+      "content": "The Postgres connection string lives in DATABASE_URL; SQLite is used when it is empty.",
+      "type": "decision",
+      "expectedSalienceBand": "any"
+    },
+    {
+      "id": "D2",
+      "content": "E2E tests require RUN_E2E=1 and a live tools-api on port 3333.",
+      "type": "pattern",
+      "expectedSalienceBand": "any"
+    }
+  ],
+  "groups": [
+    {
+      "groupId": "G1-llm-model-swap",
+      "expectedMerge": true,
+      "expectedType": "decision",
+      "members": [
+        {
+          "id": "G1a",
+          "content": "Swapped the default LLM from qwen3.5:9b to qwen2.5:7b-instruct because the thinking model degraded structured calls.",
+          "type": "decision"
+        },
+        {
+          "id": "G1b",
+          "content": "The model default is now qwen2.5:7b-instruct; the old qwen3.5:9b thinking model caused empty content channels on generateObject.",
+          "type": "decision"
+        },
+        {
+          "id": "G1c",
+          "content": "Resolved the thinking-model structured-call regression by moving to qwen2.5:7b-instruct as the instruction model and a coder model for code sites.",
+          "type": "decision"
+        }
+      ]
+    },
+    {
+      "groupId": "G2-file-cache-lru",
+      "expectedMerge": true,
+      "expectedType": "pattern",
+      "members": [
+        {
+          "id": "G2a",
+          "content": "The read_file fileCache was unbounded; capped it at 512 entries with LRU promotion on get.",
+          "type": "pattern"
+        },
+        {
+          "id": "G2b",
+          "content": "Added a 512-entry LRU cap to the read_file tool's fileCache, mirroring web-controller's pattern.",
+          "type": "pattern"
+        }
+      ]
+    },
+    {
+      "groupId": "G3-checkpoint-async",
+      "expectedMerge": true,
+      "expectedType": "decision",
+      "members": [
+        {
+          "id": "G3a",
+          "content": "Made restoreCheckpoint async so PG countExistingMemoryIds can run a real SELECT instead of a no-op.",
+          "type": "decision"
+        },
+        {
+          "id": "G3b",
+          "content": "Checkpoint restore is now a Promise; the PG store counts existing memory ids with a chunked SELECT.",
+          "type": "decision"
+        },
+        {
+          "id": "G3c",
+          "content": "The async restore checkpoint change lets the PostgreSQL backend actually verify which memory ids exist before restoring.",
+          "type": "decision"
+        }
+      ]
+    },
+    {
+      "groupId": "G4-skip-guards-removed",
+      "expectedMerge": true,
+      "expectedType": "pattern",
+      "members": [
+        {
+          "id": "G4a",
+          "content": "Removed the redundant Dx:SKIP env guards from the Phase-4 integration tests after disconnectPrisma was fixed.",
+          "type": "pattern"
+        },
+        {
+          "id": "G4b",
+          "content": "The Phase-4 Dx:SKIP scaffolding is gone; those tests now run un-skipped in the default SQLite batch.",
+          "type": "pattern"
+        }
+      ]
+    }
+  ]
+}

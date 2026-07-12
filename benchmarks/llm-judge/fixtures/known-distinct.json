@@ -1,0 +1,96 @@
+{
+  "version": "1.0.0",
+  "description": "Memory entries that are deliberately DISTINCT — they share surface keywords or topic overlap but encode different facts/decisions. A correct judge scores every listed pair as NOT duplicates (areDuplicates=false). These are the false-positive trap set for the judge.",
+  "pairs": [
+    {
+      "pairId": "P1-same-keyword-different-fact",
+      "expectedMerge": false,
+      "rationale": "Both mention 'LRU cache' but one is about read_file (512-cap) and the other is about web-controller request dedup. Distinct features.",
+      "a": {
+        "id": "P1a",
+        "content": "Capped the read_file fileCache at 512 entries with LRU promotion to bound memory.",
+        "type": "pattern"
+      },
+      "b": {
+        "id": "P1b",
+        "content": "The web-controller dedupes concurrent identical requests via an LRU request cache keyed by URL.",
+        "type": "pattern"
+      }
+    },
+    {
+      "pairId": "P2-same-model-different-action",
+      "expectedMerge": false,
+      "rationale": "Both mention qwen2.5:7b-instruct but one is the swap decision and the other is a prompt-template detail. Distinct.",
+      "a": {
+        "id": "P2a",
+        "content": "Swapped the default LLM to qwen2.5:7b-instruct to fix structured-call degradation.",
+        "type": "decision"
+      },
+      "b": {
+        "id": "P2b",
+        "content": "The salience-judge prompt template asks for a JSON object {\"importance\": number} in [0,1].",
+        "type": "pattern"
+      }
+    },
+    {
+      "pairId": "P3-same-component-different-concern",
+      "expectedMerge": false,
+      "rationale": "Both mention 'checkpoint' but one is async restore and the other is auto-checkpoint on snapshot. Distinct.",
+      "a": {
+        "id": "P3a",
+        "content": "Made restoreCheckpoint async so the PG store can run a real SELECT for existing memory ids.",
+        "type": "decision"
+      },
+      "b": {
+        "id": "P3b",
+        "content": "AutoCheckpointer triggers createCheckpoint after every N observations during indexing.",
+        "type": "pattern"
+      }
+    },
+    {
+      "pairId": "P4-same-test-different-target",
+      "expectedMerge": false,
+      "rationale": "Both mention 'integration tests' but one is Phase-4 graph and the other is PG-integration suites. Distinct.",
+      "a": {
+        "id": "P4a",
+        "content": "Removed Dx:SKIP guards so the Phase-4 graph integration tests run un-skipped.",
+        "type": "pattern"
+      },
+      "b": {
+        "id": "P4b",
+        "content": "Aligned the PostgresVectorStore gate to DB_AVAILABLE so the PG-integration suites run when DATABASE_URL is postgres.",
+        "type": "pattern"
+      }
+    },
+    {
+      "pairId": "P5-near-paraphrase-different-domain",
+      "expectedMerge": false,
+      "rationale": "Near-identical sentence structure but completely different domain (config drift vs dep skew). A good judge reads semantics, not syntax.",
+      "a": {
+        "id": "P5a",
+        "content": "The declared config interface drifted from the runtime ServerConfig shape; reconciled the keys.",
+        "type": "pattern"
+      },
+      "b": {
+        "id": "P5b",
+        "content": "The declared dependency versions drifted across workspace packages; aligned @types/node to ^25.",
+        "type": "pattern"
+      }
+    },
+    {
+      "pairId": "P6-opposite-actions",
+      "expectedMerge": false,
+      "rationale": "Opposite directions on the same component — one adds a guard, the other removes one. Distinct (contradictory, not duplicates).",
+      "a": {
+        "id": "P6a",
+        "content": "Added an LRU eviction guard to the read_file cache to bound memory growth.",
+        "type": "pattern"
+      },
+      "b": {
+        "id": "P6b",
+        "content": "Removed the redundant ENV_BROKEN skip guard from the Phase-4 tests after the pool-kill fix.",
+        "type": "pattern"
+      }
+    }
+  ]
+}
