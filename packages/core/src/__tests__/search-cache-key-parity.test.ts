@@ -20,6 +20,7 @@ const BASE_OPTIONS = {
   explainScores: false,
   includeFilters: ["src/**"],
   excludeFilters: ["**/*.test.ts"],
+  retrievalWindow: "bounded-v1",
 };
 const RESULT: SearchResult[] = [{
   id: "cache-result",
@@ -45,6 +46,7 @@ async function expectResultShapingOptionsDoNotCollide(
   expect(await cache.get(QUERY, projectId, { ...BASE_OPTIONS, explainScores: true })).toBeNull();
   expect(await cache.get(QUERY, projectId, { ...BASE_OPTIONS, includeFilters: ["lib/**"] })).toBeNull();
   expect(await cache.get(QUERY, projectId, { ...BASE_OPTIONS, excludeFilters: ["**/*.spec.ts"] })).toBeNull();
+  expect(await cache.get(QUERY, projectId, { ...BASE_OPTIONS, retrievalWindow: "legacy" })).toBeNull();
 
   // ContextualSearchRLM never consumes responseMode; SearchController formats
   // the returned raw results afterward. It is therefore result-invariant here.
@@ -118,6 +120,7 @@ describe("ContextualSearchRLM cache option propagation", () => {
       explainScores: true,
       includeFilters: ["src/**"],
       excludeFilters: ["**/*.test.ts"],
+      retrievalWindow: "bounded-v1",
     }]);
   });
 });

@@ -101,9 +101,6 @@ focused parity/regression evidence. Acceptance thresholds were not weakened.
   separately designed provider-calibration contract.
 - Automate N1, N3, E25, and F88 on the dedicated stack without touching shared services.
 - Rebuild `e2e-th0th-shared` without the stale `adsads/` path that can pollute N11 ranking.
-- Add a behavioral search test once Synapse `sessionId` affects retrieval.
-- Add an underfill regression when include/exclude filtering moves into retrieval or bounded
-  over-fetch.
 
 ## Commands
 

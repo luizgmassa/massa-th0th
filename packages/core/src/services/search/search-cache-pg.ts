@@ -101,6 +101,7 @@ export class SearchCachePg {
       "explainScores",
       "includeFilters",
       "excludeFilters",
+      "retrievalWindow",
       "include",
       "exclude",
     ];

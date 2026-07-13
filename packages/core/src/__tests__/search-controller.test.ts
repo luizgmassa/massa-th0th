@@ -141,7 +141,8 @@ describe("SearchController", () => {
 
     test("include filter keeps only matching", () => {
       const filtered = controller.filterByPatterns(results, ["src/**/*.ts"]);
-      expect(filtered.length).toBe(3); // 2 src files + 1 no-path (passthrough)
+      expect(filtered.length).toBe(2);
+      expect(filtered.some((r: any) => r.id === "5")).toBe(false);
     });
 
     test("exclude filter removes matching", () => {
@@ -158,7 +159,7 @@ describe("SearchController", () => {
         ["src/**/*.ts"],
         ["src/services/**"],
       );
-      // Include src/**/*.ts -> mem.ts, graph.ts, + no-path
+      // Include src/**/*.ts -> mem.ts, graph.ts; pathless candidates fail the whitelist.
       // Exclude src/services/** -> removes graph.ts
       expect(filtered.some((r: any) => r.id === "1")).toBe(true); // controllers/memory.ts
       expect(filtered.some((r: any) => r.id === "2")).toBe(false); // services/graph.ts excluded
@@ -277,6 +278,33 @@ describe("SearchController", () => {
         expect(calls[0].sessionId).toBe("syn-1");
         expect(response).not.toHaveProperty("sessionId");
         expect(response.results).toEqual([]);
+      } finally {
+        ctx.search = original;
+      }
+    });
+
+    test("forwards include and exclude filters into bounded retrieval", async () => {
+      const ctx = (controller as any).contextualSearch;
+      const original = ctx.search.bind(ctx);
+      const calls: Array<Record<string, unknown>> = [];
+      ctx.search = async (
+        _query: string,
+        _projectId: string,
+        options: Record<string, unknown>,
+      ) => {
+        calls.push(options);
+        return [];
+      };
+
+      try {
+        await controller.searchProject({
+          query: "bounded filters",
+          projectId: "project-1",
+          include: ["src/**"],
+          exclude: ["**/*.test.ts"],
+        });
+        expect(calls[0].includeFilters).toEqual(["src/**"]);
+        expect(calls[0].excludeFilters).toEqual(["**/*.test.ts"]);
       } finally {
         ctx.search = original;
       }

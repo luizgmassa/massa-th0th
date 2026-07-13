@@ -39,7 +39,7 @@ Sources: root `AGENTS.md`, `package.json`, `turbo.json`, package manifests, `pac
 | --- | --- | --- | --- | --- | --- |
 | T1 / TASK-001 | Freeze/activate spec, design, tasks, gates, failure ledger, validation, and parity evidence | CMT-01..06 | none | Artifact validation and clean diff review | `docs(spec): define next-step maintenance closure` |
 | T2 / TASK-002 ✅ | Apply project-scoped Synapse state to search with invalid/unscoped fallbacks | CMT-01 | T1 | PASS: 82 focused tests, upgraded live F24, type-check 6/6 | `feat(search): apply Synapse state to project search` |
-| T3 / TASK-003 | Bounded include/exclude retrieval and cache identity | CMT-02 | T2 | Filter/cache/PG focused gates | `fix(search): prevent filtered search underfill` |
+| T3 / TASK-003 ✅ | Bounded include/exclude retrieval and cache identity | CMT-02 | T2 | PASS: 25 focused tests, SQLite/PG cache parity, live F18, type-check 6/6 | `fix(search): prevent filtered search underfill` |
 | T4 / TASK-004 | Surface required retrieval dependency outages | CMT-03 | T3 | Zero-hit vs outage unit/transport gates | `fix(search): surface retrieval dependency outages` |
 | T5 / TASK-005 | Record the bounded cold-qwen sample, then add commit-locked qwen E2E fixture and embedding dimension rejection | CMT-04 | T4 | Sample stops after 10 completed files or 180 active seconds; fixture tests; valid negative profile kills one needle sensor; focused qwen run | `test(e2e): make qwen G10 clean-stack deterministic` |
 | T6 / TASK-006 | Canonical shared-index profile and `adsads/` path prevention | CMT-06 | T5 | Wrong-root unit + PG/E2E SQL sentinels | `fix(e2e): prevent stale shared-index path reuse` |

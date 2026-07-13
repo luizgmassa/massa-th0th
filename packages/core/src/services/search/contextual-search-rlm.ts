@@ -37,6 +37,7 @@ import { getMemoryRepository } from "../../data/memory/memory-repository-factory
 import fs from "fs/promises";
 import path from "path";
 import { glob } from "glob";
+import { minimatch } from "minimatch";
 import { FileFilterCache } from "./file-filter-cache.js";
 import { smartChunk } from "./smart-chunker.js";
 import { loadProjectIgnore } from "./ignore-patterns.js";
@@ -579,6 +580,11 @@ export class ContextualSearchRLM {
     const explainScores = options.explainScores || false;
     const includeFilters = options.includeFilters;
     const excludeFilters = options.excludeFilters;
+    const hasFileFilters =
+      (includeFilters?.length ?? 0) > 0 || (excludeFilters?.length ?? 0) > 0;
+    const retrievalLimit = hasFileFilters
+      ? Math.min(maxResults * 5, maxResults + 200)
+      : maxResults * 2;
 
     // Honor an explicit maxResults:0 as "zero results" (previously `|| 10`
     // coerced 0 → 10). Short-circuit here, BEFORE the cache probe and vector/
@@ -613,6 +619,7 @@ export class ContextualSearchRLM {
       explainScores,
       includeFilters,
       excludeFilters,
+      retrievalWindow: "bounded-v1",
     };
     const cachedResults = await this.searchCache.get(
       query,
@@ -688,11 +695,11 @@ export class ContextualSearchRLM {
               understood.keywords,
             );
             const [v, k, h] = await Promise.all([
-              this.vectorStore.search(query, maxResults * 2, projectId),
+              this.vectorStore.search(query, retrievalLimit, projectId),
               disableKeyword
                 ? Promise.resolve([] as SearchResult[])
                 : this.keywordSearch
-                    .searchWithFilter(rewrittenFTS, { projectId }, maxResults * 2)
+                    .searchWithFilter(rewrittenFTS, { projectId }, retrievalLimit)
                     .catch((err) => {
                       logger.warn(
                         "Keyword search (rewritten) failed — falling back to vector-only",
@@ -703,7 +710,7 @@ export class ContextualSearchRLM {
               understood.hydeVector
                 ? this.vectorStore.searchByEmbedding(
                     understood.hydeVector,
-                    maxResults * 2,
+                    retrievalLimit,
                     projectId,
                   )
                 : Promise.resolve([]),
@@ -732,7 +739,7 @@ export class ContextualSearchRLM {
         // trigram (identifier-substring recall) and fuzzy-corrected keyword
         // (Levenshtein correction over the per-store vocabulary). All four
         // streams fuse via RRF; empty streams contribute nothing.
-        const fetchN = maxResults * 2;
+        const fetchN = retrievalLimit;
         const [vectorResults, keywordResults, trigramResults] =
           await Promise.all([
             this.vectorStore.search(query, fetchN, projectId),
@@ -1449,40 +1456,23 @@ export class ContextualSearchRLM {
 
     return results.filter((result) => {
       const filePath = result.metadata?.filePath as string;
-      if (!filePath) return true;
+      if (!filePath) return !include?.length;
 
       // Check exclude patterns first (blacklist)
       if (exclude && exclude.length > 0) {
-        const isExcluded = exclude.some((pattern) => {
-          const regex = this.globToRegex(pattern);
-          return regex.test(filePath);
-        });
+        const isExcluded = exclude.some((pattern) => minimatch(filePath, pattern));
         if (isExcluded) return false;
       }
 
       // Check include patterns (whitelist)
       if (include && include.length > 0) {
-        const isIncluded = include.some((pattern) => {
-          const regex = this.globToRegex(pattern);
-          return regex.test(filePath);
-        });
+        const isIncluded = include.some((pattern) => minimatch(filePath, pattern));
         return isIncluded;
       }
 
       // No include patterns specified, include by default (unless excluded above)
       return true;
     });
-  }
-
-  /**
-   * Convert glob pattern to regex
-   */
-  private globToRegex(pattern: string): RegExp {
-    const escaped = pattern
-      .replace(/\./g, "\\.")
-      .replace(/\*/g, ".*")
-      .replace(/\?/g, ".");
-    return new RegExp(`^${escaped}$`);
   }
 
   /**

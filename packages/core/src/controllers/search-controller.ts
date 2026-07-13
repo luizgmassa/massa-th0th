@@ -127,6 +127,8 @@ export class SearchController {
       maxResults,
       minScore,
       explainScores,
+      includeFilters: include,
+      excludeFilters: exclude,
       sessionId,
     });
 
@@ -326,7 +328,7 @@ export class SearchController {
   ): any[] {
     return results.filter((result) => {
       const filePath = result.metadata?.filePath || "";
-      if (!filePath) return true;
+      if (!filePath) return !include?.length;
 
       if (exclude && exclude.length > 0) {
         for (const pattern of exclude) {

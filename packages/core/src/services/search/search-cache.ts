@@ -143,6 +143,7 @@ export class SearchCache {
       "explainScores", // Adds/removes result explanations
       "includeFilters", // ContextualSearchRLM file pattern filters
       "excludeFilters", // ContextualSearchRLM file pattern filters
+      "retrievalWindow", // Versioned candidate-window semantics
       "include", // File pattern filters
       "exclude", // File pattern filters
     ];

@@ -37,6 +37,15 @@ Every measured row records exact command, exit code, duration, pass/fail/skip co
 - Owned listeners: PostgreSQL PID 23481/data directory `/tmp/massa-th0th-close-20260713-1424/postgres`; Ollama PID 24780; API PID 25391. Shared `:3333` remained PID 9754 and healthy.
 - Temporary F24 index: 4 files/4 chunks, 0 errors, 3.517 s; project `e2e-th0th-shared` inside the dedicated DB only. This stack is disposable and will be reprovisioned before fixture/G10 acceptance.
 
+## TASK-003 Measured Evidence
+
+- Focused filter/controller/cache gate: explicit dedicated env; 3 files; 25 pass, 0 fail, 0 skip; Bun-reported 148 ms, command wall 5.3 s; exit 0. Includes assertion-equivalent SQLite and dedicated PostgreSQL cache-key checks.
+- Live F18: explicit PostgreSQL `127.0.0.1:5433/massa_th0th_test`, API `:3334`, Ollama `:11435`, qwen3-embedding:8b/4096; 1 pass, 0 fail, 0 skip, 35 filtered; Bun-reported 160 ms; exit 0.
+- Type-check after the final implementation: 6/6 Turbo tasks; 3.217 s; exit 0.
+- Disposable live fixture refresh: 5 files/7 chunks, 0 errors, 185 ms; project `e2e-th0th-shared` in the dedicated DB. API PID 35336; PostgreSQL PID 23481; Ollama PID 24780.
+- Shared `:3333` remained PID 9754 and healthy after TASK-003. No shared process or data was mutated.
+- Skip ledger: none. The 35 F18 entries reported as filtered are non-selected tests, not runtime skips.
+
 ## Artifact Checksums
 
 Initial SHA-256 freeze (before plan challenge):

@@ -7,7 +7,7 @@
 - workflow: spec-driven
 - persona: AI Engineer
 - feature: `close-maintenance-next-steps-2026-07-13`
-- status: IN PROGRESS — TASK-002 COMPLETE
+- status: IN PROGRESS — TASK-003 COMPLETE
 - branch: `main`
 - baseline: `cc985905fae3495a31a16aaf0fbd75435a2e63df`
 - push: forbidden
@@ -26,4 +26,4 @@ Execute the approved maintenance closure plan sequentially: Synapse-aware search
 
 ## Next Step
 
-Implement TASK-003 bounded include/exclude retrieval and cache identity, then run focused unit/PostgreSQL gates before its atomic commit.
+Implement TASK-004 dependency-outage transparency, preserving optional-stream degradation while surfacing required retrieval failures through the structured tool/MCP envelope.
