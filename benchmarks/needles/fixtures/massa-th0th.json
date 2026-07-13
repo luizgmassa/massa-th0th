@@ -76,8 +76,8 @@
       "query": "filtro de score mínimo aplicado na similaridade vetorial bruta e não no score normalizado por RRF",
       "expected": {
         "filePath": "packages/core/src/services/search/contextual-search-rlm.ts",
-        "lineStart": 847,
-        "lineEnd": 863
+        "lineStart": 882,
+        "lineEnd": 901
       },
       "rationale": "Decisão crítica: minScore usa _rrfRawVectorScore quando disponível porque RRF normaliza top=1.0."
     },
@@ -88,8 +88,8 @@
       "query": "lógica que ignora chaves dentro de strings, regex ou comentários ao contar profundidade de bloco",
       "expected": {
         "filePath": "packages/core/src/services/search/smart-chunker.ts",
-        "lineStart": 631,
-        "lineEnd": 646
+        "lineStart": 642,
+        "lineEnd": 674
       },
       "rationale": "netBraceDelta strip prévio. Crítico para arquivos com regex literais (parsers, validadores) — drift de depth quebra chunking."
     },
@@ -100,8 +100,8 @@
       "query": "regra que impede que chunks de código com rótulo semântico sejam mesclados com vizinhos pequenos",
       "expected": {
         "filePath": "packages/core/src/services/search/smart-chunker.ts",
-        "lineStart": 708,
-        "lineEnd": 715
+        "lineStart": 737,
+        "lineEnd": 744
       },
       "rationale": "Métodos curtos (3-4L getter/setter) têm label = não devem ser absorvidos pelo merge anti-fragmentação."
     },
@@ -112,8 +112,8 @@
       "query": "fallback que usa chunking fixo quando arquivo markdown não tem nenhum heading",
       "expected": {
         "filePath": "packages/core/src/services/search/smart-chunker.ts",
-        "lineStart": 185,
-        "lineEnd": 193
+        "lineStart": 198,
+        "lineEnd": 206
       },
       "rationale": "Sem essa regra, README sem ## vira 1 mega-chunk que matcha qualquer query (bias .md descoberto no benchmark Sicad)."
     },
@@ -124,8 +124,8 @@
       "query": "ordem de prioridade dos arquivos durante a fase de discover do ETL",
       "expected": {
         "filePath": "packages/core/src/services/etl/stages/discover.ts",
-        "lineStart": 97,
-        "lineEnd": 104
+        "lineStart": 125,
+        "lineEnd": 132
       },
       "rationale": "Ordem: centrality desc → mtime desc → path asc. Garante que arquivos importantes são embebidos primeiro (early-stop friendly)."
     },
