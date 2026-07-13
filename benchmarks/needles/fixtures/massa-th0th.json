@@ -1,7 +1,7 @@
 {
   "projectId": "massa-th0th",
-  "version": "1.1.0",
-  "description": "Needles validated against the massa-th0th codebase itself (dogfooding). Each needle targets a non-obvious heuristic, magic constant, or scoring rule that pure keyword search would miss. Captured 2026-04-20.",
+  "version": "1.2.0",
+  "description": "Needles validated against the massa-th0th codebase itself (dogfooding). Each needle targets a non-obvious heuristic, magic constant, or scoring rule that pure keyword search would miss. Line spans refreshed 2026-07-13.",
   "scoring": {
     "topK": 10,
     "hitAtK": [1, 3, 5, 10],
@@ -40,8 +40,8 @@
       "query": "fator multiplicador aplicado a resultados de keyword search quando a query parece código",
       "expected": {
         "filePath": "packages/core/src/services/search/contextual-search-rlm.ts",
-        "lineStart": 1113,
-        "lineEnd": 1120
+        "lineStart": 1199,
+        "lineEnd": 1214
       },
       "rationale": "isCodeQuery + KEYWORD_BOOST (RRF_KEYWORD_BOOST env, default 2.5). Heurística de boost para code queries."
     },
@@ -52,8 +52,8 @@
       "query": "proporção entre score RRF e similaridade vetorial bruta na composição do score final",
       "expected": {
         "filePath": "packages/core/src/services/search/contextual-search-rlm.ts",
-        "lineStart": 1187,
-        "lineEnd": 1208
+        "lineStart": 1287,
+        "lineEnd": 1324
       },
       "rationale": "vectorWeight (RRF_VECTOR_WEIGHT env, default 0.3) → combinedScore = rrfNormalized*(1-w) + vectorSimilarity*w. Split 70/30 sem constantes nomeadas."
     },
@@ -64,8 +64,8 @@
       "query": "bônus aplicado no ranking final para arquivos com alta centralidade no graph",
       "expected": {
         "filePath": "packages/core/src/services/search/contextual-search-rlm.ts",
-        "lineStart": 1209,
-        "lineEnd": 1218
+        "lineStart": 1313,
+        "lineEnd": 1333
       },
       "rationale": "normalizedScore = combinedScore * (1 + 0.2 * centralityScore). Multiplicador 0.2 nu, sem constante."
     },
@@ -136,8 +136,8 @@
       "query": "comparação de hash que decide se um arquivo precisa ser reparseado no incremental reindex",
       "expected": {
         "filePath": "packages/core/src/services/etl/stages/discover.ts",
-        "lineStart": 142,
-        "lineEnd": 147
+        "lineStart": 168,
+        "lineEnd": 174
       },
       "rationale": "needsReparse = stored.content_hash !== contentHash. Skip por SHA-256 é o que torna reindex incremental viável."
     },
