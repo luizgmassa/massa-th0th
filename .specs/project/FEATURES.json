@@ -1,7 +1,7 @@
 {
   "project": "massa-th0th",
   "version": 1,
-  "source": "i-want-to-understand-virtual-lantern.md",
+  "source": ".specs/features/local-first-memory-platform-roadmap/spec.md",
   "features": [
     {
       "slug": "phase-0-quick-wins",
@@ -110,6 +110,90 @@
         "tasks": true,
         "execute": true
       }
+    },
+    {
+      "slug": "local-first-memory-platform-roadmap",
+      "title": "Local-first memory platform roadmap",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "installer-environment-hooks-and-web-ui",
+      "title": "Pure Hedgehog — installer, environment, hooks, and UI scripts",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "installer-llm-search-quality-toggles",
+      "title": "Woolly Giggling Beaver — installer LLM search-quality toggles",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "project-identity-rename",
+      "title": "Project identity rename to massa-th0th",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "qwen-model-defaults",
+      "title": "Qwen embedding 8B and LLM default swap",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "web-ui-asset-resolution",
+      "title": "Web UI HTML and asset-resolution repair",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "native-postgresql-installer",
+      "title": "Native PostgreSQL installer and Docker warning",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "installer-config-regeneration",
+      "title": "Installer config regeneration and source clone path",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "live-stack-e2e-coverage",
+      "title": "Live-stack MCP and HTTP E2E coverage",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "e2e-coverage-audit-remediation",
+      "title": "T14 E2E coverage-audit remediation",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "e2e-coverage-side-findings",
+      "title": "E2E coverage side findings A–E",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "native-ts-platform-expansion",
+      "title": "Eager Hummingbird implementation and hardening",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "read-file-cache-correctness",
+      "title": "Declarative Tower cache correctness",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "e2e-hardening-and-graph-parity",
+      "title": "Rippling Dove hardening and E2E expansion",
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
     },
     {
       "slug": "repository-maintenance-2026-07-12",

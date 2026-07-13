@@ -32,3 +32,9 @@ Execute the approved maintenance closure plan sequentially: Synapse-aware search
 - Dedicated ports are free and shared `:3333` remains healthy at PID 9754.
 - `origin/main` independently advanced from `cc98590` to `8dad87a` during execution. No push was invoked by this orchestrator, the actor is unknown, and the remote was not repaired; no-push compliance therefore remains uncertifiable.
 - Final documentation/review commit is the continuation boundary; do not push.
+
+## Historical Plan Spec Capture
+
+- Completed: added 14 feature-named folders for the supplied Claude Code plans, each with `spec.md`, `design.md`, `tasks.md`, and `validation.md`.
+- Source plans remain machine-local under `/Users/luizmassa/.claude/plans`; each feature design captures commit-backed execution facts and explicit gaps.
+- Historical source range: inclusive `c1d37b8120025a69e2de0e5fd054ca8177e205de^..81d33606fb6826e1759a073006b165419d0e3ba4` contains 133 reachable commits. Historical claims are not current-session runtime verification.
