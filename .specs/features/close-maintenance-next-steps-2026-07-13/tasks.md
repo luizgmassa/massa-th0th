@@ -1,7 +1,7 @@
 # Close Maintenance Next Steps Task Manifest
 
 - Design: `.specs/features/close-maintenance-next-steps-2026-07-13/design.md`
-- Status: Approved / In Progress
+- Status: Complete / Verified
 - Execution: sequential; at most one subagent active; main orchestrator owns diffs and commits.
 
 ## Project Testing Guidelines Scan
@@ -44,7 +44,7 @@ Sources: root `AGENTS.md`, `package.json`, `turbo.json`, package manifests, `pac
 | T5 / TASK-005 ✅ | Record the bounded cold-qwen sample, then add commit-locked qwen E2E fixture and embedding dimension rejection | CMT-04 | T4 | PASS: 10-file cold sample; 28 focused regressions; qwen indexing 19/19, search 36/36, needles .643/.857/.732 twice, graph 9/9, negative sensor 1/1; type-check 6/6 | `test(e2e): make qwen G10 clean-stack deterministic` |
 | T6 / TASK-006 ✅ | Canonical shared-index profile and `adsads/` path prevention | CMT-06 | T5 | PASS: identity units 10/10; guarded wrong-root/direct PG path gate 3/3; search 36/36; workspace/symbol 23/23; type-check 6/6 | `fix(e2e): prevent stale shared-index path reuse` |
 | T7 / TASK-007 ✅ | Test-owned destructive stack and executable N1/N3/E25/F88 | CMT-05 | T6 | PASS: owned PostgreSQL/Ollama/API recovery 4/4, 73 assertions, 0 skip; type-check 6/6 | `test(e2e): automate dedicated destructive recovery` |
-| T8 / TASK-008 | Full build/type/root/destructive/G10 verification and measured documentation | CMT-01..06 | T7 | Complete frozen G01-G10 sequence + reviewer | `docs(maintenance): record verified next-step closure` |
+| T8 / TASK-008 ✅ | Full build/type/root/destructive/G10 verification and measured documentation | CMT-01..06 | T7 | TECHNICAL PASS: qwen G10 245/6 explained/0, cleanup last; direct PG sentinels; dedicated teardown; shared PID 9754 unchanged. External `origin/main` push drift is recorded, not repaired | `docs(maintenance): record verified next-step closure` |
 
 ## Scope, Co-location, and Parallelism Checks
 

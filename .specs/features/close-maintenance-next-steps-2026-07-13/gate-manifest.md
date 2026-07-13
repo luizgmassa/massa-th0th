@@ -15,15 +15,15 @@ Frozen before implementation. Rows may gain measured evidence; they may not be r
 | ID | Gate | Required result | Status |
 | --- | --- | --- | --- |
 | G01 | Spec artifact validation and plan challenge | All artifacts active; full Evidence Audit serious findings incorporated; JSON and diff checks pass | PASS — delegated critic timed out read-only; strict local fallback completed |
-| G02 | Build | `bun run build`, all tasks pass | PENDING |
-| G03 | Type-check | `bun run type-check`, all tasks pass | PENDING |
-| G04 | Focused unit/PG gates | Synapse, filters/cache, outage, embedding cache, workspace/index identity all pass | PENDING |
-| G05 | Uncached root aggregate | Explicit dedicated env, `TURBO_FORCE=true`, `RUN_E2E=`; all tasks pass | PENDING |
-| G06 | Test-owned destructive suite | N1/N3/E25/F88 execute, pass, recover, no unexplained skip | PASS — focused owned-stack gate; final T8 rerun still required |
-| G07 | Clean reprovision | Dedicated PostgreSQL/API/Ollama rebuilt; exact identity/version/provider/model/dimension | PENDING |
-| G08 | Standard qwen G10 | Commit-locked fixture; all sequential groups and cleanup pass within unchanged gates | PENDING |
-| G09 | PostgreSQL path/cleanup sentinels | No prefixed leaks, `adsads/`, absolute, traversal, or out-of-manifest paths | PENDING |
-| G10 | Final cleanup/shared sentinel/reviewer | Dedicated ports free; shared before/after PID/start/health recorded without mutation (independent drift reported, not repaired); read-only review accepts evidence | PENDING |
+| G02 | Build | `bun run build`, all tasks pass | PASS — 5/5 Turbo tasks |
+| G03 | Type-check | `bun run type-check`, all tasks pass | PASS — 6/6 Turbo tasks |
+| G04 | Focused unit/PG gates | Synapse, filters/cache, outage, embedding cache, workspace/index identity all pass | PASS — 61/61, 191 assertions |
+| G05 | Uncached root aggregate | Explicit dedicated env, `TURBO_FORCE=true`, `RUN_E2E=`; all tasks pass | PASS — 10/10 Turbo tasks, core 80/80 isolated groups |
+| G06 | Test-owned destructive suite | N1/N3/E25/F88 execute, pass, recover, no unexplained skip | PASS — 4/4, 79 assertions, 0 skip |
+| G07 | Clean reprovision | Dedicated PostgreSQL/API/Ollama rebuilt; exact identity/version/provider/model/dimension | PASS — PG17.10/pgvector0.8.4, qwen3-embedding:8b/4096 |
+| G08 | Standard qwen G10 | Commit-locked fixture; all sequential groups and cleanup pass within unchanged gates | PASS — 245 pass, 6 explained skips, 0 fail; cleanup last |
+| G09 | PostgreSQL path/cleanup sentinels | No prefixed leaks, `adsads/`, absolute, traversal, or out-of-manifest paths | PASS — zero violations; 34 vector + 34 symbol paths |
+| G10 | Final cleanup/shared sentinel/reviewer | Dedicated ports free; shared before/after PID/start/health recorded without mutation (independent drift reported, not repaired); read-only review accepts evidence | PASS WITH EXCEPTIONS — reviewer accepts technical/evidence closure under explicit downstream waiver; no-push remains uncertifiable |
 
 ## Evidence Fields
 
@@ -85,6 +85,25 @@ Every measured row records exact command, exit code, duration, pass/fail/skip co
 - Teardown: all owned `3334`, `5433`, and `11435` listeners stopped and the temporary run directory was removed. Shared `:3333` remained healthy at PID 9754 before and after. Skip ledger: none.
 - Type-check after the final harness: 6/6 Turbo tasks; 3.286 s; exit 0.
 
+## TASK-008 Final Measured Evidence
+
+- G02: `bun run build`; 5/5 Turbo tasks; exit 0; command wall about 6 s.
+- G03: `bun run type-check`; 6/6 Turbo tasks; final implementation rerun 3.522 s; exit 0.
+- G04: nine focused files spanning Synapse, controller/filter/cache, outage, embedding cache, workspace identity, and qwen fixture; 61 pass, 0 fail, 0 skip; 191 assertions; Bun 1.406 s; exit 0.
+- G05: `TURBO_FORCE=true RUN_E2E= RUN_OWNED_DESTRUCTIVE= RUN_E2E_DESTRUCTIVE= RLM_LLM_ENABLED=false bun run test`; 10/10 Turbo tasks, 0 cached; core 80/80 isolated groups; 1m01.078s; exit 0. Live E2E was excluded by contract, not counted as a Bun skip.
+- G06 final: explicit owned destructive command with `RUN_E2E=1 RUN_OWNED_DESTRUCTIVE=1`; 4 pass, 0 fail, 0 skip; 79 assertions; 14.56 s. N1/N3/E25/F88 all executed. Final recovery API PID 92401; F88 API PIDs 92428/92453. Shared PID 9754 remained healthy.
+- Reviewer remediation: commit `7c23e3f` gates destructive fixture/profile behavior; commit `02b7475` source-verifies N06-N10 spans and refreshes the dataset hash; commit `2e5ad3d` closes the remaining generic path by rejecting partial dedicated intent before availability probes, HTTP, or shared-index work. Final focused fixture/backend matrix 12/12 with 38 assertions and type-check 6/6 passed; the negative regression observed zero fetch calls.
+- G07/G08 clean reviewer rerun: empty native PostgreSQL 17.10 database with pgvector 0.8.4; PIDs PostgreSQL 18151, Ollama 19055, API 19706; qwen3-embedding:8b/4096. Commit-locked fixture HEAD `02b7475fa519ff29be05e6d161390685a0024037`, 46 hash-verified files.
+- G08 standard run: 17 sequential files, `bun test --max-concurrency 1`, 243 pass, 6 skip, 0 fail, 1,999 assertions, 781.80 s; cold load 34 files/468 chunks/1,070 symbols in 369.091 s. Cleanup ran as the separate last command: 2 pass, 0 fail, 0 skip, 29 ms. Total: 245 pass, 6 explained skips, 0 fail across 18 files.
+- Relevance: two identical qwen sweeps at hit@1 .643, hit@3 .786, hit@5 .929, hit@10 .929, MRR .746; unchanged floors .36/.64/.47. Negative fixture discrimination passed.
+- G09 direct SQL: unexpected prefixed workspaces 0; invalid vector paths 0; invalid symbol paths 0; 468 vectors over 34 distinct vector paths and 34 symbol paths. Sole shared workspace `e2e-th0th-shared-b4c0f19595b437ab` stored the canonical fixture root and reported 34 files/468 chunks/1,070 symbols.
+- G10 cleanup: owned API/Ollama/PostgreSQL stopped after ownership recording; dedicated ports free; final run root removed. Shared `:3333` stayed PID 9754 with the same start time and health `ok` before and after; it was never managed or mutated.
+- Exact commands, environment, exit codes, durations, identities, skips, sentinels, and teardown are recorded in `final-verification-evidence.md`.
+- The clean G10 above was completed at `02b7475`. A second clean stack at `2e5ad3d` was provisioned and reached 10/34 cold-load files, then was stopped on the user's explicit instruction to skip repeating the full G10. It is not counted as gate evidence; all its owned resources were removed. Residual risk: the final test-helper-only fail-closed patch has focused/type-check evidence but not a repeated full qwen run.
+- Process exception: `origin/main` independently advanced from baseline `cc98590` to `8dad87a` at `2026-07-13 14:26:09 -0300` (`update by push`). This orchestrator did not invoke `git push`, could not attribute the actor, and did not repair the remote; therefore local technical acceptance passes but the no-push outcome cannot be certified as a run invariant.
+- Final read-only review verdict: local technical acceptance PASS considering the explicit user waiver; documentation/evidence PASS; no-push NOT CERTIFIABLE.
+- Standard G10 skip ledger (6): internal Synapse threshold effect; F87 saturation and F88 hook toggling reserved for/covered by G06; destructive shared-workspace deletion; deep vector internals not API-observable; auth-on restart not part of the auth-off standard stack. No new unexplained skip.
+
 ## Artifact Checksums
 
 Initial SHA-256 freeze (before plan challenge):
@@ -100,3 +119,20 @@ Initial SHA-256 freeze (before plan challenge):
 | `postgres-parity-evidence.md` | `d38cc49bf8b012931d9c2c0205d1745e024d91ff9bc82bc6fb1678e3873da2c5` |
 
 Final documentation records the post-execution hashes. `gate-manifest.md` uses its Git blob ID at each committed freeze because a file cannot embed its own stable cryptographic checksum.
+
+Final SHA-256 freeze after implementation, measured documentation, reviewer remediation, and the
+user-waived repeated G10:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `spec.md` | `994951b5ff9b6f9fc682efc4790df29b41860ef6b2613b8a8be4e5ffd16460cb` |
+| `context.md` | `a74e9390ce6c50dd5acfda1f1d91ee9717635f48e49fef23d7d0b5b12135d36f` |
+| `design.md` | `91600195268c26cbdebbbe9dc933ef5ef664ba26293793ca14ee806315e0d053` |
+| `tasks.md` | `b9c654f36d38263ba777d69657f9fa3ccf92b3780d217b8715fa6b014f93c7a8` |
+| `failure-ledger.md` | `3706f57223c2432582424f128805550f3f5401e3dec7e0f72909bb82016cfd82` |
+| `validation.md` | `eab8ce63b3b33bc88549be254ec704ee12633f666fd665b3ef286003e2c07931` |
+| `postgres-parity-evidence.md` | `d45c88f1eb8813ed9e849355bdaeb1bb8f30b033cacacbc48a3c670d6ddd3146` |
+| `final-verification-evidence.md` | `f8a689e579d52d8e40935d89d1ce0b0e32ea555027a635bb2c381a27f6442494` |
+
+The committed `gate-manifest.md` blob ID is recorded in the final handoff after the documentation
+commit; embedding it here would recursively change that ID.

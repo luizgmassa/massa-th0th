@@ -1,6 +1,6 @@
 # Validation Report
 
-- Status: IN PROGRESS
+- Status: TECHNICAL PASS WITH USER-WAIVED DOWNSTREAM RERUN; PROCESS EXCEPTION — independent remote push drift
 - Acceptance backend: PostgreSQL 17 + pgvector on `127.0.0.1:5433/massa_th0th_test`
 - Shared service boundary: `:3333` PID/health probe only
 
@@ -8,14 +8,14 @@
 
 | Requirement | Evidence | Result |
 | --- | --- | --- |
-| CMT-01 Synapse search | 82 focused pass; type-check 6/6; live dedicated PG/qwen F24 1 pass with same-project injection, cross-project rejection, material result change, and cap | FOCUSED PASS — final G10 pending |
-| CMT-02 bounded filters | 25 focused pass; SQLite/PG cache-key parity; live dedicated PG/qwen F18 1 pass; type-check 6/6 | FOCUSED PASS — final G10 pending |
-| CMT-03 outage transparency | 52 focused pass plus owned N1/N3 HTTP/MCP failure and recovery; zero-hit `[]`, required vector rejection, optional-stream degradation, structured tool envelope; type-check 6/6 | FOCUSED PASS — final aggregate pending |
-| CMT-04 cold-qwen G10 | 10-file cold sample at .193 files/s; commit-locked sparse fixture; dimension-mismatch rejection in SQLite/PG; focused live qwen sequence 66/66 file-level tests plus 1 needle benchmark and 1 negative sensor; unchanged floors .643/.857/.732 twice | FOCUSED PASS — final reprovisioned G10 pending |
-| CMT-05 destructive recovery | owned native PostgreSQL/Ollama/API harness; N1/N3/E25/F88 4/4, 73 assertions, 0 skip; exact failure/recovery envelopes, PID/start/executable/command/listener/data-dir checks, full teardown, shared PID 9754 unchanged | FOCUSED PASS — final destructive rerun pending |
-| CMT-06 identity/path hygiene | canonical-root production refusal; five-field hashed shared ID; warm wrong-root guarded rebuild; direct PG validation of 468 vectors/34 vector paths/34 symbol paths against the manifest | FOCUSED PASS — final cleanup sentinel pending |
+| CMT-01 Synapse search | 82 focused pass; live PG/qwen F24; final G10 search/Synapse/lifecycle groups pass | PASS |
+| CMT-02 bounded filters | 25 focused pass; SQLite/PG cache parity; live F18; final G10 search passes | PASS |
+| CMT-03 outage transparency | 52 focused pass; final N1/N3 structured failures and recovery; uncached root aggregate passes | PASS |
+| CMT-04 cold-qwen G10 | Commit-locked 46-file fixture at `02b7475`; clean PG/qwen run 243 pass/6 explained skips/0 fail plus cleanup 2/0; unchanged needles .643/.929/.746 twice | PASS |
+| CMT-05 destructive recovery | Final owned N1/N3/E25/F88 4/4, 79 assertions, 0 skip; full teardown; shared PID 9754 unchanged | PASS |
+| CMT-06 identity/path hygiene | Same-process wrong-root rebuild and read-file refresh pass; direct PG: 468 vectors, 34 vector paths, 34 symbol paths, zero invalid or unexpected entries | PASS |
 
-Independent validation, discrimination sensors, diff range, skip audit, cleanup status, and shared before/after identity are required before this report can become PASS.
+Final read-only review passed local technical acceptance under the explicit waiver and passed documentation/evidence. Dedicated listeners were removed and shared `:3333` stayed healthy at PID 9754. The fail-closed safety delta at `2e5ad3d` passed 12 focused tests/38 assertions and type-check 6/6; the completed `02b7475` clean run remains the downstream evidence. `origin/main` independently advanced during the run, so the requested no-push outcome cannot be certified or repaired without new authority.
 
 ## TASK-002 Test Adequacy Review
 
@@ -97,3 +97,18 @@ Non-shallow check: the wrong-root seed was confirmed richly searchable before `e
 | Isolation and teardown | Shared snapshot before/after; owned listeners checked after stop | Shared PID 9754 stayed healthy; dedicated ports were free after temp-root removal | Covered |
 
 Non-shallow check: the initial run failed N1 recall because its provider had not been warmed and failed F88 because JSON configuration was not the documented runtime control. The corrected harness warms each unique path and uses `HOOKS_ENABLED` on process restart; the final gate passes 4/4 with no skips. No shared service, qwen threshold, or timeout was changed. Verdict: PASS.
+
+## TASK-008 Final Verification
+
+| Gate | Measured result |
+| --- | --- |
+| Build/type/focused | Build 5/5; type-check 6/6; focused 61/61, 191 assertions, 0 skip |
+| Root aggregate | Uncached 10/10 Turbo tasks; core 80/80 isolated groups; exit 0 |
+| Destructive | 4/4, 79 assertions, 0 skip, 14.56 s; N1/N3/E25/F88 executed and recovered |
+| Standard G10 | 17 groups: 243 pass, 6 explained skips, 0 fail, 1,999 assertions, 781.80 s; cleanup-last: 2 pass, 0 fail, 29 ms |
+| Relevance | Two identical qwen sweeps: hit@1 .643, hit@3 .786, hit@5 .929, hit@10 .929, MRR .746; original floors retained |
+| PostgreSQL cleanup/path | Zero unexpected E2E workspaces; zero invalid vector/symbol paths; canonical shared workspace has 34 files, 468 chunks, 1,070 symbols |
+| Isolation | Accepted clean-run owned PIDs PG 18151, Ollama 19055, API 19706; dedicated ports free after teardown; shared `:3333` PID 9754 healthy before/after |
+| Final safety delta | `2e5ad3d`: fixture/backend matrix 12/12, 38 assertions; zero-fetch incomplete-dedicated regression; type-check 6/6. Repeated full G10 explicitly waived by user and not claimed |
+
+Skip audit: six Bun skips are all pre-existing and explained—internal Synapse threshold observability; shared-index-destructive F87/F88 (covered in G06); destructive workspace deletion; non-API-observable vector internals; and auth-on restart (covered by dedicated orchestration design). Conditional best-effort branches logged inside passing tests are not Bun skips. No new unexplained skip exists.

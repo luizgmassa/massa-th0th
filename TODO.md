@@ -62,41 +62,9 @@ Last updated: 2026-07-13.
 
 ## Next steps
 
-### [med] Apply Synapse state to project search
-
-- `SearchController` accepts `sessionId` but does not pass it into contextual search, and no
-  production search caller uses `getSynapseManager()`.
-- Define how session state modulates retrieval, wire it through the search service, and add a
-  behavioral test that distinguishes an active session from an unknown session.
-
-### [med] Prevent include/exclude filter underfill
-
-- Project search retrieves a bounded result set and only then applies include/exclude patterns.
-  Valid lower-ranked hits can therefore be lost.
-- Push filters into retrieval where possible or use a bounded over-fetch strategy. Cover cases
-  where the first retrieval window is mostly excluded.
-
-### [med] Remove the cold-qwen E2E performance exception
-
-- Cold `qwen3-embedding:8b` full-repository indexing on the dedicated M4 Pro stack runs at roughly
-  `0.10–0.14 files/s` and can exceed the 420-second E2E setup deadline.
-- `bge-m3`/1024 is about 10× faster, but its score distribution does not satisfy qwen-calibrated
-  `minScore` and hit@1 gates. Do not weaken the qwen gates.
-- Design a dedicated fixture/warm-cache strategy or explicit provider-specific score calibration,
-  then rerun G10 from a clean PostgreSQL stack.
-
-### [low] Automate externally orchestrated destructive scenarios
-
-- N1, N3, E25, and F88 remain documented runbooks because they require controlled outage,
-  restart, or configuration orchestration.
-- Convert them to executable dedicated-stack tests without touching shared services. N9, N12,
-  N13, and F87 already pass in the destructive gate.
-
-### [low] Remove the stale `adsads/` shared-index path
-
-- `e2e-th0th-shared` can surface `adsads/packages/...` as the N11 top hit.
-- Audit the shared workspace path/file list and rebuild that index without deleting unrelated
-  developer data.
+The five maintenance follow-ups tracked on 2026-07-13 are closed. Measured closure evidence is in
+`.specs/features/close-maintenance-next-steps-2026-07-13/`; no additional in-scope next step
+remains from that iteration.
 
 ## Deferred / out of scope
 
@@ -112,8 +80,8 @@ Last updated: 2026-07-13.
 
 ## Verification references
 
-- Gate results: `.specs/features/repository-maintenance-2026-07-12/gate-manifest.md`
-- PostgreSQL parity: `.specs/features/repository-maintenance-2026-07-12/parity-matrix.md`
-- Failure history: `.specs/features/repository-maintenance-2026-07-12/failure-ledger.md`
-- Final evidence: `.specs/features/repository-maintenance-2026-07-12/validation.md`
+- Gate results: `.specs/features/close-maintenance-next-steps-2026-07-13/gate-manifest.md`
+- PostgreSQL parity: `.specs/features/close-maintenance-next-steps-2026-07-13/postgres-parity-evidence.md`
+- Failure history: `.specs/features/close-maintenance-next-steps-2026-07-13/failure-ledger.md`
+- Final evidence: `.specs/features/close-maintenance-next-steps-2026-07-13/validation.md`
 - E2E decisions and latest run: `packages/core/src/__tests__/e2e/COVERAGE.md`

@@ -11,6 +11,10 @@ Last updated: 2026-07-13. Acceptance backend: PostgreSQL 17 + pgvector 0.8.4.
 - `MASSA_TH0TH_DEDICATED=1`, explicit `DATABASE_URL`/`POSTGRES_VECTOR_URL`, and
   `VECTOR_STORE_TYPE=postgres` are required. Backend attestation must fail closed rather than infer
   PostgreSQL from API-local cache files.
+- Commit-locked fixture recovery additionally requires an explicit fixture path, API origin
+  `http://127.0.0.1:3334`, and both database URLs at
+  `127.0.0.1:5433/massa_th0th_test`; a partial dedicated declaration fails closed before
+  availability probes, HTTP calls, or shared-index work.
 - All mutable project IDs use the E2E prefix guard. Destructive scenarios run only in the
   dedicated destructive gate.
 - The suite reuses `e2e-th0th-shared` to avoid concurrent full-repository indexing and Ollama OOM.
@@ -46,6 +50,9 @@ Last updated: 2026-07-13. Acceptance backend: PostgreSQL 17 + pgvector 0.8.4.
 | `18.graph-phase4.test.ts` | typed edges, trace paths, impact analysis, architecture maps |
 | `19.web-exec.test.ts` | web controller and execution-tool behavior |
 | `20.new-features.test.ts` | observations, compact snapshots, proposals, Synapse PG persistence |
+| `21.qwen-fixture.test.ts` | negative discrimination for the commit-locked qwen fixture |
+| `22.path-identity.test.ts` | same-process wrong-root rebuild plus direct PostgreSQL manifest/path sentinels |
+| `23.owned-destructive.test.ts` | owned N1/N3/E25/F88 outage, restart, configuration, and recovery orchestration |
 | `backend-attestation.test.ts` | dedicated/non-dedicated backend-detection unit contract |
 
 The MCP surface is defined by `apps/mcp-client/src/tool-definitions.ts`; coverage should follow
@@ -66,49 +73,71 @@ the responsible suite row and add HTTP/MCP equivalence where both transports exi
   `primed` and reconstructed buffer size.
 - `_helpers.ts`: dedicated backend attestation uses the explicit vector-store declaration; API
   cache-file listings no longer misclassify a PostgreSQL data plane as SQLite.
+- `_helpers.ts`: shared-index checks coalesce only while in flight, then revalidate canonical
+  workspace identity before every later reuse in the same Bun process.
+- `read_file.ts`: the process-lifetime read-file tool refreshes an affected cached project root
+  when the existing canonical `indexing:started` lifecycle event announces a rebuild.
 
 ## Latest real verification data
 
 The authoritative command ledger is
-`.specs/features/repository-maintenance-2026-07-12/gate-manifest.md`.
+`.specs/features/close-maintenance-next-steps-2026-07-13/gate-manifest.md`.
 
 | Gate | Latest measured result |
 | --- | --- |
 | Build | 5/5 tasks passed |
 | Type-check | 6/6 tasks passed |
-| Root aggregate | Uncached 10/10 Turbo tasks passed; core ran 129 files in 74 isolated groups; exit 0 |
-| LLM judge | 4/4 passed against dedicated qwen2.5 instruct/coder models |
-| PostgreSQL parity sensors | Vector/ETL/checkpoint/session 27 tests/115 assertions; memory 7/28; search-cache 3/14; graph 6 PG plus 32 SQLite regressions; scheduler 5 PG twice plus 34 regressions; embedding cache 8 PG plus 4 SQLite plus 16 provider regressions; handoff/proposal 11 PG plus 18 SQLite plus 49 service regressions |
-| Destructive E2E | N9, N12, N13, and F87 passed; N1, N3, E25, and F88 remain explicit external-orchestration skips; 0 executable failures |
+| Root aggregate | Uncached 10/10 Turbo tasks passed; core ran 80/80 isolated groups; exit 0 |
+| Focused maintenance | 61/61 passed, 191 assertions, 0 skip |
+| Destructive E2E | Owned N1/N3/E25/F88: 4/4 passed, 79 assertions, 0 skip; every outage recovered |
+| Standard qwen G10 | Clean PostgreSQL/qwen stack at fixture HEAD `02b7475`: 243 pass, 6 explained skips, 0 fail across 17 sequential files; cleanup-last 2/0/0 |
+| Relevance | Two identical sweeps: hit@1 .643, hit@3 .786, hit@5 .929, hit@10 .929, MRR .746; floors unchanged |
+| Cleanup/path | Zero unexpected E2E workspaces and zero invalid vector/symbol paths; 34+34 manifest-contained distinct paths |
 
 ### Standard E2E result sequence
 
-1. The full default-qwen run before the final parity amendments passed all 18 sequential groups
-   and cleanup.
-2. The post-amendment `bge-m3` diagnostic completed the full suite. It was not accepted because
-   `08.search` returned one nonsense hit at raw `minScore: 0.7`, and `14.needles` hit@1 was
-   `0.357` against the qwen-calibrated `0.360` floor; hit@5 and MRR passed.
-3. The final post-amendment default-qwen cold run did not reach assertions: repository indexing
-   exceeded the 420-second `02.indexing` setup deadline at roughly `0.10–0.14 files/s`.
+The accepted 2026-07-13 run started from an empty PostgreSQL 17/pgvector database and a local
+46-file sparse clone locked to commit `02b7475`. Cold qwen indexed 34 discoverable sources into
+468 chunks and 1,070 symbols in 369.091 seconds, within the unchanged 420-second gate. The 17
+standard files then completed with 243 passes and six explained skips in 781.80 seconds. Cleanup
+ran as its own final command and passed 2/2. Direct SQL verified the sole shared workspace,
+manifest-contained paths, and no `adsads/`, absolute, traversal, or prefixed-project leak.
 
-Therefore G10 is a documented performance exception, not a claimed clean post-amendment full
-pass. The changed memory matrix passed live 25/25, and every changed PostgreSQL subsystem has
-focused parity/regression evidence. Acceptance thresholds were not weakened.
+The six skips are deliberate: one internal Synapse effect; F87/F88 destructive variants covered
+by the separate owned gate; shared-workspace deletion; deep vector internals without an API
+surface; and auth-on restart outside the auth-off standard stack. No unexplained skip remains.
 
-## Active E2E follow-ups
-
-- Eliminate the cold-qwen G10 exception with a dedicated fixture/warm-cache strategy or a
-  separately designed provider-calibration contract.
-- Automate N1, N3, E25, and F88 on the dedicated stack without touching shared services.
-- Rebuild `e2e-th0th-shared` without the stale `adsads/` path that can pollute N11 ranking.
+After the accepted run, commit `2e5ad3d` added the final fail-closed guard for incomplete
+dedicated intent. Its fixture/backend matrix passed 12/12 with 38 assertions, including a
+zero-fetch negative test, and type-check passed 6/6. The user explicitly waived repeating the
+full qwen G10 for this test-helper-only delta; no partial rerun is counted above.
 
 ## Commands
 
 From `packages/core` with the dedicated stack running:
 
 ```bash
-RUN_E2E=1 bun test src/__tests__/e2e/
+RUN_E2E=1 bun test --max-concurrency 1 \
+  src/__tests__/e2e/00.harness.smoke.test.ts \
+  src/__tests__/e2e/02.indexing.test.ts \
+  src/__tests__/e2e/05.memory.test.ts \
+  src/__tests__/e2e/06.checkpoints.test.ts \
+  src/__tests__/e2e/08.search.test.ts \
+  src/__tests__/e2e/09.symbol-graph.test.ts \
+  src/__tests__/e2e/10.synapse.test.ts \
+  src/__tests__/e2e/11.lifecycle.test.ts \
+  src/__tests__/e2e/12.observability.test.ts \
+  src/__tests__/e2e/13.cli.test.ts \
+  src/__tests__/e2e/14.needles.test.ts \
+  src/__tests__/e2e/15.nfr.test.ts \
+  src/__tests__/e2e/18.graph-phase4.test.ts \
+  src/__tests__/e2e/19.web-exec.test.ts \
+  src/__tests__/e2e/20.new-features.test.ts \
+  src/__tests__/e2e/21.qwen-fixture.test.ts \
+  src/__tests__/e2e/22.path-identity.test.ts
+RUN_E2E=1 bun test --max-concurrency 1 src/__tests__/e2e/17.cleanup-verify.test.ts
 RUN_E2E=1 RUN_E2E_DESTRUCTIVE=1 bun test src/__tests__/e2e/16.destructive.test.ts
+RUN_E2E=1 RUN_OWNED_DESTRUCTIVE=1 bun test --max-concurrency 1 src/__tests__/e2e/23.owned-destructive.test.ts
 ```
 
 Use the complete isolated environment from the gate manifest. Never rely on Bun's root `.env`

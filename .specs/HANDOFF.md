@@ -1,8 +1,8 @@
 # AI Engineering Handoff
 
-## Active Work
+## Completed Work
 
-Feature `close-maintenance-next-steps-2026-07-13` is active under workflow session `spec-close-maintenance-next-steps-2026-07-13`. Approved source plan: `/Users/luizmassa/Downloads/PLAN-final.md`.
+Feature `close-maintenance-next-steps-2026-07-13` completed under workflow session `spec-close-maintenance-next-steps-2026-07-13`. Approved source plan: `/Users/luizmassa/Downloads/PLAN-final.md`.
 
 ## Verified Baseline
 
@@ -24,8 +24,12 @@ Follow `.specs/features/close-maintenance-next-steps-2026-07-13/tasks.md` in ord
 - TASK-005 implemented and focused-verified: bounded cold-qwen sample .193 files/s; commit-locked fixture/cache regressions 28/28; indexing 19/19; search 36/36; needle floors .643/.857/.732 twice; graph 9/9; negative sensor 1/1; type-check 6/6. Live-discovered prerequisite fixes are commits `e995ea6` and `66607d3`.
 - TASK-006 implemented and focused-verified: canonical/profile units 10/10; warm wrong-root and direct PG path gate 3/3; search 36/36; symbol/workspace 23/23; type-check 6/6. Shared ID `e2e-th0th-shared-cf1a4754d3e50a0f` points at the canonical fixture root; 468 vectors/34 vector paths/34 symbol paths are manifest-contained with no `adsads/`, absolute, or traversal paths.
 - TASK-007 implemented and focused-verified: owned native PostgreSQL/Ollama/API N1/N3/E25/F88 gate 4/4 with 73 assertions and no skips; type-check 6/6. Every signal was ownership-revalidated, all dedicated listeners were removed, and shared `:3333` remained healthy at PID 9754.
-- Dedicated ports `3334`, `5433`, and `11435` are currently free after the owned harness teardown.
+- TASK-008 verified build 5/5, type-check 6/6, focused 61/61, uncached root 10/10 Turbo tasks, final destructive 4/4 with 79 assertions, and clean reviewer-rerun qwen G10 245 pass/6 explained skips/0 fail with cleanup last. Direct PostgreSQL sentinels found zero unexpected workspaces or invalid paths.
+- Final gate fixes are `4474e2c` (E25-only stale timing), `8dad87a` (same-process shared/read-file root refresh), `7c23e3f` plus `2e5ad3d` (fail-closed dedicated E2E ownership before all probes/HTTP/indexing), and `02b7475` (source-verified qwen needle spans).
+- Dedicated ports `3334`, `5433`, and `11435` are free; both final run directories were removed. Shared `:3333` remained healthy at PID 9754 before and after.
+- External exception: `origin/main` independently advanced from baseline `cc98590` to `8dad87a` at 2026-07-13 14:26:09 -0300. This orchestrator invoked no push, cannot attribute the actor, and did not repair the remote. Exact evidence is in `final-verification-evidence.md`.
+- User waiver: after `2e5ad3d` passed 12 focused tests/38 assertions and type-check 6/6, the user requested skipping another full clean qwen G10. The newly provisioned run was aborted during cold load, fully torn down, and is not claimed as evidence. The completed `02b7475` clean G10 remains authoritative.
 
-## Current Next Step
+## Continuation Point
 
-Execute TASK-008's final frozen G01-G10 verification. Reprovision the dedicated stack from scratch before qwen G10, build the commit-locked fixture from the final tested commit, run cleanup last, update TODO/COVERAGE/state/final evidence, and obtain the read-only final review before the documentation commit.
+No maintenance implementation remains. Final read-only review passed technical and documentation closure under the explicit downstream waiver. Do not push; report the external remote drift as the only non-certifiable process-level outcome.
