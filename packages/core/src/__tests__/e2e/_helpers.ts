@@ -32,7 +32,7 @@ export function resolveE2EProjectPath(
   env: Record<string, string | undefined> = process.env,
 ): string {
   const explicitPath = env.MASSA_TH0TH_E2E_PROJECT_PATH?.trim();
-  return env.MASSA_TH0TH_DEDICATED === "1" && explicitPath
+  return isOwnedDedicatedE2eEnvironment(env) && explicitPath
     ? path.resolve(explicitPath)
     : defaultPath;
 }
@@ -75,6 +75,30 @@ export function isOwnedDedicatedE2eEnvironment(
     matchesDedicatedDatabaseUrl(env.DATABASE_URL) &&
     matchesDedicatedDatabaseUrl(env.POSTGRES_VECTOR_URL)
   );
+}
+
+function hasDedicatedE2eIntent(
+  env: Record<string, string | undefined>,
+): boolean {
+  return (
+    env.MASSA_TH0TH_DEDICATED === "1" ||
+    !!env.MASSA_TH0TH_E2E_PROJECT_PATH?.trim()
+  );
+}
+
+/**
+ * Fail before any E2E network operation when a caller has requested the
+ * dedicated fixture but omitted an ownership pin. This prevents a partial
+ * declaration from falling through to the developer-owned default API.
+ */
+export function assertSafeE2eEnvironment(
+  env: Record<string, string | undefined> = process.env,
+): void {
+  if (hasDedicatedE2eIntent(env) && !isOwnedDedicatedE2eEnvironment(env)) {
+    throw new Error(
+      "Refusing incomplete dedicated E2E environment: require explicit fixture, API 127.0.0.1:3334, PostgreSQL 127.0.0.1:5433/massa_th0th_test, and VECTOR_STORE_TYPE=postgres",
+    );
+  }
 }
 
 export const PROJECT_PATH = resolveE2EProjectPath(DEFAULT_PROJECT_PATH);
@@ -200,6 +224,7 @@ export function assertE2ePrefix(id: string): void {
 let _avail: Availability | null = null;
 
 export async function probeAvailability(): Promise<Availability> {
+  assertSafeE2eEnvironment();
   if (_avail) return _avail;
 
   const fs = await import("fs/promises");
@@ -286,6 +311,7 @@ function apiHeaders(extra: Record<string, string> = {}): Record<string, string> 
 }
 
 export async function httpGet<T = any>(endpoint: string, query?: Record<string, unknown>): Promise<T> {
+  assertSafeE2eEnvironment();
   const url = new URL(`${API}${endpoint}`);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
@@ -298,6 +324,7 @@ export async function httpGet<T = any>(endpoint: string, query?: Record<string, 
 }
 
 export async function httpPost<T = any>(endpoint: string, body?: unknown): Promise<T> {
+  assertSafeE2eEnvironment();
   const res = await fetch(`${API}${endpoint}`, {
     method: "POST",
     headers: apiHeaders(),
@@ -308,6 +335,7 @@ export async function httpPost<T = any>(endpoint: string, body?: unknown): Promi
 }
 
 export async function httpRaw(endpoint: string, init: RequestInit = {}): Promise<Response> {
+  assertSafeE2eEnvironment();
   return fetch(`${API}${endpoint}`, { headers: apiHeaders(), signal: AbortSignal.timeout(60_000), ...init });
 }
 
@@ -505,7 +533,10 @@ let _sharedPromise: Promise<string> | null = null;
  * strong-probe gate below forces this re-index, so callers of
  * `ensureSharedIndex` block until the store is richly searchable.
  */
-export function ensureSharedIndex(): Promise<string> {
+export function ensureSharedIndex(
+  env: Record<string, string | undefined> = process.env,
+): Promise<string> {
+  assertSafeE2eEnvironment(env);
   if (!_sharedPromise) {
     _sharedPromise = doSharedIndex().finally(() => {
       _sharedPromise = null;
