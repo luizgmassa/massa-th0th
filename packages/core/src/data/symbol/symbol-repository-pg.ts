@@ -1477,6 +1477,7 @@ export class SymbolRepositoryPg {
     generationId: string;
     counts: { files: number; definitions: number; references: number; imports: number; centrality: number };
     diagnostics: { recovered: number; hardFailures: number; staleFiles: number; errors: number };
+    languages: Record<string, number>;
   } | null> {
     const rows = await getPrismaClient().$queryRaw<Array<{
       generation_id: string;
@@ -1489,6 +1490,7 @@ export class SymbolRepositoryPg {
       hard_failures: number;
       stale_files: number;
       errors: number;
+      languages: Record<string, number> | null;
     }>>`
       SELECT w.active_graph_generation_id AS generation_id,
         (SELECT count(*)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id) AS files,
@@ -1499,7 +1501,12 @@ export class SymbolRepositoryPg {
         (SELECT count(*)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id AND f.parser_status = 'recovered') AS recovered,
         (SELECT count(*)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id AND f.parser_status IN ('failed','unsupported')) AS hard_failures,
         (SELECT count(*)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id AND f.is_stale) AS stale_files,
-        (SELECT COALESCE(sum(f.parser_error_count), 0)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id) AS errors
+        (SELECT COALESCE(sum(f.parser_error_count), 0)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id) AS errors,
+        (SELECT COALESCE(jsonb_object_agg(x.language, x.count), '{}'::jsonb) FROM (
+          SELECT COALESCE(f.language, 'unknown') AS language, count(*)::integer AS count
+          FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id
+          GROUP BY COALESCE(f.language, 'unknown')
+        ) x) AS languages
       FROM workspaces w WHERE w.project_id = ${projectId} AND w.active_graph_generation_id IS NOT NULL
     `;
     const row = rows[0];
@@ -1515,6 +1522,7 @@ export class SymbolRepositoryPg {
         recovered: Number(row.recovered), hardFailures: Number(row.hard_failures),
         staleFiles: Number(row.stale_files), errors: Number(row.errors),
       },
+      languages: row.languages ?? {},
     };
   }
 

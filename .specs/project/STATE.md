@@ -7,7 +7,7 @@
 - workflow: spec-driven
 - persona: AI Engineer
 - feature: `multi-language-tree-sitter-breadth`
-- status: EXECUTE ACTIVE; TASK-001 through TASK-013 PASS; TASK-014 READY
+- status: EXECUTE ACTIVE; TASK-001 through TASK-014 PASS; TASK-015 through TASK-019 READY
 - branch: `main`
 - baseline: `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`
 - push: not attempted
@@ -66,14 +66,15 @@ Replace regex structural extraction with pinned native Tree-sitter grammars and 
 - TASK-011 added the PostgreSQL lifecycle repository for serialized begin, heartbeat, completion, CAS activation, abort, lease-expiry takeover, and superseded cleanup. The owned macOS arm64 PostgreSQL suite passed 11/11 with 67 assertions after review fixes made expired abort non-mutating and protected last-known-good generation pointers. T13 retains ownership of discovered-file snapshot membership and post-snapshot content-delta reconciliation.
 - TASK-012 generation-scoped symbol storage now validates live pending leases, atomically replaces/deletes/stales per-file graph rows, removes stale inbound edges, captures one active generation for batch reads/writes, replaces centrality exactly, and resolves modern/legacy FQNs with deterministic ambiguity. Owned PostgreSQL passed 12/12 with 38 assertions after race and identity review remediation.
 - TASK-013 integrates complete pending generations through real Discover/Parse/Resolve/Load stages, immutable input snapshots, deletion reconciliation, stale LKG recovery, cross-process owner refresh, interruption settlement, synchronous CAS activation, and durable terminal generation identity. Exact Bun 1.3.0 focused/owned PostgreSQL passed 38/38 with 147 assertions; type-check 6/6, build 5/5, diff, and independent review passed. The canonical semantic vector/keyword lifecycle remains unchanged by adjudication.
+- TASK-014 preserves exact diagnostic totals independently from ten bounded details/spans for recovered and incremental hard/stale files, derives status/language summaries only from the activated generation, and durably round-trips the summary with its activated identity through nullable forward-compatible job columns. Exact Bun 1.3.0 focused/owned PostgreSQL and ETL passed 50/50 with 249 assertions; type 6/6, build 5/5, diff, and independent review passed.
 
 ## Blocker
 
-No blocker at the TASK-013 boundary. The aggregate core-unit command still exposes the recorded pre-existing parser-readiness timing and environment-dependent PostgreSQL/AutoImprove failures outside this task; deterministic TASK-013 gates are green. T23 still owns the durable all-grammar packed-artifact test.
+No blocker at the TASK-014 boundary. TASK-015 through TASK-019 are dependency-satisfied parallel cohort tasks; execution remains sequential under the one-atomic-task contract.
 
 ## Next Step
 
-Execute TASK-014 parser-diagnostic persistence and active-generation aggregation only.
+Execute the next READY cohort task, TASK-015, without implementing later cohorts in the same atomic task.
 
 ## Previous Feature
 

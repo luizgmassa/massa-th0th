@@ -40,19 +40,20 @@ Implement `plan-multi-language.md` under workflow session `spec-multi-language`.
 - TASK-011 added a typed PostgreSQL lifecycle repository with cross-process workspace row locking, live lease heartbeat/ownership, fingerprint/snapshot separation, expected-active CAS, count recomputation, expiry takeover, atomic activation/abort, and last-known-good-safe cleanup. The owned macOS arm64 PostgreSQL suite passed 11/11 with 67 assertions; forced type/build and review gates passed. T13 remains the explicit owner of discovered-file snapshot membership and post-snapshot delta reconciliation.
 - TASK-012 added lease-bound pending generation writes, atomic per-file replacement/deletion/stale fallback, inbound-edge cleanup, captured active batch scopes, exact centrality replacement, full active aggregates, and exact-first modern/legacy ambiguity resolution. The owned macOS arm64 PostgreSQL suite passed 12/12 with 38 assertions after deterministic activation-race and identity validation remediation.
 - TASK-013 integrated pending generations into the real ETL lifecycle with immutable discovery snapshots, recovered/hard/incremental handling, deletion, interruption settlement, cross-process stale-active refresh, synchronous activation, and awaited durable terminal generation identity. Exact Bun 1.3.0 focused/owned PostgreSQL passed 38/38 with 147 assertions; type 6/6, build 5/5, diff, and independent review passed. Semantic vector/keyword lifecycle was explicitly preserved per the canonical task boundary.
+- TASK-014 carries exact parser diagnostic totals separately from bounded ten-detail evidence, including original hard-failure spans through stale LKG activation. Active-generation-only status/language summaries persist with activated identity in nullable durable job columns; legacy NULL jobs hydrate unchanged. Exact Bun 1.3.0 focused/owned PostgreSQL and ETL passed 50/50 with 249 assertions; type 6/6, build 5/5, diff, and independent review passed.
 
 ## Blocking Gate
 
-TASK-013 passed owned PostgreSQL lifecycle/real-stage/concurrency/fault ordering, type/build/diff, and independent-review gates. The aggregate core-unit exception remains the pre-existing readiness timing and environment-dependent PostgreSQL/AutoImprove failures; no test was weakened.
+TASK-014 passed exact-total/detail-bound, active-generation swap/isolation, durable round-trip, type/build/diff, and independent-review gates. No test was weakened.
 
 ## Exact Next Step
 
-Execute TASK-014: persist bounded parser diagnostics and active-generation/stale job/project summaries. Do not touch excluded platform files.
+Execute TASK-015 scripting-language packs/resolvers only. TASK-016 through TASK-019 are also dependency-READY but remain separate atomic tasks.
 
 ## Worktree and Safety
 
 - Branch: `main`; baseline `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`.
 - `plan-multi-language.md` was supplied untracked and is now an in-scope revised artifact.
 - No push attempted.
-- TASK-001 through TASK-013 are claimed with recorded gates, including atomic ETL generation activation and durable terminal ordering. No container build or final parser benchmark has been claimed.
+- TASK-001 through TASK-014 are claimed with recorded gates, including durable bounded parser summaries. No HTTP/MCP diagnostic exposure, container build, or final parser benchmark has been claimed.
 - Preserve existing SQLite-removal artifacts and follow-up status.

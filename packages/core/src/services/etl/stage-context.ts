@@ -128,6 +128,7 @@ export interface ParsedFile {
   /** Immutable native-query result retained after Tree-sitter objects are deleted. */
   structure?: NormalizedStructure;
   structuralDiagnostics?: readonly ParseDiagnostic[];
+  structuralDiagnosticCount?: number;
   structuralRecovered?: boolean;
 }
 
@@ -162,4 +163,13 @@ export interface EtlResult {
   durationMs: number;
   stageTimings: Record<EtlStage, number>;
   activatedGraphGenerationId: string;
+  parserDiagnostics: ParserDiagnosticsSummary;
+}
+
+export interface ParserDiagnosticsSummary {
+  diagnosticsCount: number;
+  recoveredFiles: number;
+  hardFailureFiles: number;
+  staleFiles: number;
+  languages: Record<string, number>;
 }

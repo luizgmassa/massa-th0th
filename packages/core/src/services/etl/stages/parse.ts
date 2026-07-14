@@ -17,7 +17,7 @@ import { logger } from "@massa-th0th/shared";
 import { smartChunk, type Chunk } from "../../search/smart-chunker.js";
 import { structuralRuntime, type StructuralRuntime } from "../../structural/structural-runtime.js";
 import { deriveLegacyLineRange } from "../../structural/source-span.js";
-import type { NormalizedStructure } from "../../structural/types.js";
+import type { NormalizedStructure, ParseDiagnostic } from "../../structural/types.js";
 import type {
   EtlStageContext,
   DiscoveredFile,
@@ -31,7 +31,13 @@ const BATCH_SIZE = 20;
 const STRUCTURAL_TS_JS_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 
 export class StructuralEtlParseError extends Error {
-  constructor(readonly filePath: string, readonly failureKind: string, message: string) {
+  constructor(
+    readonly filePath: string,
+    readonly failureKind: string,
+    message: string,
+    readonly diagnosticCount = 1,
+    readonly diagnostics: readonly ParseDiagnostic[] = [],
+  ) {
     super(message);
     this.name = "StructuralEtlParseError";
   }
@@ -127,6 +133,7 @@ export class ParseStage {
       let rawEdges: RawEdge[];
       let structure: NormalizedStructure | undefined;
       let structuralDiagnostics;
+      let structuralDiagnosticCount = 0;
       let structuralRecovered = false;
       if (STRUCTURAL_TS_JS_EXTENSIONS.has(ext)) {
         let outcome;
@@ -137,6 +144,8 @@ export class ParseStage {
             file.relativePath,
             "infrastructure",
             `Structural runtime threw: ${error instanceof Error ? error.message : String(error)}`,
+            1,
+            [],
           );
         }
         if (outcome.status === "failed") {
@@ -144,6 +153,8 @@ export class ParseStage {
             file.relativePath,
             outcome.failureKind,
             `Structural parse failed (${outcome.failureKind}): ${outcome.diagnostics.map((item) => item.message).join("; ")}`,
+            outcome.diagnosticCount,
+            outcome.diagnostics.slice(0, 10),
           );
         }
         if (outcome.status === "unsupported") {
@@ -151,6 +162,7 @@ export class ParseStage {
         }
         structure = outcome.structure;
         structuralDiagnostics = outcome.diagnostics;
+        structuralDiagnosticCount = outcome.diagnosticCount;
         structuralRecovered = outcome.status === "recovered";
         ({ symbols, rawImports, rawEdges } = this.projectStructuralResult(structure));
       } else {
@@ -175,7 +187,7 @@ export class ParseStage {
 
       return {
         file, chunks, symbols, rawImports, rawEdges,
-        ...(structure ? { structure, structuralDiagnostics, structuralRecovered } : {}),
+        ...(structure ? { structure, structuralDiagnostics, structuralDiagnosticCount, structuralRecovered } : {}),
       };
     } catch (err) {
       ctx.emit({

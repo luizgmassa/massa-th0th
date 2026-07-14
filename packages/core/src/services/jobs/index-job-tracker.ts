@@ -8,6 +8,7 @@
 import { randomUUID } from "crypto";
 import { logger } from "@massa-th0th/shared";
 import type { JobStore } from "./index-job-store.js";
+import type { ParserDiagnosticsSummary } from "../etl/stage-context.js";
 
 export interface IndexJob {
   jobId: string;
@@ -25,6 +26,7 @@ export interface IndexJob {
     errors: number;
     duration: number;
     activatedGraphGenerationId?: string;
+    parserDiagnostics?: ParserDiagnosticsSummary;
   };
   error?: string;
   createdAt: Date;

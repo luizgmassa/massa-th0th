@@ -269,8 +269,10 @@ export class EtlPipeline {
             parseError.filePath,
             {
               lastKnownGoodGenerationId: activeGraph.generationId,
-              diagnostics: [{ code: "incremental_structural_failure", message: parseError.message }],
-              parserErrorCount: 1,
+              diagnostics: parseError.diagnostics.length > 0
+                ? parseError.diagnostics.slice(0, 10).map((diagnostic) => ({ ...diagnostic }))
+                : [{ code: "incremental_structural_failure", message: parseError.message }],
+              parserErrorCount: parseError.diagnosticCount,
             },
           );
           if (stale.status !== "stale") throw parseError;
@@ -307,6 +309,10 @@ export class EtlPipeline {
       heartbeatTimerController.abort();
       await graphHeartbeat;
       const activatedGraph = await this.graphGenerations.activate(graphGenerationLease);
+      const activeGraphSummary = await getSymbolRepository().getActiveGraphSnapshot(projectId);
+      if (!activeGraphSummary || activeGraphSummary.generationId !== activatedGraph.generationId) {
+        throw new Error("activated_graph_summary_mismatch");
+      }
 
       const durationMs = Math.round(performance.now() - t0);
 
@@ -320,6 +326,13 @@ export class EtlPipeline {
         durationMs,
         stageTimings,
         activatedGraphGenerationId: activatedGraph.generationId,
+        parserDiagnostics: {
+          diagnosticsCount: activeGraphSummary.diagnostics.errors,
+          recoveredFiles: activeGraphSummary.diagnostics.recovered,
+          hardFailureFiles: activeGraphSummary.diagnostics.hardFailures,
+          staleFiles: activeGraphSummary.diagnostics.staleFiles,
+          languages: activeGraphSummary.languages,
+        },
       };
 
       // Index mutations invalidate every cached result for this project,
@@ -341,6 +354,7 @@ export class EtlPipeline {
         errors: result.errors,
         duration: durationMs,
         activatedGraphGenerationId: result.activatedGraphGenerationId,
+        parserDiagnostics: result.parserDiagnostics,
       });
 
       eventBus.publish("indexing:completed", {

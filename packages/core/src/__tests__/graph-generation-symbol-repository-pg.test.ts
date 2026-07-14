@@ -151,8 +151,8 @@ describe.skipIf(!requested)("owned PostgreSQL generation-scoped symbol repositor
     await db!.query(`UPDATE workspaces SET project_path=$2 WHERE project_id=$1`, [projectId, projectPath]);
     const emptyStructure = { symbols: [], edges: [], imports: [] };
     pipeline.parse = new ParseStage({ parse: async () => ({
-      status: "recovered", structure: emptyStructure, diagnosticCount: 1,
-      diagnostics: [{ code: "test_recovered", severity: "recovered", message: "recovered syntax" }],
+      status: "recovered", structure: emptyStructure, diagnosticCount: 14,
+      diagnostics: Array.from({ length: 10 }, (_, index) => ({ code: `test_recovered_${index}`, severity: "recovered", message: "recovered syntax" })),
     }) });
     pipeline.resolve = new ResolveStage(repository as never);
     const load = new LoadStage() as any;
@@ -179,8 +179,11 @@ describe.skipIf(!requested)("owned PostgreSQL generation-scoped symbol repositor
       expect(events).toEqual([`completed:${result.activatedGraphGenerationId}:completed:${result.activatedGraphGenerationId}`]);
       expect(indexJobTracker.getJob(job.jobId)?.result?.activatedGraphGenerationId).toBe(result.activatedGraphGenerationId);
       expect((await repository.getFile(projectId, "src/active.ts"))?.content_hash).toHaveLength(64);
-      expect((await db!.query(`SELECT parser_status,parser_error_count FROM symbol_files WHERE project_id=$1 AND generation_id=$2`, [projectId, result.activatedGraphGenerationId])).rows[0])
-        .toEqual({ parser_status: "recovered", parser_error_count: 1 });
+      expect((await db!.query(`SELECT parser_status,parser_error_count,jsonb_array_length(diagnostics)::int detail_count FROM symbol_files WHERE project_id=$1 AND generation_id=$2`, [projectId, result.activatedGraphGenerationId])).rows[0])
+        .toEqual({ parser_status: "recovered", parser_error_count: 14, detail_count: 10 });
+      expect(indexJobTracker.getJob(job.jobId)?.result?.parserDiagnostics).toEqual({
+        diagnosticsCount: 14, recoveredFiles: 1, hardFailureFiles: 0, staleFiles: 0, languages: { TypeScript: 1 },
+      });
 
       await fs.unlink(join(projectPath, "src/active.ts"));
       const deleteJob = indexJobTracker.createJob(projectId, projectPath);
@@ -243,13 +246,19 @@ describe.skipIf(!requested)("owned PostgreSQL generation-scoped symbol repositor
     pipeline.load = load;
     try {
       pipeline.parse = new ParseStage({ parse: async () => ({
-        status: "failed", failureKind: "parser", diagnosticCount: 1,
-        diagnostics: [{ code: "incremental_failure", severity: "error", message: "incremental failure" }],
+        status: "failed", failureKind: "parser", diagnosticCount: 14,
+        diagnostics: Array.from({ length: 10 }, (_, index) => ({
+          code: `incremental_failure_${index}`, severity: "error", message: "incremental failure",
+          span: { startByte: index, endByte: index + 1, start: { row: index, column: 0 }, end: { row: index, column: 1 } },
+        })),
       }) });
       const stale = await pipeline.run({
         projectId, projectPath, jobId: `stale-${randomUUID()}`, filesToProcess: ["a.ts", "b.ts"],
       });
+      expect(stale.parserDiagnostics).toEqual({ diagnosticsCount: 28, recoveredFiles: 0, hardFailureFiles: 2, staleFiles: 2, languages: { typescript: 2 } });
       expect((await db!.query(`SELECT count(*)::int count FROM symbol_files WHERE generation_id=$1 AND is_stale`, [stale.activatedGraphGenerationId])).rows[0].count).toBe(2);
+      expect((await db!.query(`SELECT parser_error_count,jsonb_array_length(diagnostics)::int detail_count,diagnostics->0->'span' AS first_span FROM symbol_files WHERE generation_id=$1 AND is_stale ORDER BY relative_path`, [stale.activatedGraphGenerationId])).rows)
+        .toEqual(Array.from({ length: 2 }, () => ({ parser_error_count: 14, detail_count: 10, first_span: { startByte: 0, endByte: 1, start: { row: 0, column: 0 }, end: { row: 0, column: 1 } } })));
 
       pipeline.parse = new ParseStage({ parse: async () => ({
         status: "ok", structure: emptyStructure, diagnosticCount: 0, diagnostics: [],
@@ -383,19 +392,30 @@ describe.skipIf(!requested)("owned PostgreSQL generation-scoped symbol repositor
     }
   });
 
-  test("durably persists the activated generation on a terminal index job", async () => {
+  test("durably round-trips parser summary with activated identity and accepts old NULL rows", async () => {
     const { PgJobStore } = await import("../services/jobs/index-job-store-pg.js");
     const store = new PgJobStore();
     const jobId = `task013-job-${randomUUID()}`;
     store.save({
       jobId, projectId, projectPath: "/tmp/generation-symbol", status: "completed",
       progress: { current: 1, total: 1, percentage: 100 },
-      result: { filesIndexed: 1, chunksIndexed: 0, errors: 0, duration: 1, activatedGraphGenerationId: activeId },
+      result: { filesIndexed: 1, chunksIndexed: 0, errors: 0, duration: 1, activatedGraphGenerationId: activeId,
+        parserDiagnostics: { diagnosticsCount: 17, recoveredFiles: 2, hardFailureFiles: 1, staleFiles: 1, languages: { typescript: 2, python: 1 } } },
       createdAt: new Date(), completedAt: new Date(),
     });
     await store.__drain(jobId);
-    const row = await db!.query(`SELECT status, activated_graph_generation_id FROM index_jobs WHERE job_id=$1`, [jobId]);
-    expect(row.rows[0]).toEqual({ status: "completed", activated_graph_generation_id: activeId });
+    const row = await db!.query(`SELECT status,activated_graph_generation_id,parser_diagnostics_count,parser_recovered_files,parser_hard_failure_files,parser_stale_files,parser_language_counts FROM index_jobs WHERE job_id=$1`, [jobId]);
+    expect(row.rows[0]).toEqual({ status: "completed", activated_graph_generation_id: activeId, parser_diagnostics_count: 17,
+      parser_recovered_files: 2, parser_hard_failure_files: 1, parser_stale_files: 1, parser_language_counts: { typescript: 2, python: 1 } });
+    const hydrated = new PgJobStore();
+    await hydrated.__drain();
+    await (hydrated as any).ensureHydrated();
+    expect(hydrated.get(jobId)?.result?.parserDiagnostics).toEqual({ diagnosticsCount: 17, recoveredFiles: 2, hardFailureFiles: 1, staleFiles: 1, languages: { typescript: 2, python: 1 } });
+
+    const legacyId = `legacy-job-${randomUUID()}`;
+    await db!.query(`INSERT INTO index_jobs (job_id,project_id,project_path,status,created_at) VALUES ($1,$2,'/tmp/legacy','completed',1)`, [legacyId, projectId]);
+    const legacy = new PgJobStore(); await (legacy as any).ensureHydrated();
+    expect(legacy.get(legacyId)?.result).toBeUndefined();
   });
 
   test("copies an unchanged last-known-good file into pending ownership", async () => {
@@ -469,7 +489,13 @@ describe.skipIf(!requested)("owned PostgreSQL generation-scoped symbol repositor
     expect((await repository.updateCentralityGeneration(lease(), [{ filePath: "src/pending.ts", score: 0.99 }])).status).toBe("written");
     await seedFile(pendingId, "src/pending.ts", "p", "recovered", 4, true);
     expect((await repository.getTopCentralFiles(projectId)).map((row) => row.file_path)).toEqual(["src/active.ts"]);
-    expect(await repository.getActiveGraphSnapshot(projectId)).toMatchObject({ generationId: activeId, counts: { files: 1, definitions: 1, references: 1, imports: 1, centrality: 1 }, diagnostics: { recovered: 0, hardFailures: 0, staleFiles: 0, errors: 0 } });
+    expect(await repository.getActiveGraphSnapshot(projectId)).toMatchObject({ generationId: activeId, counts: { files: 1, definitions: 1, references: 1, imports: 1, centrality: 1 }, diagnostics: { recovered: 0, hardFailures: 0, staleFiles: 0, errors: 0 }, languages: { typescript: 1 } });
+    await db!.query(`UPDATE graph_generations SET status='superseded' WHERE id=$1`, [activeId]);
+    await db!.query(`UPDATE graph_generations SET status='active',completed_at=NOW(),activated_at=NOW() WHERE id=$1`, [pendingId]);
+    await db!.query(`UPDATE workspaces SET active_graph_generation_id=$1,pending_graph_generation_id=NULL,graph_lease_token=NULL,graph_lease_expires_at=NULL,graph_lease_heartbeat_at=NULL WHERE project_id=$2`, [pendingId, projectId]);
+    expect(await repository.getActiveGraphSnapshot(projectId)).toMatchObject({
+      generationId: pendingId, diagnostics: { recovered: 1, hardFailures: 0, staleFiles: 1, errors: 4 }, languages: { typescript: 1 },
+    });
   });
 
   test("deletes only the owned pending file graph", async () => {

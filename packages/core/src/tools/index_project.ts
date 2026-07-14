@@ -267,6 +267,7 @@ export class IndexProjectTool implements IToolHandler {
         errors: etlResult.errors,
         duration,
         activatedGraphGenerationId: etlResult.activatedGraphGenerationId,
+        parserDiagnostics: etlResult.parserDiagnostics,
       });
     } catch (error) {
       const duration = Date.now() - startTime;

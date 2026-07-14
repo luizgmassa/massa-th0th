@@ -328,7 +328,7 @@ export class LoadStage {
 
     if (ctx.graphGenerationLease) {
       const manifest = getLanguageManifestEntry(path.extname(filePath));
-      const diagnostics = (file.structuralDiagnostics ?? []).map((diagnostic) => ({
+      const diagnostics = (file.structuralDiagnostics ?? []).slice(0, 10).map((diagnostic) => ({
         code: diagnostic.code,
         severity: diagnostic.severity,
         message: diagnostic.message,
@@ -351,7 +351,7 @@ export class LoadStage {
           query_pack_version: manifest?.queryPackVersion,
           resolver_version: manifest?.resolverVersion,
           parser_status: file.structuralRecovered ? "recovered" : "ok",
-          parser_error_count: diagnostics.length,
+          parser_error_count: file.structuralDiagnosticCount ?? diagnostics.length,
           diagnostics,
           is_stale: false,
         },

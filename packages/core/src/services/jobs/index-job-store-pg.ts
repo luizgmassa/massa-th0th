@@ -43,6 +43,11 @@ interface JobRow {
   errors: number | bigint | null;
   duration: number | bigint | null;
   activated_graph_generation_id: string | null;
+  parser_diagnostics_count: number | bigint | null;
+  parser_recovered_files: number | bigint | null;
+  parser_hard_failure_files: number | bigint | null;
+  parser_stale_files: number | bigint | null;
+  parser_language_counts: Record<string, number> | null;
   error: string | null;
   created_at: number | bigint;
   started_at: number | bigint | null;
@@ -75,6 +80,13 @@ function rowToJob(r: JobRow): IndexJob {
             errors: toNum(r.errors) ?? 0,
             duration: toNum(r.duration) ?? 0,
             activatedGraphGenerationId: r.activated_graph_generation_id ?? undefined,
+            parserDiagnostics: r.parser_diagnostics_count == null ? undefined : {
+              diagnosticsCount: toNum(r.parser_diagnostics_count) ?? 0,
+              recoveredFiles: toNum(r.parser_recovered_files) ?? 0,
+              hardFailureFiles: toNum(r.parser_hard_failure_files) ?? 0,
+              staleFiles: toNum(r.parser_stale_files) ?? 0,
+              languages: r.parser_language_counts ?? {},
+            },
           }
         : undefined,
     error: r.error ?? undefined,
@@ -287,6 +299,7 @@ export class PgJobStore implements JobStore {
     const errors = job.result?.errors ?? null;
     const duration = job.result?.duration ?? null;
     const activatedGraphGenerationId = job.result?.activatedGraphGenerationId ?? null;
+    const parserDiagnostics = job.result?.parserDiagnostics;
     const error = job.error ?? null;
     const createdAt = job.createdAt.getTime();
     const startedAt = job.startedAt?.getTime() ?? null;
@@ -295,7 +308,8 @@ export class PgJobStore implements JobStore {
     await prisma.$executeRaw`
       INSERT INTO index_jobs (
         job_id, project_id, project_path, status, current, total, percentage,
-        files_indexed, chunks_indexed, errors, duration, activated_graph_generation_id, error,
+        files_indexed, chunks_indexed, errors, duration, activated_graph_generation_id,
+        parser_diagnostics_count, parser_recovered_files, parser_hard_failure_files, parser_stale_files, parser_language_counts, error,
         created_at, started_at, completed_at, heartbeat_at
       ) VALUES (
         ${job.jobId},
@@ -310,6 +324,11 @@ export class PgJobStore implements JobStore {
         ${errors}::int,
         ${duration}::int,
         ${activatedGraphGenerationId},
+        ${parserDiagnostics?.diagnosticsCount ?? null}::int,
+        ${parserDiagnostics?.recoveredFiles ?? null}::int,
+        ${parserDiagnostics?.hardFailureFiles ?? null}::int,
+        ${parserDiagnostics?.staleFiles ?? null}::int,
+        ${JSON.stringify(parserDiagnostics?.languages ?? null)}::jsonb,
         ${error},
         ${createdAt}::bigint,
         ${startedAt !== null ? startedAt : null}::bigint,
@@ -326,6 +345,11 @@ export class PgJobStore implements JobStore {
         errors = EXCLUDED.errors,
         duration = EXCLUDED.duration,
         activated_graph_generation_id = EXCLUDED.activated_graph_generation_id,
+        parser_diagnostics_count = EXCLUDED.parser_diagnostics_count,
+        parser_recovered_files = EXCLUDED.parser_recovered_files,
+        parser_hard_failure_files = EXCLUDED.parser_hard_failure_files,
+        parser_stale_files = EXCLUDED.parser_stale_files,
+        parser_language_counts = EXCLUDED.parser_language_counts,
         error = EXCLUDED.error,
         started_at = EXCLUDED.started_at,
         completed_at = EXCLUDED.completed_at,

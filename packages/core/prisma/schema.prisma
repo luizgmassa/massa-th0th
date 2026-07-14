@@ -546,6 +546,11 @@ model IndexJob {
   completedAt   BigInt? @map("completed_at")
   heartbeatAt   BigInt? @map("heartbeat_at")
   activatedGraphGenerationId String? @map("activated_graph_generation_id")
+  parserDiagnosticsCount Int? @map("parser_diagnostics_count")
+  parserRecoveredFiles Int? @map("parser_recovered_files")
+  parserHardFailureFiles Int? @map("parser_hard_failure_files")
+  parserStaleFiles Int? @map("parser_stale_files")
+  parserLanguageCounts Json? @map("parser_language_counts")
 
   @@index([projectId])
   @@index([status])

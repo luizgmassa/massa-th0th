@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 through TASK-013 PASS; TASK-014 READY
+**Status:** TASK-001 through TASK-014 PASS; TASK-015 through TASK-019 READY
 
 ## Project Testing Guidelines Scan
 
@@ -254,7 +254,7 @@ Phase 7 Validate:
 
 ### T14 / TASK-014: Persist and aggregate parser diagnostics
 
-**Status:** READY after TASK-013 PASS.
+**Status:** PASS on 2026-07-14. Exact recovered and hard/stale diagnostic totals remain separate from ten-detail bounded evidence; activated-generation language/status summaries and nullable durable job round trips passed owned PostgreSQL and independent review.
 
 **What:** Store per-file parser metadata/bounded ranges and durable job/project summaries with active-generation and stale counts.  
 **Where:** stage/job types, job store, symbol repository aggregates, tests.  
@@ -265,6 +265,8 @@ Phase 7 Validate:
 
 ### T15 / TASK-015: Implement Python/Ruby/PHP/Lua query packs and resolvers [P]
 
+**Status:** READY after TASK-014 PASS.
+
 **What:** Add independently testable packs/resolvers/fixtures for the scripting cohort according to the capability matrix.  
 **Where:** structural packs/resolvers and golden fixtures/tests.  
 **Depends on:** T9,T14. **Requirements:** MLTS-008-009,015.  
@@ -273,6 +275,8 @@ Phase 7 Validate:
 **Commit:** `feat(parser): add scripting language packs`
 
 ### T16 / TASK-016: Implement C/C++/Go/Rust/Zig query packs and resolvers [P]
+
+**Status:** READY after TASK-014 PASS.
 
 **What:** Add systems cohort plus `.h` C/C++ evidence policy and deterministic source resolution.  
 **Where:** structural packs/resolvers and golden fixtures/tests.  
@@ -283,6 +287,8 @@ Phase 7 Validate:
 
 ### T17 / TASK-017: Implement Java/Kotlin/Scala/C#/Swift/Dart packs and resolvers [P]
 
+**Status:** READY after TASK-014 PASS.
+
 **What:** Add managed/mobile cohort with nesting, overloads, constructors, properties, inheritance, imports, and flow.  
 **Where:** structural packs/resolvers and golden fixtures/tests.  
 **Depends on:** T9,T14. **Requirements:** MLTS-005-009,015.  
@@ -292,6 +298,8 @@ Phase 7 Validate:
 
 ### T18 / TASK-018: Implement Elixir/Erlang/Clojure/OCaml/Haskell packs and resolvers [P]
 
+**Status:** READY after TASK-014 PASS.
+
 **What:** Add functional/BEAM cohort with module/import/type/function/call/data-flow conventions and deterministic resolution.  
 **Where:** structural packs/resolvers and golden fixtures/tests.  
 **Depends on:** T9,T14. **Requirements:** MLTS-008-009,015.  
@@ -300,6 +308,8 @@ Phase 7 Validate:
 **Commit:** `feat(parser): add functional language packs`
 
 ### T19 / TASK-019: Implement Vue/Markdown/JSON/YAML and embedded parsing [P]
+
+**Status:** READY after TASK-014 PASS.
 
 **What:** Add Vue script/template, Markdown headings/fences, JSON/YAML qualified keys, two-level embedding, host remap, stable scope FQNs, fallback, and dedupe.  
 **Where:** embedded adapters, data/document packs, fixtures/tests.  
