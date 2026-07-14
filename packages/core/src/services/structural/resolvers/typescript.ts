@@ -9,6 +9,7 @@ import type {
   ResolvableDefinition,
   StructuralBuildMetadata,
   StructuralLanguageResolver,
+  StructuralPathAlias,
   StructuralReference,
   StructuralResolverDefinition,
   StructuralResolverFile,
@@ -136,7 +137,7 @@ function probe(base: string, known: ReadonlySet<string>): string | undefined {
   return undefined;
 }
 
-function resolveSpecifier(
+export function resolveStructuralSpecifier(
   specifier: string,
   fromFile: string,
   build: StructuralBuildMetadata,
@@ -145,7 +146,8 @@ function resolveSpecifier(
   if (specifier.startsWith("./") || specifier.startsWith("../")) {
     return probe(path.posix.join(path.posix.dirname(fromFile), specifier), known);
   }
-  for (const alias of build.pathAliases ?? []) {
+  const aliases = build.pathAliasesByFile?.[normalizeStructuralFile(fromFile)] ?? build.pathAliases ?? [];
+  for (const alias of aliases) {
     const star = alias.pattern.indexOf("*");
     let capture: string | undefined;
     if (star < 0) {
@@ -163,6 +165,20 @@ function resolveSpecifier(
     }
   }
   return undefined;
+}
+
+export function matchesStructuralPathAlias(
+  specifier: string,
+  aliases: readonly StructuralPathAlias[],
+): boolean {
+  return aliases.some((alias) => {
+    const star = alias.pattern.indexOf("*");
+    if (star < 0) return specifier === alias.pattern;
+    const prefix = alias.pattern.slice(0, star);
+    const suffix = alias.pattern.slice(star + 1);
+    return specifier.startsWith(prefix) && specifier.endsWith(suffix) &&
+      specifier.length >= prefix.length + suffix.length;
+  });
 }
 
 function exportedMatches(
@@ -190,7 +206,7 @@ function exportedMatches(
   const forwarded: ResolvableDefinition[] = [];
   for (const reexport of build.importsByFile?.[file] ?? []) {
     if (reexport.form !== "esm_re_export") continue;
-    const targetFile = resolveSpecifier(reexport.specifier, file, build);
+    const targetFile = resolveStructuralSpecifier(reexport.specifier, file, build);
     if (!targetFile) continue;
     for (const binding of reexport.bindings) {
       if (binding.local !== sought && binding.imported !== "*") continue;
@@ -238,7 +254,7 @@ function importedMatches(
       }
       claimed = true;
       if ((imported.typeOnly || binding.typeOnly) && !typeEdge) continue;
-      const importedFile = resolveSpecifier(imported.specifier, file.file, build);
+      const importedFile = resolveStructuralSpecifier(imported.specifier, file.file, build);
       if (!importedFile) continue;
       const esmDefaultMember = imported.form === "esm_import" &&
         binding.imported === "default" && qualifier[0] === binding.local;
@@ -331,7 +347,14 @@ export const TYPESCRIPT_LANGUAGE_RESOLVER: StructuralLanguageResolver = Object.f
     });
   },
   resolveLegacy(legacyFqn: string, rawDefinitions: readonly StructuralResolverDefinition[]) {
-    const { registry } = indexDefinitions(rawDefinitions);
+    const { registry, definitions } = indexDefinitions(rawDefinitions);
+    const materialized = definitions.filter((definition) => definition.identity.legacyFqn === legacyFqn);
+    const materializedOutcome = outcome(
+      { kind: "call", span: { startByte: 0, endByte: 0, start: { row: 0, column: 0 }, end: { row: 0, column: 0 } }, name: legacyFqn },
+      materialized,
+      "legacy",
+    );
+    if (materializedOutcome) return materializedOutcome;
     const result = registry.resolve(legacyFqn);
     if (result.found) {
       return Object.freeze({

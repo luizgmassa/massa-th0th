@@ -216,7 +216,7 @@
         "specify": true,
         "design": true,
         "tasks": true,
-        "execute": false
+        "execute": true
       }
     },
     {

@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 PASS; TASK-009 READY
+**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 PASS; TASK-009 PASS; TASK-010 READY
 
 ## Project Testing Guidelines Scan
 
@@ -199,7 +199,7 @@ Phase 7 Validate:
 
 ### T9 / TASK-009: Integrate TS/JS runtime into ETL and retire regex after parity
 
-**Status:** READY after TASK-007 and TASK-008 PASS.
+**Status:** PASS on 2026-07-14. Exact Bun 1.3.0 focused ETL/parity tests passed 105/105 with 508 assertions; native source/dist verification, forced uncached type-check/build, diff integrity, frozen baseline/approved-difference review, and independent review passed. The aggregate core-unit command remains non-green on pre-existing readiness timing and environment-dependent PostgreSQL/AutoImprove tests outside the TASK-009 diff; the isolated structural and ETL migration gate is green.
 
 **What:** Delegate Parse/Resolve structural work to the new engine while keeping `smartChunk` unchanged; add baseline characterization/approved-difference ledger; remove regex/typed-edge extractors only after parity.  
 **Where:** ETL stages/context/pipeline, temporary characterization adapter, tests.  
@@ -209,6 +209,8 @@ Phase 7 Validate:
 **Commit:** `refactor(parser): route etl through tree-sitter`
 
 ### T10 / TASK-010: Add graph-generation schema and legacy backfill
+
+**Status:** READY after TASK-006 and TASK-009 PASS.
 
 **What:** Add generation lifecycle model, workspace active/pending/lease fields, generation ownership for all graph tables/centrality/diagnostics, FQN/span metadata, and safe legacy backfill.  
 **Where:** Prisma schema, one migration, migration/backfill tests.  

@@ -47,6 +47,7 @@ describe("ParseStage long blocks", () => {
     const classSymbol = parsed.symbols.find((symbol) => symbol.name === "LongService");
     expect(classSymbol?.lineEnd).toBe(515);
     const call = parsed.rawEdges.find((edge) => edge.symbolName === "dependency");
-    expect(call?.callerSymbol).toBe("LongService");
+    // AD-001: native spans select the tightest lexical caller.
+    expect(call?.callerSymbol).toBe("run");
   });
 });

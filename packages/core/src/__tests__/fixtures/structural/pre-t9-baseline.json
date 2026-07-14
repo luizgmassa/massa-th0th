@@ -1,0 +1,27 @@
+{
+  "sourceCommit": "8bc546a",
+  "typescript-flow.ts": {
+    "symbols": ["export:publicShared:6-6", "variable:exportedValue:7-11", "interface:LocalFace:9-11", "type:Identifier:14-15", "class:Outer:19-48", "variable:created:29-37", "variable:message:40-41", "variable:shape:41-41", "function:nested:51-53", "function:sealed:56-58", "function:lazyLoad:60-62"],
+    "imports": ["type:./face.js:Face", "value:./helper.js:assist", "value:./mixed.js:type MixedType,localValue", "value:./default.js:default", "value:./space.js:*"],
+    "edges": ["http_call:31:fetch:created", "http_call:32:axios.post:created", "http_call:39:gql:Outer", "emit:33:completed:created", "emit:40:not-an-event:message", "listen:34:completed:created", "call:22:constructor:Outer", "call:24:shape:Outer", "call:26:run:Outer", "call:27:run:Outer", "call:29:Service:created", "call:30:assist:created", "call:32:post:created", "call:37:render:created", "call:38:label:Outer", "data_flow:29:Service:created:0:input", "data_flow:30:assist:created:0:input", "data_flow:32:post:created:1:input", "data_flow:33:emit:created:1:input", "data_flow:34:once:created:1:handle", "data_flow:35:emit:created:1:input", "data_flow:36:on:created:1:handle"],
+    "chunks": [14, "710763d0d5d7aff847da9314f6f7e2eb5decdc889ec3b246fe6955f301eb0f0c"]
+  },
+  "typescript-native.ts": {
+    "symbols": ["export:export default function format:1-1", "variable:enabled:5-5"],
+    "imports": [],
+    "edges": ["call:2:String", "data_flow:2:String::0:value"],
+    "chunks": [2, "db4d4f4cf43bd69c8466e0cdaa769e51337d6f54a5fcdb492cc5882afb557878"]
+  },
+  "javascript-flow.jsx": {
+    "symbols": ["variable:legacy:3-13", "class:Card:5-13", "function:load:15-17", "variable:arrow:19-19"],
+    "imports": ["value:./render-card.js:renderCard", "value:react:default", "value:./legacy.js:*"],
+    "edges": ["http_call:16:fetch:load", "listen:10:ready:Card", "call:9:renderCard:Card", "call:19:renderCard:arrow", "data_flow:9:renderCard:Card:0:item", "data_flow:10:addEventListener:Card:1:item", "data_flow:19:renderCard:arrow:0:value"],
+    "chunks": [6, "c6b2cb222c28c975b70ff019597060e9eaa99eccf17dda4f874d4b3b4ef0cdc6"]
+  },
+  "javascript-native.js": {
+    "symbols": ["class:NativeJs:1-3"],
+    "imports": ["value:./dependency.js:*"],
+    "edges": [],
+    "chunks": [1, "ef00f2cabd6214ea06f8158401202de0437c45070330e617a27a7b068aa2f119"]
+  }
+}

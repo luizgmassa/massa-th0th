@@ -45,6 +45,64 @@ function formatDuration(ms: number): string {
   return `${h}h ${mm.toString().padStart(2, "0")}m`;
 }
 
+export function buildSymbolPersistenceBatch(
+  projectId: string,
+  file: ResolvedFile,
+  now = Date.now(),
+): { definitions: SymbolDefinition[]; references: SymbolReference[]; imports: SymbolImport[] } {
+  const filePath = file.file.relativePath;
+  const definitions: SymbolDefinition[] = file.symbols.map((sym: RawSymbol) => ({
+    id: sym.fqn ?? `${filePath}#${sym.name}`,
+    project_id: projectId,
+    file_path: filePath,
+    name: sym.name,
+    kind: sym.kind,
+    line_start: sym.lineStart,
+    line_end: sym.lineEnd,
+    exported: sym.exported,
+    doc_comment: sym.docComment,
+    indexed_at: now,
+  }));
+  const importRefs: SymbolReference[] = file.resolvedImports
+    .filter((imp) => !imp.external && imp.raw.form !== "esm_re_export")
+    .flatMap((imp) =>
+      (imp.raw.bindings ?? imp.raw.names.map((name) => ({ imported: name, local: name, typeOnly: imp.raw.isTypeOnly }))).map((binding) => ({
+        project_id: projectId,
+        from_file: filePath,
+        from_line: imp.raw.span?.start.row !== undefined ? imp.raw.span.start.row + 1 : 1,
+        symbol_name: binding.local,
+        // A resolved file is not proof of an exact definition identity. T10+
+        // can bind this through generation-owned metadata; T9 never guesses.
+        target_fqn: undefined,
+        ref_kind: "import" as const,
+        meta: imp.raw.span ? { sourceSpan: imp.raw.span, importedName: binding.imported } : null,
+      })),
+    );
+  const edgeRefs: SymbolReference[] = (file.resolvedEdges ?? []).map((edge: ResolvedEdge) => ({
+    project_id: projectId,
+    from_file: filePath,
+    from_line: edge.line,
+    symbol_name: edge.symbolName,
+    target_fqn: edge.targetFqn,
+    ref_kind: edge.kind,
+    meta: {
+      ...(edge.meta ?? {}),
+      ...(edge.span ? { sourceSpan: edge.span } : {}),
+      ...(edge.sourceFqn ? { callerFqn: edge.sourceFqn } : {}),
+    },
+  }));
+  const imports: SymbolImport[] = file.resolvedImports.map((imp) => ({
+    project_id: projectId,
+    from_file: filePath,
+    to_file: imp.resolvedPath ?? undefined,
+    specifier: imp.raw.specifier,
+    imported_names: imp.raw.names,
+    is_external: imp.external,
+    is_type_only: imp.raw.isTypeOnly,
+  }));
+  return { definitions, references: [...importRefs, ...edgeRefs], imports };
+}
+
 export class LoadStage {
   private vectorStore: Awaited<ReturnType<typeof getVectorStore>> | null = null;
   private keywordSearch: ReturnType<typeof getKeywordSearch> | null = null;
@@ -259,65 +317,18 @@ export class LoadStage {
 
   /** Insert symbols, references, and imports into the symbol DB. Returns symbol count. */
   private async loadToSymbolDb(ctx: EtlStageContext, file: ResolvedFile): Promise<number> {
-    const now = Date.now();
     const filePath = file.file.relativePath;
-
-    // Build SymbolDefinition objects
-    const defs: SymbolDefinition[] = file.symbols.map((sym: RawSymbol) => ({
-      id: sym.fqn ?? `${filePath}#${sym.name}`,
-      project_id: ctx.projectId,
-      file_path: filePath,
-      name: sym.name,
-      kind: sym.kind,
-      line_start: sym.lineStart,
-      line_end: sym.lineEnd,
-      exported: sym.exported,
-      doc_comment: sym.docComment,
-      indexed_at: now,
-    }));
-
-    // Build SymbolReference from imports (import is a ref of kind 'import')
-    const importRefs: SymbolReference[] = file.resolvedImports
-      .filter((imp) => !imp.external)
-      .flatMap((imp) =>
-        imp.raw.names.map((name) => ({
-          project_id: ctx.projectId,
-          from_file: filePath,
-          from_line: 1, // import lines are at file top; line precision not critical here
-          symbol_name: name,
-          target_fqn: imp.resolvedPath ? `${imp.resolvedPath}#${name}` : undefined,
-          ref_kind: "import" as const,
-        })),
-      );
-
-    // Build SymbolReference rows from resolved typed structural edges (D1).
-    // Each edge becomes one row with its typed ref_kind + meta JSON metadata.
-    const edgeRefs: SymbolReference[] = (file.resolvedEdges ?? []).map((edge: ResolvedEdge) => ({
-      project_id: ctx.projectId,
-      from_file: filePath,
-      from_line: edge.line,
-      symbol_name: edge.symbolName,
-      target_fqn: edge.targetFqn,
-      ref_kind: edge.kind,
-      meta: edge.meta ?? null,
-    }));
-
-    const refs: SymbolReference[] = [...importRefs, ...edgeRefs];
-
-    // Build SymbolImport edges
-    const imports: SymbolImport[] = file.resolvedImports.map((imp) => ({
-      project_id: ctx.projectId,
-      from_file: filePath,
-      to_file: imp.resolvedPath ?? undefined,
-      specifier: imp.raw.specifier,
-      imported_names: imp.raw.names,
-      is_external: imp.external,
-      is_type_only: imp.raw.isTypeOnly,
-    }));
+    const batch = buildSymbolPersistenceBatch(ctx.projectId, file);
 
     // Single transaction: delete old + insert new
-    await getSymbolRepository().writeFileSymbols(ctx.projectId, filePath, defs, refs, imports);
+    await getSymbolRepository().writeFileSymbols(
+      ctx.projectId,
+      filePath,
+      batch.definitions,
+      batch.references,
+      batch.imports,
+    );
 
-    return defs.length;
+    return batch.definitions.length;
   }
 }

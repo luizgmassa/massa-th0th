@@ -29,6 +29,8 @@ export interface StructuralPathAlias {
 export interface StructuralBuildMetadata {
   knownFiles: readonly string[];
   pathAliases?: readonly StructuralPathAlias[];
+  /** Exact caller-file aliases; prevents monorepo package aliases leaking across packages. */
+  pathAliasesByFile?: Readonly<Record<string, readonly StructuralPathAlias[]>>;
   importsByFile?: Readonly<Record<string, readonly NormalizedStructuralImport[]>>;
 }
 
@@ -196,19 +198,38 @@ export class StructuralResolverSession {
   readonly #registry: StructuralResolverRegistry;
   readonly #fqnRegistry: StructuralFqnRegistry;
   readonly #identitiesByFile: ReadonlyMap<string, readonly StructuralIdentity[]>;
+  readonly #seedIdentities: readonly StructuralIdentity[];
 
   constructor(
     documents: readonly StructuralResolverDocument[],
     build: StructuralBuildMetadata,
     registry: StructuralResolverRegistry,
+    seedDefinitions: readonly StructuralResolverDefinition[] = [],
   ) {
     this.#documents = new Map(documents.map((document) => [document.file, document]));
     const definitions = buildStructuralResolverDefinitions(documents);
     this.#fqnRegistry = new StructuralFqnRegistry();
-    this.#definitions = Object.freeze(definitions.map((definition) => Object.freeze({
+    const localDefinitions = definitions.map((definition) => Object.freeze({
       ...definition,
       resolvedIdentity: this.#fqnRegistry.register(definition.identity),
-    })));
+    }));
+    const seen = new Map<string, StructuralResolverDefinition>(
+      localDefinitions.map((definition) => [definition.resolvedIdentity.fqn, definition]),
+    );
+    const seeds: StructuralResolverDefinition[] = [];
+    for (const definition of seedDefinitions) {
+      if (!definition.resolvedIdentity) throw new TypeError("structural seed requires a materialized identity");
+      const prior = seen.get(definition.resolvedIdentity.fqn);
+      if (prior && (prior.resolvedIdentity!.canonicalSignature !== definition.resolvedIdentity.canonicalSignature ||
+          prior.exported !== definition.exported || prior.defaultExport !== definition.defaultExport)) {
+        throw new Error(`fqn_identity_collision: ${definition.resolvedIdentity.fqn}`);
+      }
+      if (prior) continue;
+      seen.set(definition.resolvedIdentity.fqn, definition);
+      seeds.push(Object.freeze(definition));
+    }
+    this.#definitions = Object.freeze([...localDefinitions, ...seeds]);
+    this.#seedIdentities = Object.freeze(seeds.map((definition) => definition.resolvedIdentity!));
     const identities = new Map<string, StructuralIdentity[]>();
     for (const definition of this.#definitions) {
       const identity = definition.resolvedIdentity!;
@@ -232,7 +253,32 @@ export class StructuralResolverSession {
   }
 
   resolveFqn(fqn: string): StructuralFqnResolution {
-    return this.#fqnRegistry.resolve(fqn);
+    const exact = this.#seedIdentities.find((identity) => identity.fqn === fqn);
+    if (exact) return { found: true, ambiguous: false, identity: exact };
+    const local = this.#fqnRegistry.resolve(fqn);
+    if (local.found || local.ambiguous) return local;
+    const aliases = this.#seedIdentities.filter((identity) => identity.legacyFqn === fqn);
+    if (aliases.length === 1) return { found: true, ambiguous: false, identity: aliases[0]! };
+    if (aliases.length > 1) return {
+      found: false,
+      ambiguous: true,
+      legacyFqn: fqn,
+      candidates: Object.freeze(aliases.map((identity) => ({
+        fqn: identity.fqn,
+        file: identity.file,
+        name: identity.name,
+        displayName: identity.displayName,
+        qualifiedName: identity.qualifiedName,
+        kind: identity.kind,
+        signatureHash: identity.signatureHash,
+      })).sort((left, right) =>
+        left.file.localeCompare(right.file) ||
+        left.qualifiedName.localeCompare(right.qualifiedName) ||
+        left.kind.localeCompare(right.kind) ||
+        left.signatureHash.localeCompare(right.signatureHash)
+      )),
+    };
+    return local;
   }
 
   resolve(file: string, reference: StructuralReference): StructuralResolverOutcome {

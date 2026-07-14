@@ -35,19 +35,20 @@ Implement `plan-multi-language.md` under workflow session `spec-multi-language`.
 - TASK-006 added byte-accurate immutable UTF-8 source indexing, embedded span remapping, legacy line compatibility, canonical full-SHA structural FQNs, legacy aliases, collision failure, and deterministic ambiguity payloads. Focused 25/25, forced type/build, and independent review passed after closing malformed-modern-suffix masquerading and reserved-name round trips.
 - TASK-007 added runtime-owned bounded native Query compilation/execution and declarative TS/JS/TSX/JSX packs with frozen declaration/import/relation/call/flow/HTTP/event output. Exact query tests 17/17 and independent query/runtime/identity review 57/57 passed after three remediation rounds covering typed identity/import material, exports, private names, capability independence, and AST-safe modifiers.
 - TASK-008 added the exact-version resolver registry, generation-scoped FQN session, and TS/JS resolver across same-file lexical scope, imports/re-exports, namespaces, default owners, globals, ambiguity, unresolved targets, and legacy aliases. Exact focused review passed 76/76 with 265 assertions after direct probes closed import basename leakage, dynamic namespaces, barrel forwarding, private leakage, and default-owner members.
+- TASK-009 routed TS/JS/TSX/JSX ETL structural extraction through the native runtime and shared resolver session while freezing unchanged `smartChunk` output. Its executable pre-T9 baseline and approved-difference ledger passed 105/105 focused tests with 508 assertions; native source/dist, type/build, diff, and independent review gates passed before the regex typed-edge path was removed.
 
 ## Blocking Gate
 
-TASK-008 passed focused/runtime/native/type/build/diff gates and independent review. Resolver ownership is exact-versioned, identities are generation-scoped, ambiguity is preserved, and ETL remains untouched pending TASK-009 parity integration.
+TASK-009 passed focused/native/type/build/diff and independent-review gates. The aggregate core-unit command remains non-green on pre-existing readiness timing and environment-dependent PostgreSQL/AutoImprove tests outside the TASK-009 diff; no test was weakened to conceal them.
 
 ## Exact Next Step
 
-Freeze and commit TASK-008, then execute TASK-009: route TS/JS Parse/Resolve structural work through the native runtime, keep `smartChunk` unchanged, record approved differences, and remove regex/typed-edge extraction only after parity. Do not touch excluded platform files.
+Freeze and commit TASK-009, then execute TASK-010: add graph-generation ownership/lifecycle schema and a safe legacy backfill with row-count/orphan sentinels. Do not touch excluded platform files.
 
 ## Worktree and Safety
 
 - Branch: `main`; baseline `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`.
 - `plan-multi-language.md` was supplied untracked and is now an in-scope revised artifact.
 - No push attempted.
-- TASK-001 through TASK-008 are claimed with recorded gates: native discovery, dependency/verifier/patch, normalized contracts/manifest, readiness/guards, bounded runtime/lifetime, structural span/identity codecs, declarative TS/JS family query packs, and deterministic TS/JS resolution. No ETL integration, graph migration, container build, or final parser benchmark has been claimed.
+- TASK-001 through TASK-009 are claimed with recorded gates: native discovery, dependency/verifier/patch, normalized contracts/manifest, readiness/guards, bounded runtime/lifetime, structural span/identity codecs, declarative TS/JS family query packs, deterministic TS/JS resolution, and parity-gated native ETL integration. No graph migration, container build, or final parser benchmark has been claimed.
 - Preserve existing SQLite-removal artifacts and follow-up status.

@@ -451,6 +451,26 @@ describe("TS/JS structural resolver", () => {
     expect(result).toMatchObject({ status: "resolved", fqn: "src/lib.ts#execute", source: "import" });
   });
 
+  test("uses the target file alias scope while recursively forwarding a barrel", () => {
+    const result = TYPESCRIPT_LANGUAGE_RESOLVER.resolve(
+      file([imported("@pkg/barrel", [{ imported: "run", local: "run" }])]),
+      reference("run"),
+      [definition("packages/a/barrel.ts", "run", { identity: { kind: "export" } }), definition("packages/a/lib.ts", "execute")],
+      {
+        knownFiles: ["src/main.ts", "packages/a/barrel.ts", "packages/a/lib.ts", "packages/b/lib.ts"],
+        pathAliasesByFile: {
+          "src/main.ts": [{ pattern: "@pkg/*", targets: ["packages/a/*"] }],
+          "packages/a/barrel.ts": [{ pattern: "@lib", targets: ["packages/a/lib"] }],
+          "packages/b/barrel.ts": [{ pattern: "@lib", targets: ["packages/b/lib"] }],
+        },
+        importsByFile: {
+          "packages/a/barrel.ts": [imported("@lib", [{ imported: "execute", local: "run" }], { form: "esm_re_export" })],
+        },
+      },
+    );
+    expect(result).toMatchObject({ status: "resolved", fqn: "packages/a/lib.ts#execute", source: "import" });
+  });
+
   test("retains deterministic ambiguity instead of choosing the first definition", () => {
     const result = TYPESCRIPT_LANGUAGE_RESOLVER.resolve(
       file(),

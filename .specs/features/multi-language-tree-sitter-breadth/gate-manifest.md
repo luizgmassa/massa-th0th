@@ -1,7 +1,7 @@
 # Multi-Language Tree-sitter Breadth Gate Manifest
 
 **Workflow session:** `spec-multi-language`  
-**Feature status:** Execute active; TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 PASS; TASK-009 READY
+**Feature status:** Execute active; TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 PASS; TASK-009 PASS; TASK-010 READY
 **Baseline commit:** `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`  
 **Baseline worktree:** supplied `plan-multi-language.md` was the only user-owned untracked file before feature artifact creation.
 
@@ -242,6 +242,27 @@ Exact output sets and negative assertions kill capture-presence-only tests, decl
 ### TASK-008 Post-Gate Adequacy Review
 
 Registry/version and generation-session tests kill fallback ownership, partial duplicate registration, process-global identities, late collisions, and first-overload wins. Import probes kill nested basename leakage, fabricated path targets, JS-before-TS selection, re-exports entering local scope, missing dynamic namespaces, type-only value leakage, barrel-marker capture, and default-owner/top-level confusion. Lexical/private/global/legacy tests kill public leakage, wrong enclosing scope, unqualified nested globals, trusted unknown FQNs, and nondeterministic ambiguity. These assertions map directly to T8 done-when, MLTS-006/008-009/014, and AC-005/008. ETL routing and regex retirement remain exclusively T9. **Verdict: sufficient, non-shallow, independently accepted PASS.**
+
+## TASK-009 Execution Result (2026-07-14)
+
+**Result:** PASS. TS/JS/TSX/JSX Parse and Resolve work now routes through the native structural runtime and one generation-scoped resolver session while `smartChunk` remains byte-for-byte characterized. Persisted symbols, references, imports, aliases, ambiguity, and skipped-file seeds use the shared structural contracts; the superseded TS/JS regex typed-edge extractor and tests were removed only after the frozen baseline and approved-difference gate passed.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Exact focused ETL/parity gate | PASS | Exact Bun 1.3.0 passed 105/105 tests with 508 assertions. |
+| Baseline characterization | PASS | Pre-T9 commit `8bc546a` baseline SHA-256 `fea48ca2470f5163130fb0181d0fb5ce984561ff45464844f56d58678ca16134`; four TS/JS fixtures freeze legacy/native projections and exact `smartChunk` counts/hashes. |
+| Approved-difference ledger | PASS | Every symbol/import/edge delta is classified; executable comparison rejects unrecorded removals or mutations and permits only recorded native additions. |
+| Native source/dist verification | PASS | `verify:tree-sitter-native` passed darwin-arm64: 33 extensions, 27 native artifacts, source/dist 33+33 parses, behavior sensors, and bounded patched RSS. |
+| Forced uncached type-check | PASS | 6/6 packages. |
+| Forced uncached build | PASS | 5/5 packages. |
+| Aggregate core unit | EXCEPTION | The command remains non-green on pre-existing parser-readiness timing plus environment-dependent PostgreSQL/AutoImprove tests outside the TASK-009 diff. Isolated structural/ETL tests pass; no production or test weakening was used to mask unrelated failures. |
+| Diff integrity | PASS | `git diff --check` clean. |
+| Independent review | PASS after remediation | Review verified baseline provenance/checksum, executable array/count projections, duplicate persisted-ID rejection, file-scoped aliases, package-boundary resolution, skipped-file seeding, ambiguity preservation, and deleted-extractor parity. |
+| Excluded-platform non-touch | PASS | No Linux, Docker, container, workflow, or non-arm64 implementation path changed. |
+
+### TASK-009 Post-Gate Adequacy Review
+
+The executable pre-T9 comparison kills fabricated parity, silent removals, reordered multiplicity, and undocumented semantic changes. Runtime rejection/recovery tests kill empty success, native parsing of skipped files, lost diagnostics, and structure loss; chunk hashes kill semantic-chunk drift. Resolver/load probes kill cross-file alias leakage, package-boundary probing, duplicate seed identities, invented import FQNs, re-export-as-local references, and duplicated query imports. Deleting the legacy extractor only after these gates makes the removal reversible from the frozen baseline. These assertions map directly to T9 done-when, MLTS-012/014, and AC-004/005/008. **Verdict: sufficient, non-shallow, independently accepted PASS with an explicit unrelated aggregate-suite exception.**
 
 ## Planned Gate Commands
 
@@ -487,3 +508,34 @@ These draft checksums are retained as failed-review evidence and are not an acti
 | `packages/core/src/__tests__/structural-resolver.test.ts` | `aa2786a5491b653be7b683db3d891f630e0902dc44ef1edbece8dd80382d8f12` |
 
 `gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-008 commit.
+
+## TASK-009 Accepted Artifact Freeze v13
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `plan-multi-language.md` | `02f183d2a23b9f9a2694289cc04c2a4c7614f87ec22918e3b59b7de66add9b10` |
+| `spec.md` | `43ed4c1c37ecbcaef52750d263f93410dffcc9372a99ac4a73cd6e7f3a54f50e` |
+| `context.md` | `af3339803245375d6a69890cfe49e60902a21d71ba969580f555b20fc460a7a9` |
+| `design.md` | `171cdcda9412cc7ede9b523d25fa47fa98de76cdd0b5ea87b84f4551602fea65` |
+| `tasks.md` | `3575039cdeec40e79317fb220dc4f63439ded08bdc02bcf555b944e466f75a5d` |
+| `capability-matrix.md` | `fe462385096d97ad1fc002d4eafa5b59bcfadf2b1d0457b76d39106338df3b16` |
+| `ts-js-approved-differences.md` | `687a7086a791dbb70f1be1204a5cf177dbdb7ade25c2a8ec01da4b26b4f81277` |
+| `.specs/project/FEATURES.json` | `077aca9d9f97926c5fc4a1dea66dcf8b6a3fde3e60ad5068da1292bfd89f23ec` |
+| `.specs/project/STATE.md` | `0aacb965becec9bd4b8d7d682e09bb0d0019bfed17dcc04a103e7412f666b1f3` |
+| `.specs/HANDOFF.md` | `78272a94be9f11c33e6ff5f6cddc8e98172013429a687d5bc0199ddb2b3354b8` |
+| `packages/core/src/__tests__/e2e/fixtures/qwen-profile.json` | `765764b15260f19fd2aa64d29089a49b35056c4fae1d4c87a1aa04f9914b51f5` |
+| `packages/core/src/__tests__/parse-long-class.test.ts` | `0933bab49c38560340ec50675e884cc354f23591f812d5797611bde48252ae66` |
+| `packages/core/src/__tests__/structural-resolver.test.ts` | `3c887cc526d01df69f95936cb1c8cadc098ab9ccddcb8a355277c5f1d741885a` |
+| `packages/core/src/__tests__/fixtures/structural/pre-t9-baseline.json` | `fea48ca2470f5163130fb0181d0fb5ce984561ff45464844f56d58678ca16134` |
+| `packages/core/src/__tests__/structural-etl.test.ts` | `ac49250f7598840e51b2a31f6c5badc7565c2f56552860f3565d1b8d2af73ebc` |
+| `packages/core/src/data/symbol/symbol-repository-pg.ts` | `c8bde7b0af62bac21a11254f8fc943e20c4a4a8321eccb6513e89b652abf4be8` |
+| `packages/core/src/services/etl/stage-context.ts` | `8b9e6c3356a3ce887b9ac8abc342873b0fdf5d38ec983fb647671f60e348ea1f` |
+| `packages/core/src/services/etl/stages/load.ts` | `1937d859b37d61cb1c23df93e64ad724063abb470f523a98b61e02c4318f70e1` |
+| `packages/core/src/services/etl/stages/parse.ts` | `3e1b9e17aea943729d53d09a0b2280757dd516f1515dc5e8f551ac0557ce2c54` |
+| `packages/core/src/services/etl/stages/resolve.ts` | `92a933b4529f70312e7df10f6aeb58901b92e08d8ab7b899afcadd601f42578b` |
+| `packages/core/src/services/structural/resolver.ts` | `d2b3f83008c9922dd300a832e43c80f867bfb7206de444462b4eee527487be5d` |
+| `packages/core/src/services/structural/resolvers/typescript.ts` | `9e3428c8190b30dbc3f44ec4e9904da3abdc4808c4a228df06660c0f0e75bf84` |
+| removed `packages/core/src/services/etl/typed-edges.ts` (pre-T9) | `bafde31e02f6d868483ac40198c64e97d07eef93198b2b5240a421a5f1cf14b9` |
+| removed `packages/core/src/__tests__/typed-edges.test.ts` (pre-T9) | `22f22e58a382b8c7788cdf4b8d4ea8d5b2a500253e439006bf3d204c61faaec1` |
+
+`gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-009 commit.

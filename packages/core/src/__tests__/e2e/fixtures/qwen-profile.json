@@ -42,7 +42,6 @@
     { "path": "apps/tools-api/package.json", "sha256": "8aa1d5e4ce818d5ee4ae0d15f8e37f18256f6bd4386d6e329c11cde99a8a34b9" },
     { "path": "apps/mcp-client/package.json", "sha256": "cce586f02746c3e588e35424eb945b5df5577f57979b574ac9e8353c329075f2" },
     { "path": "benchmarks/needles/fixtures/massa-th0th.json", "sha256": "11607ff7e3eeecce29c40c5e8aef5ebbffa00d626604a3647818d5d40bcaea63" },
-    { "path": "packages/core/src/services/etl/typed-edges.ts", "sha256": "bafde31e02f6d868483ac40198c64e97d07eef93198b2b5240a421a5f1cf14b9" },
     { "path": "packages/core/src/__tests__/e2e/11.lifecycle.test.ts", "sha256": "527166aef9a7fad6e8714c12f75a1aff54940bf13d2ab06e313180da78619f8f" },
     { "path": "packages/core/src/__tests__/e2e/20.new-features.test.ts", "sha256": "c422178796ccba93347170d93e944f342d25c70681d5ceaf2a88d72b002c4a0e" },
     { "path": "packages/core/src/__tests__/e2e/fixtures/polyglot/README.md", "sha256": "6f89b6432733844d02f8adf7074fc30917103888a3e1bd6566b9605e13af0fc1" },

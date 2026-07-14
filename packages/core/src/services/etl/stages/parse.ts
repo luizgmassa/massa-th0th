@@ -15,7 +15,9 @@ import fs from "fs/promises";
 import path from "path";
 import { logger } from "@massa-th0th/shared";
 import { smartChunk, type Chunk } from "../../search/smart-chunker.js";
-import { extractTypedEdges, TYPED_EDGE_EXTENSIONS } from "../typed-edges.js";
+import { structuralRuntime, type StructuralRuntime } from "../../structural/structural-runtime.js";
+import { deriveLegacyLineRange } from "../../structural/source-span.js";
+import type { NormalizedStructure } from "../../structural/types.js";
 import type {
   EtlStageContext,
   DiscoveredFile,
@@ -26,6 +28,14 @@ import type {
 } from "../stage-context.js";
 
 const BATCH_SIZE = 20;
+const STRUCTURAL_TS_JS_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
+
+class StructuralEtlParseError extends Error {
+  constructor(readonly filePath: string, readonly failureKind: string, message: string) {
+    super(message);
+    this.name = "StructuralEtlParseError";
+  }
+}
 
 function resolveChunkerMaxChars(): number | undefined {
   // Global override takes highest precedence
@@ -41,6 +51,8 @@ function resolveChunkerMaxChars(): number | undefined {
 }
 
 export class ParseStage {
+  constructor(private readonly runtime: Pick<StructuralRuntime, "parse"> = structuralRuntime) {}
+
   async run(ctx: EtlStageContext, files: DiscoveredFile[]): Promise<ParsedFile[]> {
     const t0 = performance.now();
 
@@ -109,13 +121,42 @@ export class ParseStage {
         file.relativePath,
         chunkerMaxChars ? { maxChunkChars: chunkerMaxChars } : {},
       );
-      const symbols = this.extractSymbols(content, ext);
-      const rawImports = this.extractImports(content, ext);
-
-      // Typed structural edges (D1) — TS/JS only, best-effort.
-      const rawEdges: RawEdge[] = TYPED_EDGE_EXTENSIONS.has(ext)
-        ? extractTypedEdges(content, symbols)
-        : [];
+      let symbols: RawSymbol[];
+      let rawImports: RawImport[];
+      let rawEdges: RawEdge[];
+      let structure: NormalizedStructure | undefined;
+      let structuralDiagnostics;
+      let structuralRecovered = false;
+      if (STRUCTURAL_TS_JS_EXTENSIONS.has(ext)) {
+        let outcome;
+        try {
+          outcome = await this.runtime.parse({ extension: ext, source: Buffer.from(content) });
+        } catch (error) {
+          throw new StructuralEtlParseError(
+            file.relativePath,
+            "infrastructure",
+            `Structural runtime threw: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+        if (outcome.status === "failed") {
+          throw new StructuralEtlParseError(
+            file.relativePath,
+            outcome.failureKind,
+            `Structural parse failed (${outcome.failureKind}): ${outcome.diagnostics.map((item) => item.message).join("; ")}`,
+          );
+        }
+        if (outcome.status === "unsupported") {
+          throw new StructuralEtlParseError(file.relativePath, "infrastructure", `Structural runtime rejected supported extension ${ext}`);
+        }
+        structure = outcome.structure;
+        structuralDiagnostics = outcome.diagnostics;
+        structuralRecovered = outcome.status === "recovered";
+        ({ symbols, rawImports, rawEdges } = this.projectStructuralResult(structure));
+      } else {
+        symbols = this.extractSymbols(content, ext);
+        rawImports = this.extractImports(content, ext);
+        rawEdges = [];
+      }
 
       ctx.emit({
         type: "file_processed",
@@ -131,7 +172,10 @@ export class ParseStage {
         timestamp: Date.now(),
       });
 
-      return { file, chunks, symbols, rawImports, rawEdges };
+      return {
+        file, chunks, symbols, rawImports, rawEdges,
+        ...(structure ? { structure, structuralDiagnostics, structuralRecovered } : {}),
+      };
     } catch (err) {
       ctx.emit({
         type: "file_error",
@@ -143,19 +187,67 @@ export class ParseStage {
         filePath: file.relativePath,
         error: (err as Error).message,
       });
+      // Native, query, ABI, and structural infrastructure failures invalidate
+      // the whole build. Never convert them into an empty successful file.
+      if (err instanceof StructuralEtlParseError) throw err;
       return { file, chunks: [], symbols: [], rawImports: [], rawEdges: [] };
     }
+  }
+
+  private projectStructuralResult(structure: NormalizedStructure): {
+    symbols: RawSymbol[];
+    rawImports: RawImport[];
+    rawEdges: RawEdge[];
+  } {
+    const symbols = structure.symbols.map((symbol) => ({
+      kind: symbol.kind,
+      name: symbol.name,
+      ...deriveLegacyLineRange(symbol.span),
+      exported: symbol.exported,
+      ...(symbol.documentation ? { docComment: symbol.documentation } : {}),
+      span: symbol.span,
+    }));
+    const rawImports = structure.imports.map((item) => ({
+      specifier: item.specifier,
+      names: [...item.names],
+      isTypeOnly: item.typeOnly,
+      form: item.form,
+      span: item.span,
+      bindings: item.bindings,
+    }));
+    const rawEdges = structure.edges.filter((edge) => edge.kind !== "import").map((edge) => {
+      const target = edge.target.status === "resolved"
+        ? { symbolName: edge.target.fqn }
+        : {
+            symbolName: edge.target.name,
+            ...(edge.target.qualifier ? { qualifier: edge.target.qualifier } : {}),
+          };
+      const owner = structure.symbols.filter((symbol) =>
+        symbol.span.startByte <= edge.span.startByte && symbol.span.endByte >= edge.span.endByte
+      ).sort((left, right) =>
+        (left.span.endByte - left.span.startByte) - (right.span.endByte - right.span.startByte)
+      )[0];
+      return {
+        kind: edge.kind,
+        line: deriveLegacyLineRange(edge.span).lineStart,
+        symbolName: target.symbolName,
+        ...(owner ? { callerSymbol: owner.name } : {}),
+        span: edge.span,
+        meta: {
+          ...(edge.metadata ?? {}),
+          ...(edge.paramIndex !== undefined ? { paramIndex: edge.paramIndex } : {}),
+          ...(target.qualifier ? { qualifier: target.qualifier } : {}),
+          sourceSpan: edge.span,
+        },
+      } satisfies RawEdge;
+    });
+    return { symbols, rawImports, rawEdges };
   }
 
   // ─── Symbol extraction ─────────────────────────────────────────────────────
 
   private extractSymbols(content: string, ext: string): RawSymbol[] {
     switch (ext) {
-      case ".ts":
-      case ".tsx":
-      case ".js":
-      case ".jsx":
-        return this.extractJsSymbols(content);
       case ".py":
         return this.extractPySymbols(content);
       case ".dart":
@@ -166,86 +258,6 @@ export class ParseStage {
       default:
         return [];
     }
-  }
-
-  /**
-   * TypeScript/JavaScript symbol extractor.
-   *
-   * Regex patterns cover the most common declaration forms.
-   * Does NOT require a full AST parser — tradeoff: avoids ts-morph boot cost
-   * (~300ms) at the expense of missing edge cases (decorators, namespaces).
-   */
-  private extractJsSymbols(content: string): RawSymbol[] {
-    const lines = content.split("\n");
-    const symbols: RawSymbol[] = [];
-
-    // Patterns: [regex, kind, exportGroup, nameGroup]
-    const patterns: Array<[RegExp, RawSymbol["kind"], boolean]> = [
-      // export async function foo / export function foo
-      [/^(export\s+)?(?:async\s+)?function\s+(\w+)/, "function", false],
-      // export class Foo / class Foo
-      [/^(export\s+)?class\s+(\w+)/, "class", false],
-      // export const/let/var foo = / export const foo: Type =
-      [/^(export\s+)?(?:const|let|var)\s+(\w+)(?:\s*[=:])/, "variable", false],
-      // export type Foo = / type Foo =
-      [/^(export\s+)?type\s+(\w+)\s*(?:[=<{])/, "type", false],
-      // export interface Foo / interface Foo
-      [/^(export\s+)?interface\s+(\w+)/, "interface", false],
-      // export default function / export default class
-      [/^export\s+default\s+(?:async\s+)?(?:function|class)\s*(\w+)?/, "export", false],
-      // export { Foo, Bar } — re-exports / named exports
-      [/^export\s+\{([^}]+)\}/, "export", false],
-      // Arrow function assigned to const: const foo = (...) =>
-      [/^(export\s+)?const\s+(\w+)\s*=\s*(?:async\s*)?\(/, "function", false],
-    ];
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trimStart();
-
-      for (const [pattern, kind] of patterns) {
-        const match = pattern.exec(line);
-        if (!match) continue;
-
-        const exported = line.startsWith("export");
-
-        // Find symbol name from capture groups
-        let name = "";
-        if (kind === "export" && line.includes("{")) {
-          // export { Foo, Bar as Baz } — emit each name
-          const inner = match[0].replace(/export\s*\{/, "").replace("}", "");
-          const names = inner
-            .split(",")
-            .map((n) => n.split(" as ").pop()!.trim())
-            .filter(Boolean);
-          for (const n of names) {
-            symbols.push({ kind, name: n, lineStart: i + 1, lineEnd: i + 1, exported: true });
-          }
-          break;
-        } else {
-          // Find first capture group that looks like an identifier
-          for (let g = 1; g < match.length; g++) {
-            const cap = match[g];
-            if (cap && /^\w+$/.test(cap) && cap !== "export" && cap !== "async") {
-              name = cap;
-              break;
-            }
-          }
-        }
-
-        if (!name) break;
-
-        // Find end line: for functions/classes, track braces
-        const lineEnd = this.findBlockEnd(lines, i);
-
-        // Extract JSDoc comment above the declaration
-        const docComment = this.extractDocComment(lines, i);
-
-        symbols.push({ kind, name, lineStart: i + 1, lineEnd, exported, docComment });
-        break;
-      }
-    }
-
-    return symbols;
   }
 
   private extractPySymbols(content: string): RawSymbol[] {
@@ -420,11 +432,6 @@ export class ParseStage {
 
   private extractImports(content: string, ext: string): RawImport[] {
     switch (ext) {
-      case ".ts":
-      case ".tsx":
-      case ".js":
-      case ".jsx":
-        return this.extractJsImports(content);
       case ".py":
         return this.extractPyImports(content);
       case ".kt":
@@ -433,39 +440,6 @@ export class ParseStage {
       default:
         return [];
     }
-  }
-
-  private extractJsImports(content: string): RawImport[] {
-    const imports: RawImport[] = [];
-
-    // import { A, B } from 'x' / import type { A } from 'x'
-    const namedRe = /import\s+(type\s+)?\{\s*([^}]+)\}\s+from\s+['"]([^'"]+)['"]/g;
-    let m: RegExpExecArray | null;
-    while ((m = namedRe.exec(content)) !== null) {
-      const isTypeOnly = Boolean(m[1]);
-      const names = m[2].split(",").map((n) => n.trim().split(/\s+as\s+/).pop()!.trim()).filter(Boolean);
-      imports.push({ specifier: m[3], names, isTypeOnly });
-    }
-
-    // import DefaultExport from 'x'
-    const defaultRe = /import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g;
-    while ((m = defaultRe.exec(content)) !== null) {
-      imports.push({ specifier: m[2], names: ["default"], isTypeOnly: false });
-    }
-
-    // import * as X from 'x'
-    const starRe = /import\s+\*\s+as\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g;
-    while ((m = starRe.exec(content)) !== null) {
-      imports.push({ specifier: m[2], names: ["*"], isTypeOnly: false });
-    }
-
-    // require('x')
-    const requireRe = /require\(['"]([^'"]+)['"]\)/g;
-    while ((m = requireRe.exec(content)) !== null) {
-      imports.push({ specifier: m[1], names: ["*"], isTypeOnly: false });
-    }
-
-    return imports;
   }
 
   private extractPyImports(content: string): RawImport[] {

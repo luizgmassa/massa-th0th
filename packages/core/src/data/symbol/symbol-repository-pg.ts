@@ -11,12 +11,24 @@ import { getPrismaClient } from "../../services/query/prisma-client.js";
 // ─── Domain types ────────────────────────────────────────────────────────────
 
 export type SymbolKind =
-  | "function"
+  | "module"
+  | "namespace"
   | "class"
-  | "variable"
-  | "type"
   | "interface"
-  | "export";
+  | "trait"
+  | "enum"
+  | "function"
+  | "method"
+  | "constructor"
+  | "property"
+  | "field"
+  | "variable"
+  | "constant"
+  | "type"
+  | "type_parameter"
+  | "export"
+  | "heading"
+  | "key";
 
 export type RefKind =
   | "call"
@@ -904,8 +916,11 @@ export class SymbolRepositoryPg {
       WHERE project_id = ${projectId}
         AND (${kindList}::text[] IS NULL OR kind = ANY(${kindList}::text[]))
         AND (${opts.exportedOnly ?? false} = false OR exported = true)
-      LIMIT ${SAFETY_CAP}
+      LIMIT ${SAFETY_CAP + 1}
     `;
+    if (rows.length > SAFETY_CAP) {
+      throw new Error(`symbol_definition_safety_cap_exceeded:${SAFETY_CAP}`);
+    }
     return rows.map(mapDef);
   }
 

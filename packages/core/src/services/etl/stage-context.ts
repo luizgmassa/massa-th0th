@@ -9,6 +9,13 @@
  */
 
 import type { Chunk } from "../search/smart-chunker.js";
+import type {
+  NormalizedStructure,
+  ParseDiagnostic,
+  SourceSpan,
+  StructuralEdgeKind,
+  StructuralSymbolKind,
+} from "../structural/types.js";
 
 // ─── Event types ─────────────────────────────────────────────────────────────
 
@@ -51,7 +58,7 @@ export interface DiscoveredFile {
 
 /** A raw symbol extracted by the Parse stage before FQN resolution. */
 export interface RawSymbol {
-  kind: "function" | "class" | "variable" | "type" | "interface" | "export";
+  kind: StructuralSymbolKind;
   name: string;
   /** Filled by Resolve stage: '{relativePath}#{name}' */
   fqn?: string;
@@ -59,6 +66,7 @@ export interface RawSymbol {
   lineEnd: number;
   exported: boolean;
   docComment?: string;
+  span?: SourceSpan;
 }
 
 /** A raw import statement before path resolution. */
@@ -66,6 +74,13 @@ export interface RawImport {
   specifier: string; // e.g. '../services/search'
   names: string[]; // e.g. ['SearchController', 'default']
   isTypeOnly: boolean;
+  form?: "esm_import" | "esm_re_export" | "commonjs_require" | "dynamic_import";
+  span?: SourceSpan;
+  bindings?: readonly Readonly<{
+    imported: string;
+    local: string;
+    typeOnly: boolean;
+  }>[];
 }
 
 /**
@@ -82,7 +97,7 @@ export interface RawImport {
  *   - emit       : emitter.emit('event', ...) — event producer
  *   - listen     : emitter.on('event', ...) — event consumer
  */
-export type RawEdgeKind = "call" | "data_flow" | "http_call" | "emit" | "listen";
+export type RawEdgeKind = StructuralEdgeKind;
 
 export interface RawEdge {
   kind: RawEdgeKind;
@@ -94,6 +109,8 @@ export interface RawEdge {
   callerSymbol?: string;
   /** Typed-edge metadata. Resolved target_fqn is filled by Resolve stage. */
   meta?: Record<string, unknown>;
+  span?: SourceSpan;
+  sourceFqn?: string;
 }
 
 /** Output of Parse stage / Input of Resolve stage */
@@ -103,6 +120,10 @@ export interface ParsedFile {
   symbols: RawSymbol[];
   rawImports: RawImport[];
   rawEdges: RawEdge[]; // typed structural edges (D1)
+  /** Immutable native-query result retained after Tree-sitter objects are deleted. */
+  structure?: NormalizedStructure;
+  structuralDiagnostics?: readonly ParseDiagnostic[];
+  structuralRecovered?: boolean;
 }
 
 /** A resolved import with the concrete file path (or null if external). */

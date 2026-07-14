@@ -14,6 +14,17 @@ import path from "path";
 import fs from "fs";
 import { logger } from "@massa-th0th/shared";
 import { getSymbolRepository } from "../../../data/symbol/symbol-repository-factory.js";
+import type { SymbolDefinition } from "../../../data/symbol/symbol-repository-pg.js";
+import {
+  StructuralResolverRegistry,
+  StructuralResolverSession,
+  type StructuralResolverDefinition,
+  type StructuralResolverDocument,
+} from "../../structural/resolver.js";
+import { TYPESCRIPT_LANGUAGE_RESOLVER, matchesStructuralPathAlias, resolveStructuralSpecifier } from "../../structural/resolvers/typescript.js";
+import { createStructuralIdentity, parseStructuralFqn, type StructuralIdentity } from "../../structural/fqn-codec.js";
+import { resolveStructuralLanguage } from "../../structural/language-manifest.js";
+import { STRUCTURAL_SYMBOL_KINDS, type StructuralSymbolKind } from "../../structural/types.js";
 import type {
   EtlStageContext,
   ParsedFile,
@@ -25,6 +36,7 @@ import type {
 } from "../stage-context.js";
 
 const TS_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.js"];
+const TS_JS_FILE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 
 interface TsPathAlias {
   prefix: string;
@@ -39,6 +51,10 @@ interface MonorepoPackage {
 }
 
 export class ResolveStage {
+  constructor(
+    private readonly symbolRepository: Pick<ReturnType<typeof getSymbolRepository>, "listAllDefinitions"> = getSymbolRepository(),
+  ) {}
+
   async run(ctx: EtlStageContext, files: ParsedFile[]): Promise<ResolvedFile[]> {
     const t0 = performance.now();
 
@@ -60,7 +76,7 @@ export class ResolveStage {
     // within each source. This closes the D1 cross-file gap: a call edge in
     // a newly-indexed file can now resolve to a callee defined in an
     // unchanged file that was fingerprint-skipped this run.
-    const symbolIndex = await this.buildSymbolIndex(ctx.projectId, files);
+    const { index: symbolIndex, definitions: repositoryDefinitions } = await this.buildSymbolIndex(ctx.projectId, files);
 
     // Parse tsconfig.json compilerOptions.paths for workspace alias resolution
     const rootAliases = this.loadTsConfigPaths(ctx.projectPath);
@@ -68,11 +84,59 @@ export class ResolveStage {
     // Detect monorepo packages and load their tsconfigs
     const monorepoPackages = this.detectMonorepoPackages(ctx.projectPath, files);
 
+    const structuralDocuments: StructuralResolverDocument[] = files.flatMap((file) => {
+      if (!file.structure) return [];
+      const language = resolveStructuralLanguage(path.extname(file.file.relativePath));
+      if (language.status !== "supported") throw new Error(`structural_manifest_missing:${file.file.relativePath}`);
+      return [{
+        file: file.file.relativePath,
+        language: language.entry.language,
+        dialect: language.entry.dialect,
+        resolverVersion: language.entry.resolverVersion,
+        structure: file.structure,
+      }];
+    });
+    const currentStructuralFiles = new Set(structuralDocuments.map((document) => document.file));
+    const skippedStructuralFiles = new Set(files.filter((item) =>
+      !item.file.needsReparse && TS_JS_FILE_EXTENSIONS.has(path.extname(item.file.relativePath).toLowerCase())
+    ).map((item) => item.file.relativePath));
+    const pathAliasesByFile = Object.fromEntries([...knownRelPaths].map((file) => [
+      file,
+      this.structuralAliasesFor(file, rootAliases, monorepoPackages),
+    ]));
+    const buildMetadata = { knownFiles: [...knownRelPaths], pathAliasesByFile };
+    const seedRows = repositoryDefinitions
+      .filter((definition) => TS_JS_FILE_EXTENSIONS.has(path.extname(definition.file_path).toLowerCase()))
+      .filter((definition) => knownRelPaths.has(definition.file_path) && skippedStructuralFiles.has(definition.file_path))
+      .filter((definition) => !currentStructuralFiles.has(definition.file_path));
+    const seedIds = new Set<string>();
+    for (const definition of seedRows) {
+      if (seedIds.has(definition.id)) throw new Error(`structural_repository_seed_duplicate:${definition.id}`);
+      seedIds.add(definition.id);
+    }
+    const seedDefinitions = seedRows.map((definition) => this.materializeRepositorySeed(definition));
+    const session = structuralDocuments.length > 0
+      ? new StructuralResolverSession(
+          structuralDocuments,
+          buildMetadata,
+          new StructuralResolverRegistry([TYPESCRIPT_LANGUAGE_RESOLVER]),
+          seedDefinitions,
+        )
+      : undefined;
+
     const resolved: ResolvedFile[] = [];
     let processed = 0;
 
     for (const parsedFile of files) {
-      const resolvedFile = this.resolveFile(
+      const resolvedFile = parsedFile.structure && session
+        ? this.resolveStructuralFile(
+            parsedFile,
+            session,
+            knownRelPaths,
+            rootAliases,
+            monorepoPackages,
+          )
+        : this.resolveFile(
         parsedFile,
         ctx.projectPath,
         knownRelPaths,
@@ -109,6 +173,126 @@ export class ResolveStage {
     logger.info("ETL Resolve complete", { projectId: ctx.projectId, total: resolved.length, durationMs });
 
     return resolved;
+  }
+
+  private resolveStructuralFile(
+    parsed: ParsedFile,
+    session: StructuralResolverSession,
+    knownRelPaths: Set<string>,
+    rootAliases: TsPathAlias[],
+    monorepoPackages: MonorepoPackage[],
+  ): ResolvedFile {
+    const filePath = parsed.file.relativePath;
+    const structuralAliases = this.structuralAliasesFor(filePath, rootAliases, monorepoPackages);
+    const build = { knownFiles: [...knownRelPaths], pathAliasesByFile: { [filePath]: structuralAliases } };
+    const resolvedImports: ResolvedImport[] = parsed.rawImports.map((raw) => {
+      const resolvedPath = resolveStructuralSpecifier(raw.specifier, filePath, build) ?? null;
+      return {
+        raw,
+        resolvedPath,
+        external: !raw.specifier.startsWith(".") && !matchesStructuralPathAlias(raw.specifier, structuralAliases),
+      };
+    });
+    const identities = session.identitiesFor(filePath);
+    if (identities.length !== parsed.symbols.length) {
+      throw new Error(`structural_identity_projection_mismatch:${filePath}`);
+    }
+    const symbols = parsed.symbols.map((symbol, index) => ({ ...symbol, fqn: identities[index]!.fqn }));
+    const resolvedEdges: ResolvedEdge[] = (parsed.structure?.edges ?? [])
+      .filter((edge) => edge.kind !== "import")
+      .map((edge) => {
+        const resolution = session.resolve(filePath, {
+          kind: edge.kind,
+          span: edge.span,
+          target: edge.target,
+        });
+        const unresolved = edge.target.status === "unresolved" ? edge.target : undefined;
+        const owner = parsed.structure!.symbols.filter((symbol) =>
+          symbol.span.startByte <= edge.span.startByte && symbol.span.endByte >= edge.span.endByte
+        ).sort((left, right) =>
+          (left.span.endByte - left.span.startByte) - (right.span.endByte - right.span.startByte)
+        )[0];
+        const ownerIndex = owner ? parsed.structure!.symbols.indexOf(owner) : -1;
+        return {
+          kind: edge.kind,
+          line: edge.span.start.row + 1,
+          symbolName: unresolved?.name ?? (edge.target.status === "resolved" ? edge.target.fqn : ""),
+          ...(owner ? { callerSymbol: owner.name } : {}),
+          ...(resolution.status === "resolved" ? { targetFqn: resolution.fqn } : {}),
+          span: edge.span,
+          ...(ownerIndex >= 0 ? { sourceFqn: identities[ownerIndex]?.fqn } : {}),
+          meta: {
+            ...(edge.metadata ?? {}),
+            ...(edge.paramIndex !== undefined ? { paramIndex: edge.paramIndex } : {}),
+            sourceSpan: edge.span,
+            ...(unresolved?.qualifier ? { qualifier: unresolved.qualifier } : {}),
+            ...(resolution.status === "ambiguous"
+              ? { resolution: "ambiguous", candidates: resolution.candidates.map((candidate) => candidate.fqn) }
+              : resolution.status === "unresolved" ? { resolution: "unresolved" } : {}),
+            ...(ownerIndex >= 0 && identities[ownerIndex] ? { callerFqn: identities[ownerIndex]!.fqn } : {}),
+          },
+        } satisfies ResolvedEdge;
+      });
+    return { ...parsed, symbols, resolvedImports, resolvedEdges };
+  }
+
+  private materializeRepositorySeed(definition: SymbolDefinition): StructuralResolverDefinition {
+    if (!definition.id || definition.file_path.includes("#") || !definition.name ||
+        !STRUCTURAL_SYMBOL_KINDS.includes(definition.kind as StructuralSymbolKind)) {
+      throw new Error(`invalid_structural_repository_seed:${definition.id || definition.file_path}`);
+    }
+    const parsed = parseStructuralFqn(definition.id);
+    if (parsed.file !== definition.file_path) {
+      throw new Error(`structural_repository_seed_file_mismatch:${definition.id}`);
+    }
+    const language = resolveStructuralLanguage(path.extname(definition.file_path));
+    if (language.status !== "supported") throw new Error(`structural_repository_seed_language:${definition.id}`);
+    let identity: StructuralIdentity;
+    if (parsed.format === "simple") {
+      if (parsed.name !== definition.name) throw new Error(`structural_repository_seed_name_mismatch:${definition.id}`);
+      identity = createStructuralIdentity({
+        file: definition.file_path,
+        name: definition.name,
+        language: language.entry.language,
+        dialect: language.entry.dialect,
+        qualifiedName: definition.name,
+        kind: definition.kind as StructuralSymbolKind,
+        scope: "top_level",
+        overload: "unique",
+      });
+    } else {
+      const terminal = parsed.qualifiedName.split(".").at(-1);
+      if (terminal !== definition.name || parsed.kind !== definition.kind) {
+        throw new Error(`structural_repository_seed_identity_mismatch:${definition.id}`);
+      }
+      identity = Object.freeze({
+        fqn: definition.id,
+        legacyFqn: `${definition.file_path}#${definition.name}`,
+        aliases: Object.freeze([`${definition.file_path}#${definition.name}`]) as readonly [string],
+        file: definition.file_path,
+        name: definition.name,
+        displayName: parsed.qualifiedName,
+        qualifiedName: parsed.qualifiedName,
+        kind: parsed.kind,
+        canonicalSignature: `persisted:${definition.id}`,
+        signatureHash: parsed.signatureHash,
+      });
+    }
+    return Object.freeze({
+      identity: {
+        file: identity.file,
+        name: identity.name,
+        language: language.entry.language,
+        dialect: language.entry.dialect,
+        qualifiedName: identity.qualifiedName,
+        kind: identity.kind,
+        scope: identity.qualifiedName === identity.name ? "top_level" : "nested",
+        overload: identity.fqn === identity.legacyFqn ? "unique" : "overloaded",
+      },
+      resolvedIdentity: identity,
+      exported: definition.exported,
+      defaultExport: false,
+    } satisfies StructuralResolverDefinition);
   }
 
   private resolveFile(
@@ -240,18 +424,23 @@ export class ResolveStage {
   private async buildSymbolIndex(
     projectId: string,
     files: ParsedFile[],
-  ): Promise<Map<string, string>> {
+  ): Promise<{ index: Map<string, string>; definitions: SymbolDefinition[] }> {
     const index = new Map<string, string>();
+    let repositoryDefinitions: SymbolDefinition[] = [];
 
     // 1. Seed from the repo (project-wide), first-def-wins. Catches unchanged
     //    files that are fingerprint-skipped this run.
     try {
-      const repoSyms = await getSymbolRepository().listAllDefinitions(projectId);
-      for (const def of repoSyms) {
+      repositoryDefinitions = await this.symbolRepository.listAllDefinitions(projectId);
+      for (const def of repositoryDefinitions) {
         if (index.has(def.name)) continue;
         index.set(def.name, `${def.file_path}#${def.name}`);
       }
     } catch (err) {
+      const skippedStructural = files.some((file) =>
+        !file.file.needsReparse && TS_JS_FILE_EXTENSIONS.has(path.extname(file.file.relativePath).toLowerCase())
+      );
+      if (skippedStructural) throw new Error("structural_repository_seed_failed", { cause: err });
       logger.warn("buildSymbolIndex: repo seed failed, in-batch only", {
         projectId,
         error: (err as Error)?.message,
@@ -271,7 +460,7 @@ export class ResolveStage {
     for (const [name, fqn] of inBatch) {
       index.set(name, fqn);
     }
-    return index;
+    return { index, definitions: repositoryDefinitions };
   }
 
   private resolveSpecifier(
@@ -421,10 +610,21 @@ export class ResolveStage {
    */
   private getPackageAliases(filePath: string, packages: MonorepoPackage[]): TsPathAlias[] {
     for (const pkg of packages) {
-      if (filePath.startsWith(pkg.relativePath + "/") || filePath.startsWith(pkg.relativePath)) {
+      if (filePath === pkg.relativePath || filePath.startsWith(pkg.relativePath + "/")) {
         return pkg.aliases;
       }
     }
     return [];
+  }
+
+  private structuralAliasesFor(
+    filePath: string,
+    rootAliases: TsPathAlias[],
+    packages: MonorepoPackage[],
+  ) {
+    return [...this.getPackageAliases(filePath, packages), ...rootAliases].map((alias) => ({
+      pattern: alias.prefix + (alias.targets.some((target) => target.includes("*")) ? "/*" : ""),
+      targets: alias.targets.map((target) => alias.packagePath ? path.posix.join(alias.packagePath, target) : target),
+    }));
   }
 }
