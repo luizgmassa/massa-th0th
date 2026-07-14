@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 READY
+**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 READY
 
 ## Project Testing Guidelines Scan
 
@@ -166,7 +166,7 @@ Phase 7 Validate:
 
 ### T6 / TASK-006: Implement SourceSpan and versioned FQN codec
 
-**Status:** READY after TASK-005 PASS.
+**Status:** PASS on 2026-07-14. Exact Bun 1.3.0 focused tests passed 25/25 with 79 assertions; forced uncached workspace type-check/build and diff integrity passed. Independent review's strict-parser and round-trip findings were remediated so malformed modern-looking suffixes cannot masquerade as legacy FQNs and legitimate reserved-looking names receive hashed primary IDs.
 
 **What:** Add byte/point mapping, embedded remap/newline index, line compatibility derivation, canonical signatures, full SHA-256 FQNs, legacy aliases, deterministic ambiguity payload, and collision failure.  
 **Where:** structural span/FQN modules and golden tests.  
@@ -176,6 +176,8 @@ Phase 7 Validate:
 **Commit:** `feat(graph): add structural identity codecs`
 
 ### T7 / TASK-007: Build declarative query execution and TS/JS packs
+
+**Status:** READY after TASK-005 and TASK-006 PASS.
 
 **What:** Implement query-pack execution, capture normalization/dedupe, documentation and all required TS/JS symbol/import/edge captures.  
 **Where:** structural query engine, TS/JS/TSX/JSX packs, fixtures, unit tests.  

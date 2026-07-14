@@ -146,9 +146,35 @@ export {
 } from "./structural/diagnostics.js";
 export type {
   ParseDiagnostic,
+  SourcePoint,
+  SourceSpan,
   StructuralFailureKind,
   StructuralParseOutcome,
 } from "./structural/types.js";
+export { SourceIndex, deriveLegacyLineRange } from "./structural/source-span.js";
+export type { LegacyLineRange } from "./structural/source-span.js";
+export {
+  FqnHashCollisionError,
+  StructuralFqnRegistry,
+  canonicalizeStructuralSignature,
+  createStructuralIdentity,
+  formatStructuralFqn,
+  normalizeStructuralFile,
+  parseStructuralFqn,
+  sha256SignatureDigest,
+  structuralFqnDisplayName,
+} from "./structural/fqn-codec.js";
+export type {
+  ParsedStructuralFqn,
+  SignatureDigest,
+  StructuralFqnCandidate,
+  StructuralFqnResolution,
+  StructuralIdentity,
+  StructuralIdentityInput,
+  StructuralIdentityOverload,
+  StructuralIdentityScope,
+  StructuralSignatureInput,
+} from "./structural/fqn-codec.js";
 
 // Symbol Graph
 export { symbolGraphService, SymbolGraphService } from "./symbol/symbol-graph.service.js";

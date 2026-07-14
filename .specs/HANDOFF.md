@@ -32,19 +32,20 @@ Implement `plan-multi-language.md` under workflow session `spec-multi-language`.
 - TASK-003 added normalized structural contracts plus the ordered exhaustive 33-extension manifest and deterministic fingerprint inputs. Exact Bun 1.3.0 focused tests passed 6/6 with 451 assertions; forced uncached type-check/build passed. Independent review's sole `parameterIndex`/`paramIndex` finding was fixed and accepted.
 - TASK-004 added lazy literal native grammar loading, exact serialized Bun-marker restoration, cached 33/33 parser readiness, additive live health status, startup validation-before-listen, and pre-side-effect indexing guards. Focused 10/10, queue regressions 13/13, native verifier, uncached type/build, built-dist readiness, and independent review passed.
 - TASK-005 added one process-global FIFO parser pool (capacity 4/max 32; timeout 5s/max 60s), typed runtime outcomes, bounded diagnostics with total counts, and cursor-before-tree lifetime ownership. Focused 21/21, native/RSS, uncached type/build, and independent review passed after fixing cap multiplication, poisoned retarget slots, and raw grammar-cache exposure.
+- TASK-006 added byte-accurate immutable UTF-8 source indexing, embedded span remapping, legacy line compatibility, canonical full-SHA structural FQNs, legacy aliases, collision failure, and deterministic ambiguity payloads. Focused 25/25, forced type/build, and independent review passed after closing malformed-modern-suffix masquerading and reserved-name round trips.
 
 ## Blocking Gate
 
-TASK-005 passed focused/native/RSS/type/build/diff gates and independent review. The runtime now fails hard when query execution is absent or native cleanup/acquisition fails; it never converts those paths to empty success.
+TASK-006 passed focused/type/build/diff gates and independent review. Golden identity serialization is frozen, malformed modern-looking IDs reject, and later persistence/transport work must consume this codec rather than fork it.
 
 ## Exact Next Step
 
-Freeze and commit TASK-005, then execute TASK-006. Do not touch excluded platform files.
+Freeze and commit TASK-006, then execute TASK-007 declarative query execution and TS/JS packs. Do not touch excluded platform files.
 
 ## Worktree and Safety
 
 - Branch: `main`; baseline `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`.
 - `plan-multi-language.md` was supplied untracked and is now an in-scope revised artifact.
 - No push attempted.
-- TASK-001 through TASK-005 are claimed with recorded gates: native discovery, dependency/verifier/patch, normalized contracts/manifest, readiness/guards, and bounded runtime/lifetime. No graph migration, container build, or final parser benchmark has been claimed.
+- TASK-001 through TASK-006 are claimed with recorded gates: native discovery, dependency/verifier/patch, normalized contracts/manifest, readiness/guards, bounded runtime/lifetime, and structural span/identity codecs. No query-pack integration, graph migration, container build, or final parser benchmark has been claimed.
 - Preserve existing SQLite-removal artifacts and follow-up status.

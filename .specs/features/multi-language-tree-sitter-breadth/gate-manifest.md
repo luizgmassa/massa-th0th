@@ -1,7 +1,7 @@
 # Multi-Language Tree-sitter Breadth Gate Manifest
 
 **Workflow session:** `spec-multi-language`  
-**Feature status:** Execute active; TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 READY
+**Feature status:** Execute active; TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 READY
 **Baseline commit:** `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`  
 **Baseline worktree:** supplied `plan-multi-language.md` was the only user-owned untracked file before feature artifact creation.
 
@@ -185,6 +185,24 @@ The fault adapters kill value-only restoration, leaked markers, poisoned queues,
 
 FIFO/capacity tests kill overlapping same-slot use, newcomer queue bypass, wrong-language deadlock, timeout leakage, and per-runtime cap multiplication. Failure sensors kill poisoned parser reuse and silent factory-capacity loss. Runtime tests kill missing-query empty success, cleanup-order inversion, lost diagnostic totals, partial readiness-cache publication, and hard-failure-to-empty conversion. The real native lifetime and no-delete discrimination gates prove the patched binding rather than mocks. These assertions map directly to T5 done-when, MLTS-004/007-009/012/017, and AC-003/004/005/007. Query-pack extraction remains T7 and ETL routing remains T9. **Verdict: sufficient, non-shallow, independently accepted PASS.**
 
+## TASK-006 Execution Result (2026-07-14)
+
+**Result:** PASS. One immutable UTF-8 source index now owns byte/point mapping, host-child remapping, snippet round trips, and legacy inclusive-line derivation. The versioned identity codec preserves simple top-level IDs, hashes nested/overloaded canonical signatures with full SHA-256, emits legacy aliases, rejects collisions, and returns deterministic ambiguity candidates.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Focused exact-runtime tests | PASS | Exact Bun 1.3.0: 25 tests, 79 assertions, zero failures/skips. |
+| UTF-8 span goldens | PASS | Frozen 73-byte BOM/tab/accent/emoji/CRLF fixture, LF-only line index, code-point boundary rejection, host-child remap, full-buffer L1-L4 compatibility, and exact snippet bytes. |
+| Canonical FQN goldens | PASS | Frozen ordered JSON and full SHA-256 `b738f0516b320c0125823b89b5d2877b20a3190de14eead3929695f63247023e`; explicit nesting/overload modes and NFC/path normalization. |
+| Compatibility and failures | PASS | Simple top-level IDs and legacy aliases remain stable; malformed modern suffixes reject; reserved-looking legitimate names receive round-trippable hashed primary IDs; forced digest collision raises typed `fqn_hash_collision`; ambiguity candidates are frozen and deterministically sorted. |
+| Type-check and build | PASS | Forced uncached type-check 6/6 and build 5/5; diff integrity clean. |
+| Independent review | PASS after remediation | Review found malformed modern-looking suffixes falling through as legacy names and a create/parse conflict for legitimate reserved-looking names; strict rejection plus hashed primary identity fallback now have regression coverage. |
+| Excluded-platform non-touch | PASS | No excluded platform, container, workflow, or non-arm64 native path changed. |
+
+### TASK-006 Post-Gate Adequacy Review
+
+The byte fixture kills character-column, CR-only newline, BOM stripping, and inclusive-end implementations. Boundary and child-remap tests kill split-code-point and unchecked-relative-offset behavior. Canonical JSON/hash goldens kill key-order, normalization, shortened-hash, and position-dependent identities. Collision injection, exact-before-alias resolution, idempotent registration, sorted ambiguity candidates, and malformed-suffix tests distinguish silent overwrite, first-definition wins, unstable payloads, and modern-to-legacy masquerading. These assertions map directly to T6 done-when, MLTS-005-007, and AC-004/006. Query extraction, resolver wiring, persistence, and transport remain later tasks. **Verdict: sufficient, non-shallow, independently accepted PASS.**
+
 ## Planned Gate Commands
 
 - `bun run verify:tree-sitter-native`
@@ -359,3 +377,23 @@ These draft checksums are retained as failed-review evidence and are not an acti
 | `packages/core/src/__tests__/structural-runtime.test.ts` | `dc3113d72764d0bfd98be632a3d89354056166f01b7b41c7c9d6257a5568927e` |
 
 `gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-005 commit.
+
+## TASK-006 Accepted Artifact Freeze v10
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `plan-multi-language.md` | `02f183d2a23b9f9a2694289cc04c2a4c7614f87ec22918e3b59b7de66add9b10` |
+| `spec.md` | `43ed4c1c37ecbcaef52750d263f93410dffcc9372a99ac4a73cd6e7f3a54f50e` |
+| `context.md` | `af3339803245375d6a69890cfe49e60902a21d71ba969580f555b20fc460a7a9` |
+| `design.md` | `171cdcda9412cc7ede9b523d25fa47fa98de76cdd0b5ea87b84f4551602fea65` |
+| `tasks.md` | `03b406effaafd2d221f15f708dc27b7c4a035a0f1daf60ad77dbf07130d69968` |
+| `capability-matrix.md` | `fe462385096d97ad1fc002d4eafa5b59bcfadf2b1d0457b76d39106338df3b16` |
+| `.specs/project/FEATURES.json` | `851c7662bebb18fe138d1324d6f29d8a945b03e737b016f761359e20d8f5eced` |
+| `.specs/project/STATE.md` | `368a8833935c62cb2f5da88fe5b94a137caa66187d4ac25bd517a846673123f0` |
+| `.specs/HANDOFF.md` | `3dbea3be0795db0e51891d3fd5498826b8aa15fcd8117b3acc8d48181bfe8679` |
+| `packages/core/src/services/index.ts` | `be4cede8e82493b2e2a645cb05e99103af0a9b97b83181971f266c91f842da40` |
+| `packages/core/src/services/structural/source-span.ts` | `6ede4301f7ad2a90ca1d9ff848948c9224a18e3bdbf6a285d78ef2858259ab20` |
+| `packages/core/src/services/structural/fqn-codec.ts` | `6d99683c8b388e7b4edb5d4d5dd33937777140706fa639a350eda5d0691e2495` |
+| `packages/core/src/__tests__/structural-identity.test.ts` | `f0b5929e45cced08cc2dab23575e63b3c56c6b377f22868036967bcad549cffe` |
+
+`gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-006 commit.
