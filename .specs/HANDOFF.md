@@ -23,14 +23,15 @@ Implement `plan-multi-language.md` under workflow session `spec-multi-language`.
 - Created/activated feature spec, context, design, capability matrix, tasks, gate manifest, project state, and this handoff.
 - User explicitly permitted sub-agents. Tasks select one sequential worker per Execute phase plus an independent verifier.
 - Phase 0 worker ran TASK-001 target discovery and measured macOS 26.5.2 arm64 with Bun 1.3.11. The user subsequently narrowed native implementation scope to macOS arm64 only.
+- TASK-001 then passed with exact Bun 1.3.0 after exact Bun 1.2.0 failed. Frozen reinstall, 33/33 parses twice, Mach-O arm64 linkage, missing/incompatible sensors, and provenance evidence are recorded in the feature manifests.
 
 ## Blocking Gate
 
-TASK-001 must prove clean frozen install/load/parse and native linkage for every required grammar on exact Bun/macOS arm64. Other platforms, container-native packaging, and other architectures are outside the user-approved scope.
+No active blocker. Exact Bun 1.3.0 requires a serialized startup loader that restores the complete Bun-version property descriptor before parsing; exact Node 22.22.2 is the native build helper. T4 owns invariant tests.
 
 ## Exact Next Step
 
-Run TASK-001 from clean caches on macOS arm64, testing repository-declared Bun 1.2.0 first and the lowest exact Bun 1.3.x candidate only if required. Only after every grammar row passes may TASK-002 begin.
+Execute TASK-002 without reselecting versions: pin the exact Bun/runtime/grammar set, Node build-helper contract, audited lifecycle trust list, frozen lockfile, and deterministic macOS arm64 verifier.
 
 ## Worktree and Safety
 

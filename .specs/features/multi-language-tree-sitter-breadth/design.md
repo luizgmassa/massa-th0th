@@ -268,6 +268,8 @@ Incremental hard failure does not delete active definitions/references/imports. 
 - `capability-matrix.md` records exact npm/Git artifacts, source repository, version/commit, license, scripts, Tree-sitter peer/ABI, arm64 linkage, and smoke result.
 - Root `packageManager` and the macOS arm64 native CI/publish checks use one exact feasibility-proven Bun release.
 - Native grammar packages are exact dependencies. Only packages with required lifecycle scripts are named in root `trustedDependencies`.
+- Exact Bun `1.3.0` is the application runtime. Exact Node `22.22.2` arm64 is a build-only helper for native lifecycle compilation; it is not an application runtime dependency.
+- Grammar startup loading is serialized. The loader snapshots the full `process.versions.bun` property descriptor, temporarily removes the configurable marker while upstream `node-gyp-build` fallbacks load, and restores the exact descriptor in `finally` before parsing or concurrent work begins.
 - Source, built `dist`, and packed-package load smokes run independently on macOS arm64.
 - Docker, Linux, Alpine, and non-arm64 packaging are untouched and outside this design.
 
@@ -328,6 +330,6 @@ Independent validation mutates at least one query capture, grammar dependency, g
 ## Artifact Store Evidence
 
 - Active key: `.specs/features/multi-language-tree-sitter-breadth/design.md`
-- Version: 2 (macOS arm64-only scope override)
+- Version: 3 (TASK-001 selected runtime and loader constraint)
 - Checksum: recorded in `gate-manifest.md` after artifact freeze.
 - MCP/skill decision: use `massa-th0th`, `coding-guidelines`, direct repository tools, official Tree-sitter/Bun/npm evidence, phase implementers with disjoint ownership, and an independent verifier. Synapse is unavailable in the current build, so indexed retrieval fell back to stateless search plus current-source confirmation.

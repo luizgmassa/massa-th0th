@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** Execute reopened by explicit macOS arm64-only scope; TASK-001 is active
+**Status:** TASK-001 PASS on macOS arm64; TASK-002 ready
 
 ## Project Testing Guidelines Scan
 
@@ -109,7 +109,7 @@ Phase 7 Validate:
 
 ### T1 / TASK-001: Prove native grammar feasibility on macOS arm64
 
-**Status:** ACTIVE after the user's 2026-07-13 macOS arm64-only scope override.
+**Status:** PASS on 2026-07-13. Exact Bun 1.2.0 was rejected; exact Bun 1.3.0 passed frozen clean install, 33/33 parse twice, Mach-O arm64 linkage, and two negative sensors. Evidence is in `capability-matrix.md` and `gate-manifest.md`.
 
 **What:** In throwaway clean caches, vet and load/parse every unique grammar artifact on exact Bun/macOS arm64; freeze package/commit, license, scripts, ABI, integrity, arm64 linkage, and failures in `capability-matrix.md` and `gate-manifest.md`.  
 **Where:** `.specs/features/multi-language-tree-sitter-breadth/{capability-matrix,gate-manifest}.md`; throwaway `/tmp` probes only.  
@@ -121,7 +121,9 @@ Phase 7 Validate:
 
 ### T2 / TASK-002: Pin native dependencies and one Bun runtime
 
-**What:** Consume the exact Bun and grammar selections frozen by T1; add those dependencies, lockfile, explicit `trustedDependencies`, and `verify:tree-sitter-native` script without reselecting versions.  
+**Status:** READY.
+
+**What:** Consume the exact Bun and grammar selections frozen by T1; add those dependencies, lockfile, explicit `trustedDependencies`, exact Node `22.22.2` build-helper contract, and `verify:tree-sitter-native` script without reselecting versions.
 **Where:** root/core package manifests, `bun.lock`, `scripts/verify-tree-sitter-grammars.ts`, focused tests.  
 **Depends on:** T1 PASS. **Requirements:** MLTS-001-004,020.  
 **Non-goals:** Non-macOS and Docker packaging; macOS CI is T24.  
@@ -140,11 +142,11 @@ Phase 7 Validate:
 
 ### T4 / TASK-004: Implement grammar loaders and parser readiness
 
-**What:** Add explicit native imports, idempotent `validateAllGrammars`, parser readiness state, `/health` liveness separation, and indexing guard.  
+**What:** Add explicit native imports, a serialized Bun-marker compatibility loader with exact descriptor restoration in `finally`, idempotent `validateAllGrammars`, parser readiness state, `/health` liveness separation, and indexing guard.
 **Where:** structural grammar loader/readiness modules, Tools API startup/routes, direct-core guard, tests.  
 **Depends on:** T3. **Requirements:** MLTS-002-003,017-019.  
-**Tests:** Unit/native smoke; missing/ABI-incompatible grammar keeps liveness but rejects indexing. **Gate:** Focused + Native + Type.  
-**Done when:** All required grammars validate before indexing and custom semantic-only extensions do not fail readiness.  
+**Tests:** Unit/native smoke; loader serialization/restoration on success and throw; missing/ABI-incompatible grammar keeps liveness but rejects indexing. **Gate:** Focused + Native + Type.
+**Done when:** All required grammars validate before indexing, the Bun descriptor is always restored before parsing, and custom semantic-only extensions do not fail readiness.
 **Commit:** `feat(parser): add native grammar readiness`
 
 ### T5 / TASK-005: Implement bounded parser pool and structural runtime
@@ -457,5 +459,5 @@ Counts below are minimum new focused cases/sensors, not total repository pass co
 ## Artifact Store Evidence
 
 - Active key: `.specs/features/multi-language-tree-sitter-breadth/tasks.md`
-- Version: 2 (macOS arm64-only scope override)
+- Version: 3 (TASK-001 PASS; TASK-002 ready)
 - Checksum: recorded in `gate-manifest.md` after artifact freeze.

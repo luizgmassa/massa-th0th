@@ -7,7 +7,7 @@
 - workflow: spec-driven
 - persona: AI Engineer
 - feature: `multi-language-tree-sitter-breadth`
-- status: EXECUTE ACTIVE; TASK-001 MACOS ARM64 FEASIBILITY
+- status: EXECUTE ACTIVE; TASK-001 PASS; TASK-002 READY
 - branch: `main`
 - baseline: `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`
 - push: not attempted
@@ -32,6 +32,7 @@ Replace regex structural extraction with pinned native Tree-sitter grammars and 
 | AD-001 | proposed; activate after TASK-001/TASK-002 verification | Structural parsing uses pinned native Tree-sitter grammar artifacts plus repository-owned query/resolver packs; no runtime-download or WASM fallback. | `design.md`, native feasibility gate |
 | AD-002 | proposed; activate after migration/CAS tests | Graph schema upgrades build generation-scoped structure beside active data and activate through DB lease, immutable snapshot, completeness, and CAS. | `design.md`, full pre-mortem |
 | AD-003 | proposed; activate after FQN transport parity | One versioned FQN codec owns modern IDs, legacy aliases, collision failure, and ambiguity payloads across persistence/HTTP/MCP. | `design.md`, full pre-mortem |
+| AD-004 | proposed; activate after TASK-004 invariant tests | Exact Bun 1.3.0 loads upstream native packages through one serialized compatibility loader that snapshots, removes, and restores the full `process.versions.bun` descriptor before parsing. Exact Node 22.22.2 is build-only. | TASK-001 native evidence |
 
 ## Progress
 
@@ -41,14 +42,16 @@ Replace regex structural extraction with pinned native Tree-sitter grammars and 
 - 23 requirements, 12 acceptance criteria, 26 atomic tasks, seven phases, and independent verifier contract are frozen.
 - Current source evidence: 33 allowed extensions; structural extraction supports 8 symbol extensions, 7 import extensions, and 4 typed-edge extensions.
 - TASK-001 target discovery measured macOS 26.5.2 arm64 with Bun 1.3.11. The user then narrowed platform scope to macOS arm64 only, reopening the grammar artifact loop. No production file changed yet.
+- TASK-001 PASS: exact Bun 1.2.0 was rejected; exact Bun 1.3.0 passed a second frozen clean install, all 33 extension parses twice, 27 loaded native modules with Mach-O arm64/system-only linkage, and missing/incompatible negative sensors.
+- Frozen selections include modern pinned Dart and Erlang Git commits, Clojure Orchard, and HTML as the Vue SFC host. No WASM or runtime download was used.
 
 ## Blocker
 
-None before TASK-001 execution. Local target is Darwin arm64 with Bun 1.3.11; root metadata declares Bun 1.2.0 and must be tested first per the approved fallback rule.
+None. TASK-002 must consume the exact T1 runtime/artifact set without version reselection.
 
 ## Next Step
 
-Run TASK-001 from clean caches on macOS arm64. Test repository-declared Bun 1.2.0 first, then the lowest exact Bun 1.3.x candidate only if required. Record every grammar artifact result before TASK-002.
+Execute TASK-002: pin exact Bun 1.3.0, exact Node 22.22.2 build-helper contract, the 27 selected native artifacts, audited `trustedDependencies`, lockfile, and a deterministic macOS arm64 verifier.
 
 ## Previous Feature
 
