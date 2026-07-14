@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 PASS; TASK-009 PASS; TASK-010 PASS; TASK-011 PASS; TASK-012 READY
+**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 PASS; TASK-009 PASS; TASK-010 PASS; TASK-011 PASS; TASK-012 PASS; TASK-013 READY
 
 ## Project Testing Guidelines Scan
 
@@ -232,7 +232,7 @@ Phase 7 Validate:
 
 ### T12 / TASK-012: Scope symbol repository reads/writes by generation
 
-**Status:** READY after TASK-010 and TASK-011 PASS.
+**Status:** PASS on 2026-07-14. Explicit lease-bound pending writes, captured active scopes, per-file replacement/deletion/stale retention, centrality replacement, exact modern/legacy ambiguity, and full active aggregates passed the owned PostgreSQL concurrency gate and independent review.
 
 **What:** Add generation-scoped per-file writes, active-generation reads, exact FQN/legacy lookup, centrality ownership, full aggregates, and deleted/stale file operations.  
 **Where:** symbol repository interfaces/PG implementation and tests.  
@@ -242,6 +242,8 @@ Phase 7 Validate:
 **Commit:** `feat(graph): scope symbol storage by generation`
 
 ### T13 / TASK-013: Integrate generation lifecycle into ETL and job ordering
+
+**Status:** READY after TASK-009 and TASK-012 PASS.
 
 **What:** Thread generation/snapshot through Discover/Parse/Resolve/Load; build pending beside active; enforce completeness; retain last-good incremental rows; activate/count synchronously before terminal job; reconcile deletes.  
 **Where:** ETL stages/pipeline, workspace/job lifecycle, event ordering, tests.  

@@ -309,6 +309,28 @@ The real predecessor-schema backfill kills empty-workspace omission, row loss, o
 
 The owned database fixture executes the full migration chain and real repository transactions. Competing begin and double-activation probes kill process-local locking and duplicate terminal transitions. Wrong token, tampered immutable identity, expiry, stale-active, and abort races kill lease/CAS bypasses. Count poisoning before activation kills trust in cached aggregates; incomplete fixtures distinguish recovered syntax from hard failures and missing files. Takeover and abort assertions kill empty-metadata cleanup, child-row leakage, and active-visibility loss, while the last-known-good fixture kills dangling cleanup pointers. T12 owns generation-scoped per-file persistence/identity; T13 owns discovered-file snapshot membership and post-snapshot delta reconciliation. These assertions map directly to T11 done-when and MLTS-010-013. **Verdict: sufficient, non-shallow, independently accepted PASS within the frozen task boundary.**
 
+## TASK-012 Execution Result (2026-07-14)
+
+**Result:** PASS. Symbol storage now exposes live lease-bound pending generation writes and one-generation active read/write scopes. Per-file replacement, deletion, and stale fallback are atomic; removed definitions also remove stale inbound edges. Centrality replacement, full graph/diagnostic aggregates, exact-name search, and exact-first modern/legacy FQN resolution all preserve active/pending isolation and deterministic ambiguity.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Owned PostgreSQL 17 storage/concurrency | PASS | Dedicated native macOS arm64 PostgreSQL on `127.0.0.1:5433`; 12/12 tests with 38 assertions. |
+| Active/pending isolation | PASS | Files, definitions, references, imports, centrality, aggregates, diagnostics, and ambiguity lookup expose only one captured active generation. |
+| Lease-bound pending writes | PASS | Project, generation, token, expected active, fingerprint, snapshot, expected file count, and both DB expiries are validated before mutation. |
+| File lifecycle | PASS | Atomic replacement/deletion/stale copy removes outgoing and obsolete inbound edges, imports, definitions, file metadata, and centrality without changing active visibility. |
+| Activation-race discrimination | PASS | Advisory-trigger barrier proves a centrality batch cannot split across old/new active generations during concurrent activation. |
+| FQN compatibility | PASS | Exact modern ID wins; legacy aliases resolve only when unique; ambiguity candidates are active-only and stable; malformed/inconsistent simple or qualified identity metadata is rejected. |
+| Forced uncached type-check | PASS | 6/6 packages. |
+| Forced uncached build | PASS | 5/5 build tasks. |
+| Diff integrity | PASS | `git diff --check` clean. |
+| Independent review | PASS after remediation | Review-driven kill tests closed aggregate/batch generation splitting, inbound-edge leakage, and simple/qualified identity corruption. |
+| Excluded-platform non-touch | PASS | No Linux, Docker, container, workflow, or non-arm64 implementation path changed. |
+
+### TASK-012 Post-Gate Adequacy Review
+
+Pending poison rows across all graph tables kill missing active filters. Wrong lease identity and expiry probes kill caller-only ownership checks. Repeat replacement, deletion, stale fallback, and cross-file inbound references kill partial cleanup and empty-success behavior. The advisory-trigger activation barrier kills per-row active-pointer resolution. Exact-versus-alias and ordered ambiguity fixtures kill substring lookup, first-match ambiguity loss, and pending leakage; simple and qualified metadata mismatch fixtures kill corrupt persisted identities. Full aggregates use one locked generation. These assertions map directly to T12 done-when, MLTS-006/010-013/017-018, and AC-006/007/010. **Verdict: sufficient, non-shallow, independently accepted PASS.**
+
 ## Planned Gate Commands
 
 - `bun run verify:tree-sitter-native`
@@ -627,3 +649,21 @@ These draft checksums are retained as failed-review evidence and are not an acti
 | `packages/core/src/__tests__/graph-generation-lifecycle-pg.test.ts` | `4f70ae7aeabafbc37fb3915ad62a7554840a76b2a10c66a14008f2af5b04f5c0` |
 
 `gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-011 commit.
+
+## TASK-012 Accepted Artifact Freeze v16
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `plan-multi-language.md` | `02f183d2a23b9f9a2694289cc04c2a4c7614f87ec22918e3b59b7de66add9b10` |
+| `spec.md` | `43ed4c1c37ecbcaef52750d263f93410dffcc9372a99ac4a73cd6e7f3a54f50e` |
+| `context.md` | `af3339803245375d6a69890cfe49e60902a21d71ba969580f555b20fc460a7a9` |
+| `design.md` | `171cdcda9412cc7ede9b523d25fa47fa98de76cdd0b5ea87b84f4551602fea65` |
+| `tasks.md` | `c64292a815ebc767016126e1ec3487286a90de9c623822c5e9e282ccf2b5c38e` |
+| `capability-matrix.md` | `fe462385096d97ad1fc002d4eafa5b59bcfadf2b1d0457b76d39106338df3b16` |
+| `.specs/project/FEATURES.json` | `077aca9d9f97926c5fc4a1dea66dcf8b6a3fde3e60ad5068da1292bfd89f23ec` |
+| `.specs/project/STATE.md` | `79578ebe9b5c2f84c28fa409dd3e764bb99fc285de81a526f94cd9ac608f4ff6` |
+| `.specs/HANDOFF.md` | `c1bfdcf9ba43686f96ef8eb4b30f9a9e7774e77efc5c9d5965bf9b372998a2ee` |
+| `packages/core/src/data/symbol/symbol-repository-pg.ts` | `64bf8b40bb3bc6d08b9c7b70f2ba65312d7460b6bb727252b0210200a29f62e5` |
+| `packages/core/src/__tests__/graph-generation-symbol-repository-pg.test.ts` | `f74ab7e31de52080f034a66d88b4f35e5ad457e13ef4b749003bd6477ea4dcaf` |
+
+`gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-012 commit.

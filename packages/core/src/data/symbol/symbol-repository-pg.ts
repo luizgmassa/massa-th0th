@@ -5,9 +5,14 @@
  * Prisma 7.7.0 + Bun ORM bug (isObjectEnumValue is not a function).
  */
 
+import { createHash } from "node:crypto";
 import { logger } from "@massa-th0th/shared";
 import { getPrismaClient } from "../../services/query/prisma-client.js";
-import { parseStructuralFqn } from "../../services/structural/fqn-codec.js";
+import {
+  parseStructuralFqn,
+  type StructuralFqnCandidate,
+} from "../../services/structural/fqn-codec.js";
+import type { GraphGenerationLease } from "../graph-generation/graph-generation-contract.js";
 
 // ─── Domain types ────────────────────────────────────────────────────────────
 
@@ -54,6 +59,18 @@ export interface SymbolFileRow {
   indexed_at: number;
   symbol_count: number;
   chunk_count: number;
+  generation_id?: string;
+  language?: string;
+  dialect?: string;
+  grammar_version?: string;
+  query_pack_version?: string;
+  resolver_version?: string;
+  parser_status?: "legacy" | "ok" | "recovered" | "unsupported" | "failed";
+  parser_error_count?: number;
+  diagnostics?: readonly Record<string, unknown>[];
+  is_stale?: boolean;
+  last_known_good_generation_id?: string;
+  last_successful_at?: number;
 }
 
 export interface SymbolDefinition {
@@ -119,6 +136,33 @@ export interface WorkspaceRow {
   updated_at: number;
 }
 
+export interface ActiveGenerationScope {
+  projectId: string;
+  generationId: string;
+}
+
+export interface GenerationFileWrite {
+  file: SymbolFileRow;
+  definitions: readonly SymbolDefinition[];
+  references: readonly SymbolReference[];
+  imports: readonly SymbolImport[];
+}
+
+export type DefinitionFqnResolution =
+  | { found: true; ambiguous: false; definition: SymbolDefinition }
+  | { found: false; ambiguous: false; fqn: string; candidates: readonly [] }
+  | { found: false; ambiguous: false; legacyFqn: string; candidates: readonly [] }
+  | {
+      found: false;
+      ambiguous: true;
+      legacyFqn: string;
+      candidates: readonly StructuralFqnCandidate[];
+    };
+
+type TransactionClient = Parameters<
+  Parameters<ReturnType<typeof getPrismaClient>["$transaction"]>[0]
+>[0];
+
 function definitionIdentityColumns(def: SymbolDefinition): {
   qualifiedName: string;
   canonicalSignature: string | null;
@@ -148,6 +192,49 @@ function definitionIdentityColumns(def: SymbolDefinition): {
     signatureHash: def.signature_hash ?? parsedModern?.signatureHash ?? null,
     legacyFqn,
     sourceSpan: def.source_span ?? null,
+  };
+}
+
+function generationDefinitionIdentityColumns(def: SymbolDefinition): ReturnType<typeof definitionIdentityColumns> {
+  const identity = definitionIdentityColumns(def);
+  const parsed = parseStructuralFqn(def.id);
+  if (parsed.file !== def.file_path) throw new TypeError(`definition_fqn_file_mismatch:${def.id}`);
+  const expectedLegacyFqn = `${def.file_path}#${def.name}`;
+  if (identity.legacyFqn !== expectedLegacyFqn) {
+    throw new TypeError(`definition_legacy_fqn_mismatch:${def.id}`);
+  }
+  if (parsed.format === "simple") {
+    if (parsed.name !== def.name) throw new TypeError(`definition_fqn_name_mismatch:${def.id}`);
+    if (def.qualified_name !== undefined && def.qualified_name !== def.name) {
+      throw new TypeError(`definition_fqn_qualified_name_mismatch:${def.id}`);
+    }
+    if ((def.canonical_signature === undefined) !== (def.signature_hash === undefined)) {
+      throw new TypeError(`definition_simple_signature_pair_mismatch:${def.id}`);
+    }
+    if (def.canonical_signature !== undefined && def.signature_hash !== undefined) {
+      const digest = createHash("sha256").update(def.canonical_signature, "utf8").digest("hex");
+      if (digest !== def.signature_hash) throw new TypeError(`definition_fqn_signature_mismatch:${def.id}`);
+    }
+    return { ...identity, qualifiedName: def.name };
+  }
+  if (parsed.kind !== def.kind) throw new TypeError(`definition_fqn_kind_mismatch:${def.id}`);
+  if (parsed.qualifiedName.split(".").at(-1) !== def.name) {
+    throw new TypeError(`definition_fqn_name_mismatch:${def.id}`);
+  }
+  if (def.qualified_name !== undefined && def.qualified_name !== parsed.qualifiedName) {
+    throw new TypeError(`definition_fqn_qualified_name_mismatch:${def.id}`);
+  }
+  if (def.signature_hash !== undefined && def.signature_hash !== parsed.signatureHash) {
+    throw new TypeError(`definition_fqn_signature_hash_mismatch:${def.id}`);
+  }
+  if (def.canonical_signature !== undefined) {
+    const digest = createHash("sha256").update(def.canonical_signature, "utf8").digest("hex");
+    if (digest !== parsed.signatureHash) throw new TypeError(`definition_fqn_signature_mismatch:${def.id}`);
+  }
+  return {
+    ...identity,
+    qualifiedName: parsed.qualifiedName,
+    signatureHash: parsed.signatureHash,
   };
 }
 
@@ -197,6 +284,7 @@ function mapWs(ws: WsRaw): WorkspaceRow {
 
 interface FileRaw {
   project_id: string;
+  generation_id: string;
   relative_path: string;
   content_hash: string;
   mtime: bigint;
@@ -204,6 +292,17 @@ interface FileRaw {
   indexed_at: Date;
   symbol_count: number;
   chunk_count: number;
+  language: string | null;
+  dialect: string | null;
+  grammar_version: string | null;
+  query_pack_version: string | null;
+  resolver_version: string | null;
+  parser_status: SymbolFileRow["parser_status"];
+  parser_error_count: number;
+  diagnostics: Record<string, unknown>[];
+  is_stale: boolean;
+  last_known_good_generation_id: string | null;
+  last_successful_at: Date | null;
 }
 
 function mapFile(f: FileRaw): SymbolFileRow {
@@ -216,6 +315,18 @@ function mapFile(f: FileRaw): SymbolFileRow {
     indexed_at: f.indexed_at.getTime(),
     symbol_count: Number(f.symbol_count),
     chunk_count: Number(f.chunk_count),
+    generation_id: f.generation_id,
+    language: f.language ?? undefined,
+    dialect: f.dialect ?? undefined,
+    grammar_version: f.grammar_version ?? undefined,
+    query_pack_version: f.query_pack_version ?? undefined,
+    resolver_version: f.resolver_version ?? undefined,
+    parser_status: f.parser_status,
+    parser_error_count: Number(f.parser_error_count),
+    diagnostics: Array.isArray(f.diagnostics) ? f.diagnostics : [],
+    is_stale: Boolean(f.is_stale),
+    last_known_good_generation_id: f.last_known_good_generation_id ?? undefined,
+    last_successful_at: f.last_successful_at?.getTime(),
   };
 }
 
@@ -305,6 +416,136 @@ function mapImp(i: ImpRaw): SymbolImport {
     is_external: Boolean(i.is_external),
     is_type_only: Boolean(i.is_type_only),
   };
+}
+
+interface GenerationWriteLockRow {
+  id: string;
+  status: string;
+  expected_active_id: string | null;
+  lease_token: string | null;
+  lease_expires_at: Date | null;
+  fingerprint: string;
+  input_snapshot_hash: string;
+  expected_files_count: number;
+  pending_graph_generation_id: string | null;
+  graph_lease_token: string | null;
+  graph_lease_expires_at: Date | null;
+  active_graph_generation_id: string | null;
+  live: boolean;
+}
+
+async function lockOwnedPendingGeneration(
+  tx: TransactionClient,
+  lease: GraphGenerationLease,
+): Promise<boolean> {
+  // Lock only the generation row. T11 activation locks workspace then waits on
+  // this row, so it cannot cut over while a file transaction is committing.
+  // Taking the workspace lock after this lock would invert T11's order.
+  const generations = await tx.$queryRaw<Array<Omit<GenerationWriteLockRow,
+    "pending_graph_generation_id" | "graph_lease_token" | "graph_lease_expires_at" |
+    "active_graph_generation_id" | "live">>>`
+    SELECT id, status, expected_active_id, lease_token, lease_expires_at,
+           fingerprint, input_snapshot_hash, expected_files_count
+    FROM graph_generations
+    WHERE project_id = ${lease.projectId} AND id = ${lease.generationId}
+    FOR UPDATE
+  `;
+  const generation = generations[0];
+  if (!generation) return false;
+  const workspaces = await tx.$queryRaw<Array<{
+    pending_graph_generation_id: string | null;
+    graph_lease_token: string | null;
+    graph_lease_expires_at: Date | null;
+    active_graph_generation_id: string | null;
+    live: boolean;
+  }>>`
+    SELECT pending_graph_generation_id, graph_lease_token, graph_lease_expires_at,
+           active_graph_generation_id,
+           (graph_lease_expires_at > clock_timestamp()
+             AND ${generation.lease_expires_at}::timestamp > clock_timestamp()) AS live
+    FROM workspaces WHERE project_id = ${lease.projectId}
+  `;
+  const workspace = workspaces[0];
+  return Boolean(
+    workspace && workspace.live && generation.status === "pending" &&
+    workspace.pending_graph_generation_id === lease.generationId &&
+    workspace.graph_lease_token === lease.leaseToken &&
+    generation.lease_token === lease.leaseToken &&
+    workspace.active_graph_generation_id === lease.expectedActiveGenerationId &&
+    generation.expected_active_id === lease.expectedActiveGenerationId &&
+    generation.fingerprint === lease.fingerprint &&
+    generation.input_snapshot_hash === lease.inputSnapshotHash &&
+    Number(generation.expected_files_count) === lease.expectedFilesCount
+  );
+}
+
+async function lockActiveGenerations(
+  tx: TransactionClient,
+  projectIds: readonly string[],
+): Promise<Map<string, string>> {
+  const generations = new Map<string, string>();
+  for (const projectId of [...new Set(projectIds)].sort()) {
+    const rows = await tx.$queryRaw<Array<{ active_graph_generation_id: string | null }>>`
+      SELECT active_graph_generation_id FROM workspaces
+      WHERE project_id = ${projectId} FOR UPDATE
+    `;
+    const generationId = rows[0]?.active_graph_generation_id;
+    if (!generationId) throw new Error(`active_graph_generation_missing:${projectId}`);
+    generations.set(projectId, generationId);
+  }
+  return generations;
+}
+
+function validateGenerationFileWrite(input: GenerationFileWrite, lease: GraphGenerationLease): void {
+  const { file } = input;
+  if (file.project_id !== lease.projectId || !file.relative_path) {
+    throw new TypeError("generation file must belong to the leased project and have a path");
+  }
+  if (!Number.isInteger(file.parser_error_count ?? 0) || (file.parser_error_count ?? 0) < 0) {
+    throw new RangeError("parser_error_count must be a non-negative integer");
+  }
+  if ((file.diagnostics?.length ?? 0) > 10) throw new RangeError("diagnostics must contain at most 10 entries");
+  for (const definition of input.definitions) {
+    if (definition.project_id !== lease.projectId || definition.file_path !== file.relative_path) {
+      throw new TypeError("definition must belong to the generation file");
+    }
+  }
+  for (const reference of input.references) {
+    if (reference.project_id !== lease.projectId || reference.from_file !== file.relative_path) {
+      throw new TypeError("reference must originate from the generation file");
+    }
+  }
+  for (const imported of input.imports) {
+    if (imported.project_id !== lease.projectId || imported.from_file !== file.relative_path) {
+      throw new TypeError("import must originate from the generation file");
+    }
+  }
+}
+
+function definitionCandidate(definition: SymbolDefinition): StructuralFqnCandidate {
+  let signatureHash = definition.signature_hash;
+  if (!signatureHash) {
+    const parsed = parseStructuralFqn(definition.id);
+    if (parsed.format === "qualified") signatureHash = parsed.signatureHash;
+  }
+  if (!signatureHash) throw new Error(`ambiguous_definition_identity_incomplete:${definition.id}`);
+  const qualifiedName = definition.qualified_name ?? definition.name;
+  return Object.freeze({
+    fqn: definition.id,
+    file: definition.file_path,
+    name: definition.name,
+    displayName: qualifiedName,
+    qualifiedName,
+    kind: definition.kind,
+    signatureHash,
+  });
+}
+
+function compareDefinitionCandidates(left: StructuralFqnCandidate, right: StructuralFqnCandidate): number {
+  return left.file.localeCompare(right.file) ||
+    left.qualifiedName.localeCompare(right.qualifiedName) ||
+    left.kind.localeCompare(right.kind) ||
+    left.signatureHash.localeCompare(right.signatureHash);
 }
 
 // ─── Repository ──────────────────────────────────────────────────────────────
@@ -620,7 +861,7 @@ export class SymbolRepositoryPg {
     const sourceSpan = referenceSourceSpan(ref);
     await p.$executeRaw`
       INSERT INTO symbol_references (project_id, generation_id, from_file, from_line, symbol_name, target_fqn, ref_kind, meta, source_span)
-      VALUES (${ref.project_id}, (SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${ref.project_id}), ${ref.from_file}, ${ref.from_line}, ${ref.symbol_name}, ${ref.target_fqn ?? "unknown"}, ${ref.ref_kind}, ${ref.meta ?? null}::jsonb, ${sourceSpan}::jsonb)
+      VALUES (${ref.project_id}, (SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${ref.project_id}), ${ref.from_file}, ${ref.from_line}, ${ref.symbol_name}, ${ref.target_fqn ?? null}, ${ref.ref_kind}, ${ref.meta ?? null}::jsonb, ${sourceSpan}::jsonb)
     `;
   }
 
@@ -734,37 +975,46 @@ export class SymbolRepositoryPg {
     filesByLanguage: Record<string, number>;
     recentFiles: Array<{ filePath: string; indexedAt: number | null }>;
   }> {
-    const p = getPrismaClient();
-
-    const [kindRows, langRows, recentRows] = await Promise.all([
-      p.$queryRaw<{ kind: string; count: bigint }[]>`
+    const [kindRows, langRows, recentRows] = await getPrismaClient().$transaction(async (tx) => {
+      const scopes = await tx.$queryRaw<Array<{ generation_id: string | null }>>`
+        SELECT active_graph_generation_id AS generation_id FROM workspaces
+        WHERE project_id = ${projectId} FOR SHARE
+      `;
+      const generationId = scopes[0]?.generation_id;
+      if (!generationId) return [[], [], []] as [
+        { kind: string; count: bigint }[],
+        { ext: string | null; count: bigint }[],
+        { relative_path: string; indexed_at: Date }[],
+      ];
+      const kindRows = await tx.$queryRaw<{ kind: string; count: bigint }[]>`
         SELECT kind, COUNT(*)::bigint AS count
         FROM symbol_definitions
         WHERE project_id = ${projectId}
-          AND generation_id = (SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${projectId})
+          AND generation_id = ${generationId}
         GROUP BY kind
         ORDER BY count DESC
-      `,
+      `;
       // Postgres-native extension extraction; NULLIF avoids treating files
       // without a dot as extension "" (they fall under "other").
-      p.$queryRaw<{ ext: string | null; count: bigint }[]>`
+      const langRows = await tx.$queryRaw<{ ext: string | null; count: bigint }[]>`
         SELECT LOWER(NULLIF(SUBSTRING(relative_path FROM '\\.([^./\\\\]+)$'), '')) AS ext,
                COUNT(*)::bigint AS count
         FROM symbol_files
         WHERE project_id = ${projectId}
-          AND generation_id = (SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${projectId})
+          AND generation_id = ${generationId}
         GROUP BY ext
         ORDER BY count DESC
-      `,
-      p.$queryRaw<{ relative_path: string; indexed_at: Date }[]>`
+      `;
+      const recentRows = await tx.$queryRaw<{ relative_path: string; indexed_at: Date }[]>`
         SELECT relative_path, indexed_at
         FROM symbol_files
         WHERE project_id = ${projectId}
-          AND generation_id = (SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${projectId})
+          AND generation_id = ${generationId}
         ORDER BY indexed_at DESC
         LIMIT ${recentLimit}
-      `,
-    ]);
+      `;
+      return [kindRows, langRows, recentRows] as const;
+    });
 
     const symbolsByKind: Record<string, number> = {};
     for (const row of kindRows) symbolsByKind[row.kind] = Number(row.count);
@@ -800,11 +1050,13 @@ export class SymbolRepositoryPg {
     if (defs.length === 0) return;
     const p = getPrismaClient();
     await p.$transaction(async (tx) => {
+      const generationByProject = await lockActiveGenerations(tx, defs.map((def) => def.project_id));
       for (const def of defs) {
+        const generationId = generationByProject.get(def.project_id)!;
         const identity = definitionIdentityColumns(def);
         await tx.$executeRaw`
           INSERT INTO symbol_definitions (id, project_id, generation_id, file_path, name, kind, line_start, line_end, exported, doc_comment, indexed_at, qualified_name, canonical_signature, signature_hash, legacy_fqn, source_span)
-          VALUES (${def.id}, ${def.project_id}, (SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${def.project_id}), ${def.file_path}, ${def.name}, ${def.kind}, ${def.line_start}, ${def.line_end}, ${def.exported}, ${def.doc_comment ?? null}, ${new Date(def.indexed_at)}, ${identity.qualifiedName}, ${identity.canonicalSignature}, ${identity.signatureHash}, ${identity.legacyFqn}, ${identity.sourceSpan}::jsonb)
+          VALUES (${def.id}, ${def.project_id}, ${generationId}, ${def.file_path}, ${def.name}, ${def.kind}, ${def.line_start}, ${def.line_end}, ${def.exported}, ${def.doc_comment ?? null}, ${new Date(def.indexed_at)}, ${identity.qualifiedName}, ${identity.canonicalSignature}, ${identity.signatureHash}, ${identity.legacyFqn}, ${identity.sourceSpan}::jsonb)
           ON CONFLICT (project_id, generation_id, id) DO UPDATE SET
             file_path   = EXCLUDED.file_path,
             name        = EXCLUDED.name,
@@ -828,11 +1080,13 @@ export class SymbolRepositoryPg {
     if (refs.length === 0) return;
     const p = getPrismaClient();
     await p.$transaction(async (tx) => {
+      const generationByProject = await lockActiveGenerations(tx, refs.map((ref) => ref.project_id));
       for (const ref of refs) {
+        const generationId = generationByProject.get(ref.project_id)!;
         const sourceSpan = referenceSourceSpan(ref);
         await tx.$executeRaw`
           INSERT INTO symbol_references (project_id, generation_id, from_file, from_line, symbol_name, target_fqn, ref_kind, meta, source_span)
-          VALUES (${ref.project_id}, (SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${ref.project_id}), ${ref.from_file}, ${ref.from_line}, ${ref.symbol_name}, ${ref.target_fqn ?? null}, ${ref.ref_kind}, ${ref.meta ?? null}::jsonb, ${sourceSpan}::jsonb)
+          VALUES (${ref.project_id}, ${generationId}, ${ref.from_file}, ${ref.from_line}, ${ref.symbol_name}, ${ref.target_fqn ?? null}, ${ref.ref_kind}, ${ref.meta ?? null}::jsonb, ${sourceSpan}::jsonb)
         `;
       }
     });
@@ -842,12 +1096,217 @@ export class SymbolRepositoryPg {
     if (imports.length === 0) return;
     const p = getPrismaClient();
     await p.$transaction(async (tx) => {
+      const generationByProject = await lockActiveGenerations(tx, imports.map((item) => item.project_id));
       for (const imp of imports) {
+        const generationId = generationByProject.get(imp.project_id)!;
         await tx.$executeRaw`
           INSERT INTO symbol_imports (project_id, generation_id, from_file, to_file, specifier, imported_names, is_external, is_type_only)
-          VALUES (${imp.project_id}, (SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${imp.project_id}), ${imp.from_file}, ${imp.to_file ?? null}, ${imp.specifier}, ${imp.imported_names}, ${imp.is_external}, ${imp.is_type_only})
+          VALUES (${imp.project_id}, ${generationId}, ${imp.from_file}, ${imp.to_file ?? null}, ${imp.specifier}, ${imp.imported_names}, ${imp.is_external}, ${imp.is_type_only})
         `;
       }
+    });
+  }
+
+  // ── Generation-scoped writes ─────────────────────────────────────────────
+
+  async writeFileGeneration(
+    input: { lease: GraphGenerationLease } & GenerationFileWrite,
+  ): Promise<{ status: "written" | "lease_lost" }> {
+    validateGenerationFileWrite(input, input.lease);
+    return getPrismaClient().$transaction(async (tx) => {
+      if (!await lockOwnedPendingGeneration(tx, input.lease)) return { status: "lease_lost" as const };
+
+      const { lease, file, definitions, references, imports } = input;
+      const oldRows = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM symbol_definitions
+        WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId}
+          AND file_path = ${file.relative_path}
+      `;
+      const retainedIds = new Set(definitions.map((definition) => definition.id));
+      const removedIds = oldRows.map((row) => row.id).filter((id) => !retainedIds.has(id));
+
+      await tx.$executeRaw`DELETE FROM symbol_references WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND from_file = ${file.relative_path}`;
+      if (removedIds.length > 0) {
+        await tx.$executeRaw`DELETE FROM symbol_references WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND target_fqn = ANY(${removedIds}::text[])`;
+      }
+      await tx.$executeRaw`DELETE FROM symbol_imports WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND from_file = ${file.relative_path}`;
+      await tx.$executeRaw`DELETE FROM symbol_centrality WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND file_path = ${file.relative_path}`;
+      await tx.$executeRaw`DELETE FROM symbol_definitions WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND file_path = ${file.relative_path}`;
+
+      const diagnostics = file.diagnostics ?? [];
+      const diagnosticsJson = JSON.stringify(diagnostics);
+      const parserStatus = file.parser_status ?? "ok";
+      const successful = parserStatus === "ok" || parserStatus === "recovered";
+      await tx.$executeRaw`
+        INSERT INTO symbol_files (
+          project_id, generation_id, relative_path, content_hash, mtime, size, indexed_at,
+          symbol_count, chunk_count, language, dialect, grammar_version, query_pack_version,
+          resolver_version, parser_status, parser_error_count, diagnostics, is_stale,
+          last_known_good_generation_id, last_successful_at
+        ) VALUES (
+          ${lease.projectId}, ${lease.generationId}, ${file.relative_path}, ${file.content_hash},
+          ${BigInt(Math.trunc(file.mtime))}, ${file.size}, ${new Date(file.indexed_at)},
+          ${file.symbol_count}, ${file.chunk_count}, ${file.language ?? null}, ${file.dialect ?? null},
+          ${file.grammar_version ?? null}, ${file.query_pack_version ?? null},
+          ${file.resolver_version ?? null}, ${parserStatus}, ${file.parser_error_count ?? 0},
+          ${diagnosticsJson}::jsonb, ${file.is_stale ?? false},
+          ${file.last_known_good_generation_id ?? (successful ? lease.generationId : null)},
+          ${file.last_successful_at ? new Date(file.last_successful_at) : (successful ? new Date(file.indexed_at) : null)}
+        )
+        ON CONFLICT (project_id, generation_id, relative_path) DO UPDATE SET
+          content_hash = EXCLUDED.content_hash, mtime = EXCLUDED.mtime, size = EXCLUDED.size,
+          indexed_at = EXCLUDED.indexed_at, symbol_count = EXCLUDED.symbol_count,
+          chunk_count = EXCLUDED.chunk_count, language = EXCLUDED.language, dialect = EXCLUDED.dialect,
+          grammar_version = EXCLUDED.grammar_version, query_pack_version = EXCLUDED.query_pack_version,
+          resolver_version = EXCLUDED.resolver_version, parser_status = EXCLUDED.parser_status,
+          parser_error_count = EXCLUDED.parser_error_count, diagnostics = EXCLUDED.diagnostics,
+          is_stale = EXCLUDED.is_stale,
+          last_known_good_generation_id = EXCLUDED.last_known_good_generation_id,
+          last_successful_at = EXCLUDED.last_successful_at
+      `;
+
+      for (const definition of definitions) {
+        const identity = generationDefinitionIdentityColumns(definition);
+        await tx.$executeRaw`
+          INSERT INTO symbol_definitions (id, project_id, generation_id, file_path, name, kind, line_start, line_end, exported, doc_comment, indexed_at, qualified_name, canonical_signature, signature_hash, legacy_fqn, source_span)
+          VALUES (${definition.id}, ${lease.projectId}, ${lease.generationId}, ${file.relative_path}, ${definition.name}, ${definition.kind}, ${definition.line_start}, ${definition.line_end}, ${definition.exported}, ${definition.doc_comment ?? null}, ${new Date(definition.indexed_at)}, ${identity.qualifiedName}, ${identity.canonicalSignature}, ${identity.signatureHash}, ${identity.legacyFqn}, ${identity.sourceSpan}::jsonb)
+        `;
+      }
+      for (const reference of references) {
+        const sourceSpan = referenceSourceSpan(reference);
+        await tx.$executeRaw`
+          INSERT INTO symbol_references (project_id, generation_id, from_file, from_line, symbol_name, target_fqn, ref_kind, meta, source_span)
+          VALUES (${lease.projectId}, ${lease.generationId}, ${file.relative_path}, ${reference.from_line}, ${reference.symbol_name}, ${reference.target_fqn ?? null}, ${reference.ref_kind}, ${reference.meta ?? null}::jsonb, ${sourceSpan}::jsonb)
+        `;
+      }
+      for (const imported of imports) {
+        await tx.$executeRaw`
+          INSERT INTO symbol_imports (project_id, generation_id, from_file, to_file, specifier, imported_names, is_external, is_type_only)
+          VALUES (${lease.projectId}, ${lease.generationId}, ${file.relative_path}, ${imported.to_file ?? null}, ${imported.specifier}, ${imported.imported_names}, ${imported.is_external}, ${imported.is_type_only})
+        `;
+      }
+      return { status: "written" as const };
+    });
+  }
+
+  async deleteFileGeneration(
+    lease: GraphGenerationLease,
+    filePath: string,
+  ): Promise<{ status: "deleted" | "lease_lost" }> {
+    if (!filePath) throw new TypeError("filePath must not be empty");
+    return getPrismaClient().$transaction(async (tx) => {
+      if (!await lockOwnedPendingGeneration(tx, lease)) return { status: "lease_lost" as const };
+      const ids = (await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM symbol_definitions WHERE project_id = ${lease.projectId}
+          AND generation_id = ${lease.generationId} AND file_path = ${filePath}
+      `).map((row) => row.id);
+      await tx.$executeRaw`DELETE FROM symbol_references WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND from_file = ${filePath}`;
+      if (ids.length > 0) {
+        await tx.$executeRaw`DELETE FROM symbol_references WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND target_fqn = ANY(${ids}::text[])`;
+      }
+      await tx.$executeRaw`DELETE FROM symbol_imports WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND (from_file = ${filePath} OR to_file = ${filePath})`;
+      await tx.$executeRaw`DELETE FROM symbol_centrality WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND file_path = ${filePath}`;
+      await tx.$executeRaw`DELETE FROM symbol_definitions WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND file_path = ${filePath}`;
+      await tx.$executeRaw`DELETE FROM symbol_files WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND relative_path = ${filePath}`;
+      return { status: "deleted" as const };
+    });
+  }
+
+  async markFileStaleGeneration(
+    lease: GraphGenerationLease,
+    filePath: string,
+    input: {
+      lastKnownGoodGenerationId: string;
+      diagnostics: readonly Record<string, unknown>[];
+      parserErrorCount: number;
+    },
+  ): Promise<{ status: "stale" | "lease_lost" }> {
+    if (!filePath || input.diagnostics.length > 10 || !Number.isInteger(input.parserErrorCount) || input.parserErrorCount < 0) {
+      throw new TypeError("invalid stale file metadata");
+    }
+    return getPrismaClient().$transaction(async (tx) => {
+      if (!await lockOwnedPendingGeneration(tx, lease)) return { status: "lease_lost" as const };
+      const active = await tx.$queryRaw<Array<{ active_graph_generation_id: string | null }>>`
+        SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${lease.projectId}
+      `;
+      if (active[0]?.active_graph_generation_id !== input.lastKnownGoodGenerationId) return { status: "lease_lost" as const };
+      const diagnosticsJson = JSON.stringify(input.diagnostics);
+
+      const oldIds = (await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM symbol_definitions WHERE project_id = ${lease.projectId}
+          AND generation_id = ${lease.generationId} AND file_path = ${filePath}
+      `).map((row) => row.id);
+      const retainedIds = new Set((await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM symbol_definitions WHERE project_id = ${lease.projectId}
+          AND generation_id = ${input.lastKnownGoodGenerationId} AND file_path = ${filePath}
+      `).map((row) => row.id));
+      const removedIds = oldIds.filter((id) => !retainedIds.has(id));
+
+      await tx.$executeRaw`DELETE FROM symbol_references WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND from_file = ${filePath}`;
+      if (removedIds.length > 0) {
+        await tx.$executeRaw`DELETE FROM symbol_references WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND target_fqn = ANY(${removedIds}::text[])`;
+      }
+      await tx.$executeRaw`DELETE FROM symbol_imports WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND from_file = ${filePath}`;
+      await tx.$executeRaw`DELETE FROM symbol_centrality WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND file_path = ${filePath}`;
+      await tx.$executeRaw`DELETE FROM symbol_definitions WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND file_path = ${filePath}`;
+      await tx.$executeRaw`DELETE FROM symbol_files WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId} AND relative_path = ${filePath}`;
+
+      const inserted = await tx.$executeRaw`
+        INSERT INTO symbol_files (
+          project_id, generation_id, relative_path, content_hash, mtime, size, indexed_at,
+          symbol_count, chunk_count, language, dialect, grammar_version, query_pack_version,
+          resolver_version, parser_status, parser_error_count, diagnostics, is_stale,
+          last_known_good_generation_id, last_successful_at
+        )
+        SELECT project_id, ${lease.generationId}, relative_path, content_hash, mtime, size, clock_timestamp(),
+          symbol_count, chunk_count, language, dialect, grammar_version, query_pack_version,
+          resolver_version, 'failed', ${input.parserErrorCount}, ${diagnosticsJson}::jsonb, true,
+          ${input.lastKnownGoodGenerationId}, last_successful_at
+        FROM symbol_files WHERE project_id = ${lease.projectId}
+          AND generation_id = ${input.lastKnownGoodGenerationId} AND relative_path = ${filePath}
+      `;
+      if (inserted !== 1) throw new Error(`last_known_good_file_missing:${filePath}`);
+      await tx.$executeRaw`
+        INSERT INTO symbol_definitions (id, project_id, generation_id, file_path, name, kind, line_start, line_end, exported, doc_comment, indexed_at, qualified_name, canonical_signature, signature_hash, legacy_fqn, source_span)
+        SELECT id, project_id, ${lease.generationId}, file_path, name, kind, line_start, line_end, exported, doc_comment, indexed_at, qualified_name, canonical_signature, signature_hash, legacy_fqn, source_span
+        FROM symbol_definitions WHERE project_id = ${lease.projectId} AND generation_id = ${input.lastKnownGoodGenerationId} AND file_path = ${filePath}
+      `;
+      await tx.$executeRaw`
+        INSERT INTO symbol_references (project_id, generation_id, from_file, from_line, symbol_name, target_fqn, ref_kind, meta, source_span)
+        SELECT project_id, ${lease.generationId}, from_file, from_line, symbol_name, target_fqn, ref_kind, meta, source_span
+        FROM symbol_references WHERE project_id = ${lease.projectId} AND generation_id = ${input.lastKnownGoodGenerationId} AND from_file = ${filePath}
+      `;
+      await tx.$executeRaw`
+        INSERT INTO symbol_imports (project_id, generation_id, from_file, to_file, specifier, imported_names, is_external, is_type_only)
+        SELECT project_id, ${lease.generationId}, from_file, to_file, specifier, imported_names, is_external, is_type_only
+        FROM symbol_imports WHERE project_id = ${lease.projectId} AND generation_id = ${input.lastKnownGoodGenerationId} AND from_file = ${filePath}
+      `;
+      await tx.$executeRaw`
+        INSERT INTO symbol_centrality (project_id, generation_id, file_path, score, updated_at)
+        SELECT project_id, ${lease.generationId}, file_path, score, clock_timestamp()
+        FROM symbol_centrality WHERE project_id = ${lease.projectId} AND generation_id = ${input.lastKnownGoodGenerationId} AND file_path = ${filePath}
+      `;
+      return { status: "stale" as const };
+    });
+  }
+
+  async updateCentralityGeneration(
+    lease: GraphGenerationLease,
+    entries: readonly { filePath: string; score: number }[],
+  ): Promise<{ status: "written" | "lease_lost" }> {
+    if (entries.some((entry) => !entry.filePath || !Number.isFinite(entry.score))) {
+      throw new TypeError("centrality entries require a path and finite score");
+    }
+    return getPrismaClient().$transaction(async (tx) => {
+      if (!await lockOwnedPendingGeneration(tx, lease)) return { status: "lease_lost" as const };
+      await tx.$executeRaw`DELETE FROM symbol_centrality WHERE project_id = ${lease.projectId} AND generation_id = ${lease.generationId}`;
+      for (const entry of entries) {
+        await tx.$executeRaw`
+          INSERT INTO symbol_centrality (project_id, generation_id, file_path, score, updated_at)
+          VALUES (${lease.projectId}, ${lease.generationId}, ${entry.filePath}, ${entry.score}, clock_timestamp())
+        `;
+      }
+      return { status: "written" as const };
     });
   }
 
@@ -869,9 +1328,18 @@ export class SymbolRepositoryPg {
       const generationId = generations[0]?.active_graph_generation_id;
       if (!generationId) throw new Error(`active_graph_generation_missing:${projectId}`);
 
-      await tx.$executeRaw`DELETE FROM symbol_definitions WHERE project_id = ${projectId} AND generation_id = ${generationId} AND file_path = ${filePath}`;
+      const oldIds = (await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM symbol_definitions WHERE project_id = ${projectId}
+          AND generation_id = ${generationId} AND file_path = ${filePath}
+      `).map((row) => row.id);
+      const retainedIds = new Set(defs.map((definition) => definition.id));
+      const removedIds = oldIds.filter((id) => !retainedIds.has(id));
       await tx.$executeRaw`DELETE FROM symbol_references WHERE project_id = ${projectId} AND generation_id = ${generationId} AND from_file = ${filePath}`;
+      if (removedIds.length > 0) {
+        await tx.$executeRaw`DELETE FROM symbol_references WHERE project_id = ${projectId} AND generation_id = ${generationId} AND target_fqn = ANY(${removedIds}::text[])`;
+      }
       await tx.$executeRaw`DELETE FROM symbol_imports WHERE project_id = ${projectId} AND generation_id = ${generationId} AND from_file = ${filePath}`;
+      await tx.$executeRaw`DELETE FROM symbol_definitions WHERE project_id = ${projectId} AND generation_id = ${generationId} AND file_path = ${filePath}`;
 
       for (const def of defs) {
         const identity = definitionIdentityColumns(def);
@@ -919,11 +1387,118 @@ export class SymbolRepositoryPg {
 
   // ── Query helpers ────────────────────────────────────────────────────────
 
+  async getActiveGenerationScope(projectId: string): Promise<ActiveGenerationScope | null> {
+    const rows = await getPrismaClient().$queryRaw<Array<{ generation_id: string | null }>>`
+      SELECT active_graph_generation_id AS generation_id
+      FROM workspaces WHERE project_id = ${projectId}
+    `;
+    const generationId = rows[0]?.generation_id;
+    return generationId ? { projectId, generationId } : null;
+  }
+
+  async resolveDefinitionFqn(
+    projectId: string,
+    fqn: string,
+  ): Promise<DefinitionFqnResolution> {
+    // Inputs without a file separator are valid misses, never substring name
+    // searches. Inputs that claim to be FQNs must satisfy the shared codec.
+    if (fqn.includes("#")) parseStructuralFqn(fqn);
+    else return { found: false, ambiguous: false, fqn, candidates: [] };
+
+    return getPrismaClient().$transaction(async (tx) => {
+      const scopes = await tx.$queryRaw<Array<{ generation_id: string }>>`
+        SELECT generation.id AS generation_id
+        FROM workspaces workspace
+        JOIN graph_generations generation
+          ON generation.project_id = workspace.project_id
+         AND generation.id = workspace.active_graph_generation_id
+        WHERE workspace.project_id = ${projectId} AND generation.status = 'active'
+        FOR SHARE OF generation
+      `;
+      const generationId = scopes[0]?.generation_id;
+      if (!generationId) return { found: false, ambiguous: false, fqn, candidates: [] } as const;
+
+      const exact = await tx.$queryRaw<DefRaw[]>`
+        SELECT * FROM symbol_definitions WHERE project_id = ${projectId}
+          AND generation_id = ${generationId} AND id = ${fqn} LIMIT 1
+      `;
+      if (exact[0]) return { found: true, ambiguous: false, definition: mapDef(exact[0]) } as const;
+
+      const aliases = (await tx.$queryRaw<DefRaw[]>`
+        SELECT * FROM symbol_definitions WHERE project_id = ${projectId}
+          AND generation_id = ${generationId} AND legacy_fqn = ${fqn}
+      `).map(mapDef);
+      if (aliases.length === 1) {
+        return { found: true, ambiguous: false, definition: aliases[0]! } as const;
+      }
+      if (aliases.length === 0) {
+        return { found: false, ambiguous: false, legacyFqn: fqn, candidates: [] } as const;
+      }
+      return {
+        found: false,
+        ambiguous: true,
+        legacyFqn: fqn,
+        candidates: Object.freeze(aliases.map(definitionCandidate).sort(compareDefinitionCandidates)),
+      } as const;
+    });
+  }
+
+  async getActiveGraphSnapshot(projectId: string): Promise<{
+    generationId: string;
+    counts: { files: number; definitions: number; references: number; imports: number; centrality: number };
+    diagnostics: { recovered: number; hardFailures: number; staleFiles: number; errors: number };
+  } | null> {
+    const rows = await getPrismaClient().$queryRaw<Array<{
+      generation_id: string;
+      files: number;
+      definitions: number;
+      references: number;
+      imports: number;
+      centrality: number;
+      recovered: number;
+      hard_failures: number;
+      stale_files: number;
+      errors: number;
+    }>>`
+      SELECT w.active_graph_generation_id AS generation_id,
+        (SELECT count(*)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id) AS files,
+        (SELECT count(*)::integer FROM symbol_definitions d WHERE d.project_id = w.project_id AND d.generation_id = w.active_graph_generation_id) AS definitions,
+        (SELECT count(*)::integer FROM symbol_references r WHERE r.project_id = w.project_id AND r.generation_id = w.active_graph_generation_id) AS references,
+        (SELECT count(*)::integer FROM symbol_imports i WHERE i.project_id = w.project_id AND i.generation_id = w.active_graph_generation_id) AS imports,
+        (SELECT count(*)::integer FROM symbol_centrality c WHERE c.project_id = w.project_id AND c.generation_id = w.active_graph_generation_id) AS centrality,
+        (SELECT count(*)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id AND f.parser_status = 'recovered') AS recovered,
+        (SELECT count(*)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id AND f.parser_status IN ('failed','unsupported')) AS hard_failures,
+        (SELECT count(*)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id AND f.is_stale) AS stale_files,
+        (SELECT COALESCE(sum(f.parser_error_count), 0)::integer FROM symbol_files f WHERE f.project_id = w.project_id AND f.generation_id = w.active_graph_generation_id) AS errors
+      FROM workspaces w WHERE w.project_id = ${projectId} AND w.active_graph_generation_id IS NOT NULL
+    `;
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      generationId: row.generation_id,
+      counts: {
+        files: Number(row.files), definitions: Number(row.definitions),
+        references: Number(row.references), imports: Number(row.imports),
+        centrality: Number(row.centrality),
+      },
+      diagnostics: {
+        recovered: Number(row.recovered), hardFailures: Number(row.hard_failures),
+        staleFiles: Number(row.stale_files), errors: Number(row.errors),
+      },
+    };
+  }
+
   async findDefinitionsByName(
     projectId: string,
     name: string,
   ): Promise<SymbolDefinition[]> {
-    return this.searchDefinitions(projectId, name);
+    const p = getPrismaClient();
+    const rows = await p.$queryRaw<DefRaw[]>`
+      SELECT * FROM symbol_definitions WHERE project_id = ${projectId}
+        AND generation_id = (SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${projectId})
+        AND name = ${name} ORDER BY file_path, qualified_name, id
+    `;
+    return rows.map(mapDef);
   }
 
   async findDefinitionByFqn(
@@ -1143,10 +1718,11 @@ export class SymbolRepositoryPg {
     const p = getPrismaClient();
     const now = new Date();
     await p.$transaction(async (tx) => {
+      const generationId = (await lockActiveGenerations(tx, [projectId])).get(projectId)!;
       for (const [filePath, score] of scores) {
         await tx.$executeRaw`
           INSERT INTO symbol_centrality (project_id, generation_id, file_path, score, updated_at)
-          VALUES (${projectId}, (SELECT active_graph_generation_id FROM workspaces WHERE project_id = ${projectId}), ${filePath}, ${score}, ${now})
+          VALUES (${projectId}, ${generationId}, ${filePath}, ${score}, ${now})
           ON CONFLICT (project_id, generation_id, file_path) DO UPDATE SET
             score      = EXCLUDED.score,
             updated_at = EXCLUDED.updated_at
