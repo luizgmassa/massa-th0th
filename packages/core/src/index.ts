@@ -29,6 +29,7 @@ export type {
   SearchFilters,
 } from "./data/memory/memory-repository-contract.js";
 export { getVectorStore, resetVectorStore } from "./data/vector/index.js";
+export * from "./data/graph-generation/index.js";
 
 // Phase 3 — passive lifecycle capture (hook ingestion)
 export {

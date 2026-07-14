@@ -7,7 +7,7 @@
 - workflow: spec-driven
 - persona: AI Engineer
 - feature: `multi-language-tree-sitter-breadth`
-- status: EXECUTE ACTIVE; TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 PASS; TASK-009 PASS; TASK-010 PASS; TASK-011 READY
+- status: EXECUTE ACTIVE; TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 PASS; TASK-009 PASS; TASK-010 PASS; TASK-011 PASS; TASK-012 READY
 - branch: `main`
 - baseline: `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`
 - push: not attempted
@@ -63,14 +63,15 @@ Replace regex structural extraction with pinned native Tree-sitter grammars and 
 - TASK-008 added an exact `(dialect, resolverVersion)` registry, generation-scoped identity session, and deterministic TS/JS resolver for lexical, import, re-export, namespace, default-owner, global, ambiguity, unresolved, and legacy outcomes. Review-driven direct probes closed nested-basename leakage, dynamic import namespaces, barrel forwarding, private export leakage, and default-owner member qualification.
 - TASK-009 routed TS/JS/TSX/JSX ETL structural work through the native runtime, retained exact `smartChunk` output, persisted generation-scoped resolver results, froze executable pre-T9 parity evidence and approved additions, and removed the superseded TS/JS regex typed-edge path. Focused 105/105, native source/dist, type/build, diff, and independent review gates passed.
 - TASK-010 added the locked transactional graph-generation migration, deterministic legacy backfill, generation-owned graph keys/metadata, active/pending/lease state, full counts, and an active-scoped T9 repository bridge. Owned PostgreSQL 17 passed 3/3 with 62 assertions; clean migration, migrated ETL, type/build, and independent review gates passed.
+- TASK-011 added the PostgreSQL lifecycle repository for serialized begin, heartbeat, completion, CAS activation, abort, lease-expiry takeover, and superseded cleanup. The owned macOS arm64 PostgreSQL suite passed 11/11 with 67 assertions after review fixes made expired abort non-mutating and protected last-known-good generation pointers. T13 retains ownership of discovered-file snapshot membership and post-snapshot content-delta reconciliation.
 
 ## Blocker
 
-No blocker at the TASK-010 boundary. The aggregate core-unit command still exposes pre-existing parser-readiness timing and environment-dependent PostgreSQL/AutoImprove failures outside the TASK-009/TASK-010 diffs; focused ETL/structural/migration gates are green. T23 still owns the durable all-grammar packed-artifact test introduced by the task plan.
+No blocker at the TASK-011 boundary. The aggregate core-unit command still exposes pre-existing parser-readiness timing and environment-dependent PostgreSQL/AutoImprove failures outside the TASK-009/TASK-011 diffs; focused ETL/structural/generation gates are green. T23 still owns the durable all-grammar packed-artifact test introduced by the task plan.
 
 ## Next Step
 
-Freeze and commit TASK-010, then execute TASK-011 graph-generation lease, heartbeat, completion, activation, abort, and recovery APIs.
+Freeze and commit TASK-011, then execute TASK-012 generation-scoped symbol reads/writes, exact lookup, stale/deleted operations, and active/pending isolation.
 
 ## Previous Feature
 

@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 PASS; TASK-009 PASS; TASK-010 PASS; TASK-011 READY
+**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 PASS; TASK-009 PASS; TASK-010 PASS; TASK-011 PASS; TASK-012 READY
 
 ## Project Testing Guidelines Scan
 
@@ -221,7 +221,7 @@ Phase 7 Validate:
 
 ### T11 / TASK-011: Implement graph-generation lifecycle repository
 
-**Status:** READY after TASK-010 PASS.
+**Status:** PASS on 2026-07-14. Database row locks serialize competing owners across processes; live token ownership, immutable fingerprint/snapshot identity, expected-active CAS, completeness counts, expiry recovery, activation, abort, and retention-safe cleanup passed the owned PostgreSQL gate.
 
 **What:** Add begin/heartbeat/complete/activate/abort APIs with DB lease token, expiry recovery, snapshot/fingerprint separation, expected-active CAS, and pending cleanup.  
 **Where:** graph-generation repository/coordinator lifecycle modules and PG tests.  
@@ -231,6 +231,8 @@ Phase 7 Validate:
 **Commit:** `feat(graph): coordinate graph generation lifecycle`
 
 ### T12 / TASK-012: Scope symbol repository reads/writes by generation
+
+**Status:** READY after TASK-010 and TASK-011 PASS.
 
 **What:** Add generation-scoped per-file writes, active-generation reads, exact FQN/legacy lookup, centrality ownership, full aggregates, and deleted/stale file operations.  
 **Where:** symbol repository interfaces/PG implementation and tests.  

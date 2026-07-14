@@ -288,6 +288,27 @@ The executable pre-T9 comparison kills fabricated parity, silent removals, reord
 
 The real predecessor-schema backfill kills empty-workspace omission, row loss, orphan ownership, stale counts, serial-ID changes, fabricated canonical signatures/spans, and unbounded diagnostics. Pending poison rows across all five graph tables kill missing active filters. Composite-pointer and partial-state probes kill cross-project ownership and duplicate active/pending states while deletion probes kill circular-FK mistakes. Actual repository execution kills trigger-only conflict bridges, non-atomic workspace creation, stale aggregate counts, and duplicated FQN parsing. Huge/fractional JSON probes kill cast-driven migration aborts. A full clean migration deploy kills synthetic-fixture schema drift. These assertions map directly to T10 done-when, MLTS-006-007/010-013/017, and AC-006/007/010. **Verdict: sufficient, non-shallow, independently accepted PASS.**
 
+## TASK-011 Execution Result (2026-07-14)
+
+**Result:** PASS. A typed PostgreSQL repository now serializes same-project lifecycle transitions with workspace row locks, binds each attempt to a live database lease plus distinct fingerprint/snapshot identities, recomputes completeness and active counts from owned rows, and performs expected-active CAS activation atomically. Expired takeover and abort delete pending graph rows while retaining failure metadata; superseded cleanup preserves active, pending, explicitly retained, and last-known-good generations.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Owned PostgreSQL 17 lifecycle | PASS | Dedicated native macOS arm64 PostgreSQL on `127.0.0.1:5433`; 11/11 tests with 67 assertions. |
+| Competing ownership and heartbeat | PASS | Concurrent begin yields one owner and one busy result; successful, wrong-token, tampered-snapshot, and expired lease paths are distinguished. |
+| Recovery and retry | PASS | Expired pending rows are removed, failure metadata is retained, and a distinct retry generation with the same structural fingerprint acquires ownership. |
+| Completeness and activation | PASS | Missing, hard-failed, recovered, stale-active, full-count recomputation, and expected-active CAS outcomes are deterministic; only one concurrent activation succeeds. |
+| Abort and cleanup safety | PASS | Expired abort is mutation-free; live abort removes all five pending graph row families without changing active visibility; cleanup protects last-known-good pointers. |
+| Forced uncached type-check | PASS | 6/6 packages. |
+| Forced uncached build | PASS | 5/5 build tasks. |
+| Diff integrity | PASS | `git diff --check` clean. |
+| Independent review | PASS after remediation | Review reproduced and verified expiry-safe abort and last-known-good retention; boundary-aware re-review confirmed snapshot-delta and discovered-file membership enforcement remain explicitly owned by T12/T13. |
+| Excluded-platform non-touch | PASS | No Linux, Docker, container, workflow, or non-arm64 implementation path changed. |
+
+### TASK-011 Post-Gate Adequacy Review
+
+The owned database fixture executes the full migration chain and real repository transactions. Competing begin and double-activation probes kill process-local locking and duplicate terminal transitions. Wrong token, tampered immutable identity, expiry, stale-active, and abort races kill lease/CAS bypasses. Count poisoning before activation kills trust in cached aggregates; incomplete fixtures distinguish recovered syntax from hard failures and missing files. Takeover and abort assertions kill empty-metadata cleanup, child-row leakage, and active-visibility loss, while the last-known-good fixture kills dangling cleanup pointers. T12 owns generation-scoped per-file persistence/identity; T13 owns discovered-file snapshot membership and post-snapshot delta reconciliation. These assertions map directly to T11 done-when and MLTS-010-013. **Verdict: sufficient, non-shallow, independently accepted PASS within the frozen task boundary.**
+
 ## Planned Gate Commands
 
 - `bun run verify:tree-sitter-native`
@@ -584,3 +605,25 @@ These draft checksums are retained as failed-review evidence and are not an acti
 | `packages/core/src/__tests__/etl-pipeline-pg.test.ts` | `a3d06872d0318cb6984ffd99d4f69b7b9d0bc46d2be25b801ed1d63a10435c46` |
 
 `gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-010 commit.
+
+## TASK-011 Accepted Artifact Freeze v15
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `plan-multi-language.md` | `02f183d2a23b9f9a2694289cc04c2a4c7614f87ec22918e3b59b7de66add9b10` |
+| `spec.md` | `43ed4c1c37ecbcaef52750d263f93410dffcc9372a99ac4a73cd6e7f3a54f50e` |
+| `context.md` | `af3339803245375d6a69890cfe49e60902a21d71ba969580f555b20fc460a7a9` |
+| `design.md` | `171cdcda9412cc7ede9b523d25fa47fa98de76cdd0b5ea87b84f4551602fea65` |
+| `tasks.md` | `f9798dc99483da5bbca51139cfe04bdfc57c6516b9116dbf267df152a6b3d81e` |
+| `capability-matrix.md` | `fe462385096d97ad1fc002d4eafa5b59bcfadf2b1d0457b76d39106338df3b16` |
+| `.specs/project/FEATURES.json` | `077aca9d9f97926c5fc4a1dea66dcf8b6a3fde3e60ad5068da1292bfd89f23ec` |
+| `.specs/project/STATE.md` | `24c4649d09af2bb93b5e04fb7f70e023d9430be1a9d32ca0cc3f0d11268c0505` |
+| `.specs/HANDOFF.md` | `71f40e223ef42cdd2f5e94d843f5f35e0dda1d218c16eb04facc10490960eca3` |
+| `packages/core/src/index.ts` | `86afbe0bf67d027dcabe5cde3ef4f9c6b43911b3c1ad880bca0031c63fdf2ad6` |
+| `packages/core/src/data/graph-generation/graph-generation-contract.ts` | `966de4da348d2e34fcfdab0a8deb1f2ed6b0d7337c6613f33506760ce6eb8e66` |
+| `packages/core/src/data/graph-generation/graph-generation-repository-pg.ts` | `a69977ab63ff1a9ae4626a9764e05f0f6ac3088a04c8069329441f3401ebde8f` |
+| `packages/core/src/data/graph-generation/graph-generation-repository-factory.ts` | `ee0789a57c3b1a4c0ca1ce34a4feb1c18bbba1bbcef9b5c5cb3f888a7cc7744f` |
+| `packages/core/src/data/graph-generation/index.ts` | `7ee5f94dd25676f5dc9b13c461454f7b4cb340216de527ff04263b1f5dcf52f0` |
+| `packages/core/src/__tests__/graph-generation-lifecycle-pg.test.ts` | `4f70ae7aeabafbc37fb3915ad62a7554840a76b2a10c66a14008f2af5b04f5c0` |
+
+`gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-011 commit.

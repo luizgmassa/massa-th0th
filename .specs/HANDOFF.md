@@ -37,19 +37,20 @@ Implement `plan-multi-language.md` under workflow session `spec-multi-language`.
 - TASK-008 added the exact-version resolver registry, generation-scoped FQN session, and TS/JS resolver across same-file lexical scope, imports/re-exports, namespaces, default owners, globals, ambiguity, unresolved targets, and legacy aliases. Exact focused review passed 76/76 with 265 assertions after direct probes closed import basename leakage, dynamic namespaces, barrel forwarding, private leakage, and default-owner members.
 - TASK-009 routed TS/JS/TSX/JSX ETL structural extraction through the native runtime and shared resolver session while freezing unchanged `smartChunk` output. Its executable pre-T9 baseline and approved-difference ledger passed 105/105 focused tests with 508 assertions; native source/dist, type/build, diff, and independent review gates passed before the regex typed-edge path was removed.
 - TASK-010 added graph-generation schema/ownership plus one locked transactional legacy backfill. Its active-scoped repository bridge, same-project pointers, modern FQN/span preservation, exact counts, bounded diagnostics, and safe cleanup passed an owned PostgreSQL 17 gate (3/3, 62 assertions), a clean 15-migration deploy, migrated ETL regression, type/build, and independent review.
+- TASK-011 added a typed PostgreSQL lifecycle repository with cross-process workspace row locking, live lease heartbeat/ownership, fingerprint/snapshot separation, expected-active CAS, count recomputation, expiry takeover, atomic activation/abort, and last-known-good-safe cleanup. The owned macOS arm64 PostgreSQL suite passed 11/11 with 67 assertions; forced type/build and review gates passed. T13 remains the explicit owner of discovered-file snapshot membership and post-snapshot delta reconciliation.
 
 ## Blocking Gate
 
-TASK-010 passed owned PostgreSQL/backfill, clean migration, migrated ETL, Prisma, type/build/diff, and independent-review gates. The aggregate core-unit command remains non-green on pre-existing readiness timing and environment-dependent PostgreSQL/AutoImprove tests outside the TASK-009/TASK-010 diffs; no test was weakened to conceal them.
+TASK-011 passed owned PostgreSQL lifecycle, type/build/diff, and independent-review gates. The aggregate core-unit command remains non-green on pre-existing readiness timing and environment-dependent PostgreSQL/AutoImprove tests outside the TASK-009/TASK-011 diffs; no test was weakened to conceal them.
 
 ## Exact Next Step
 
-Freeze and commit TASK-010, then execute TASK-011: implement begin/heartbeat/complete/activate/abort with database lease expiry recovery and expected-active CAS. Do not touch excluded platform files.
+Freeze and commit TASK-011, then execute TASK-012: generation-scope symbol reads/writes, exact FQN/legacy lookup, centrality ownership, full aggregates, and deleted/stale operations. Do not touch excluded platform files.
 
 ## Worktree and Safety
 
 - Branch: `main`; baseline `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`.
 - `plan-multi-language.md` was supplied untracked and is now an in-scope revised artifact.
 - No push attempted.
-- TASK-001 through TASK-010 are claimed with recorded gates: native discovery, dependency/verifier/patch, normalized contracts/manifest, readiness/guards, bounded runtime/lifetime, structural span/identity codecs, declarative TS/JS family query packs, deterministic TS/JS resolution, parity-gated native ETL integration, and graph-generation schema/backfill. No lifecycle coordinator, container build, or final parser benchmark has been claimed.
+- TASK-001 through TASK-011 are claimed with recorded gates: native discovery, dependency/verifier/patch, normalized contracts/manifest, readiness/guards, bounded runtime/lifetime, structural span/identity codecs, declarative TS/JS family query packs, deterministic TS/JS resolution, parity-gated native ETL integration, graph-generation schema/backfill, and lifecycle coordination. No generation-scoped writer integration, container build, or final parser benchmark has been claimed.
 - Preserve existing SQLite-removal artifacts and follow-up status.
