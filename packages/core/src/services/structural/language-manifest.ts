@@ -433,6 +433,33 @@ export function resolveStructuralLanguage(
   };
 }
 
+export interface HeaderLanguageEvidence {
+  readonly cImporters?: readonly string[];
+  readonly cppImporters?: readonly string[];
+  readonly buildLanguage?: "c" | "cpp" | "conflict";
+}
+
+/** `.h` is C unless one unambiguous importer/build signal positively proves C++. */
+export function resolveStructuralParseLanguage(
+  extension: string,
+  evidence?: HeaderLanguageEvidence,
+): StructuralLanguageResolution {
+  const resolution = resolveStructuralLanguage(extension);
+  if (resolution.status !== "supported" || resolution.entry.extension !== ".h") return resolution;
+  const provesC = (evidence?.cImporters?.length ?? 0) > 0 || evidence?.buildLanguage === "c" || evidence?.buildLanguage === "conflict";
+  const provesCpp = (evidence?.cppImporters?.length ?? 0) > 0 || evidence?.buildLanguage === "cpp" || evidence?.buildLanguage === "conflict";
+  if (!provesCpp || provesC || !resolution.entry.alternateGrammarArtifact) return resolution;
+  return {
+    ...resolution,
+    entry: Object.freeze({
+      ...resolution.entry,
+      language: "C++",
+      dialect: "header-cpp",
+      grammarArtifact: resolution.entry.alternateGrammarArtifact,
+    }),
+  };
+}
+
 /** Stable, serializable inputs. T10 owns the final structural fingerprint hash. */
 export const STRUCTURAL_FINGERPRINT_INPUTS = Object.freeze({
   manifestVersion: LANGUAGE_MANIFEST_VERSION,

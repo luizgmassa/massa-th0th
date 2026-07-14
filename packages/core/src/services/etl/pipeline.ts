@@ -36,6 +36,9 @@ import {
 } from "./graph-generation-coordinator.js";
 import type { GraphGenerationLease } from "../../data/graph-generation/graph-generation-contract.js";
 import { setTimeout as delay } from "node:timers/promises";
+import path from "node:path";
+import type { DiscoveredFile } from "./stage-context.js";
+import type { HeaderLanguageEvidence } from "../structural/language-manifest.js";
 
 export interface PipelineInput {
   projectId: string;
@@ -51,6 +54,52 @@ export interface PipelineInput {
    * {@link loadProjectIgnore} stays unchanged for query-time callers).
    */
   include_tests?: boolean;
+}
+
+/** Derive deterministic `.h` language evidence from the immutable discovery snapshot. */
+export function buildHeaderLanguageEvidence(
+  files: readonly DiscoveredFile[],
+): Readonly<Record<string, HeaderLanguageEvidence>> {
+  const headers = new Set(files.filter((file) => path.posix.extname(file.relativePath).toLowerCase() === ".h")
+    .map((file) => path.posix.normalize(file.relativePath)));
+  const mutable = new Map<string, { cImporters: Set<string>; cppImporters: Set<string>; build: Set<"c" | "cpp"> }>();
+  const entry = (header: string) => {
+    let value = mutable.get(header);
+    if (!value) {
+      value = { cImporters: new Set(), cppImporters: new Set(), build: new Set() };
+      mutable.set(header, value);
+    }
+    return value;
+  };
+  for (const file of files) {
+    if (path.posix.basename(file.relativePath) !== "compile_commands.json" || file.snapshotContent === undefined) continue;
+    let commands: unknown;
+    try { commands = JSON.parse(file.snapshotContent); } catch { continue; }
+    if (!Array.isArray(commands)) continue;
+    for (const command of commands) {
+      if (!command || typeof command !== "object") continue;
+      const record = command as { file?: unknown; directory?: unknown; command?: unknown; arguments?: unknown };
+      if (typeof record.file !== "string") continue;
+      const projectRoot = path.resolve(file.absolutePath, ...file.relativePath.split("/").map(() => ".."));
+      const commandDirectory = typeof record.directory === "string"
+        ? path.resolve(projectRoot, record.directory)
+        : projectRoot;
+      const absoluteInput = path.resolve(commandDirectory, record.file);
+      const relative = path.relative(projectRoot, absoluteInput);
+      const header = path.posix.normalize(relative.replaceAll(path.sep, "/"));
+      if (!headers.has(header)) continue;
+      const invocation = typeof record.command === "string"
+        ? record.command
+        : Array.isArray(record.arguments) ? record.arguments.join(" ") : "";
+      if (/(?:^|\s)(?:clang\+\+|g\+\+|c\+\+)(?:\s|$)|(?:^|\s)-x\s*c\+\+(?:\s|$)/u.test(invocation)) entry(header).build.add("cpp");
+      else if (/(?:^|\s)(?:clang|gcc|cc)(?:\s|$)|(?:^|\s)-x\s*c(?:\s|$)/u.test(invocation)) entry(header).build.add("c");
+    }
+  }
+  return Object.freeze(Object.fromEntries([...mutable.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([header, value]) => [header, Object.freeze({
+    ...(value.cImporters.size ? { cImporters: Object.freeze([...value.cImporters].sort()) } : {}),
+    ...(value.cppImporters.size ? { cppImporters: Object.freeze([...value.cppImporters].sort()) } : {}),
+    ...(value.build.size ? { buildLanguage: value.build.size > 1 ? "conflict" : [...value.build][0] } : {}),
+  })])));
 }
 
 function abortable<T>(operation: Promise<T>, signal: AbortSignal): Promise<T> {
@@ -191,6 +240,7 @@ export class EtlPipeline {
       // incremental hint cannot narrow membership or omitted/deleted paths
       // would disappear from completeness evidence unpredictably.
       const discoveredSnapshot = await this.discover.run(ctx, { forceReindex, includeTests: include_tests });
+      ctx.structuralHeaderEvidenceByFile = buildHeaderLanguageEvidence(discoveredSnapshot);
       stageTimings.discover = Math.round(performance.now() - st1);
 
       const activeGraph = await getSymbolRepository().getActiveGraphSnapshot(projectId);

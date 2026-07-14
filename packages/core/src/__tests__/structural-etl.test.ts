@@ -9,6 +9,7 @@ import { buildSymbolPersistenceBatch } from "../services/etl/stages/load.js";
 import { matchesStructuralPathAlias, resolveStructuralSpecifier } from "../services/structural/resolvers/typescript.js";
 import { smartChunk } from "../services/search/smart-chunker.js";
 import { StructuralRuntime } from "../services/structural/structural-runtime.js";
+import { buildHeaderLanguageEvidence } from "../services/etl/pipeline.js";
 import type { EtlStageContext, ParsedFile } from "../services/etl/stage-context.js";
 import type { NormalizedStructure, SourceSpan } from "../services/structural/types.js";
 
@@ -39,6 +40,44 @@ function context(projectPath: string): EtlStageContext {
 }
 
 describe("TS/JS structural ETL adapter", () => {
+  test("derives AST importer and directory-aware build evidence through the real ParseStage seam", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-header-evidence-"));
+    tempDirs.push(dir);
+    const discovered = (relativePath: string, snapshotContent: string, needsReparse = true) => ({
+      absolutePath: path.join(dir, relativePath), relativePath, snapshotContent,
+      mtime: 0, size: Buffer.byteLength(snapshotContent), contentHash: relativePath, needsReparse,
+    });
+    const files = [
+      discovered("include/default.h", "int stable(void);"),
+      discovered("include/cpp.h", "class Child {};"),
+      discovered("include/conflict.h", "int conflict(void);"),
+      discovered("include/build-only.h", "class BuildOnly {};"),
+      discovered("src/main.cpp", '#include "../include/cpp.h"\n#include "../include/conflict.h"\n', false),
+      discovered("src/fake.cpp", '// #include "../include/default.h"\nconst char* fake = "#include \\\"../include/default.h\\\"";\n'),
+      discovered("src/main.c", '#include "../include/conflict.h"\n'),
+      discovered("compile_commands.json", JSON.stringify([
+        { directory: path.join(dir, "build"), file: "../include/cpp.h", command: "clang++ -x c++ ../include/cpp.h" },
+        { directory: ".", file: path.join(dir, "include/build-only.h"), arguments: ["clang++", "-x", "c++", "include/build-only.h"] },
+      ])),
+    ];
+    const evidence = buildHeaderLanguageEvidence(files);
+    expect(evidence).toEqual({
+      "include/build-only.h": { buildLanguage: "cpp" },
+      "include/cpp.h": { buildLanguage: "cpp" },
+    });
+    const ctx = { ...context(dir), structuralHeaderEvidenceByFile: evidence };
+    const parsed = await new ParseStage().run(ctx, files);
+    expect(ctx.structuralHeaderEvidenceByFile).toEqual({
+      "include/build-only.h": { buildLanguage: "cpp" },
+      "include/conflict.h": { cImporters: ["src/main.c"], cppImporters: ["src/main.cpp"] },
+      "include/cpp.h": { cppImporters: ["src/main.cpp"], buildLanguage: "cpp" },
+    });
+    expect(ctx.structuralHeaderEvidenceByFile?.["include/default.h"]).toBeUndefined();
+    expect(parsed.find((item) => item.file.relativePath === "include/cpp.h")?.symbols.map((item) => item.name)).toContain("Child");
+    expect(parsed.find((item) => item.file.relativePath === "include/build-only.h")?.symbols.map((item) => item.name)).toContain("BuildOnly");
+    expect(parsed.find((item) => item.file.relativePath === "include/conflict.h")?.symbols.map((item) => item.name)).not.toContain("Child");
+    expect(parsed.find((item) => item.file.relativePath === "src/main.cpp")).toMatchObject({ symbols: [], rawEdges: [] });
+  });
   test("freezes smartChunk output while native structure replaces regex (AD-001 through AD-006)", async () => {
     const content = "import { helper as run } from \"./helper.js\";\n\nexport class Service {\n  execute(value: string) {\n    return run(value);\n  }\n}\n";
     const { dir, file } = await fixture("src/service.ts", content);

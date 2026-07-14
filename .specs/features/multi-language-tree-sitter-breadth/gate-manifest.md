@@ -698,3 +698,14 @@ These draft checksums are retained as failed-review evidence and are not an acti
 - Resolver evidence: same-file, imported alias, unique global, ambiguity, unresolved, language-specific extension probing, scripting dialect isolation, and TS/scripting cross-language negative sensors.
 - Independent read-only review: initial NOT PASS identified four P1 findings (cross-language leakage, missing applicable types, dishonest multi-imports, missing Lua alias). All were remediated; independent re-review PASS with no actionable finding.
 - Scope: scripting cohort only; no systems, managed, functional, embedded/data, Linux, Docker, container, or non-arm64 implementation.
+
+## TASK-016 Accepted Gate Evidence v20
+
+- Platform: macOS arm64 only; exact Bun `1.3.0`.
+- Exact focused command: `bunx bun@1.3.0 test packages/core/src/__tests__/structural-query-pack.test.ts packages/core/src/__tests__/structural-resolver.test.ts packages/core/src/__tests__/language-manifest.test.ts packages/core/src/__tests__/structural-runtime.test.ts packages/core/src/__tests__/structural-etl.test.ts` — PASS, 95 tests, 1,010 assertions.
+- `bunx turbo run build --filter=@massa-th0th/core` — PASS, shared/core TypeScript compilation and core build. `git diff --check` — PASS.
+- Native capability evidence: C/C++/Go/Rust/Zig declarations and exact nested owners, documentation, honest includes/imports, applicable type/inheritance/trait relations, calls, bare-argument data flow, HTTP, and events; at least four native parses per `.c`, `.cpp`, `.hpp`, `.go`, `.rs`, and `.zig`.
+- `.h` evidence: deterministic C default; C++ only for unambiguous AST-derived C++ importer or compilation-database proof; conflict defaults C; cached importer evidence-only native parsing retains empty graph/semantic output; `compile_commands.json` honors absolute/project-relative `directory`; comment/string fake includes are absent and angle includes remain unresolved.
+- Resolver evidence: dialect isolation, honest Go/Rust imports, ambiguity/unresolved negatives, Rust alias/group/nested/glob/grouped-self semantics from native grammar records, and cross-language isolation.
+- Independent read-only review: PASS after four remediation rounds covering runtime ETL evidence production, Rust import honesty/AST traversal, compilation-directory resolution, cache-hit importer correctness, glob/grouped-self semantics, and fake-include negatives.
+- Scope: systems cohort only; no managed, functional, embedded/data, Linux, Docker, container, non-arm64, `.cc`, `.cxx`, or future-cohort implementation.

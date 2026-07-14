@@ -28,7 +28,9 @@ import type {
 } from "../stage-context.js";
 
 const BATCH_SIZE = 20;
-const STRUCTURAL_TS_JS_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
+const STRUCTURAL_EXTENSIONS = new Set([
+  ".ts", ".tsx", ".js", ".jsx", ".c", ".h", ".cpp", ".hpp", ".go", ".rs", ".zig",
+]);
 
 export class StructuralEtlParseError extends Error {
   constructor(
@@ -69,16 +71,26 @@ export class ParseStage {
       timestamp: Date.now(),
     });
 
-    const results: ParsedFile[] = [];
+    const results = new Map<string, ParsedFile>();
     let processed = 0;
+    // Importers must be parsed before ambiguous `.h` files so header evidence
+    // comes from native preprocessor captures, never source-text heuristics.
+    const phases = [
+      files.filter((file) => path.extname(file.relativePath).toLowerCase() !== ".h"),
+      files.filter((file) => path.extname(file.relativePath).toLowerCase() === ".h"),
+    ];
+    const batches = phases.flatMap((phase) => Array.from(
+      { length: Math.ceil(phase.length / BATCH_SIZE) },
+      (_, index) => phase.slice(index * BATCH_SIZE, (index + 1) * BATCH_SIZE),
+    ));
 
-    for (let i = 0; i < files.length; i += BATCH_SIZE) {
+    for (const batch of batches) {
       if (ctx.abortSignal?.aborted) throw ctx.abortSignal.reason;
-      const batch = files.slice(i, i + BATCH_SIZE);
       const batchResults = await Promise.all(
         batch.map((file) => this.parseFile(ctx, file)),
       );
-      results.push(...batchResults);
+      for (const result of batchResults) results.set(result.file.relativePath, result);
+      this.recordHeaderImporterEvidence(ctx, files, batchResults);
       processed += batch.length;
 
       ctx.emit({
@@ -95,9 +107,9 @@ export class ParseStage {
       type: "stage_end",
       stage: "parse",
       payload: {
-        parsed: results.filter((f) => f.file.needsReparse).length,
-        totalSymbols: results.reduce((s, f) => s + f.symbols.length, 0),
-        totalChunks: results.reduce((s, f) => s + f.chunks.length, 0),
+        parsed: [...results.values()].filter((f) => f.file.needsReparse).length,
+        totalSymbols: [...results.values()].reduce((s, f) => s + f.symbols.length, 0),
+        totalChunks: [...results.values()].reduce((s, f) => s + f.chunks.length, 0),
         durationMs,
       },
       timestamp: Date.now(),
@@ -105,15 +117,55 @@ export class ParseStage {
 
     logger.info("ETL Parse complete", {
       projectId: ctx.projectId,
-      parsed: results.filter((f) => f.file.needsReparse).length,
+      parsed: [...results.values()].filter((f) => f.file.needsReparse).length,
       durationMs,
     });
 
-    return results;
+    return files.map((file) => results.get(file.relativePath)!);
+  }
+
+  private recordHeaderImporterEvidence(
+    ctx: EtlStageContext,
+    files: readonly DiscoveredFile[],
+    parsedFiles: readonly ParsedFile[],
+  ): void {
+    const knownHeaders = new Set(files.filter((file) => path.extname(file.relativePath).toLowerCase() === ".h")
+      .map((file) => path.posix.normalize(file.relativePath)));
+    const mutable: Record<string, { cImporters?: readonly string[]; cppImporters?: readonly string[]; buildLanguage?: "c" | "cpp" | "conflict" }> = {
+      ...(ctx.structuralHeaderEvidenceByFile ?? {}),
+    };
+    for (const parsed of parsedFiles) {
+      const extension = path.extname(parsed.file.relativePath).toLowerCase();
+      const key = extension === ".c" ? "cImporters" : [".cpp", ".hpp"].includes(extension) ? "cppImporters" : undefined;
+      if (!key) continue;
+      for (const imported of parsed.rawImports) {
+        if (!(["c_include", "cpp_include"] as const).includes(imported.form as "c_include" | "cpp_include") || imported.specifier.startsWith("<")) continue;
+        const header = path.posix.normalize(path.posix.join(path.posix.dirname(parsed.file.relativePath), imported.specifier));
+        if (!knownHeaders.has(header)) continue;
+        const existing = mutable[header] ?? {};
+        mutable[header] = { ...existing, [key]: Object.freeze([...new Set([...(existing[key] ?? []), parsed.file.relativePath])].sort()) };
+      }
+    }
+    ctx.structuralHeaderEvidenceByFile = Object.freeze(Object.fromEntries(Object.entries(mutable).sort(([a], [b]) => a.localeCompare(b))));
   }
 
   private async parseFile(ctx: EtlStageContext, file: DiscoveredFile): Promise<ParsedFile> {
     if (!file.needsReparse) {
+      const extension = path.extname(file.relativePath).toLowerCase();
+      if ([".c", ".cpp", ".hpp"].includes(extension)) {
+        const content = file.snapshotContent ?? await fs.readFile(file.absolutePath, "utf8");
+        const outcome = await this.runtime.parse({ extension, source: Buffer.from(content) });
+        if (outcome.status === "failed") throw new StructuralEtlParseError(
+          file.relativePath, outcome.failureKind, `Structural evidence parse failed (${outcome.failureKind})`,
+          outcome.diagnosticCount, outcome.diagnostics.slice(0, 10),
+        );
+        if (outcome.status === "ok" || outcome.status === "recovered") {
+          const { rawImports } = this.projectStructuralResult(outcome.structure);
+          // Evidence-only parse: retain imports for header selection while the
+          // cached file remains excluded from semantic/graph output.
+          return { file, chunks: [], symbols: [], rawImports, rawEdges: [] };
+        }
+      }
       // Fingerprint cache hit — pass through with empty collections
       return { file, chunks: [], symbols: [], rawImports: [], rawEdges: [] };
     }
@@ -135,10 +187,14 @@ export class ParseStage {
       let structuralDiagnostics;
       let structuralDiagnosticCount = 0;
       let structuralRecovered = false;
-      if (STRUCTURAL_TS_JS_EXTENSIONS.has(ext)) {
+      if (STRUCTURAL_EXTENSIONS.has(ext)) {
         let outcome;
         try {
-          outcome = await this.runtime.parse({ extension: ext, source: Buffer.from(content) });
+          outcome = await this.runtime.parse({
+            extension: ext,
+            source: Buffer.from(content),
+            ...(ext === ".h" ? { headerEvidence: ctx.structuralHeaderEvidenceByFile?.[file.relativePath] } : {}),
+          });
         } catch (error) {
           throw new StructuralEtlParseError(
             file.relativePath,

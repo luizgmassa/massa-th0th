@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 through TASK-015 PASS; TASK-016 through TASK-019 READY
+**Status:** TASK-001 through TASK-016 PASS; TASK-017 through TASK-019 READY
 
 ## Project Testing Guidelines Scan
 
@@ -276,7 +276,7 @@ Phase 7 Validate:
 
 ### T16 / TASK-016: Implement C/C++/Go/Rust/Zig query packs and resolvers [P]
 
-**Status:** READY after TASK-014 PASS.
+**Status:** PASS on 2026-07-14. Native systems packs/resolvers, AST-only imports, `.h` C-default/C++-evidence policy, cached-importer evidence, exact Rust glob/self semantics, focused/build gates, and independent review passed.
 
 **What:** Add systems cohort plus `.h` C/C++ evidence policy and deterministic source resolution.  
 **Where:** structural packs/resolvers and golden fixtures/tests.  

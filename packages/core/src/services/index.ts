@@ -187,6 +187,9 @@ export {
   RUBY_QUERY_PACK,
   SCRIPTING_QUERY_PACKS,
 } from "./structural/query-packs/scripting.js";
+export {
+  C_QUERY_PACK, CPP_QUERY_PACK, GO_QUERY_PACK, RUST_QUERY_PACK, SYSTEMS_QUERY_PACKS, ZIG_QUERY_PACK,
+} from "./structural/query-packs/systems.js";
 export type {
   ParsedStructuralFqn,
   SignatureDigest,
@@ -219,6 +222,9 @@ export {
   TYPESCRIPT_RESOLVER_VERSION,
 } from "./structural/resolvers/typescript.js";
 export { SCRIPTING_LANGUAGE_RESOLVER } from "./structural/resolvers/scripting.js";
+export { SYSTEMS_LANGUAGE_RESOLVER } from "./structural/resolvers/systems.js";
+export { resolveStructuralParseLanguage } from "./structural/language-manifest.js";
+export type { HeaderLanguageEvidence } from "./structural/language-manifest.js";
 
 // Symbol Graph
 export { symbolGraphService, SymbolGraphService } from "./symbol/symbol-graph.service.js";

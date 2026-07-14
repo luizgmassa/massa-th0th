@@ -7,7 +7,8 @@ import {
   type NativeQueryInstance,
 } from "./grammar-loaders.js";
 import {
-  resolveStructuralLanguage,
+  resolveStructuralParseLanguage,
+  type HeaderLanguageEvidence,
 } from "./language-manifest.js";
 import {
   getValidatedNativeGrammarSet,
@@ -67,6 +68,7 @@ export interface StructuralParseRequest {
   extension: string;
   source: Buffer;
   queryExecutor?: StructuralQueryExecutor;
+  headerEvidence?: HeaderLanguageEvidence;
 }
 
 export interface StructuralRuntimeOptions {
@@ -182,7 +184,7 @@ export class StructuralRuntime {
       ]);
     }
 
-    const resolution = resolveStructuralLanguage(request.extension);
+    const resolution = resolveStructuralParseLanguage(request.extension, request.headerEvidence);
     if (resolution.status === "semantic_only") {
       return {
         status: "unsupported",

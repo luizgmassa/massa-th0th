@@ -409,6 +409,94 @@ describe("declarative structural query packs", () => {
     expect(outcome.diagnostics[0]?.code).toBe("unsupported_structural_language");
   });
 
+  test("extracts systems-cohort native capability floors and honest imports", async () => {
+    const cases = [
+      [".c", { packageName: "tree-sitter-c", version: "0.24.1" },
+        '#include <stdio.h>\n/// Doc\ntypedef struct Base { int x; } Base;\nint run(Input value){ fetch("/api/x", value); emit("ready"); }',
+        "c_include", ["function", "type", "class"], ["type_ref", "http_call", "data_flow", "emit"]],
+      [".cpp", { packageName: "tree-sitter-cpp", version: "0.23.4" },
+        '#include "base.hpp"\n/// Doc\nclass Child : public Base { public: int run(Input value){ fetch("/api/x", value); emit("ready"); } };',
+        "cpp_include", ["class", "method"], ["extend", "type_ref", "http_call", "data_flow", "emit"]],
+      [".go", { packageName: "tree-sitter-go", version: "0.25.0" },
+        'package main\nimport alias "example/lib"\n// Doc\ntype Child struct { Value Input }\nfunc run(value Input) Output { fetch("/api/x", value); emit("ready"); return Output{} }',
+        "go_import", ["class", "function"], ["type_ref", "http_call", "data_flow", "emit"]],
+      [".rs", { packageName: "tree-sitter-rust", version: "0.24.0" },
+        'use crate::base::Base as Root;\n/// Doc\nstruct Child { value: Input }\ntrait Runner {}\nimpl Runner for Child {}\nfn run(value: Input) -> Output { fetch("/api/x", value); emit("ready"); Output{} }',
+        "rust_use", ["class", "trait", "function"], ["implement", "type_ref", "http_call", "data_flow", "emit"]],
+      [".zig", { packageName: "@tree-sitter-grammars/tree-sitter-zig", version: "1.1.2" },
+        'const dep = @import("base.zig");\n/// Doc\nconst Child = struct { value: Input, fn run(value: Input) Output { fetch("/api/x", value); emit("ready"); } };',
+        "zig_import", ["class", "function"], ["type_ref", "http_call", "data_flow", "emit"]],
+    ] as const;
+    for (const [extension, artifact, source, importForm, symbolKinds, edgeKinds] of cases) {
+      const outcome = await parse(extension, Buffer.from(source), artifact);
+      expect(outcome.status, `${extension}:${outcome.status === "failed" ? outcome.diagnostics[0]?.message : ""}`).toBe("ok");
+      if (outcome.status !== "ok") continue;
+      expect(outcome.structure.imports.map((item) => item.form)).toContain(importForm);
+      expect(outcome.structure.symbols.map((item) => item.kind)).toEqual(expect.arrayContaining(symbolKinds));
+      expect(outcome.structure.edges.map((item) => item.kind)).toEqual(expect.arrayContaining(edgeKinds));
+      expect(outcome.structure.symbols.some((item) => item.documentation), extension).toBe(true);
+    }
+  });
+
+  test("selects .h C++ only from unambiguous positive importer/build evidence", async () => {
+    const grammarSet = await loadNativeGrammarSet([
+      { packageName: "tree-sitter-c", version: "0.24.1" },
+      { packageName: "tree-sitter-cpp", version: "0.23.4" },
+    ]);
+    const runtime = new StructuralRuntime({ grammarSet: () => grammarSet });
+    const defaultC = await runtime.parse({ extension: ".h", source: Buffer.from("int run(int value) { return value; }") });
+    expect(defaultC.status).toBe("ok");
+    if (defaultC.status === "ok") expect(defaultC.structure.symbols.map((item) => item.name)).toContain("run");
+    const provenCpp = await runtime.parse({
+      extension: ".h", source: Buffer.from("class Child : public Base {};") ,
+      headerEvidence: { cppImporters: ["src/main.cpp"] },
+    });
+    expect(provenCpp.status).toBe("ok");
+    if (provenCpp.status === "ok") expect(provenCpp.structure.symbols.map((item) => item.name)).toContain("Child");
+    const conflictDefaultsC = await runtime.parse({
+      extension: ".h", source: Buffer.from("int stable(void) { return 1; }") ,
+      headerEvidence: { cImporters: ["src/main.c"], cppImporters: ["src/main.cpp"] },
+    });
+    expect(conflictDefaultsC.status).toBe("ok");
+    if (conflictDefaultsC.status === "ok") expect(conflictDefaultsC.structure.symbols.map((item) => item.name)).toContain("stable");
+  });
+
+  test("normalizes Rust use modules separately from alias, grouped, nested, and glob bindings", async () => {
+    const outcome = await parse(".rs", Buffer.from(
+      "use crate::base::{Base as Root, helper, self as base_mod, nested::{Thing, *}};\n",
+    ), { packageName: "tree-sitter-rust", version: "0.24.0" });
+    expect(outcome.status).toBe("ok");
+    if (outcome.status !== "ok") return;
+    expect(outcome.structure.imports.map(({ specifier, bindings }) => ({ specifier, bindings }))).toEqual([
+      { specifier: "crate/base", bindings: [
+        { imported: "Base", local: "Root", typeOnly: false },
+        { imported: "helper", local: "helper", typeOnly: false },
+        { imported: "*", local: "base_mod", typeOnly: false },
+      ] },
+      { specifier: "crate/base/nested", bindings: [
+        { imported: "Thing", local: "Thing", typeOnly: false },
+        { imported: "*", local: "*", typeOnly: false },
+      ] },
+    ]);
+  });
+
+  test("runs four independent native goldens for every systems extension", async () => {
+    const matrix = [
+      [".c", { packageName: "tree-sitter-c", version: "0.24.1" }, ["int f(void) {}", "#include <sys.h>\n", "struct X { T x; };", "void g(T x) { fetch(x); }"]],
+      [".cpp", { packageName: "tree-sitter-cpp", version: "0.23.4" }, ["class X {};", "#include <x.hpp>\n", "class X : public B {};", "void g(T x) { fetch(x); }"]],
+      [".hpp", { packageName: "tree-sitter-cpp", version: "0.23.4" }, ["class X {};", "#include <x.hpp>\n", "class X : public B {};", "void g(T x) { fetch(x); }"]],
+      [".go", { packageName: "tree-sitter-go", version: "0.25.0" }, ["package p\nfunc f() {}", "package p\nimport \"example/x\"", "package p\ntype X struct {\n V T\n}\n", "package p\nfunc g(x T) { fetch(x) }"]],
+      [".rs", { packageName: "tree-sitter-rust", version: "0.24.0" }, ["struct X {}", "use crate::x::X;", "trait T {}\nimpl T for X {}", "fn g(x: T) { fetch(x); }"]],
+      [".zig", { packageName: "@tree-sitter-grammars/tree-sitter-zig", version: "1.1.2" }, ["const X = enum { a, };", "const x = @import(\"x.zig\");", "const X = struct { v: T, };", "fn g(x: T) void { fetch(x); }"]],
+    ] as const;
+    for (const [extension, artifact, sources] of matrix) {
+      for (const source of sources) {
+        const outcome = await parse(extension, Buffer.from(source), artifact);
+        expect(outcome.status, `${extension}:${source}:${outcome.status === "failed" ? outcome.diagnostics[0]?.message : ""}`).toBe("ok");
+      }
+    }
+  });
+
   test("turns query compilation errors into hard query outcomes", async () => {
     const source = Buffer.from("function valid() {}\n");
     const grammarSet = await loadNativeGrammarSet([{

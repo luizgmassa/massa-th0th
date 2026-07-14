@@ -7,7 +7,7 @@
 - workflow: spec-driven
 - persona: AI Engineer
 - feature: `multi-language-tree-sitter-breadth`
-- status: EXECUTE ACTIVE; TASK-001 through TASK-015 PASS; TASK-016 through TASK-019 READY
+- status: EXECUTE ACTIVE; TASK-001 through TASK-016 PASS; TASK-017 through TASK-019 READY
 - branch: `main`
 - baseline: `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`
 - push: not attempted
@@ -68,14 +68,15 @@ Replace regex structural extraction with pinned native Tree-sitter grammars and 
 - TASK-013 integrates complete pending generations through real Discover/Parse/Resolve/Load stages, immutable input snapshots, deletion reconciliation, stale LKG recovery, cross-process owner refresh, interruption settlement, synchronous CAS activation, and durable terminal generation identity. Exact Bun 1.3.0 focused/owned PostgreSQL passed 38/38 with 147 assertions; type-check 6/6, build 5/5, diff, and independent review passed. The canonical semantic vector/keyword lifecycle remains unchanged by adjudication.
 - TASK-014 preserves exact diagnostic totals independently from ten bounded details/spans for recovered and incremental hard/stale files, derives status/language summaries only from the activated generation, and durably round-trips the summary with its activated identity through nullable forward-compatible job columns. Exact Bun 1.3.0 focused/owned PostgreSQL and ETL passed 50/50 with 249 assertions; type 6/6, build 5/5, diff, and independent review passed.
 - TASK-015 adds native Python/Ruby/PHP/Lua declarations, documentation, honest per-module/per-clause imports, applicable type relations, calls/data flow/HTTP/events, and dialect-scoped resolution without cross-language leakage. Exact Bun 1.3.0 focused query/resolver/ETL passed 67/67 with 333 assertions; core build/type compilation, diff, and independent review passed after four P1 remediations.
+- TASK-016 adds native C/C++/Go/Rust/Zig declarations, documentation, honest AST-derived imports, applicable types/inheritance/traits, calls/data flow/HTTP/events, and dialect-isolated resolution. `.h` defaults to C and selects C++ only from unambiguous native importer or directory-aware compilation-database evidence, including cached importers; angle includes remain unresolved. Exact Bun 1.3.0 focused gates passed 95/95 with 1,010 assertions; core build, diff, and independent review passed after four remediation rounds.
 
 ## Blocker
 
-No blocker at the TASK-015 boundary. TASK-016 through TASK-019 are dependency-satisfied parallel cohort tasks; execution remains sequential under the one-atomic-task contract.
+No blocker at the TASK-016 boundary. TASK-017 through TASK-019 are dependency-satisfied parallel cohort tasks; execution remains sequential under the one-atomic-task contract.
 
 ## Next Step
 
-Execute the next READY cohort task, TASK-016, without implementing later cohorts in the same atomic task.
+Execute the next READY cohort task, TASK-017, without implementing later cohorts in the same atomic task.
 
 ## Previous Feature
 

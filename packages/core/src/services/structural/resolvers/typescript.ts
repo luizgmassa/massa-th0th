@@ -25,6 +25,9 @@ const DIALECT_PROBES: Readonly<Record<string, readonly string[]>> = Object.freez
   jsx: ["", ".js", ".jsx", ".ts", ".tsx", "/index.js", "/index.jsx", "/index.ts", "/index.tsx"],
   python: ["", ".py", "/__init__.py"], ruby: ["", ".rb"], php: ["", ".php"],
   "lua-luajit": ["", ".lua"],
+  c: ["", ".c", ".h"], "header-default-c": ["", ".c", ".h"],
+  cpp: ["", ".cpp", ".hpp", ".h"], header: ["", ".cpp", ".hpp", ".h"], "header-cpp": ["", ".cpp", ".hpp", ".h"],
+  go: ["", ".go"], rust: ["", ".rs"], zig: ["", ".zig"],
 });
 
 function candidates(identities: readonly StructuralIdentity[]): readonly StructuralFqnCandidate[] {
@@ -243,7 +246,7 @@ function importedMatches(
   const matches: ResolvableDefinition[] = [];
   let claimed = false;
   for (const imported of file.imports) {
-    if (!["esm_import", "commonjs_require", "dynamic_import", "python_import", "ruby_require", "php_use", "lua_require"].includes(imported.form)) continue;
+    if (!["esm_import", "commonjs_require", "dynamic_import", "python_import", "ruby_require", "php_use", "lua_require", "c_include", "cpp_include", "go_import", "rust_use", "zig_import"].includes(imported.form)) continue;
     const typeEdge = reference.kind === "type_ref" || reference.kind === "extend" || reference.kind === "implement";
     for (const binding of imported.bindings) {
       let sought: string | undefined;
@@ -263,7 +266,7 @@ function importedMatches(
       claimed = true;
       if ((imported.typeOnly || binding.typeOnly) && !typeEdge) continue;
       const importedFile = resolveStructuralSpecifier(imported.specifier, file.file, build, file.dialect) ??
-        (["python_import", "ruby_require", "php_use", "lua_require"].includes(imported.form)
+        (["python_import", "ruby_require", "php_use", "lua_require", "c_include", "cpp_include", "go_import", "rust_use", "zig_import"].includes(imported.form)
           ? probe(imported.specifier.replace(/^\.\//u, ""), new Set(build.knownFiles.map(normalizeStructuralFile)), file.dialect)
           : undefined);
       if (!importedFile) continue;

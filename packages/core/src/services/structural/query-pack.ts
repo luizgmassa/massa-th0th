@@ -22,18 +22,20 @@ import {
   TYPESCRIPT_QUERY_PACK,
 } from "./query-packs/typescript.js";
 import { SCRIPTING_QUERY_PACKS } from "./query-packs/scripting.js";
+import { SYSTEMS_QUERY_PACKS } from "./query-packs/systems.js";
 
 export interface StructuralQueryPack {
   readonly version: string;
   readonly dialects: readonly string[];
   readonly querySources: readonly string[];
-  readonly family?: "typescript" | "python" | "ruby" | "php" | "lua";
+  readonly family?: "typescript" | "python" | "ruby" | "php" | "lua" | "c" | "cpp" | "go" | "rust" | "zig";
 }
 
 const QUERY_PACKS = new Map<string, StructuralQueryPack>(
   [...TYPESCRIPT_QUERY_PACK.dialects.map((dialect) => [dialect, TYPESCRIPT_QUERY_PACK] as const),
    ...JAVASCRIPT_QUERY_PACK.dialects.map((dialect) => [dialect, JAVASCRIPT_QUERY_PACK] as const),
-   ...SCRIPTING_QUERY_PACKS.flatMap((pack) => pack.dialects.map((dialect) => [dialect, pack] as const))],
+   ...SCRIPTING_QUERY_PACKS.flatMap((pack) => pack.dialects.map((dialect) => [dialect, pack] as const)),
+   ...SYSTEMS_QUERY_PACKS.flatMap((pack) => pack.dialects.map((dialect) => [dialect, pack] as const))],
 );
 
 const SYMBOL_KINDS = new Set<StructuralSymbolKind>([
@@ -137,6 +139,19 @@ function symbolName(source: Buffer, node: NativeQueryNode): string | null {
     const raw = text(source, nameNode);
     return (raw.startsWith("#") ? `%23${raw.slice(1)}` : raw).normalize("NFC");
   }
+  if (["function_definition", "type_definition"].includes(node.type)) {
+    let declarator = field(node, "declarator");
+    while (declarator) {
+      if (["identifier", "field_identifier", "type_identifier"].includes(declarator.type)) {
+        return text(source, declarator).normalize("NFC");
+      }
+      declarator = field(declarator, "declarator");
+    }
+  }
+  if (node.type === "variable_declaration") {
+    const identifier = node.namedChildren?.find((child) => child.type === "identifier");
+    return identifier ? text(source, identifier).normalize("NFC") : null;
+  }
   if (node.type === "type_parameter") {
     const identifier = node.namedChildren?.find((child) => child.type === "type_identifier" || child.type === "identifier");
     return identifier ? text(source, identifier).normalize("NFC") : null;
@@ -157,12 +172,24 @@ function symbolKind(captureName: string, source: Buffer, node: NativeQueryNode):
   const requested = captureName.slice("symbol.".length) as StructuralSymbolKind;
   if (!SYMBOL_KINDS.has(requested)) return null;
   if (requested === "method" && symbolName(source, node) === "constructor") return "constructor";
+  if (requested === "function" && node.type === "function_definition" &&
+    ancestor(node, "class_specifier")) return "method";
   if (requested === "namespace" && text(source, node).trimStart().startsWith("module ")) return "module";
   if (requested === "variable") {
     const value = field(node, "value");
     if (value?.type === "arrow_function" || value?.type === "function_expression") return "function";
     const parentText = node.parent ? text(source, node.parent).trimStart() : "";
     return parentText.startsWith("const ") ? "constant" : "variable";
+  }
+  if (node.type === "type_spec") {
+    const value = field(node, "type");
+    if (value?.type === "struct_type") return "class";
+    if (value?.type === "interface_type") return "interface";
+  }
+  if (node.type === "variable_declaration") {
+    const value = node.namedChildren?.[1];
+    if (value?.type === "struct_declaration") return "class";
+    if (value?.type === "enum_declaration") return "enum";
   }
   return requested;
 }
@@ -311,6 +338,8 @@ function buildSymbols(
     const nameNode = field(draft.node, "name") ?? field(draft.node, "property");
     const documentationStart = draft.node.parent?.type === "export_statement"
       ? draft.node.parent.startIndex
+      : draft.node.type === "type_spec" && draft.node.parent?.type === "type_declaration"
+        ? draft.node.parent.startIndex
       : draft.node.startIndex;
     const capturedDocumentation = captures
       .filter((capture) => capture.name === "documentation")
@@ -405,6 +434,40 @@ function importBindings(node: NativeQueryNode, source: Buffer) {
   return frozenBindings(bindings);
 }
 
+interface RustUseLeaf { readonly path: readonly string[]; readonly alias?: string; readonly glob?: boolean }
+
+function rustPathSegments(node: NativeQueryNode, source: Buffer): readonly string[] {
+  if (node.type === "scoped_identifier") {
+    const pathNode = field(node, "path");
+    const nameNode = field(node, "name");
+    return [...(pathNode ? rustPathSegments(pathNode, source) : []), ...(nameNode ? rustPathSegments(nameNode, source) : [])];
+  }
+  if (["identifier", "crate", "self", "super", "metavariable"].includes(node.type)) return [text(source, node)];
+  return (node.namedChildren ?? []).flatMap((child) => rustPathSegments(child, source));
+}
+
+function rustUseLeaves(node: NativeQueryNode, source: Buffer, prefix: readonly string[] = []): readonly RustUseLeaf[] {
+  if (node.type === "use_declaration") {
+    const argument = field(node, "argument") ?? node.namedChildren?.[0];
+    return argument ? rustUseLeaves(argument, source, prefix) : [];
+  }
+  if (node.type === "scoped_use_list") {
+    const pathNode = field(node, "path");
+    const list = field(node, "list") ?? node.namedChildren?.find((child) => child.type === "use_list");
+    const nextPrefix = [...prefix, ...(pathNode ? rustPathSegments(pathNode, source) : [])];
+    return list ? rustUseLeaves(list, source, nextPrefix) : [];
+  }
+  if (node.type === "use_list") return (node.namedChildren ?? []).flatMap((child) => rustUseLeaves(child, source, prefix));
+  if (node.type === "use_as_clause") {
+    const pathNode = field(node, "path") ?? node.namedChildren?.[0];
+    const alias = field(node, "alias");
+    return pathNode ? [{ path: [...prefix, ...rustPathSegments(pathNode, source)], ...(alias ? { alias: text(source, alias) } : {}) }] : [];
+  }
+  if (node.type === "use_wildcard") return [{ path: [...prefix, "*"], glob: true }];
+  const path = rustPathSegments(node, source);
+  return path.length ? [{ path: [...prefix, ...path] }] : [];
+}
+
 function buildImports(
   captures: readonly NativeQueryCapture[],
   source: Buffer,
@@ -466,6 +529,43 @@ function buildImports(
           imported, local: alias ? text(source, alias) : imported, typeOnly: false,
         }])];
       });
+    } else if (capture.name === "import.c" || capture.name === "import.cpp") {
+      const pathNode = field(capture.node, "path");
+      if (!pathNode) return [];
+      const raw = text(source, pathNode).trim();
+      const specifier = raw.startsWith("<") && raw.endsWith(">") ? raw : unquote(raw);
+      return [normalized(capture.name === "import.c" ? "c_include" : "cpp_include", specifier, [])];
+    } else if (capture.name === "import.go") {
+      const pathNode = field(capture.node, "path");
+      if (!pathNode) return [];
+      const specifier = unquote(text(source, pathNode));
+      const alias = field(capture.node, "name");
+      const local = alias ? text(source, alias) : specifier.split("/").at(-1)!;
+      return [normalized("go_import", specifier, [{ imported: "*", local, typeOnly: false }])];
+    } else if (capture.name === "import.rust") {
+      const grouped = new Map<string, { imported: string; local: string; typeOnly: boolean }[]>();
+      for (const leaf of rustUseLeaves(capture.node, source)) {
+        if (leaf.path.length === 0) continue;
+        const terminal = leaf.path.at(-1)!;
+        const importsModuleSelf = terminal === "self";
+        const moduleParts = importsModuleSelf ? leaf.path.slice(0, -1)
+          : leaf.path.length === 1 ? leaf.path : leaf.path.slice(0, -1);
+        const specifier = moduleParts.join("/");
+        const imported = leaf.glob || importsModuleSelf ? "*" : leaf.path.length === 1 ? "*" : terminal;
+        const local = leaf.alias ?? (leaf.glob ? "*" : importsModuleSelf ? moduleParts.at(-1)! : terminal);
+        const bindings = grouped.get(specifier) ?? [];
+        bindings.push({ imported, local, typeOnly: false });
+        grouped.set(specifier, bindings);
+      }
+      return [...grouped.entries()].map(([specifier, bindings]) => normalized("rust_use", specifier, bindings));
+    } else if (capture.name === "import.zig") {
+      const builtin = capture.node.namedChildren?.find((node) => node.type === "builtin_identifier");
+      if (!builtin || text(source, builtin) !== "@import") return [];
+      const argument = descendants(capture.node).find((node) => node.type === "string");
+      if (!argument) return [];
+      const assignment = ancestor(capture.node, "variable_declaration");
+      const local = assignment?.namedChildren?.find((node) => node.type === "identifier");
+      return [normalized("zig_import", unquote(text(source, argument)), local ? [{ imported: "*", local: text(source, local), typeOnly: false }] : [])];
     } else return [];
   });
   const statements = captures
@@ -567,8 +667,8 @@ function buildCallEdges(
     if (capture.name !== "edge.call") continue;
     const targetNode = field(capture.node, "function") ?? field(capture.node, "constructor") ?? field(capture.node, "method") ?? field(capture.node, "name");
     const argumentsNode = field(capture.node, "arguments");
-    if (!targetNode || !argumentsNode) continue;
-    const argumentNodes = argumentsNode.namedChildren ?? [];
+    if (!targetNode) continue;
+    const argumentNodes = argumentsNode?.namedChildren ?? (capture.node.namedChildren ?? []).filter((node) => node !== targetNode);
     const rawTarget = text(source, targetNode);
     if (["require", "require_relative", "import"].includes(rawTarget)) continue;
     const firstArgument = argumentNodes[0] ? text(source, argumentNodes[0]) : undefined;

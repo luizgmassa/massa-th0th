@@ -17,6 +17,7 @@ import type {
   StructuralSymbolKind,
 } from "../structural/types.js";
 import type { GraphGenerationLease } from "../../data/graph-generation/graph-generation-contract.js";
+import type { HeaderLanguageEvidence } from "../structural/language-manifest.js";
 
 // ─── Event types ─────────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ export interface EtlStageContext {
   jobId: string;
   graphGenerationLease?: GraphGenerationLease;
   abortSignal?: AbortSignal;
+  structuralHeaderEvidenceByFile?: Readonly<Record<string, HeaderLanguageEvidence>>;
   /** Hook for emitting progress events to the EventBus. */
   emit: (event: EtlEvent) => void;
 }
@@ -80,7 +82,8 @@ export interface RawImport {
   names: string[]; // e.g. ['SearchController', 'default']
   isTypeOnly: boolean;
   form?: "esm_import" | "esm_re_export" | "commonjs_require" | "dynamic_import" |
-    "python_import" | "ruby_require" | "php_use" | "lua_require";
+    "python_import" | "ruby_require" | "php_use" | "lua_require" |
+    "c_include" | "cpp_include" | "go_import" | "rust_use" | "zig_import";
   span?: SourceSpan;
   bindings?: readonly Readonly<{
     imported: string;

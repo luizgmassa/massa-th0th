@@ -100,7 +100,8 @@ export interface NormalizedStructuralEdge {
 
 export interface NormalizedStructuralImport {
   form: "esm_import" | "esm_re_export" | "commonjs_require" | "dynamic_import" |
-    "python_import" | "ruby_require" | "php_use" | "lua_require";
+    "python_import" | "ruby_require" | "php_use" | "lua_require" |
+    "c_include" | "cpp_include" | "go_import" | "rust_use" | "zig_import";
   specifier: string;
   span: SourceSpan;
   bindings: readonly Readonly<{

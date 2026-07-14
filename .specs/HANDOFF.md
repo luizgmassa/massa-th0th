@@ -42,19 +42,20 @@ Implement `plan-multi-language.md` under workflow session `spec-multi-language`.
 - TASK-013 integrated pending generations into the real ETL lifecycle with immutable discovery snapshots, recovered/hard/incremental handling, deletion, interruption settlement, cross-process stale-active refresh, synchronous activation, and awaited durable terminal generation identity. Exact Bun 1.3.0 focused/owned PostgreSQL passed 38/38 with 147 assertions; type 6/6, build 5/5, diff, and independent review passed. Semantic vector/keyword lifecycle was explicitly preserved per the canonical task boundary.
 - TASK-014 carries exact parser diagnostic totals separately from bounded ten-detail evidence, including original hard-failure spans through stale LKG activation. Active-generation-only status/language summaries persist with activated identity in nullable durable job columns; legacy NULL jobs hydrate unchanged. Exact Bun 1.3.0 focused/owned PostgreSQL and ETL passed 50/50 with 249 assertions; type 6/6, build 5/5, diff, and independent review passed.
 - TASK-015 adds versioned native Python/Ruby/PHP/Lua packs and a dialect-scoped scripting resolver. Grammar-derived tests cover symbols/docs, distinct honest imports and aliases, Python/PHP types, inheritance, calls/data flow/HTTP/events, unresolved/ambiguity, cross-language negatives, and Lua's no-type contract. Focused exact Bun 1.3.0 passed 67/67 with 333 assertions; build/type, diff, and independent review passed after four P1 fixes.
+- TASK-016 adds versioned native C/C++/Go/Rust/Zig packs and a dialect-scoped systems resolver. AST-derived native tests cover symbols/docs, honest includes/imports, types/inheritance/traits, calls/data flow/HTTP/events, Rust alias/group/glob/self resolution, unresolved/ambiguity/isolation, and four cases per concrete extension. `.h` defaults to C and selects C++ only from unambiguous AST importer or directory-aware build evidence, including cached importers; angle includes stay unresolved. Exact Bun 1.3.0 passed 95/95 with 1,010 assertions; core build, diff, and independent review passed after four remediation rounds.
 
 ## Blocking Gate
 
-TASK-015 passed scripting capability, resolver isolation, honest-import, type/build/diff, and independent-review gates. No test was weakened.
+TASK-016 passed systems capability, resolver isolation, AST-only honest-import, `.h` evidence/cache, build/diff, and independent-review gates. No test was weakened.
 
 ## Exact Next Step
 
-Execute TASK-016 systems-language packs/resolvers only. TASK-017 through TASK-019 are also dependency-READY but remain separate atomic tasks.
+Execute TASK-017 managed/mobile language packs/resolvers only. TASK-018 and TASK-019 are also dependency-READY but remain separate atomic tasks.
 
 ## Worktree and Safety
 
 - Branch: `main`; baseline `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`.
 - `plan-multi-language.md` was supplied untracked and is now an in-scope revised artifact.
 - No push attempted.
-- TASK-001 through TASK-015 are claimed with recorded gates, including scripting cohort support and durable bounded parser summaries. No HTTP/MCP diagnostic exposure, container build, or final parser benchmark has been claimed.
+- TASK-001 through TASK-016 are claimed with recorded gates, including scripting/systems cohort support and durable bounded parser summaries. No HTTP/MCP diagnostic exposure, container build, or final parser benchmark has been claimed.
 - Preserve existing SQLite-removal artifacts and follow-up status.

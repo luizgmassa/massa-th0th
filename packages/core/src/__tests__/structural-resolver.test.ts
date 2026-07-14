@@ -3,6 +3,7 @@ import {
   StructuralResolverRegistry,
   StructuralResolverSession,
   SCRIPTING_LANGUAGE_RESOLVER,
+  SYSTEMS_LANGUAGE_RESOLVER,
   TYPESCRIPT_LANGUAGE_RESOLVER,
   buildStructuralResolverDefinitions,
   type NormalizedStructuralImport,
@@ -12,6 +13,8 @@ import {
   type StructuralResolverFile,
   type StructuralReference,
 } from "../services/index.js";
+import { StructuralRuntime } from "../services/structural/structural-runtime.js";
+import { loadNativeGrammarSet } from "../services/structural/grammar-loaders.js";
 
 const SPAN = Object.freeze({
   startByte: 0,
@@ -179,6 +182,56 @@ describe("scripting structural resolver", () => {
       [definition("src/python_only.py", "run", { identity: { language: "Python", dialect: "python" } })],
       { knownFiles: ["src/main.ts", "src/python_only.py"] },
     )).toEqual({ status: "unresolved", name: "foreign" });
+  });
+});
+
+describe("systems structural resolver", () => {
+  test("resolves exact alias records produced by the native Rust grammar", async () => {
+    const grammarSet = await loadNativeGrammarSet([{ packageName: "tree-sitter-rust", version: "0.24.0" }]);
+    const outcome = await new StructuralRuntime({ grammarSet: () => grammarSet }).parse({
+      extension: ".rs",
+      source: Buffer.from("use crate::base::{Base as Root, helper, self as base_mod, *};\nfn run() { Root(); helper(); Other(); base_mod::Nested(); }"),
+    });
+    expect(outcome.status).toBe("ok");
+    if (outcome.status !== "ok") return;
+    expect(outcome.structure.imports).toHaveLength(1);
+    const current = { file: "src/main.rs", dialect: "rust", resolverVersion: "1.0.0", imports: outcome.structure.imports };
+    const definitions = [
+      definition("src/base.rs", "Base", { identity: { language: "Rust", dialect: "rust" } }),
+      definition("src/base.rs", "helper", { identity: { language: "Rust", dialect: "rust" } }),
+      definition("src/base.rs", "Other", { identity: { language: "Rust", dialect: "rust" } }),
+      definition("src/base.rs", "Nested", { identity: { language: "Rust", dialect: "rust" } }),
+    ];
+    const build = { knownFiles: ["src/main.rs", "src/base.rs"] };
+    expect(SYSTEMS_LANGUAGE_RESOLVER.resolve(current, reference("Root"), definitions, build))
+      .toMatchObject({ status: "resolved", fqn: "src/base.rs#Base", source: "import" });
+    expect(SYSTEMS_LANGUAGE_RESOLVER.resolve(current, reference("helper"), definitions, build))
+      .toMatchObject({ status: "resolved", fqn: "src/base.rs#helper", source: "import" });
+    expect(SYSTEMS_LANGUAGE_RESOLVER.resolve(current, reference("Other"), definitions, build))
+      .toMatchObject({ status: "resolved", fqn: "src/base.rs#Other", source: "import" });
+    expect(SYSTEMS_LANGUAGE_RESOLVER.resolve(current, reference("Nested", { qualifier: "base_mod" }), definitions, build))
+      .toMatchObject({ status: "resolved", fqn: "src/base.rs#Nested", source: "import" });
+  });
+
+  test("isolates dialects while resolving imports, globals, ambiguity, and unresolved targets", () => {
+    const registry = new StructuralResolverRegistry([SYSTEMS_LANGUAGE_RESOLVER]);
+    for (const dialect of ["c", "header-default-c", "cpp", "header", "header-cpp", "go", "rust", "zig"]) {
+      expect(registry.requireDialect(dialect, "1.0.0")).toBe(SYSTEMS_LANGUAGE_RESOLVER);
+    }
+    const current = { file: "src/main.go", dialect: "go", resolverVersion: "1.0.0", imports: [
+      imported("./lib", [{ imported: "run", local: "execute" }], { form: "go_import" }),
+    ] };
+    const definitions = [
+      definition("src/lib.go", "run", { identity: { language: "Go", dialect: "go" } }),
+      definition("src/a.go", "shared", { identity: { language: "Go", dialect: "go" } }),
+      definition("src/b.go", "shared", { identity: { language: "Go", dialect: "go" } }),
+      definition("src/lib.rs", "run", { identity: { language: "Rust", dialect: "rust" } }),
+    ];
+    const build = { knownFiles: ["src/main.go", "src/lib.go", "src/a.go", "src/b.go", "src/lib.rs"] };
+    expect(SYSTEMS_LANGUAGE_RESOLVER.resolve(current, reference("execute"), definitions, build)).toMatchObject({ status: "resolved", source: "import" });
+    expect(SYSTEMS_LANGUAGE_RESOLVER.resolve(current, reference("run"), definitions, build)).toMatchObject({ status: "resolved", source: "global" });
+    expect(SYSTEMS_LANGUAGE_RESOLVER.resolve(current, reference("shared"), definitions, build)).toMatchObject({ status: "ambiguous" });
+    expect(SYSTEMS_LANGUAGE_RESOLVER.resolve(current, reference("missing"), definitions, build)).toEqual({ status: "unresolved", name: "missing" });
   });
 });
 
