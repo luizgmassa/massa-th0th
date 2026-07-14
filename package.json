@@ -28,7 +28,8 @@
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/dist packages/*/dist",
     "test:scripts": "bash scripts/tests/test-wsl-ip-detection.sh",
     "diagnose": "bun scripts/diagnose.ts",
-    "version:sync": "bun scripts/version-sync.ts"
+    "version:sync": "bun scripts/version-sync.ts",
+    "verify:tree-sitter-native": "bun scripts/verify-tree-sitter-grammars.ts"
   },
   "keywords": [
     "mcp",
@@ -53,7 +54,39 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "packageManager": "bun@1.2.0",
+  "packageManager": "bun@1.3.0",
+  "trustedDependencies": [
+    "@tree-sitter-grammars/tree-sitter-kotlin",
+    "@tree-sitter-grammars/tree-sitter-lua",
+    "@tree-sitter-grammars/tree-sitter-markdown",
+    "@tree-sitter-grammars/tree-sitter-yaml",
+    "@tree-sitter-grammars/tree-sitter-zig",
+    "tree-sitter",
+    "tree-sitter-c",
+    "tree-sitter-c-sharp",
+    "tree-sitter-clojure-orchard",
+    "tree-sitter-cpp",
+    "tree-sitter-dart",
+    "tree-sitter-elixir",
+    "tree-sitter-erlang",
+    "tree-sitter-go",
+    "tree-sitter-haskell",
+    "tree-sitter-html",
+    "tree-sitter-java",
+    "tree-sitter-javascript",
+    "tree-sitter-json",
+    "tree-sitter-ocaml",
+    "tree-sitter-php",
+    "tree-sitter-python",
+    "tree-sitter-ruby",
+    "tree-sitter-rust",
+    "tree-sitter-scala",
+    "tree-sitter-swift",
+    "tree-sitter-typescript"
+  ],
+  "patchedDependencies": {
+    "tree-sitter@0.25.0": "patches/tree-sitter@0.25.0.patch"
+  },
   "dependencies": {
     "pg": "^8.20.0"
   }

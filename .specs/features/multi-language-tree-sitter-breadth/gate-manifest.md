@@ -1,7 +1,7 @@
 # Multi-Language Tree-sitter Breadth Gate Manifest
 
 **Workflow session:** `spec-multi-language`  
-**Feature status:** Execute active; TASK-001 PASS on macOS arm64; TASK-002 ready
+**Feature status:** Execute active; TASK-001 PASS; TASK-002 PASS; TASK-003 READY
 **Baseline commit:** `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`  
 **Baseline worktree:** supplied `plan-multi-language.md` was the only user-owned untracked file before feature artifact creation.
 
@@ -84,6 +84,44 @@ The clean build used exact Node `22.22.2` arm64 only as the pinned `node-gyp-bui
 
 Reverse mapping: the runtime ladder, frozen install, parse matrix, linkage inventory, and two negative sensors map only to T1 done-when plus MLTS-001-003/AC-002. No speculative sensor was added. Assertions discriminate plausible wrong implementations: a missing extension, parse error, truncated byte range, wrong architecture, failed descriptor restoration, absent package, or legacy ABI would fail. Project testing guidelines followed: `tasks.md` native gate and no skipped/deleted test assets. **Verdict: sufficient, necessary, non-shallow PASS.**
 
+## TASK-002 Remediation Result (2026-07-14)
+
+**Result:** PASS. The first review rejected synthetic consumers, optional disposal, queue deadlock paths, and incomplete lock assertions. Later reviews reproduced mutable-owner and cross-tree cursor-transfer SIGSEGVs plus incorrect cross-tree reset behavior. Patch v3 closes those paths in both JS and native code, was regenerated canonically from the pristine npm artifact, passed the authoritative rerun, and received fresh author-independent acceptance with no remaining findings.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Fresh frozen install | PASS | Isolated copy, empty cache, exact Bun 1.3.0 plus Node 22.22.2 helper; 770 packages in 8.99 seconds. |
+| Focused tests | PASS | Patch v3: 9 tests, 54 assertions, zero failures/skips. |
+| Durable native verifier | PASS | Real cold source/dist entries; 33+33 parses, 27+27 exact loaded modules, 54 Mach-O arm64/system-only linkage checks, 27 lock identities/integrities, ten behavior guards including owner substitution and cross-tree cursor transfer, plus missing/incompatible sensors. |
+| Native lifetime discrimination | PASS | 100 explicit-delete/forced-GC cycles median delta 557,056 bytes; no-delete child growth 125,026,304 bytes; exact bound 16,777,216 bytes. |
+| Patch identity | PASS | Upstream `tree-sitter@0.25.0` SRI plus repository patch SHA-256 `b0f73d0031e70f3585fca701076e1c6a05c30968b62f2d939de32af6df39a06a`; root and lock mappings exact. |
+| Packed-consumer feasibility | PASS | Fresh npm-packed shared/core installed 172 packages in a normal consumer. Built core imported; nested patched runtime path, immutable owners, same-tree reset, cross-tree reset/resetTo rejection, stale throw, arm64 addon, and system-only linkage passed. |
+| Type-check | PASS | Six of six workspace tasks in the authoritative clean install. |
+| Build | PASS | Five of five workspace tasks in the authoritative clean install. |
+| Excluded-platform non-touch | PASS | No excluded platform, container, workflow, or non-arm64 native path changed. |
+| Diff integrity | PASS | `git diff --check HEAD` returned zero. |
+| Independent review | PASS | Final reviewer found no remaining code, native-safety, packaging, evidence, or macOS arm64 scope findings. |
+
+Stock `tree-sitter@0.25.0` retained approximately 1 MiB RSS per repeated 32 KiB parse even after references left scope and forced GC. Its public API has no deterministic tree/cursor disposal. The checksummed patch therefore adds shared idempotent native release, cache invalidation, `Tree.delete()`, `TreeCursor.delete()`, guards for Tree, SyntaxNode, Query, parser old-tree, and cursor operations after deletion, and immutable SyntaxNode/TreeCursor owner identity. The package metadata also includes the generated addon in a bundled tarball.
+
+Second independent review proved that native liveness checks alone were insufficient: public mutable `.tree` properties let stale nodes/cursors substitute a different live tree and crash Bun with SIGSEGV. A follow-up then proved cross-tree `resetTo` could desynchronize an otherwise immutable owner and crash, while cross-tree `reset` returned garbage. Patch v3 makes owner properties non-writable/non-configurable, marshals same-tree reset nodes, and rejects cross-tree reset/resetTo in both JS and native code. The cold child discriminates every path with clean exits and same-tree positive controls.
+
+Bun 1.3.0 `pm pack` was rejected for core distribution because both accepted npm bundle-field spellings produced tarballs without the bundled dependency. Exact Node 22.22.2/npm 10.9.7 preserved the bundle. The core manifest now uses publish-safe `@massa-th0th/shared@1.0.0`; repository installation still resolves the matching local workspace. The local packed-consumer proof redirects only that unpublished shared package to its sibling tarball.
+
+### TASK-002 Post-Gate Adequacy Review
+
+| Done-when criterion | Exact assertion/gate evidence | Spec-defined outcome | Covered? |
+| --- | --- | --- | --- |
+| Exact runtime/build/package/trust pins | Focused contract freezes Bun 1.3.0, Node 22.22.2, ABI 137, 27 native specs/trust entries, 33 extensions, and exact patch mapping | Consume frozen T1 selections only | Yes |
+| Frozen lock exhaustiveness | JSONC parser verifies all 27 resolved identities and npm SRI/Git integrity identities plus the sole patch mapping | Lock and trust set contain every and only audited native artifact | Yes |
+| Full Bun descriptor restoration | Serialized success/throw plus forced setup/restoration faults prove queue release and exact descriptor restoration | Compatibility load never leaks mutated global state or deadlocks callers | Yes |
+| Source and dist native parsing | Two cold PIDs import real `packages/core/src/index.ts` and built `dist/index.js`, parse all 33 extensions, and link all 27 exact modules | Every required grammar loads through real source and dist consumers | Yes |
+| Deterministic native lifetime | Ten cold behavior sensors including immutable owner substitution and cursor transfer, idempotent double delete, explicit-disposal stress, and a no-delete discrimination child | No use-after-free/no-op deletion and bounded native retention | Yes |
+| Packed delivery | Tar inventory, normal consumer import, nested module-path assertion, parse/delete, `file`, and `otool -L` | Packed consumers cannot fall through to stock or hoisted runtime code | Yes |
+| Frozen clean install/type/build | Deterministic gate rows above | Exact pins install and the workspace compiles/builds | Yes |
+
+Reverse mapping: every assertion maps to T2 done-when, MLTS-001-004/020, and AC-002. The no-delete process, corrupted lock identities, owner/cursor-transfer crash probes, module-path rejection, and removed/incompatible sensors each distinguish a plausible wrong implementation. No spec, fixture, or threshold was weakened. **Verdict: sufficient, non-shallow, independently accepted PASS.**
+
 ## Planned Gate Commands
 
 - `bun run verify:tree-sitter-native`
@@ -143,3 +181,48 @@ Committed at `c497a41838b002fde99d57a2ba6fcc81f0b06f10`. Superseded by the user'
 | `.specs/HANDOFF.md` | `d8877ab5797ffcaabd733f21d4d73218bf53eb09dcb42376868b573bc6b7868f` |
 
 `gate-manifest.md` cannot embed its own stable file checksum; record its Git blob ID at the TASK-001 commit.
+
+## TASK-002 Draft Artifact Freeze v5 (Invalidated by Independent Review)
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `plan-multi-language.md` | `528e01ba925c314e6f0296b2f25bc5abaa9f4a09c85eb73dd795127836b2a2f2` |
+| `spec.md` | `8914a74a433e1df9878a606a9cdf647fe463a6c87ac0e33106c9d6a7c85a9aa9` |
+| `context.md` | `af3339803245375d6a69890cfe49e60902a21d71ba969580f555b20fc460a7a9` |
+| `design.md` | `eae642248e063a56a24448242ec31cd36c6fcb08d026f90aba041eb35f1f7eff` |
+| `tasks.md` | `5a75dea1813c7485d3f99bfa69ed2d2550d7bcdf55fd6b47637022b98e4d022b` |
+| `capability-matrix.md` | `c3fcbe420f301101fbeda7ebe3f1f85cfce85a2e37a429a51eaf1e80ccf2902c` |
+| `.specs/project/FEATURES.json` | `851c7662bebb18fe138d1324d6f29d8a945b03e737b016f761359e20d8f5eced` |
+| `.specs/project/STATE.md` | `9ab7d0d4f366313c0dfe3c7457ad854953823962bfe4b8fa70ad17ad49eb9c5c` |
+| `.specs/HANDOFF.md` | `deeb72bed6aced95319861f634aff1f9942eb8bd7af69dba9c770b26bd9041dd` |
+| `package.json` | `6821fbc4b932109395087f68b4cf04a711b22671ce85bec6bf2a131697a97ec6` |
+| `packages/core/package.json` | `127714262b6860af1d3d4181094d9613d071f0d5f0d107e37966b45e8882c649` |
+| `bun.lock` | `2f82c52aa8beffbc614e3630aebb947b050f610642d3b07479d85022b4cc41e6` |
+| `.node-version` | `4c42fb8d6334c5cdcac68b93f96c581fb83b1f58cda898cff115e5e941ef717d` |
+| `scripts/verify-tree-sitter-grammars.ts` | `032a4f3a1dd1baf1dc524faf82e97b2c7dd14a1ca245f4f9e0d69bbeb3c50ade` |
+| `scripts/tests/verify-tree-sitter-grammars.test.ts` | `4eb24995e4d7630bc5d0467edf4817a87dad4e44a0028084a003a657af1133ea` |
+
+These draft checksums are retained as failed-review evidence and are not an active freeze. A new freeze and Git blob ID are required after remediation passes.
+
+## TASK-002 Accepted Artifact Freeze v6
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `plan-multi-language.md` | `02f183d2a23b9f9a2694289cc04c2a4c7614f87ec22918e3b59b7de66add9b10` |
+| `spec.md` | `43ed4c1c37ecbcaef52750d263f93410dffcc9372a99ac4a73cd6e7f3a54f50e` |
+| `context.md` | `af3339803245375d6a69890cfe49e60902a21d71ba969580f555b20fc460a7a9` |
+| `design.md` | `fc0fa42186326d126455fc85b12177c5f5df238f9aaf878a219baacb562ce42a` |
+| `tasks.md` | `8b2649a5d0d78bbc4b2c0577532649ac5a0ad5ce292907b8e80fa7c3ddf520f8` |
+| `capability-matrix.md` | `ded3f112b391aa7042e9f8bc957cb016642ea0e8e16a2f2ebe128ad189473e18` |
+| `.specs/project/FEATURES.json` | `851c7662bebb18fe138d1324d6f29d8a945b03e737b016f761359e20d8f5eced` |
+| `.specs/project/STATE.md` | `bdd652146d614d9979d1dd3b3f359391655e6c9c7f4857b3faeb80ca99add648` |
+| `.specs/HANDOFF.md` | `c1c605586bb386038576c6c4c54e6cbd2ba4da88667e7b07f3c79e0d388d088c` |
+| `package.json` | `fd44c995c3c4fb76e4d269d53628e0845b32f7b597ba6c3368bd8be3f601734c` |
+| `packages/core/package.json` | `c13ad6bcd949cc6131ebfc8ff7d0a19ca12c027f640a2b4f98989e8dfeb4ca4f` |
+| `bun.lock` | `2d4c28a9db158cfbeeb8c14c839d44922923dde898a6b5368a65c82fe5b1bbcf` |
+| `.node-version` | `4c42fb8d6334c5cdcac68b93f96c581fb83b1f58cda898cff115e5e941ef717d` |
+| `patches/tree-sitter@0.25.0.patch` | `b0f73d0031e70f3585fca701076e1c6a05c30968b62f2d939de32af6df39a06a` |
+| `scripts/verify-tree-sitter-grammars.ts` | `fb7310f3c1e87b3e5827aafda38ac5aae7d9a233b5c47a387c42d08796f84ff1` |
+| `scripts/tests/verify-tree-sitter-grammars.test.ts` | `dbdb332626ff151a22625ae80edb78811b7fa685c18dd2b680cb583a22701bb3` |
+
+`gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-002 commit.

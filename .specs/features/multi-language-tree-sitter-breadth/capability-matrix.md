@@ -1,6 +1,6 @@
 # Multi-Language Tree-sitter Capability and Native Feasibility Matrix
 
-**Status:** TASK-001 PASS on macOS arm64 with exact Bun 1.3.0
+**Status:** TASK-001 and TASK-002 PASS on macOS arm64 with exact Bun 1.3.0
 **Canonical source:** `packages/shared/src/config/index.ts` (`DEFAULT_ALLOWED_EXTENSIONS`)  
 **Legend:** `R` required and tested; `F` forbidden false positive; `U` unsupported/no output; `E` embedded-child capability.
 
@@ -152,6 +152,12 @@ The exact Git commits above are their integrity identities. All npm artifacts we
 | Fallback prohibition | No WASM grammar, runtime download, or post-install binary download was used. |
 
 Exact Bun 1.3.0 needs a serialized startup compatibility loader: save `process.versions.bun`, temporarily remove that configurable marker while loading unmodified `node-gyp-build` fallbacks, and restore the exact descriptor before parsing. The gate proved exact restoration to `1.3.0`; TASK-004 owns this shim and its invariant tests.
+
+Stock `tree-sitter@0.25.0` exposes no public disposal API. Repeated 32 KiB parses retained approximately 1 MiB RSS per parse under both exact Bun 1.3.0 and Node even after references left scope and forced GC; a 500-parse control grew by roughly 484 MiB. The repository-owned source-and-packaging patch (SHA-256 `b0f73d0031e70f3585fca701076e1c6a05c30968b62f2d939de32af6df39a06a`) adds idempotent cursor/tree deletion, cache-safe destructor sharing, stale-object guards, immutable SyntaxNode/TreeCursor owner identity, same-tree reset marshalling, cross-tree reset/resetTo rejection, and inclusion of the generated arm64 addon in bundled package artifacts. Its exact Node 22.22.2 arm64 prototype made Tree, SyntaxNode, Query, incremental old-tree, and TreeCursor post-delete operations throw deterministically; neither public owner assignment nor cursor transfer can substitute another tree. A 500 explicit-delete-cycle run grew by less than 2 MiB after warm-up. The frozen runtime identity is the upstream npm SRI plus this patch checksum. The core package bundles that patched dependency for packed consumers.
+
+The acceptance stress uses 100 explicit-delete cycles with `Bun.gc(true)` after each. Median RSS for cycles 81-100 may exceed cycles 21-40 by at most 16 MiB, and a separate no-delete child process must exceed that bound so the sensor discriminates a missing/no-op patch.
+
+Packaging feasibility was proven from a clean exact-runtime build. Exact Node `22.22.2`/npm `10.9.7` packed shared and core; the core tarball contained `node_modules/tree-sitter/build/Release/tree_sitter_runtime_binding.node`. A normal non-workspace Bun `1.3.0` consumer installed the local shared/core tarballs, imported built core `dist`, resolved `tree-sitter` strictly from the core's nested bundled path, parsed JavaScript, and double-deleted the patched tree. The nested addon was a Mach-O 64-bit arm64 bundle linked only to system `libc++` and `libSystem`. Bun `1.3.0` packing was rejected for this artifact because its tarball omitted both `bundledDependencies` and `bundleDependencies` payloads.
 
 Rejected candidates are recorded rather than silently substituted: legacy `tree-sitter-clojure@0.4.0` failed against current V8/NAN APIs; npm `tree-sitter-dart@1.0.0` and `tree-sitter-vue@0.2.1` carry native ABI 127 while Bun 1.3.0 requires ABI 137. The selected replacements are Clojure Orchard, the exact canonical Dart Git commit, and HTML as the Vue SFC host.
 

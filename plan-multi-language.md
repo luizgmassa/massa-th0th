@@ -73,7 +73,7 @@ Feature artifacts will live under .specs/features/multi-language-tree-sitter-bre
 2. Native dependencies and parser runtime
     - Add only lifecycle-script packages to Bun trustedDependencies.
     - Prove native-link/load behavior for source, built dist, and the packed package on macOS arm64. Do not change Docker or non-macOS packaging.
-    - Implement a bounded parser pool keyed by language/dialect. Trees are always disposed in finally; parser instances are never used concurrently.
+    - Implement a bounded parser pool keyed by language/dialect. The repository-owned, checksummed `tree-sitter@0.25.0` source-and-packaging patch adds idempotent `TreeCursor.delete()` and `Tree.delete()` with stale-object guards, immutable node/cursor owner identity, same-tree-only cursor reset/resetTo, and generated-addon inclusion. Cursors are deleted before trees in `finally`; parser instances are never used concurrently.
     - Validate every grammar at API startup. Missing or ABI-incompatible grammars fail readiness before indexing begins.
 
 3. Versioned structural-index migration
@@ -126,7 +126,7 @@ Feature artifacts will live under .specs/features/multi-language-tree-sitter-bre
 7. Rollout and verification
     - Update CI with a macOS arm64 native smoke job. Record runtime architecture and linkage; leave Linux, Alpine, Docker, and other CPU targets unchanged and outside this implementation.
     - Add bench:parser comparing candidate against baseline commit 5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03 on the same host and exact Bun version: five warmups, ten isolated measurements,
-      median throughput, peak/steady-state RSS, and a 100-iteration tree-disposal stress run.
+      median throughput, peak/steady-state RSS, and a 100-iteration explicit tree-disposal/forced-GC stress run. After `Bun.gc(true)` on each cycle, the median RSS for cycles 81-100 must not exceed cycles 21-40 by more than 16 MiB.
 
     - Freeze the benchmark corpus manifest and SHA-256, with file count, byte count, size distribution, and TS/JS/language mix. Measure parser/query-pack work only, one fresh process per isolated
       measurement, using the same corpus and disabled semantic/DB work for baseline and candidate. Sample peak and post-GC steady-state RSS with one documented platform method; retry only one
@@ -140,7 +140,7 @@ Feature artifacts will live under .specs/features/multi-language-tree-sitter-bre
 - Manifest exhaustiveness: all 33 extensions map exactly once; no extra or missing entries.
 - Clean install/startup: every native grammar loads and parses on each supported runtime; missing or incompatible grammar prevents readiness.
 - Per-language golden fixtures: every capability required by that extension's manifest tier, plus forbidden/unsupported negative cases and unresolved-edge expectations.
-- Mixed languages: Vue and Markdown nested parsing, unknown tags, malformed blocks, coordinate remapping, recursion limit, duplicate suppression, diagnostics attribution, and tree disposal.
+- Mixed languages: Vue and Markdown nested parsing, unknown tags, malformed blocks, coordinate remapping, recursion limit, duplicate suppression, diagnostics attribution, and cursor/tree disposal.
 - Graph identity: nested symbols, overloads, signature changes, collision-free legacy FQNs, and explicit ambiguous legacy inputs.
 - FQN codec: canonical signature/hash fixtures, forced hash collisions, alias migration, trace/display parsing, and identical ambiguity payloads across PostgreSQL, HTTP, and MCP.
 - Generation migration: automatic invalidation, old-generation visibility, DB lease ownership, immutable snapshot/CAS activation, delta race handling, interruption rollback, retry, concurrent

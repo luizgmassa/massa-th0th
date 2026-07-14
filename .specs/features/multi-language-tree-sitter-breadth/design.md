@@ -81,7 +81,7 @@ packages/core/src/services/structural/
 ├── language-manifest.ts       # exact 33-extension registry and fingerprint input
 ├── grammar-loaders.ts         # explicit native imports and startup validation
 ├── parser-pool.ts             # bounded, non-concurrent parser leases
-├── structural-runtime.ts      # parse/query/dispose orchestration
+├── structural-runtime.ts      # parse/query/cursor/tree disposal orchestration
 ├── types.ts                   # normalized symbols, edges, spans, diagnostics, outcomes
 ├── fqn-codec.ts               # versioned modern/legacy identity contract
 ├── diagnostics.ts             # bounded details and summary aggregation
@@ -161,7 +161,7 @@ interface GraphGenerationCoordinator {
 }
 ```
 
-The native feasibility task confirms the exact Node binding disposal APIs before `ParserLease` implementation. Trees are always disposed in `finally`; parser instances are never leased concurrently.
+The native audit confirmed that stock `tree-sitter@0.25.0` exposes no public disposal API and retains approximately 1 MiB of RSS per repeated 32 KiB parse despite scoped references and forced GC. The repository therefore applies one source-and-packaging Bun patch identified by upstream SRI plus patch SHA-256. It adds idempotent `TreeCursor.delete()` and `Tree.delete()`, shares one cache-safe release primitive with native destructors, guards Tree, SyntaxNode, Query, incremental old-tree, and TreeCursor access after deletion, binds SyntaxNode/TreeCursor owner identity as non-writable and non-configurable, marshals same-tree reset nodes, rejects cross-tree reset/resetTo in JS and native code, and includes the generated arm64 addon when bundled. The runtime owns cursor-before-tree cleanup in `finally`, never leases a parser concurrently, and proves bounded native retention through a 100-cycle stress. Each cycle ends with `Bun.gc(true)` and an RSS sample; the cycles 81-100 median must be no more than 16 MiB above the cycles 21-40 median.
 
 ## FQN Contract
 
@@ -194,7 +194,7 @@ The final capability matrix records `required`, `forbidden`, or `unsupported` fo
 ## Parser Pool and Runtime
 
 - One process-global pool, keyed by language/dialect, with a configured total parser-instance cap. Default and maximum are frozen by the feasibility/benchmark slice.
-- A lease owns one parser instance until the parse/query/dispose `finally` completes.
+- A lease owns one parser instance until the parse/query/cursor-delete/tree-delete `finally` completes.
 - Waiting requests use FIFO order and bounded acquisition timeout; timeout is a hard infrastructure parse failure, not empty structure.
 - Grammar objects and compiled queries are immutable caches after successful startup validation.
 - `validateAllGrammars()` loads every required manifest grammar and parses a minimal fixture before readiness becomes true. Direct core consumers call an idempotent guard.
@@ -271,6 +271,9 @@ Incremental hard failure does not delete active definitions/references/imports. 
 - Exact Bun `1.3.0` is the application runtime. Exact Node `22.22.2` arm64 is a build-only helper for native lifecycle compilation; it is not an application runtime dependency.
 - Grammar startup loading is serialized. The loader snapshots the full `process.versions.bun` property descriptor, temporarily removes the configurable marker while upstream `node-gyp-build` fallbacks load, and restores the exact descriptor in `finally` before parsing or concurrent work begins.
 - Source, built `dist`, and packed-package load smokes run independently on macOS arm64.
+- `@massa-th0th/core` declares `@massa-th0th/shared@1.0.0` as publish-safe semver; Bun still links the matching local workspace during repository installs.
+- Exact Node `22.22.2`/npm `10.9.7` packs shared then core because Bun `1.3.0` rewrites workspace ranges but omits bundled dependencies. The patch includes the generated addon in `tree-sitter`'s package file set, and the core tarball bundles that exact patched runtime.
+- A clean packed-consumer gate installs both local tarballs, redirects only the unpublished local shared package through an override, then rejects missing, unpatched, hoisted, or alternate loaded runtime-module paths.
 - Docker, Linux, Alpine, and non-arm64 packaging are untouched and outside this design.
 
 ## Verification Design
@@ -278,14 +281,14 @@ Incremental hard failure does not delete active definitions/references/imports. 
 | High-risk contract | Deterministic proof |
 | --- | --- |
 | Manifest/native feasibility | Exact 33-entry comparison; clean frozen macOS arm64 installs; load/parse all grammars; removed/ABI-incompatible negative sensor; Mach-O linkage evidence. |
-| Parser concurrency/disposal | Lease overlap detector, acquisition timeout test, forced query failure cleanup, 100-iteration RSS stress. |
+| Parser concurrency/lifetime | Lease overlap detector, acquisition timeout test, forced query failure cleanup, double-delete and post-delete crash sensors, a no-delete discrimination control, and 100-cycle explicit-disposal/forced-GC/RSS stress with the exact 16 MiB median-delta bound. |
 | TS/JS compatibility | Regex baseline characterization fixtures; approved-difference ledger; unchanged `smartChunk` snapshots. |
 | FQN compatibility | Golden codec fixtures, forced digest collision, nested/overload aliases, identical PG/HTTP/MCP ambiguity payload. |
 | Span correctness | UTF-8/emoji/BOM/CRLF/tab/nested remap byte slices and snippet round trips. |
 | Generation safety | Backfill, active filter, old visibility, lease loss, stale snapshot, interruption, retry, concurrent process, centrality/diagnostic filter, deleted-file cleanup, synchronous job ordering. |
 | Per-language correctness | Capability-matrix positive/negative fixtures and unresolved-edge payloads. |
 | Packaging | macOS arm64 clean install plus source, built-dist, and packed-package native load. |
-| Performance | Frozen corpus SHA-256, exact baseline commit/Bun/host, five warmups, ten fresh-process samples, declared variance rule, RSS method, 100 disposal loops. |
+| Performance | Frozen corpus SHA-256, exact baseline commit/Bun/host, five warmups, ten fresh-process samples, declared variance rule, RSS method, 100 explicit-disposal/forced-GC loops. |
 
 Independent validation mutates at least one query capture, grammar dependency, generation fingerprint, active-generation filter/CAS, coordinate offset, and legacy-FQN resolver. All relevant tests must kill each mutation in scratch state.
 

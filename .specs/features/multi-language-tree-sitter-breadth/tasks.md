@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 PASS on macOS arm64; TASK-002 ready
+**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 READY
 
 ## Project Testing Guidelines Scan
 
@@ -29,7 +29,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 | Graph generation repository/migration | PostgreSQL integration | Backfill, active filters, lease/CAS, interruption, retry, stale snapshot, centrality/diagnostic ownership | `packages/core/src/__tests__/graph-generation-*.test.ts` | `bun test --max-concurrency 1 <focused files>` with owned `DATABASE_URL` |
 | HTTP/MCP controllers and schemas | unit/contract + E2E | Exact modern/legacy FQN results, ambiguity parity, diagnostics summaries, additive kinds | Tools API/MCP tests and core E2E | focused Bun tests; owned sequential E2E command |
 | macOS arm64 packaging and CI | artifact/native smoke | Frozen clean install, source/dist/packed-package grammar load, arm64 linkage | package scripts, `.github/workflows/*.yml`, native verifier | `bun run verify:tree-sitter-native` on macOS arm64 |
-| Parser performance | benchmark | Frozen corpus/checksum, exact baseline/candidate isolation, throughput/RSS thresholds, disposal stress | `benchmarks/parser/**`, root/core scripts | `bun run bench:parser -- --baseline 5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03` |
+| Parser performance | benchmark | Frozen corpus/checksum, exact baseline/candidate isolation, throughput/RSS thresholds, native-retention stress | `benchmarks/parser/**`, root/core scripts | `bun run bench:parser -- --baseline 5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03` |
 | End-to-end graph behavior | owned sequential E2E | `02.indexing`, `09.symbol-graph`, `15.nfr`: happy, edge, error, concurrency, old visibility, polyglot results | `packages/core/src/__tests__/e2e/*.test.ts` | `RUN_E2E=1 bun test --max-concurrency 1 src/__tests__/e2e/02.indexing.test.ts src/__tests__/e2e/09.symbol-graph.test.ts src/__tests__/e2e/15.nfr.test.ts` from `packages/core` with owned stack env |
 | Schema/config-only changes | build/migration | Prisma generation, migration deploy/backfill sentinels, type declarations compile | Prisma schema/migrations and config | `bun run type-check`; `bun run build`; owned migration gate |
 
@@ -121,17 +121,19 @@ Phase 7 Validate:
 
 ### T2 / TASK-002: Pin native dependencies and one Bun runtime
 
-**Status:** READY.
+**Status:** PASS on 2026-07-14. Two independent reviews exposed mutable-owner and cross-tree cursor-transfer crashes. Patch v3 binds immutable owners, marshals same-tree reset nodes, rejects cross-tree reset/resetTo in JS and native code, passes every fresh gate, and received author-independent acceptance with no remaining findings.
 
-**What:** Consume the exact Bun and grammar selections frozen by T1; add those dependencies, lockfile, explicit `trustedDependencies`, exact Node `22.22.2` build-helper contract, and `verify:tree-sitter-native` script without reselecting versions.
-**Where:** root/core package manifests, `bun.lock`, `scripts/verify-tree-sitter-grammars.ts`, focused tests.  
+**What:** Consume the exact Bun and grammar selections frozen by T1; add those dependencies, lockfile, explicit `trustedDependencies`, exact Node `22.22.2` build-helper contract, the checksummed explicit-disposal/packaging patch plus core bundled dependency, a publish-safe internal semver, and `verify:tree-sitter-native` script without reselecting versions.
+**Where:** root/core package manifests, `bun.lock`, `patches/tree-sitter@0.25.0.patch`, `scripts/verify-tree-sitter-grammars.ts`, focused tests.  
 **Depends on:** T1 PASS. **Requirements:** MLTS-001-004,020.  
 **Non-goals:** Non-macOS and Docker packaging; macOS CI is T24.  
-**Tests:** Manifest/package exhaustiveness, source and `dist` grammar load. **Gate:** Native + Type + Build.  
-**Done when:** Frozen install and verifier pass with only audited lifecycle packages trusted.  
+**Tests:** Manifest/package/patch exhaustiveness, source and `dist` grammar load, post-delete safety, no-delete discrimination, and bounded native retention. **Gate:** Native + Type + Build.  
+**Done when:** Frozen install and verifier pass with only audited lifecycle packages trusted, exact patch identity, deterministic stale-object failure, and bounded explicit disposal.  
 **Commit:** `build(parser): pin native tree-sitter grammars`
 
 ### T3 / TASK-003: Define normalized structural contracts and exhaustive manifest
+
+**Status:** READY after TASK-002 PASS.
 
 **What:** Add normalized symbol/edge kinds, `SourceSpan`, parse outcomes, diagnostics, capability types, and the exact 33-extension manifest/fingerprint inputs.  
 **Where:** `packages/core/src/services/structural/{types,language-manifest}.ts` and unit tests.  
@@ -151,11 +153,11 @@ Phase 7 Validate:
 
 ### T5 / TASK-005: Implement bounded parser pool and structural runtime
 
-**What:** Add FIFO bounded parser leases, per-language reuse, acquisition timeout, parse/query/dispose `finally`, recovered/hard outcomes, and diagnostics bounding.  
+**What:** Add FIFO bounded parser leases, per-language reuse, acquisition timeout, parse/query/cursor-delete/tree-delete `finally`, recovered/hard outcomes, and diagnostics bounding using the T2-frozen patched binding.  
 **Where:** structural parser pool/runtime/diagnostic modules and tests.  
 **Depends on:** T4. **Requirements:** MLTS-004,007-009,012,017.  
-**Tests:** Unit/native; overlap detector, timeout, forced query failure cleanup, recovered syntax, 100 disposal iterations. **Gate:** Focused + Native + Type.  
-**Done when:** No parser is concurrent, no tree survives a lease, and hard failure never becomes empty success.  
+**Tests:** Unit/native; overlap detector, timeout, forced query failure cleanup, recovered syntax, cursor-before-tree ordering, double-delete/stale-object sensors, and 100 forced-GC/RSS cycles. **Gate:** Focused + Native + Type.  
+**Done when:** No parser is concurrent, every cursor is deleted before its tree even on failure, the cycles 81-100 median RSS is at most 16 MiB above the cycles 21-40 median after per-cycle `Bun.gc(true)`, and hard failure never becomes empty success.  
 **Commit:** `feat(parser): add bounded structural runtime`
 
 ### T6 / TASK-006: Implement SourceSpan and versioned FQN codec
@@ -313,11 +315,11 @@ Phase 7 Validate:
 
 ### T23 / TASK-023: Verify macOS arm64 package artifacts
 
-**What:** Pack the core/root artifacts and prove clean source, built `dist`, and packed-package native grammar link/load/parse on macOS arm64 with only audited lifecycle scripts trusted.  
+**What:** With exact Node `22.22.2`/npm `10.9.7`, pack shared then core and prove clean source, built `dist`, and packed-package native grammar link/load/parse/disposal on macOS arm64 with only audited lifecycle scripts trusted. Prove the tarball contains the generated arm64 addon and resolves the exact nested patched `tree-sitter` runtime rather than stock or hoisted code.  
 **Where:** package manifests/scripts, packed-artifact helpers, native verifier tests.  
 **Depends on:** T2,T5,T15,T16,T17,T18,T19. **Requirements:** MLTS-002-004,020.  
-**Tests:** Clean-cache source/dist/packed-package parse and arm64 linkage. **Gate:** Native + Build.  
-**Done when:** Every packed surface loads and parses every required grammar on macOS arm64.  
+**Tests:** Clean-cache source/dist/packed-package parse, disposal, publish-manifest semver, exact loaded-module path, generated-addon presence, and arm64 linkage. **Gate:** Native + Build.  
+**Done when:** Every packed surface loads, parses, and disposes every required grammar on macOS arm64 through the exact bundled patched runtime.  
 **Commit:** `build(parser): verify macos native artifacts`
 
 ### T24 / TASK-024: Add frozen macOS arm64 CI and publish gates
@@ -329,9 +331,9 @@ Phase 7 Validate:
 **Done when:** The declared macOS arm64 target reports measured PASS.  
 **Commit:** `ci(parser): gate macos native grammars`
 
-### T25 / TASK-025: Add frozen parser benchmark and disposal stress
+### T25 / TASK-025: Add frozen parser benchmark and explicit-disposal stress
 
-**What:** Add corpus manifest/checksum, baseline checkout runner, candidate parser-only runner, fresh-process sampling, variance rule, RSS method, thresholds, and 100-iteration disposal sensor.  
+**What:** Add corpus manifest/checksum, baseline checkout runner, candidate parser-only runner, fresh-process sampling, variance rule, RSS method, thresholds, and a 100-cycle explicit-disposal/forced-GC native-retention sensor using the MLTS-004 16 MiB median-delta bound.  
 **Where:** `benchmarks/parser/**`, package scripts, tests/docs.  
 **Depends on:** T9,T15,T16,T17,T18,T19. **Requirements:** MLTS-004,014,022.  
 **Tests:** Harness unit/smoke and measured same-host baseline/candidate result. **Gate:** Benchmark + Type.  
@@ -430,10 +432,10 @@ Counts below are minimum new focused cases/sensors, not total repository pass co
 | Tasks | Minimum new cases/sensors |
 | --- | ---: |
 | T1 | One clean install/load/parse per unique grammar on macOS arm64, plus 2 negative sensors |
-| T2 | 4 manifest/source/dist/frozen-install cases |
+| T2 | 7 manifest/source/dist/patch/lifetime/frozen-install cases plus cold behavior subprocesses |
 | T3 | 6 manifest/type/custom-extension cases |
 | T4 | 5 readiness/liveness/direct-core/negative cases |
-| T5 | 8 pool/recovery/failure/disposal cases |
+| T5 | 8 pool/recovery/failure/explicit-disposal cases |
 | T6 | 12 span/FQN/ambiguity/collision goldens |
 | T7 | 16 TS/JS symbol/import/edge/negative goldens |
 | T8 | 8 resolver/FQN cases |
@@ -453,11 +455,11 @@ Counts below are minimum new focused cases/sensors, not total repository pass co
 | T22 | At least 33 extension assertions across 12 deterministic E2E cases |
 | T23 | 6 source/dist/packed-package install/load/parse/linkage sensors |
 | T24 | One measured macOS arm64 native smoke, 2 workflow static tests, and 1 baseline non-touch sensor |
-| T25 | 4 harness tests, 20 measured processes, and 100 disposal iterations |
+| T25 | 4 harness tests, 20 measured processes, and 100 explicit-disposal/forced-GC iterations |
 | T26 | 4 docs/manifest/stale-reference/checksum scans |
 
 ## Artifact Store Evidence
 
 - Active key: `.specs/features/multi-language-tree-sitter-breadth/tasks.md`
-- Version: 3 (TASK-001 PASS; TASK-002 ready)
+- Version: 6; TASK-002 PASS and TASK-003 READY
 - Checksum: recorded in `gate-manifest.md` after artifact freeze.
