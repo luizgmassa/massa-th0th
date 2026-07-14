@@ -1,7 +1,7 @@
 # Multi-Language Tree-sitter Breadth Gate Manifest
 
 **Workflow session:** `spec-multi-language`  
-**Feature status:** Execute active; TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 READY
+**Feature status:** Execute active; TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 READY
 **Baseline commit:** `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`  
 **Baseline worktree:** supplied `plan-multi-language.md` was the only user-owned untracked file before feature artifact creation.
 
@@ -203,6 +203,27 @@ FIFO/capacity tests kill overlapping same-slot use, newcomer queue bypass, wrong
 
 The byte fixture kills character-column, CR-only newline, BOM stripping, and inclusive-end implementations. Boundary and child-remap tests kill split-code-point and unchecked-relative-offset behavior. Canonical JSON/hash goldens kill key-order, normalization, shortened-hash, and position-dependent identities. Collision injection, exact-before-alias resolution, idempotent registration, sorted ambiguity candidates, and malformed-suffix tests distinguish silent overwrite, first-definition wins, unstable payloads, and modern-to-legacy masquerading. These assertions map directly to T6 done-when, MLTS-005-007, and AC-004/006. Query extraction, resolver wiring, persistence, and transport remain later tasks. **Verdict: sufficient, non-shallow, independently accepted PASS.**
 
+## TASK-007 Execution Result (2026-07-14)
+
+**Result:** PASS. The structural runtime now owns immutable native Query compilation/cache identity, bounded match execution, and hard overflow/compile failures. Declarative TS/JS packs normalize TS, JS, TSX, and JSX declarations, documentation, imports/bindings, type relations, calls, bare-argument flow, HTTP, and event edges into frozen deterministic structures.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Focused exact-runtime tests | PASS | Exact Bun 1.3.0: 17 TASK-007 tests, 130 assertions, zero failures/skips. |
+| Regression breadth | PASS | Query-pack + T5 runtime: 32/32 with 274 assertions; independent query/runtime/identity rerun: 57/57 with 353 assertions. |
+| Native query ownership | PASS | Query cache keys include grammar object, Query constructor, and immutable source; compile successes cache once; match limit 4,096 hard-fails before partial publication; outputs retain no native nodes. |
+| TS/JS family breadth | PASS | Native `.ts`, `.js`, `.tsx`, `.jsx` fixtures cover decorators/docs, nesting, overloads, fields/private fields, arrows, constructors, anonymous/default/alias exports, ES/CommonJS/dynamic imports, typed bindings, and recovered syntax. |
+| Edge precision | PASS | Qualified/generic extend/implement/type refs, constructor/direct/member calls, bare-identifier-only flow, HTTP/gql/events precedence, declarations/JSX/comments/strings/non-bare negatives, deterministic dedupe, and unresolved targets. |
+| Identity continuity | PASS | Deep-frozen arity/typeTokens/direct-token modifiers survive tree deletion; type literals remain intact; private `#` names use reversible `%23`; decorator literals cannot pollute modifiers. |
+| Capability enforcement | PASS | Required capabilities emit independently; forbidden/unsupported declarations/imports/relations/calls/flow/specialized edges emit no invented placeholder or downgrade. |
+| Type-check and build | PASS | Forced uncached type-check 6/6 and build 5/5; diff integrity clean. |
+| Independent review | PASS after remediation | Three review rounds found and verified fixes for lossy signatures/imports/exports, missing TS/JS constructs, relation/event/capability errors, private identity collisions, and AST-unsafe modifiers. |
+| Excluded-platform non-touch | PASS | No excluded platform, container, workflow, or non-arm64 native path changed. |
+
+### TASK-007 Post-Gate Adequacy Review
+
+Exact output sets and negative assertions kill capture-presence-only tests, declaration-as-call, specialized-call duplication, non-bare flow, lossy import aliases, private/public field collision, and unsupported-capability placeholders. Native dialect fixtures kill TSX/JSX-only assumptions and cross-grammar node leakage. Compile-cache, overflow, recovered-tree, deep-freeze, and T5 lifetime regressions kill raw grammar exposure, partial success, retained native nodes, and cleanup regressions. Signature probes kill body-dependent hashes, type-literal truncation, comment-inflated arity, decorator-string modifiers, and lost async arrows. These assertions map directly to T7 done-when, MLTS-005/008-009/014, and AC-004/005/008. Resolution remains T8 and ETL parity/removal remains T9. **Verdict: sufficient, non-shallow, independently accepted PASS.**
+
 ## Planned Gate Commands
 
 - `bun run verify:tree-sitter-native`
@@ -397,3 +418,30 @@ These draft checksums are retained as failed-review evidence and are not an acti
 | `packages/core/src/__tests__/structural-identity.test.ts` | `f0b5929e45cced08cc2dab23575e63b3c56c6b377f22868036967bcad549cffe` |
 
 `gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-006 commit.
+
+## TASK-007 Accepted Artifact Freeze v11
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `plan-multi-language.md` | `02f183d2a23b9f9a2694289cc04c2a4c7614f87ec22918e3b59b7de66add9b10` |
+| `spec.md` | `43ed4c1c37ecbcaef52750d263f93410dffcc9372a99ac4a73cd6e7f3a54f50e` |
+| `context.md` | `af3339803245375d6a69890cfe49e60902a21d71ba969580f555b20fc460a7a9` |
+| `design.md` | `171cdcda9412cc7ede9b523d25fa47fa98de76cdd0b5ea87b84f4551602fea65` |
+| `tasks.md` | `0bcb714e46ab8e803fa2e50cd01f9596c115c2b7af88987c3d5234b47d374bc3` |
+| `capability-matrix.md` | `fe462385096d97ad1fc002d4eafa5b59bcfadf2b1d0457b76d39106338df3b16` |
+| `.specs/project/FEATURES.json` | `851c7662bebb18fe138d1324d6f29d8a945b03e737b016f761359e20d8f5eced` |
+| `.specs/project/STATE.md` | `90ebe7bf358a12c8cdb38219dd26d6fb47c31c454e306a03472b3fef461e85e4` |
+| `.specs/HANDOFF.md` | `fa74edc5399c21cf5489f8a0440ab6d235cae35f4b710f262ebdfb5f7e2931c3` |
+| `packages/core/src/services/index.ts` | `0ddc4593be674cc512dadfeb272a3d4f83aed6c2daf6d6ff0cdea1aa4f864154` |
+| `packages/core/src/services/structural/types.ts` | `2a919e91afbb96a8983c4a792a7ffa8e2e7b67139876feae310f4141993b5341` |
+| `packages/core/src/services/structural/grammar-loaders.ts` | `3785dd8da7d2e40b45adf84d2e7ddfe08904deb3c03d3da6bd80405785afbee2` |
+| `packages/core/src/services/structural/structural-runtime.ts` | `dccc162fabfe6432d284b5c4cfe09b58542132d5b1c46351c88a77ceec7d6206` |
+| `packages/core/src/services/structural/query-pack.ts` | `fa2796dbc518e3dc560c12746908c038a65e40ebe824a9ddefbbe04839667251` |
+| `packages/core/src/services/structural/query-packs/typescript.ts` | `8190cb39bbcf28d4be64e8fc277c062e6394ccdc86ea8107387379b6f5f087cc` |
+| `packages/core/src/__tests__/structural-query-pack.test.ts` | `51a0f0b93d265840aa0c0ac0ab7fc1c32daab1abf9b276d2de54f9ff1e901ee3` |
+| `fixtures/structural/typescript-flow.ts` | `031696d122d8e1c431e944e94a4f51e591826fc2df212a2e125ac71927713634` |
+| `fixtures/structural/javascript-flow.jsx` | `fe4d01d6fcf985495d45c9ec10e6d62d0ef57c165c7afee4f18f973cab556c6b` |
+| `fixtures/structural/typescript-native.ts` | `051d8327e5c58281c1eb7fe4ccce10056c0b51cf7f7e3fc9275dd2072fe42de1` |
+| `fixtures/structural/javascript-native.js` | `1120c33cf795c4f89b04acad2efc9ab08dd91dbad211965657013762a3de52ea` |
+
+`gate-manifest.md` cannot embed its own stable checksum; record its Git blob ID at the TASK-007 commit.

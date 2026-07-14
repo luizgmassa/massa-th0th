@@ -64,6 +64,12 @@ export interface NormalizedStructuralSymbol {
   exported: boolean;
   documentation?: string;
   signature?: string;
+  /** Syntax-owned inputs consumed by the FQN codec after native trees are deleted. */
+  signatureMaterial: Readonly<{
+    readonly arity: number;
+    readonly typeTokens: readonly string[];
+    readonly modifiers: readonly string[];
+  }>;
 }
 
 export interface UnresolvedStructuralTarget {
@@ -93,6 +99,12 @@ export interface NormalizedStructuralEdge {
 export interface NormalizedStructuralImport {
   specifier: string;
   span: SourceSpan;
+  bindings: readonly Readonly<{
+    readonly imported: string;
+    readonly local: string;
+    readonly typeOnly: boolean;
+  }>[];
+  /** Compatibility projection containing local binding names only. */
   names: readonly string[];
   typeOnly: boolean;
 }

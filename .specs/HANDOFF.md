@@ -33,19 +33,20 @@ Implement `plan-multi-language.md` under workflow session `spec-multi-language`.
 - TASK-004 added lazy literal native grammar loading, exact serialized Bun-marker restoration, cached 33/33 parser readiness, additive live health status, startup validation-before-listen, and pre-side-effect indexing guards. Focused 10/10, queue regressions 13/13, native verifier, uncached type/build, built-dist readiness, and independent review passed.
 - TASK-005 added one process-global FIFO parser pool (capacity 4/max 32; timeout 5s/max 60s), typed runtime outcomes, bounded diagnostics with total counts, and cursor-before-tree lifetime ownership. Focused 21/21, native/RSS, uncached type/build, and independent review passed after fixing cap multiplication, poisoned retarget slots, and raw grammar-cache exposure.
 - TASK-006 added byte-accurate immutable UTF-8 source indexing, embedded span remapping, legacy line compatibility, canonical full-SHA structural FQNs, legacy aliases, collision failure, and deterministic ambiguity payloads. Focused 25/25, forced type/build, and independent review passed after closing malformed-modern-suffix masquerading and reserved-name round trips.
+- TASK-007 added runtime-owned bounded native Query compilation/execution and declarative TS/JS/TSX/JSX packs with frozen declaration/import/relation/call/flow/HTTP/event output. Exact query tests 17/17 and independent query/runtime/identity review 57/57 passed after three remediation rounds covering typed identity/import material, exports, private names, capability independence, and AST-safe modifiers.
 
 ## Blocking Gate
 
-TASK-006 passed focused/type/build/diff gates and independent review. Golden identity serialization is frozen, malformed modern-looking IDs reject, and later persistence/transport work must consume this codec rather than fork it.
+TASK-007 passed native focused/regression/type/build/diff gates and independent review. Query compilation/overflow is hard-failed, no native node escapes tree lifetime, and typed signature/import material is ready for TASK-008 resolution.
 
 ## Exact Next Step
 
-Freeze and commit TASK-006, then execute TASK-007 declarative query execution and TS/JS packs. Do not touch excluded platform files.
+Freeze and commit TASK-007, then execute TASK-008 resolver registry and TS/JS resolver. Do not touch excluded platform files.
 
 ## Worktree and Safety
 
 - Branch: `main`; baseline `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`.
 - `plan-multi-language.md` was supplied untracked and is now an in-scope revised artifact.
 - No push attempted.
-- TASK-001 through TASK-006 are claimed with recorded gates: native discovery, dependency/verifier/patch, normalized contracts/manifest, readiness/guards, bounded runtime/lifetime, and structural span/identity codecs. No query-pack integration, graph migration, container build, or final parser benchmark has been claimed.
+- TASK-001 through TASK-007 are claimed with recorded gates: native discovery, dependency/verifier/patch, normalized contracts/manifest, readiness/guards, bounded runtime/lifetime, structural span/identity codecs, and declarative TS/JS family query packs. No resolver/ETL integration, graph migration, container build, or final parser benchmark has been claimed.
 - Preserve existing SQLite-removal artifacts and follow-up status.

@@ -21,6 +21,33 @@ export interface NativeTreeCursor {
   delete(): void;
 }
 
+export interface NativeQueryNode {
+  readonly type: string;
+  readonly startIndex: number;
+  readonly endIndex: number;
+  readonly namedChildren?: readonly NativeQueryNode[];
+  readonly children?: readonly NativeQueryNode[];
+  readonly parent?: NativeQueryNode | null;
+  childForFieldName?(fieldName: string): NativeQueryNode | null;
+}
+
+export interface NativeQueryCapture {
+  readonly name: string;
+  readonly node: NativeQueryNode;
+}
+
+export interface NativeQueryInstance {
+  matches(
+    node: NativeQueryNode,
+    options?: { matchLimit?: number },
+  ): readonly { readonly captures: readonly NativeQueryCapture[] }[];
+  didExceedMatchLimit(): boolean;
+}
+
+export interface NativeQueryConstructor {
+  new (language: unknown, source: string | Buffer): NativeQueryInstance;
+}
+
 export interface NativeParserInstance {
   setLanguage(language: unknown): void;
   parse(source: string | ((index: number) => string | null)): NativeTree;
@@ -28,6 +55,7 @@ export interface NativeParserInstance {
 
 export interface NativeParserConstructor {
   new (): NativeParserInstance;
+  Query?: NativeQueryConstructor;
 }
 
 export interface LoadedNativeGrammarSet {

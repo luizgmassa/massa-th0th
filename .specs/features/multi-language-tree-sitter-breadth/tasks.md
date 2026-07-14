@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 READY
+**Status:** TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 READY
 
 ## Project Testing Guidelines Scan
 
@@ -177,7 +177,7 @@ Phase 7 Validate:
 
 ### T7 / TASK-007: Build declarative query execution and TS/JS packs
 
-**Status:** READY after TASK-005 and TASK-006 PASS.
+**Status:** PASS on 2026-07-14. Exact Bun 1.3.0 native query-pack tests passed 17/17 with 130 assertions; combined query/runtime/identity review passed 57/57 with 353 assertions. Forced uncached type-check/build, diff integrity, and independent review passed after closing breadth, identity-material, capability-filtering, export/import, relation, event, and modifier-token defects.
 
 **What:** Implement query-pack execution, capture normalization/dedupe, documentation and all required TS/JS symbol/import/edge captures.  
 **Where:** structural query engine, TS/JS/TSX/JSX packs, fixtures, unit tests.  
@@ -187,6 +187,8 @@ Phase 7 Validate:
 **Commit:** `feat(parser): add typescript query packs`
 
 ### T8 / TASK-008: Build resolver registry and TS/JS resolver
+
+**Status:** READY after TASK-006 and TASK-007 PASS.
 
 **What:** Replace TS-only hard-coding with resolver interfaces/registry and a TS/JS resolver using syntax/import/build metadata plus shared FQN codec.  
 **Where:** structural resolvers and Resolve-stage adapter tests.  

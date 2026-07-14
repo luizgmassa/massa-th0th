@@ -3,6 +3,8 @@ import {
   type LoadedNativeGrammarSet,
   type NativeTree,
   type NativeTreeCursor,
+  type NativeQueryCapture,
+  type NativeQueryInstance,
 } from "./grammar-loaders.js";
 import {
   resolveStructuralLanguage,
@@ -29,10 +31,13 @@ import type {
   StructuralFailureKind,
   StructuralParseOutcome,
 } from "./types.js";
+import { executeStructuralQueryPack } from "./query-pack.js";
 
 export interface StructuralQueryContext {
   /** Every cursor created here is owned and deleted by the runtime. */
   createCursor(node?: StructuralSyntaxNode): NativeTreeCursor;
+  /** Compile once per grammar/query source and execute against a node. */
+  query(source: string, node?: StructuralSyntaxNode): readonly NativeQueryCapture[];
 }
 
 /** Cursor creation is intentionally absent; use StructuralQueryContext. */
@@ -41,6 +46,10 @@ export interface StructuralSyntaxNode {
   readonly hasError: boolean;
   readonly endIndex: number;
   readonly startIndex?: number;
+  readonly namedChildren?: readonly StructuralSyntaxNode[];
+  readonly children?: readonly StructuralSyntaxNode[];
+  readonly parent?: StructuralSyntaxNode | null;
+  childForFieldName?(fieldName: string): StructuralSyntaxNode | null;
 }
 
 export interface StructuralQueryTree {
@@ -69,6 +78,48 @@ export interface StructuralRuntimeOptions {
 
 let processParserPool: StructuralParserPool | null = null;
 let processParserConstructor: LoadedNativeGrammarSet["Parser"] | null = null;
+const queryCaches = new WeakMap<object, WeakMap<object, Map<string, NativeQueryInstance>>>();
+export const STRUCTURAL_QUERY_MATCH_LIMIT = 4_096;
+
+export function executeBoundedNativeQuery(
+  query: NativeQueryInstance,
+  node: Parameters<NativeQueryInstance["matches"]>[0],
+): readonly NativeQueryCapture[] {
+  const matches = query.matches(node, { matchLimit: STRUCTURAL_QUERY_MATCH_LIMIT });
+  if (query.didExceedMatchLimit()) {
+    throw new Error(`structural_query_match_limit_exceeded:${STRUCTURAL_QUERY_MATCH_LIMIT}`);
+  }
+  return Object.freeze(matches.flatMap((match) => match.captures));
+}
+
+function compiledQuery(
+  loaded: LoadedNativeGrammarSet,
+  grammar: unknown,
+  source: string,
+): NativeQueryInstance {
+  if ((typeof grammar !== "object" || grammar === null) && typeof grammar !== "function") {
+    throw new Error("Validated grammar cannot own a compiled query cache");
+  }
+  const owner = grammar as object;
+  const Query = loaded.Parser.Query;
+  if (!Query) throw new Error("structural_query_executor_unavailable");
+  let constructorCaches = queryCaches.get(owner);
+  if (!constructorCaches) {
+    constructorCaches = new WeakMap();
+    queryCaches.set(owner, constructorCaches);
+  }
+  let cache = constructorCaches.get(Query as object);
+  if (!cache) {
+    cache = new Map();
+    constructorCaches.set(Query as object, cache);
+  }
+  let query = cache.get(source);
+  if (!query) {
+    query = new Query(grammar, source);
+    cache.set(source, query);
+  }
+  return query;
+}
 
 function processPoolFor(loaded: LoadedNativeGrammarSet): StructuralParserPool {
   if (!processParserPool) {
@@ -117,9 +168,7 @@ export class StructuralRuntime {
     this.#configuredPool = options.parserPool;
     this.#poolOptions = options.pool ?? {};
     this.#grammarSet = options.grammarSet ?? startupGrammarSet;
-    this.#queryExecutor = options.queryExecutor ?? (() => {
-      throw new Error("structural_query_executor_unavailable");
-    });
+    this.#queryExecutor = options.queryExecutor ?? executeStructuralQueryPack;
     this.#usesProcessPool =
       options.parserPool === undefined &&
       options.grammarSet === undefined &&
@@ -194,6 +243,11 @@ export class StructuralRuntime {
             const cursor = nativeNode.walk();
             cursors.push(cursor);
             return cursor;
+          },
+          query(querySource, node = parsedTree.rootNode) {
+            return executeBoundedNativeQuery(compiledQuery(loaded, grammar, querySource),
+              node as Parameters<NativeQueryInstance["matches"]>[0],
+            );
           },
         },
       );

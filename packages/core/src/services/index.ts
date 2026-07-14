@@ -129,6 +129,8 @@ export type {
   ParserPoolOptions,
 } from "./structural/parser-pool.js";
 export {
+  STRUCTURAL_QUERY_MATCH_LIMIT,
+  executeBoundedNativeQuery,
   StructuralRuntime,
   structuralRuntime,
 } from "./structural/structural-runtime.js";
@@ -164,6 +166,20 @@ export {
   sha256SignatureDigest,
   structuralFqnDisplayName,
 } from "./structural/fqn-codec.js";
+export {
+  executeQueryPack,
+  executeStructuralQueryPack,
+  normalizeQueryCaptures,
+  structuralQueryPackForDialect,
+} from "./structural/query-pack.js";
+export type {
+  QueryCapabilityContract,
+  StructuralQueryPack,
+} from "./structural/query-pack.js";
+export {
+  JAVASCRIPT_QUERY_PACK,
+  TYPESCRIPT_QUERY_PACK,
+} from "./structural/query-packs/typescript.js";
 export type {
   ParsedStructuralFqn,
   SignatureDigest,

@@ -7,7 +7,7 @@
 - workflow: spec-driven
 - persona: AI Engineer
 - feature: `multi-language-tree-sitter-breadth`
-- status: EXECUTE ACTIVE; TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 READY
+- status: EXECUTE ACTIVE; TASK-001 PASS; TASK-002 PASS; TASK-003 PASS; TASK-004 PASS; TASK-005 PASS; TASK-006 PASS; TASK-007 PASS; TASK-008 READY
 - branch: `main`
 - baseline: `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`
 - push: not attempted
@@ -59,14 +59,15 @@ Replace regex structural extraction with pinned native Tree-sitter grammars and 
 - TASK-004 added literal lazy native grammar loading, exact serialized Bun-marker restoration, cached all-33 readiness, live-but-parser-failed health, startup validation ordering, and pre-side-effect guards for the tool, ETL, and legacy direct index paths. Focused/native/regression/type/build/dist gates and independent review passed.
 - TASK-005 added the process-global bounded FIFO parser pool, structural runtime, bounded diagnostics with total counts, validated grammar-cache handoff, and native lifetime ownership. Review-driven fixes closed per-runtime cap multiplication, poisoned retarget-slot reuse, and public raw grammar access.
 - TASK-006 added immutable UTF-8 byte/point indexing, embedded host-child span remapping, legacy line derivation, canonical full-SHA FQNs, legacy aliases, collision detection, and deterministic ambiguity payloads. Review-driven strict parsing prevents malformed modern-looking suffixes from masquerading as legacy names.
+- TASK-007 added runtime-owned bounded native Query execution/cache identity and declarative TS/JS/TSX/JSX packs. Review-driven fixes completed typed signature/import material, exact exports/relations/calls/flow/specialized edges, capability filtering, private-name encoding, native dialect breadth, and AST-safe modifier identity.
 
 ## Blocker
 
-No blocker at the TASK-006 boundary. T23 still owns the durable all-grammar packed-artifact test introduced by the task plan.
+No blocker at the TASK-007 boundary. T23 still owns the durable all-grammar packed-artifact test introduced by the task plan.
 
 ## Next Step
 
-Freeze and commit TASK-006, then execute TASK-007 declarative query execution and TS/JS packs.
+Freeze and commit TASK-007, then execute TASK-008 resolver registry and TS/JS resolver.
 
 ## Previous Feature
 
