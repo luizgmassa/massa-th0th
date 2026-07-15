@@ -102,13 +102,16 @@ export interface NormalizedStructuralImport {
   form: "esm_import" | "esm_re_export" | "commonjs_require" | "dynamic_import" |
     "python_import" | "ruby_require" | "php_use" | "lua_require" |
     "c_include" | "cpp_include" | "go_import" | "rust_use" | "zig_import" |
-    "java_import" | "java_static_import" | "kotlin_import" | "scala_import" | "csharp_using" | "swift_import" | "dart_import";
+    "java_import" | "java_static_import" | "kotlin_import" | "scala_import" | "csharp_using" | "swift_import" | "dart_import" |
+    "elixir_alias" | "elixir_import" | "elixir_require" | "elixir_use" | "erlang_import" |
+    "clojure_require" | "clojure_import" | "ocaml_open" | "ocaml_include" | "ocaml_module_alias" | "haskell_import";
   specifier: string;
   span: SourceSpan;
   bindings: readonly Readonly<{
     readonly imported: string;
     readonly local: string;
     readonly typeOnly: boolean;
+    readonly arity?: number;
   }>[];
   /** Compatibility projection containing local binding names only. */
   names: readonly string[];

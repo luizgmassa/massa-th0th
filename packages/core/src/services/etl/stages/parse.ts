@@ -31,6 +31,7 @@ const BATCH_SIZE = 20;
 const STRUCTURAL_EXTENSIONS = new Set([
   ".ts", ".tsx", ".js", ".jsx", ".c", ".h", ".cpp", ".hpp", ".go", ".rs", ".zig",
   ".java", ".kt", ".kts", ".scala", ".cs", ".swift", ".dart",
+  ".ex", ".exs", ".erl", ".clj", ".ml", ".hs",
 ]);
 
 export class StructuralEtlParseError extends Error {

@@ -136,6 +136,7 @@ export class StructuralResolverRegistry {
 
 export interface ResolvableDefinition {
   identity: StructuralIdentity;
+  arity?: number;
   exported: boolean;
   defaultExport: boolean;
 }
@@ -158,7 +159,7 @@ export function buildStructuralResolverDefinitions(
     const key = `${document.file}\0${symbol.qualifiedName}\0${symbol.kind}`;
     groups.set(key, (groups.get(key) ?? 0) + 1);
     if (symbol.exported && symbol.qualifiedName === symbol.name) {
-      exportedRoots.add(`${document.file}\0${symbol.name}`);
+      exportedRoots.add(`${document.file}\0${symbol.qualifiedName.split(".")[0]}`);
     }
   }
   return Object.freeze(documents.flatMap((document) => document.structure.symbols.map((symbol) => {

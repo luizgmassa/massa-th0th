@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 through TASK-017 PASS; TASK-018 through TASK-019 READY
+**Status:** TASK-001 through TASK-018 PASS; TASK-019 READY
 
 ## Project Testing Guidelines Scan
 
@@ -298,7 +298,7 @@ Phase 7 Validate:
 
 ### T18 / TASK-018: Implement Elixir/Erlang/Clojure/OCaml/Haskell packs and resolvers [P]
 
-**Status:** READY after TASK-014 PASS.
+**Status:** PASS.
 
 **What:** Add functional/BEAM cohort with module/import/type/function/call/data-flow conventions and deterministic resolution.  
 **Where:** structural packs/resolvers and golden fixtures/tests.  

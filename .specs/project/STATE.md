@@ -7,7 +7,7 @@
 - workflow: spec-driven
 - persona: AI Engineer
 - feature: `multi-language-tree-sitter-breadth`
-- status: EXECUTE ACTIVE; TASK-001 through TASK-017 PASS; TASK-018 through TASK-019 READY
+- status: EXECUTE ACTIVE; TASK-001 through TASK-018 PASS; TASK-019 READY
 - branch: `main`
 - baseline: `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`
 - push: not attempted
@@ -70,14 +70,15 @@ Replace regex structural extraction with pinned native Tree-sitter grammars and 
 - TASK-015 adds native Python/Ruby/PHP/Lua declarations, documentation, honest per-module/per-clause imports, applicable type relations, calls/data flow/HTTP/events, and dialect-scoped resolution without cross-language leakage. Exact Bun 1.3.0 focused query/resolver/ETL passed 67/67 with 333 assertions; core build/type compilation, diff, and independent review passed after four P1 remediations.
 - TASK-016 adds native C/C++/Go/Rust/Zig declarations, documentation, honest AST-derived imports, applicable types/inheritance/traits, calls/data flow/HTTP/events, and dialect-isolated resolution. `.h` defaults to C and selects C++ only from unambiguous native importer or directory-aware compilation-database evidence, including cached importers; angle includes remain unresolved. Exact Bun 1.3.0 focused gates passed 95/95 with 1,010 assertions; core build, diff, and independent review passed after four remediation rounds.
 - TASK-017 adds native Java/Kotlin/KTS/Scala/C#/Swift/Dart declarations, documentation, honest imports, overload/constructor/property/field identities, inheritance, calls/data flow/HTTP/events, and dialect-isolated resolution. Real Java provider/consumer tests prove nested and static named/wildcard imports with public/private visibility. Exact Bun 1.3.0 focused gates passed 91/91 with 480 assertions; type-check 6/6, build 5/5, diff, and independent review passed after five remediation rounds.
+- TASK-018 adds native Elixir/EXS/Erlang/Clojure/OCaml/Haskell declarations, documentation/spec evidence, honest namespace/named/open/qualified/hiding imports, applicable relations, calls/data flow, module-owned identities, and dialect-isolated resolution. BEAM import arity selects exact overload identities; EX/EXS remain compatible. Exact Bun 1.3.0 focused gates passed 101/101 with 575 assertions; type-check 6/6, core build 2/2, diff, and independent review passed after two remediation rounds.
 
 ## Blocker
 
-No blocker at the TASK-017 boundary. TASK-018 and TASK-019 are dependency-satisfied parallel cohort tasks; execution remains sequential under the one-atomic-task contract.
+No blocker at the TASK-018 boundary. TASK-019 is dependency-satisfied and remains sequential under the one-atomic-task contract.
 
 ## Next Step
 
-Execute the next READY cohort task, TASK-018, without implementing TASK-019 in the same atomic task.
+Execute the next READY task, TASK-019.
 
 ## Previous Feature
 

@@ -5,6 +5,7 @@ import {
   SCRIPTING_LANGUAGE_RESOLVER,
   SYSTEMS_LANGUAGE_RESOLVER,
   MANAGED_LANGUAGE_RESOLVER,
+  FUNCTIONAL_LANGUAGE_RESOLVER,
   TYPESCRIPT_LANGUAGE_RESOLVER,
   buildStructuralResolverDefinitions,
   type NormalizedStructuralImport,
@@ -344,6 +345,104 @@ describe("managed structural resolver", () => {
       reference("Base"), [definition("A/B.cs", "Base", { exported: false, identity: { language: "C#", dialect: "csharp" } })],
       { knownFiles: ["src/Main.cs", "A/B.cs"] },
     )).toEqual({ status: "unresolved", name: "Base" });
+  });
+});
+
+describe("functional structural resolver", () => {
+  test("resolves parser-produced Elixir imports across EX/EXS while isolating foreign dialects", async () => {
+    const grammarSet = await loadNativeGrammarSet([{ packageName: "tree-sitter-elixir", version: "0.3.5" }]);
+    const runtime = new StructuralRuntime({ grammarSet: () => grammarSet });
+    const provider = await runtime.parse({ extension: ".ex", source: Buffer.from("defmodule Util do\n def helper(x), do: x\nend") });
+    const consumer = await runtime.parse({ extension: ".exs", source: Buffer.from("import Util\nhelper(1)") });
+    expect(provider.status).toBe("ok");
+    expect(consumer.status).toBe("ok");
+    if (provider.status !== "ok" || consumer.status !== "ok") return;
+    const definitions = buildStructuralResolverDefinitions([{
+      file: "Util.ex", language: "Elixir", dialect: "elixir", resolverVersion: "1.0.0", structure: provider.structure,
+    }]);
+    const current = { file: "main.exs", dialect: "elixir-script", resolverVersion: "1.0.0", imports: consumer.structure.imports };
+    expect(FUNCTIONAL_LANGUAGE_RESOLVER.resolve(current, reference("helper"), definitions, { knownFiles: ["main.exs", "Util.ex"] }))
+      .toMatchObject({ status: "resolved", source: "import", fqn: expect.stringContaining("Util.ex#Util.helper") });
+    expect(FUNCTIONAL_LANGUAGE_RESOLVER.resolve(current, reference("missing"), definitions, { knownFiles: ["main.exs", "Util.ex"] }))
+      .toEqual({ status: "unresolved", name: "missing" });
+    const foreign = [definition("Util.erl", "helper", { identity: { language: "Erlang", dialect: "erlang" } })];
+    expect(FUNCTIONAL_LANGUAGE_RESOLVER.resolve(current, reference("helper"), foreign, { knownFiles: ["main.exs", "Util.erl"] }))
+      .toEqual({ status: "unresolved", name: "helper" });
+  });
+
+  test("resolves native Erlang imports and Clojure refer/alias without namespace leakage", async () => {
+    const cases = [
+      {
+        artifact: { packageName: "tree-sitter-erlang", version: "github:WhatsApp/tree-sitter-erlang#836aa2b6c3af2c7cef3f84049b0ed6d44485a870" },
+        providerExtension: ".erl", providerSource: "-module(util).\nrun(X) -> X.\nrun(X,Y) -> {X,Y}.", providerFile: "util.erl", providerDialect: "erlang", language: "Erlang",
+        consumerExtension: ".erl", consumerSource: "-module(main).\n-import(util,[run/1]).\nmain(X) -> run(X).", consumerFile: "main.erl", consumerDialect: "erlang",
+        name: "run",
+      },
+      {
+        artifact: { packageName: "tree-sitter-clojure-orchard", version: "0.2.5" },
+        providerExtension: ".clj", providerSource: "(ns util)\n(defn run [x] x)", providerFile: "util.clj", providerDialect: "clojure", language: "Clojure",
+        consumerExtension: ".clj", consumerSource: "(ns main (:require [util :refer [run]]))\n(run 1)", consumerFile: "main.clj", consumerDialect: "clojure",
+        name: "run",
+      },
+    ] as const;
+    for (const item of cases) {
+      const grammarSet = await loadNativeGrammarSet([item.artifact]);
+      const runtime = new StructuralRuntime({ grammarSet: () => grammarSet });
+      const provider = await runtime.parse({ extension: item.providerExtension, source: Buffer.from(item.providerSource) });
+      const consumer = await runtime.parse({ extension: item.consumerExtension, source: Buffer.from(item.consumerSource) });
+      expect(provider.status).toBe("ok"); expect(consumer.status).toBe("ok");
+      if (provider.status !== "ok" || consumer.status !== "ok") continue;
+      const definitions = buildStructuralResolverDefinitions([{ file: item.providerFile, language: item.language, dialect: item.providerDialect, resolverVersion: "1.0.0", structure: provider.structure }]);
+      const resolved = FUNCTIONAL_LANGUAGE_RESOLVER.resolve(
+        { file: item.consumerFile, dialect: item.consumerDialect, resolverVersion: "1.0.0", imports: consumer.structure.imports },
+        reference(item.name), definitions, { knownFiles: [item.consumerFile, item.providerFile] },
+      );
+      expect(resolved).toMatchObject({ status: "resolved", source: "import", fqn: expect.stringContaining(`${item.providerFile}#`) });
+      if (item.providerDialect === "erlang") {
+        expect(resolved).toMatchObject({ identity: { canonicalSignature: expect.stringContaining('"arity":1') } });
+      }
+    }
+
+    const aliasOnly = [imported("util", [{ imported: "*", local: "u" }], { form: "clojure_require" })];
+    const clojureDefinition = [definition("util.clj", "run", { identity: { language: "Clojure", dialect: "clojure", qualifiedName: "util.run", scope: "nested" } })];
+    const clojureFile = { file: "main.clj", dialect: "clojure", resolverVersion: "1.0.0", imports: aliasOnly };
+    expect(FUNCTIONAL_LANGUAGE_RESOLVER.resolve(clojureFile, reference("run"), clojureDefinition, { knownFiles: ["main.clj", "util.clj"] })).toEqual({ status: "unresolved", name: "run" });
+  });
+
+  test("uses Elixir only arity to choose one parser-produced overload", async () => {
+    const grammarSet = await loadNativeGrammarSet([{ packageName: "tree-sitter-elixir", version: "0.3.5" }]);
+    const runtime = new StructuralRuntime({ grammarSet: () => grammarSet });
+    const provider = await runtime.parse({ extension: ".ex", source: Buffer.from("defmodule Util do\n def run(x), do: x\n def run(x,y), do: {x,y}\nend") });
+    const consumer = await runtime.parse({ extension: ".exs", source: Buffer.from("import Util, only: [run: 1]\nrun(1)") });
+    expect(provider.status).toBe("ok"); expect(consumer.status).toBe("ok");
+    if (provider.status !== "ok" || consumer.status !== "ok") return;
+    const definitions = buildStructuralResolverDefinitions([{ file: "Util.ex", language: "Elixir", dialect: "elixir", resolverVersion: "1.0.0", structure: provider.structure }]);
+    expect(definitions.filter((item) => item.identity.qualifiedName === "Util.run").map((item) => item.identity.arity).sort()).toEqual([1, 2]);
+    const resolved = FUNCTIONAL_LANGUAGE_RESOLVER.resolve(
+      { file: "main.exs", dialect: "elixir-script", resolverVersion: "1.0.0", imports: consumer.structure.imports },
+      reference("run"), definitions, { knownFiles: ["main.exs", "Util.ex"] },
+    );
+    expect(resolved).toMatchObject({ status: "resolved", source: "import", identity: { canonicalSignature: expect.stringContaining('"arity":1') } });
+  });
+
+  test("keeps native Haskell qualified and hiding imports from leaking bare names", async () => {
+    const grammarSet = await loadNativeGrammarSet([{ packageName: "tree-sitter-haskell", version: "0.23.1" }]);
+    const runtime = new StructuralRuntime({ grammarSet: () => grammarSet });
+    const provider = await runtime.parse({ extension: ".hs", source: Buffer.from("module Foo.Bar where\nrun x = x\nsecret x = x") });
+    const qualified = await runtime.parse({ extension: ".hs", source: Buffer.from("module Main where\nimport qualified Foo.Bar as FB\nmain x = FB.run x") });
+    const hidden = await runtime.parse({ extension: ".hs", source: Buffer.from("module Main where\nimport Foo.Bar hiding (secret)\nmain x = run x") });
+    expect(provider.status).toBe("ok"); expect(qualified.status).toBe("ok"); expect(hidden.status).toBe("ok");
+    if (provider.status !== "ok" || qualified.status !== "ok" || hidden.status !== "ok") return;
+    const definitions = buildStructuralResolverDefinitions([{ file: "Foo/Bar.hs", language: "Haskell", dialect: "haskell", resolverVersion: "1.0.0", structure: provider.structure }]);
+    expect(qualified.structure.imports.map(({ specifier, bindings }) => ({ specifier, bindings }))).toEqual([{ specifier: "Foo/Bar", bindings: [{ imported: "*", local: "FB", typeOnly: false }] }]);
+    expect(definitions.map((item) => item.identity.qualifiedName)).toEqual(expect.arrayContaining(["Foo.Bar", "Foo.Bar.run"]));
+    const build = { knownFiles: ["Main.hs", "Foo/Bar.hs"] };
+    const qualifiedFile = { file: "Main.hs", dialect: "haskell", resolverVersion: "1.0.0", imports: qualified.structure.imports };
+    expect(FUNCTIONAL_LANGUAGE_RESOLVER.resolve(qualifiedFile, reference("run", { qualifier: "FB" }), definitions, build)).toMatchObject({ status: "resolved", source: "import" });
+    expect(FUNCTIONAL_LANGUAGE_RESOLVER.resolve(qualifiedFile, reference("run"), definitions, build)).toEqual({ status: "unresolved", name: "run" });
+    const hiddenFile = { file: "Main.hs", dialect: "haskell", resolverVersion: "1.0.0", imports: hidden.structure.imports };
+    expect(FUNCTIONAL_LANGUAGE_RESOLVER.resolve(hiddenFile, reference("run"), definitions, build)).toMatchObject({ status: "resolved", source: "import" });
+    expect(FUNCTIONAL_LANGUAGE_RESOLVER.resolve(hiddenFile, reference("secret"), definitions, build)).toEqual({ status: "unresolved", name: "secret" });
   });
 });
 

@@ -24,13 +24,15 @@ import {
 import { SCRIPTING_QUERY_PACKS } from "./query-packs/scripting.js";
 import { SYSTEMS_QUERY_PACKS } from "./query-packs/systems.js";
 import { MANAGED_QUERY_PACKS } from "./query-packs/managed.js";
+import { FUNCTIONAL_QUERY_PACKS } from "./query-packs/functional.js";
 
 export interface StructuralQueryPack {
   readonly version: string;
   readonly dialects: readonly string[];
   readonly querySources: readonly string[];
   readonly family?: "typescript" | "python" | "ruby" | "php" | "lua" | "c" | "cpp" | "go" | "rust" | "zig" |
-    "java" | "kotlin" | "scala" | "csharp" | "swift" | "dart";
+    "java" | "kotlin" | "scala" | "csharp" | "swift" | "dart" |
+    "elixir" | "erlang" | "clojure" | "ocaml" | "haskell";
 }
 
 const QUERY_PACKS = new Map<string, StructuralQueryPack>(
@@ -38,7 +40,8 @@ const QUERY_PACKS = new Map<string, StructuralQueryPack>(
    ...JAVASCRIPT_QUERY_PACK.dialects.map((dialect) => [dialect, JAVASCRIPT_QUERY_PACK] as const),
    ...SCRIPTING_QUERY_PACKS.flatMap((pack) => pack.dialects.map((dialect) => [dialect, pack] as const)),
    ...SYSTEMS_QUERY_PACKS.flatMap((pack) => pack.dialects.map((dialect) => [dialect, pack] as const)),
-   ...MANAGED_QUERY_PACKS.flatMap((pack) => pack.dialects.map((dialect) => [dialect, pack] as const))],
+   ...MANAGED_QUERY_PACKS.flatMap((pack) => pack.dialects.map((dialect) => [dialect, pack] as const)),
+   ...FUNCTIONAL_QUERY_PACKS.flatMap((pack) => pack.dialects.map((dialect) => [dialect, pack] as const))],
 );
 
 const SYMBOL_KINDS = new Set<StructuralSymbolKind>([
@@ -141,6 +144,37 @@ function symbolName(source: Buffer, node: NativeQueryNode): string | null {
   if (nameNode) {
     const raw = text(source, nameNode);
     return (raw.startsWith("#") ? `%23${raw.slice(1)}` : raw).normalize("NFC");
+  }
+  if (node.type === "call") {
+    const target = field(node, "target");
+    const targetText = target ? text(source, target) : "";
+    if (["defmodule", "defprotocol", "def", "defp", "defmacro", "defmacrop"].includes(targetText)) {
+      const argumentsNode = node.namedChildren?.find((child) => child.type === "arguments");
+      const candidate = argumentsNode?.namedChildren?.[0];
+      if (candidate) {
+        const head = candidate.type === "call" ? field(candidate, "target") : candidate;
+        if (head) return text(source, head).normalize("NFC");
+      }
+    }
+  }
+  if (node.type === "list_lit") {
+    const values = (node.namedChildren ?? []).filter((child) => child.type !== "comment");
+    return values[1] ? text(source, values[1]).normalize("NFC") : null;
+  }
+  if (["module_definition", "value_definition", "type_definition", "class_definition"].includes(node.type)) {
+    const candidate = descendants(node).find((child) => [
+      "module_name", "value_name", "type_constructor", "class_name",
+    ].includes(child.type));
+    if (candidate) return text(source, candidate).normalize("NFC");
+  }
+  if (node.type === "fun_decl") {
+    const clause = descendants(node).find((child) => child.type === "function_clause");
+    const nestedName = clause ? field(clause, "name") : null;
+    if (nestedName) return text(source, nestedName).normalize("NFC");
+  }
+  if (node.type === "module" || node.type === "header") {
+    const moduleNode = node.type === "module" ? node : descendants(node).find((child) => child.type === "module");
+    if (moduleNode) return text(source, moduleNode).normalize("NFC");
   }
   if (["function_definition", "type_definition"].includes(node.type)) {
     let declarator = field(node, "declarator");
@@ -271,12 +305,19 @@ function structuralSignature(source: Buffer, draft: SymbolDraft): string {
 function signatureMaterial(source: Buffer, draft: SymbolDraft) {
   const owner = signatureOwner(draft.node);
   const callable = ["function", "method", "constructor"].includes(draft.kind);
-  const parameters = callable ? field(owner, "parameters") ?? (owner.type === "class_parameters" ? owner : undefined) ?? descendants(owner).find((node) =>
-    ["formal_parameters", "formal_parameter_list", "function_value_parameters", "class_parameters", "parameter_clause"].includes(node.type)
+  const elixirHead = owner.type === "call" && field(owner, "target") && ["def", "defp", "defmacro", "defmacrop"].includes(text(source, field(owner, "target")!))
+    ? owner.namedChildren?.find((node) => node.type === "arguments")?.namedChildren?.find((node) => node.type === "call")
+    : undefined;
+  const parameters = callable ? field(elixirHead ?? owner, "parameters") ?? field(elixirHead ?? owner, "args") ?? field(elixirHead ?? owner, "patterns") ??
+    (elixirHead ? elixirHead.namedChildren?.find((node) => node.type === "arguments") : undefined) ??
+    (owner.type === "class_parameters" ? owner : undefined) ?? descendants(owner).find((node) =>
+    ["formal_parameters", "formal_parameter_list", "function_value_parameters", "class_parameters", "parameter_clause", "expr_args", "patterns"].includes(node.type)
   ) : undefined;
   const parameterTypes = new Set(["parameter", "formal_parameter", "class_parameter", "required_parameter", "optional_formal_parameter"]);
   const parameterNodes = parameters
-    ? (parameters.namedChildren ?? []).filter((node) => parameterTypes.has(node.type))
+    ? ["expr_args", "arguments", "patterns"].includes(parameters.type)
+      ? (parameters.namedChildren ?? [])
+      : (parameters.namedChildren ?? []).filter((node) => parameterTypes.has(node.type))
     : callable ? (owner.namedChildren ?? []).filter((node) => parameterTypes.has(node.type)) : [];
   const typeTokens: string[] = [];
   for (const parameter of parameterNodes) {
@@ -387,7 +428,7 @@ function buildSymbols(
     }
     draft.qualifiedName = parent ? `${parent.qualifiedName}.${draft.name}` : draft.name;
   }
-  const symbols = drafts.map((draft) => {
+  let symbols = drafts.map((draft) => {
     const nameNode = field(draft.node, "name") ?? field(draft.node, "property");
     const documentationStart = draft.node.parent?.type === "export_statement"
       ? draft.node.parent.startIndex
@@ -405,13 +446,23 @@ function buildSymbols(
         }
         if (capture.node.endIndex > documentationStart) return false;
         for (let offset = capture.node.endIndex; offset < documentationStart; offset += 1) {
+          if (family === "elixir") {
+            const chained = captures.find((item) => item.name === "documentation" && item.node.startIndex <= offset && item.node.endIndex > offset);
+            if (chained) {
+              offset = chained.node.endIndex - 1;
+              continue;
+            }
+          }
           const byte = source[offset];
           if (byte !== 9 && byte !== 10 && byte !== 13 && byte !== 32) return false;
         }
         return true;
       });
     const documentation = includeDocumentation
-      ? capturedDocumentation ? text(source, capturedDocumentation.node).trim() : family === "typescript"
+      ? capturedDocumentation ? family === "elixir"
+        ? captures.filter((item) => item.name === "documentation" && item.node.startIndex >= capturedDocumentation.node.startIndex && item.node.endIndex <= documentationStart)
+          .map((item) => text(source, item.node).trim()).join("\n")
+        : text(source, capturedDocumentation.node).trim() : family === "typescript"
         ? leadingDocumentation(source, documentationStart)
         : undefined
       : undefined;
@@ -432,9 +483,17 @@ function buildSymbols(
       signatureMaterial: material,
     } satisfies NormalizedStructuralSymbol);
   });
+  if (["erlang", "clojure", "haskell"].includes(family ?? "")) {
+    const module = symbols.find((symbol) => symbol.kind === "module");
+    if (module) symbols = symbols.map((symbol) => symbol === module || symbol.qualifiedName.includes(".")
+      ? symbol
+      : Object.freeze({ ...symbol, qualifiedName: `${module.name}.${symbol.qualifiedName}` }));
+  }
   const seen = new Set<string>();
   return Object.freeze(symbols.filter((symbol) => {
-    const key = `${symbol.kind}\0${symbol.qualifiedName}\0${symbol.span.startByte}\0${symbol.span.endByte}`;
+    const key = family === "haskell"
+      ? `${symbol.kind}\0${symbol.qualifiedName}`
+      : `${symbol.kind}\0${symbol.qualifiedName}\0${symbol.span.startByte}\0${symbol.span.endByte}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -449,10 +508,10 @@ function unquote(value: string): string {
   return trimmed;
 }
 
-function frozenBindings(bindings: readonly { imported: string; local: string; typeOnly: boolean }[]) {
+function frozenBindings(bindings: readonly { imported: string; local: string; typeOnly: boolean; arity?: number }[]) {
   const seen = new Set<string>();
   return Object.freeze(bindings.filter((binding) => {
-    const key = `${binding.imported}\0${binding.local}\0${binding.typeOnly}`;
+    const key = `${binding.imported}\0${binding.local}\0${binding.typeOnly}\0${binding.arity ?? ""}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -678,6 +737,89 @@ function buildImports(
         ["qualified_name", "identifier", "simple_identifier"].includes(node.type)
       );
       return name ? [normalized(capture.name === "import.csharp" ? "csharp_using" : "swift_import", text(source, name), [])] : [];
+    } else if (capture.name === "import.elixir") {
+      const target = field(capture.node, "target");
+      const form = target ? text(source, target) : "";
+      const args = capture.node.namedChildren?.find((node) => node.type === "arguments");
+      const moduleNode = args?.namedChildren?.[0];
+      if (!moduleNode || !["alias", "import", "require", "use"].includes(form)) return [];
+      const moduleName = text(source, moduleNode);
+      const pairs = descendants(args!).filter((node) => node.type === "pair");
+      const pairNamed = (key: string) => pairs.find((pair) => {
+        const keyNode = field(pair, "key");
+        return keyNode && text(source, keyNode).replace(/:\s*$/u, "") === key;
+      });
+      const asPair = pairNamed("as");
+      const asValue = asPair ? field(asPair, "value") : null;
+      const onlyPair = pairNamed("only");
+      const onlyValue = onlyPair ? field(onlyPair, "value") : null;
+      const named = onlyValue ? descendants(onlyValue).filter((node) => node.type === "pair").flatMap((pair) => {
+        const keyNode = field(pair, "key");
+        const valueNode = field(pair, "value");
+        return keyNode ? [{ name: text(source, keyNode).replace(/:\s*$/u, ""), arity: valueNode ? Number(text(source, valueNode)) : undefined }] : [];
+      }) : [];
+      const local = asValue ? text(source, asValue) : moduleName.split(".").at(-1)!;
+      const bindings = named.length ? named.map(({ name, arity }) => ({ imported: name, local: name, typeOnly: false, ...(Number.isSafeInteger(arity) ? { arity } : {}) }))
+        : [{ imported: "*", local, typeOnly: false }];
+      return [normalized(`elixir_${form}` as NormalizedStructuralImport["form"], moduleName.replaceAll(".", "/"), bindings)];
+    } else if (capture.name === "import.erlang") {
+      const moduleNode = field(capture.node, "module");
+      if (!moduleNode) return [];
+      const bindings = (field(capture.node, "funs") ? descendants(capture.node) : capture.node.namedChildren ?? [])
+        .filter((node) => node.type === "fa").map((node) => {
+          const name = field(node, "name") ?? node.namedChildren?.[0];
+          const imported = name ? text(source, name) : text(source, node).split("/")[0]!;
+          const arityNode = field(node, "arity");
+          const integer = arityNode ? descendants(arityNode).find((child) => child.type === "integer") : undefined;
+          const arity = integer ? Number(text(source, integer)) : undefined;
+          return { imported, local: imported, typeOnly: false, ...(Number.isSafeInteger(arity) ? { arity } : {}) };
+        });
+      return [normalized("erlang_import", text(source, moduleNode), bindings)];
+    } else if (capture.name === "import.clojure") {
+      const forms = descendants(capture.node).filter((node) => node.type === "list_lit" || node.type === "vec_lit");
+      return forms.flatMap((formNode) => {
+        const values = (formNode.namedChildren ?? []).filter((node) => node.type !== "comment");
+        const directive = values[0] ? text(source, values[0]) : "";
+        if (![":require", ":import"].includes(directive)) return [];
+        return values.slice(1).flatMap((entry) => {
+          const parts = (entry.namedChildren ?? []).filter((node) => node.type !== "comment");
+          const moduleNode = entry.type === "vec_lit" ? parts[0] : entry;
+          if (!moduleNode) return [];
+          const moduleName = text(source, moduleNode);
+          const asIndex = parts.findIndex((node) => text(source, node) === ":as");
+          const alias = asIndex >= 0 ? parts[asIndex + 1] : undefined;
+          const local = alias ? text(source, alias) : moduleName.split(".").at(-1)!;
+          const referIndex = parts.findIndex((node) => text(source, node) === ":refer");
+          const refer = referIndex >= 0 ? parts[referIndex + 1] : undefined;
+          const referred = refer?.type === "vec_lit" ? (refer.namedChildren ?? []).filter((node) => node.type === "sym_lit").map((node) => text(source, node)) : [];
+          const bindings = referred.length ? referred.map((name) => ({ imported: name, local: name, typeOnly: false }))
+            : [{ imported: "*", local, typeOnly: false }];
+          return [normalized(directive === ":require" ? "clojure_require" : "clojure_import", moduleName.replaceAll(".", "/"), bindings)];
+        });
+      });
+    } else if (capture.name === "import.ocaml") {
+      const moduleNode = field(capture.node, "module");
+      return moduleNode ? [normalized(capture.node.type === "open_module" ? "ocaml_open" : "ocaml_include", text(source, moduleNode).replaceAll(".", "/"), [])] : [];
+    } else if (capture.name === "import.ocaml.module") {
+      const binding = descendants(capture.node).find((node) => node.type === "module_binding");
+      const body = binding ? field(binding, "body") : null;
+      const local = binding?.namedChildren?.find((node) => node.type === "module_name");
+      if (!body || body.type !== "module_path" || !local) return [];
+      return [normalized("ocaml_module_alias", text(source, body).replaceAll(".", "/"), [{ imported: "*", local: text(source, local), typeOnly: false }])];
+    } else if (capture.name === "import.haskell") {
+      const moduleNode = field(capture.node, "module");
+      if (!moduleNode) return [];
+      const alias = field(capture.node, "alias");
+      const names = field(capture.node, "names");
+      const importedNames = names ? descendants(names).filter((node) => node.type === "import_name").map((node) => text(source, node)) : [];
+      const qualified = (capture.node.children ?? []).some((node) => node.type === "qualified");
+      const hiding = (capture.node.children ?? []).some((node) => node.type === "hiding");
+      const moduleLocal = alias ? text(source, alias) : text(source, moduleNode).split(".").at(-1)!;
+      const bindings = qualified ? [{ imported: "*", local: moduleLocal, typeOnly: false }]
+        : hiding ? [{ imported: "*", local: "*", typeOnly: false }, ...importedNames.map((name) => ({ imported: `!${name}`, local: `!${name}`, typeOnly: false }))]
+        : importedNames.length ? importedNames.map((name) => ({ imported: name, local: name, typeOnly: false }))
+        : [{ imported: "*", local: "*", typeOnly: false }];
+      return [normalized("haskell_import", text(source, moduleNode).replaceAll(".", "/"), bindings)];
     } else return [];
   });
   const statements = captures
@@ -750,7 +892,7 @@ function unresolved(name: string, qualifier?: string): StructuralTarget {
 
 function targetParts(raw: string): { name: string; qualifier?: string } {
   const normalized = raw.replace(/\s+/gu, "").replace(/\?\./gu, ".");
-  const parts = normalized.split(".").filter(Boolean);
+  const parts = normalized.split(/[.:/]/u).filter(Boolean);
   return { name: parts.at(-1) ?? normalized, ...(parts.length > 1 ? { qualifier: parts.slice(0, -1).join(".") } : {}) };
 }
 
@@ -777,12 +919,12 @@ function buildCallEdges(
   const edges: NormalizedStructuralEdge[] = [];
   for (const capture of captures) {
     if (capture.name !== "edge.call") continue;
-    const targetNode = field(capture.node, "function") ?? field(capture.node, "constructor") ?? field(capture.node, "method") ?? field(capture.node, "name") ??
+    const targetNode = field(capture.node, "function") ?? field(capture.node, "constructor") ?? field(capture.node, "method") ?? field(capture.node, "name") ?? field(capture.node, "target") ?? field(capture.node, "expr") ??
       (capture.node.type === "selector" ? capture.node.parent?.namedChildren?.find((node) => node.endIndex <= capture.node.startIndex) : undefined) ??
       capture.node.namedChildren?.find((node) => !["value_arguments", "argument_list", "call_suffix", "arguments"].includes(node.type));
     const argumentsNode = field(capture.node, "arguments") ?? capture.node.namedChildren?.find((node) =>
-      ["value_arguments", "argument_list", "call_suffix", "arguments"].includes(node.type)
-    ) ?? descendants(capture.node).find((node) => ["value_arguments", "argument_list", "arguments"].includes(node.type));
+      ["value_arguments", "argument_list", "call_suffix", "arguments", "expr_args"].includes(node.type)
+    ) ?? descendants(capture.node).find((node) => ["value_arguments", "argument_list", "arguments", "expr_args"].includes(node.type));
     if (!targetNode) continue;
     const argumentContainer = argumentsNode?.type === "call_suffix"
       ? descendants(argumentsNode).find((node) => ["value_arguments", "argument_list", "arguments"].includes(node.type))
@@ -819,7 +961,7 @@ function buildCallEdges(
       const flowNode = ["argument", "value_argument", "simple_parameter"].includes(argument.type)
         ? argument.namedChildren?.[0] ?? argument
         : argument;
-      if (!["identifier", "simple_identifier", "variable_name"].includes(flowNode.type)) continue;
+      if (!["identifier", "simple_identifier", "variable_name", "var", "value_path", "value_name", "variable", "sym_lit"].includes(flowNode.type)) continue;
       edges.push({
         kind: "data_flow",
         span: frozenSpan(index, flowNode.startIndex, flowNode.endIndex),
@@ -929,6 +1071,32 @@ function dedupeEdges(edges: readonly NormalizedStructuralEdge[]): readonly Norma
   }).map((edge) => Object.freeze(edge)));
 }
 
+function functionalCaptures(
+  captures: readonly NativeQueryCapture[],
+  source: Buffer,
+  family: StructuralQueryPack["family"],
+): readonly NativeQueryCapture[] {
+  if (family !== "clojure") return captures;
+  const result: NativeQueryCapture[] = [];
+  for (const capture of captures) {
+    if (capture.name !== "form.clojure") {
+      result.push(capture);
+      continue;
+    }
+    const values = (capture.node.namedChildren ?? []).filter((child) => child.type !== "comment");
+    const head = values[0] ? text(source, values[0]) : "";
+    const declaration = head === "ns" ? "symbol.module"
+      : ["defn", "defn-", "defmacro"].includes(head) ? "symbol.function"
+      : head === "defprotocol" ? "symbol.interface"
+      : ["defrecord", "deftype"].includes(head) ? "symbol.class"
+      : head === "def" ? "symbol.variable" : undefined;
+    if (declaration) result.push({ ...capture, name: declaration });
+    if (head === "ns") result.push({ ...capture, name: "import.clojure" });
+    if (!declaration && head && !head.startsWith(":")) result.push({ ...capture, name: "edge.call" });
+  }
+  return normalizeQueryCaptures(result);
+}
+
 export function executeQueryPack(
   pack: StructuralQueryPack,
   tree: StructuralQueryTree,
@@ -936,9 +1104,9 @@ export function executeQueryPack(
   context: StructuralQueryContext,
   capabilities: QueryCapabilityContract = ALL_REQUIRED_CAPABILITIES,
 ): NormalizedStructure {
-  const captures = normalizeQueryCaptures(pack.querySources.flatMap((querySource) =>
+  const captures = functionalCaptures(normalizeQueryCaptures(pack.querySources.flatMap((querySource) =>
     context.query(querySource, tree.rootNode),
-  ));
+  )), source, pack.family);
   const index = new SourceIndex(source);
   const imports = enabled(capabilities, "imports") ? buildImports(captures, source, index, pack.family) : Object.freeze([]);
   const importEdges: NormalizedStructuralEdge[] = imports.map((item) => ({

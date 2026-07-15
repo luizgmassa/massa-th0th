@@ -225,6 +225,8 @@ export { SCRIPTING_LANGUAGE_RESOLVER } from "./structural/resolvers/scripting.js
 export { SYSTEMS_LANGUAGE_RESOLVER } from "./structural/resolvers/systems.js";
 export { MANAGED_LANGUAGE_RESOLVER } from "./structural/resolvers/managed.js";
 export { MANAGED_QUERY_PACKS } from "./structural/query-packs/managed.js";
+export { FUNCTIONAL_LANGUAGE_RESOLVER } from "./structural/resolvers/functional.js";
+export { FUNCTIONAL_QUERY_PACKS } from "./structural/query-packs/functional.js";
 export { resolveStructuralParseLanguage } from "./structural/language-manifest.js";
 export type { HeaderLanguageEvidence } from "./structural/language-manifest.js";
 

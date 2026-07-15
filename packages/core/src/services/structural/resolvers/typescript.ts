@@ -30,6 +30,8 @@ const DIALECT_PROBES: Readonly<Record<string, readonly string[]>> = Object.freez
   go: ["", ".go"], rust: ["", ".rs"], zig: ["", ".zig"],
   java: ["", ".java"], kotlin: ["", ".kt", ".kts"], "kotlin-script": ["", ".kt", ".kts"],
   scala: ["", ".scala"], csharp: ["", ".cs"], swift: ["", ".swift"], dart: ["", ".dart"],
+  elixir: ["", ".ex", ".exs"], "elixir-script": ["", ".ex", ".exs"], erlang: ["", ".erl"],
+  clojure: ["", ".clj"], ocaml: ["", ".ml"], haskell: ["", ".hs"],
 });
 
 function candidates(identities: readonly StructuralIdentity[]): readonly StructuralFqnCandidate[] {
@@ -121,6 +123,7 @@ function indexDefinitions(
     const identity = definition.resolvedIdentity ?? registry.register({ ...definition.identity, name, qualifiedName });
     return Object.freeze({
       identity,
+      arity: definition.identity.arity,
       exported: definition.exported,
       defaultExport: definition.defaultExport === true,
     });
@@ -248,14 +251,17 @@ function importedMatches(
   const matches: ResolvableDefinition[] = [];
   let claimed = false;
   for (const imported of file.imports) {
-    if (!["esm_import", "commonjs_require", "dynamic_import", "python_import", "ruby_require", "php_use", "lua_require", "c_include", "cpp_include", "go_import", "rust_use", "zig_import", "java_import", "java_static_import", "kotlin_import", "scala_import", "dart_import"].includes(imported.form)) continue;
+    if (!["esm_import", "commonjs_require", "dynamic_import", "python_import", "ruby_require", "php_use", "lua_require", "c_include", "cpp_include", "go_import", "rust_use", "zig_import", "java_import", "java_static_import", "kotlin_import", "scala_import", "dart_import", "elixir_alias", "elixir_import", "elixir_require", "elixir_use", "erlang_import", "clojure_require", "clojure_import", "ocaml_open", "ocaml_include", "ocaml_module_alias", "haskell_import"].includes(imported.form)) continue;
     const typeEdge = reference.kind === "type_ref" || reference.kind === "extend" || reference.kind === "implement";
     for (const binding of imported.bindings) {
       let sought: string | undefined;
       let defaultOnly = false;
       const qualifier = reference.qualifier?.split(".") ?? [];
       if (binding.imported === "*" && qualifier[0] === binding.local) {
-        sought = [...qualifier.slice(1), reference.name].join(".");
+        const member = [...qualifier.slice(1), reference.name].join(".");
+        sought = ["elixir_alias", "clojure_require", "haskell_import"].includes(imported.form)
+          ? `${imported.specifier.replaceAll("/", ".")}.${member}`
+          : member;
       } else if (binding.imported === "default") {
         if (qualifier[0] === binding.local) sought = [...qualifier.slice(1), reference.name].join(".");
         else if (!reference.qualifier && reference.name === binding.local) defaultOnly = true;
@@ -268,7 +274,7 @@ function importedMatches(
       claimed = true;
       if ((imported.typeOnly || binding.typeOnly) && !typeEdge) continue;
       const importedFile = resolveStructuralSpecifier(imported.specifier, file.file, build, file.dialect) ??
-        (["python_import", "ruby_require", "php_use", "lua_require", "c_include", "cpp_include", "go_import", "rust_use", "zig_import", "java_import", "java_static_import", "kotlin_import", "scala_import", "dart_import"].includes(imported.form)
+        (["python_import", "ruby_require", "php_use", "lua_require", "c_include", "cpp_include", "go_import", "rust_use", "zig_import", "java_import", "java_static_import", "kotlin_import", "scala_import", "dart_import", "elixir_alias", "elixir_import", "elixir_require", "elixir_use", "erlang_import", "clojure_require", "clojure_import", "ocaml_open", "ocaml_include", "ocaml_module_alias", "haskell_import"].includes(imported.form)
           ? probe(imported.specifier.replace(/^\.\//u, ""), new Set(build.knownFiles.map(normalizeStructuralFile)), file.dialect)
           : undefined);
       if (!importedFile) continue;
@@ -287,7 +293,9 @@ function importedMatches(
         continue;
       }
       if (defaultOnly) matches.push(...exportedMatches(importedFile, "default", true, definitions, build));
-      else if (sought !== undefined) matches.push(...exportedMatches(importedFile, sought, false, definitions, build));
+      else if (sought !== undefined) matches.push(...exportedMatches(importedFile, sought, false, definitions, build).filter((definition) =>
+        binding.arity === undefined || definition.arity === binding.arity
+      ));
     }
   }
   return { matches, claimed };

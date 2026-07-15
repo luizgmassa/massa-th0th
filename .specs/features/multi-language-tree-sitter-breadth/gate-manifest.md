@@ -720,3 +720,14 @@ These draft checksums are retained as failed-review evidence and are not an acti
 - Identity evidence: managed constructor/method overload FQNs remain unique and legacy ambiguity remains stable; Java/C# field declarators inherit exact declaration modifiers.
 - Independent read-only review: PASS after five remediation rounds covering static/nested owner qualification, Dart unprefixed imports, multi-declarator and primary-constructor extraction, Kotlin/KTS compatibility, production-derived Java visibility, and static-field modifier inheritance.
 - Scope: managed/mobile cohort only; no functional, embedded/data, Linux, Docker, container, or non-arm64 implementation.
+
+## TASK-018 Accepted Gate Evidence v22
+
+- Platform: macOS arm64 only; exact Bun `1.3.0`.
+- Exact focused command: `bunx bun@1.3.0 test packages/core/src/__tests__/structural-query-pack.test.ts packages/core/src/__tests__/structural-resolver.test.ts packages/core/src/__tests__/structural-identity.test.ts` — PASS, 101 tests, 575 assertions.
+- `bunx bun@1.3.0 run type-check` — PASS, 6/6 packages. `bunx turbo run build --filter=@massa-th0th/core` — PASS, shared/core 2/2. `git diff --check` — PASS.
+- Native capability evidence: Elixir/EXS/Erlang/Clojure/OCaml/Haskell modules, functions, types/classes/protocols where applicable; comments, attributes, metadata/specs, and Haddock documentation; behaviour/inheritance/instance relations; calls and bare-identifier data flow without invented specialized edges.
+- Import evidence: exact Elixir alias/import/require/use and `only`/`as`; Erlang named imports; Clojure `:as`/`:refer`; OCaml open/include/module alias; Haskell qualified/as/list/hiding. Namespace-only forms do not leak bare names, hidden names remain unavailable, and only injecting forms expose unqualified members.
+- Resolver/identity evidence: EX/EXS compatibility with foreign isolation; parser-produced Erlang, Clojure, Elixir, and Haskell provider/consumer resolution; unresolved and namespace-leakage negatives; Haskell equation dedupe; BEAM import arity selects the declared overload modern identity.
+- Independent read-only review: PASS after two remediation rounds covering exposure semantics, Haskell hiding, Elixir metadata/spec association, module ownership, coverage floors, BEAM arity, and keyed-only Elixir option parsing.
+- Scope: functional/BEAM cohort only; no embedded/data, Linux, Docker, container, or non-arm64 implementation.

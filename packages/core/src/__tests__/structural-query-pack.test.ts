@@ -554,6 +554,107 @@ describe("declarative structural query packs", () => {
     ]));
   });
 
+  test("extracts functional and BEAM native declarations, imports, and calls", async () => {
+    const cases = [
+      [".ex", { packageName: "tree-sitter-elixir", version: "0.3.5" }, "defmodule Demo do\n alias Foo.Bar\n def run(x), do: helper(x)\nend", "elixir_alias"],
+      [".exs", { packageName: "tree-sitter-elixir", version: "0.3.5" }, "import Util\ndef run(x), do: helper(x)", "elixir_import"],
+      [".erl", { packageName: "tree-sitter-erlang", version: "github:WhatsApp/tree-sitter-erlang#836aa2b6c3af2c7cef3f84049b0ed6d44485a870" }, "-module(demo).\n-import(util,[helper/1]).\nrun(X) -> helper(X).", "erlang_import"],
+      [".clj", { packageName: "tree-sitter-clojure-orchard", version: "0.2.5" }, "(ns demo (:require [foo.bar :as fb]))\n(defn run [x] (fb/helper x))", "clojure_require"],
+      [".ml", { packageName: "tree-sitter-ocaml", version: "0.24.2", exportName: "ocaml" }, "open Util\nmodule Demo = struct let run x = helper x end", "ocaml_open"],
+      [".hs", { packageName: "tree-sitter-haskell", version: "0.23.1" }, "module Demo where\nimport qualified Foo.Bar as FB\nrun x = FB.helper x", "haskell_import"],
+    ] as const;
+    for (const [extension, artifact, source, importForm] of cases) {
+      const outcome = await parse(extension, Buffer.from(source), artifact);
+      expect(outcome.status, `${extension}:${outcome.status === "failed" ? outcome.diagnostics[0]?.message : ""}`).toBe("ok");
+      if (outcome.status !== "ok") continue;
+      expect(outcome.structure.symbols.length, extension).toBeGreaterThan(0);
+      expect(outcome.structure.imports.map((item) => item.form), extension).toContain(importForm);
+      expect(outcome.structure.edges.map((item) => item.kind), extension).toContain("call");
+    }
+  });
+
+  test("keeps functional imports honest and declaration forms out of calls", async () => {
+    const elixir = await parse(".ex", Buffer.from("alias Foo.Bar, warn: false\nalias Foo.Baz, warn: false, as: B\nimport Util, only: [run: 1]\nrequire Req\nuse Feature"), {
+      packageName: "tree-sitter-elixir", version: "0.3.5",
+    });
+    expect(elixir.status).toBe("ok");
+    if (elixir.status === "ok") {
+      expect(elixir.structure.imports.map(({ form, specifier, bindings }) => ({ form, specifier, bindings }))).toEqual([
+        { form: "elixir_alias", specifier: "Foo/Bar", bindings: [{ imported: "*", local: "Bar", typeOnly: false }] },
+        { form: "elixir_alias", specifier: "Foo/Baz", bindings: [{ imported: "*", local: "B", typeOnly: false }] },
+        { form: "elixir_import", specifier: "Util", bindings: [{ imported: "run", local: "run", typeOnly: false, arity: 1 }] },
+        { form: "elixir_require", specifier: "Req", bindings: [{ imported: "*", local: "Req", typeOnly: false }] },
+        { form: "elixir_use", specifier: "Feature", bindings: [{ imported: "*", local: "Feature", typeOnly: false }] },
+      ]);
+      expect(elixir.structure.edges.filter((edge) => edge.kind !== "import")).toEqual([]);
+    }
+    const clojure = await parse(".clj", Buffer.from("(ns app (:require [foo.bar :as fb] [util :refer [run stop]]))"), {
+      packageName: "tree-sitter-clojure-orchard", version: "0.2.5",
+    });
+    expect(clojure.status).toBe("ok");
+    if (clojure.status === "ok") expect(clojure.structure.imports.map(({ specifier, bindings }) => ({ specifier, bindings }))).toEqual([
+      { specifier: "foo/bar", bindings: [{ imported: "*", local: "fb", typeOnly: false }] },
+      { specifier: "util", bindings: [{ imported: "run", local: "run", typeOnly: false }, { imported: "stop", local: "stop", typeOnly: false }] },
+    ]);
+  });
+
+  test("deduplicates Haskell equations and preserves Erlang arity material", async () => {
+    const haskell = await parse(".hs", Buffer.from("run 0 = 0\nrun x = helper x"), { packageName: "tree-sitter-haskell", version: "0.23.1" });
+    expect(haskell.status).toBe("ok");
+    if (haskell.status === "ok") expect(haskell.structure.symbols.filter((item) => item.name === "run")).toHaveLength(1);
+    const erlang = await parse(".erl", Buffer.from("-module(over).\nrun() -> ok.\nrun(X) -> X."), {
+      packageName: "tree-sitter-erlang", version: "github:WhatsApp/tree-sitter-erlang#836aa2b6c3af2c7cef3f84049b0ed6d44485a870",
+    });
+    expect(erlang.status).toBe("ok");
+    if (erlang.status === "ok") expect(erlang.structure.symbols.filter((item) => item.name === "run").map((item) => item.signatureMaterial.arity).sort()).toEqual([0, 1]);
+  });
+
+  test("associates Elixir metadata as documentation and never calls metadata forms", async () => {
+    const outcome = await parse(".ex", Buffer.from(
+      "@moduledoc \"Module docs\"\ndefmodule Demo do\n @doc \"Run docs\"\n @spec run(integer()) :: integer()\n def run(x), do: helper(x)\nend",
+    ), { packageName: "tree-sitter-elixir", version: "0.3.5" });
+    expect(outcome.status).toBe("ok");
+    if (outcome.status !== "ok") return;
+    expect(outcome.structure.symbols.find((item) => item.name === "Demo")?.documentation).toContain("@moduledoc");
+    expect(outcome.structure.symbols.find((item) => item.name === "run")?.documentation).toContain("@doc");
+    expect(outcome.structure.symbols.find((item) => item.name === "run")?.documentation).toContain("@spec");
+    const callTargets = outcome.structure.edges.filter((edge) => edge.kind === "call" && edge.target.status === "unresolved").map((edge) => edge.target.name);
+    expect(callTargets).not.toEqual(expect.arrayContaining(["@moduledoc", "@doc", "@spec", "defmodule", "def"]));
+    expect(callTargets).toContain("helper");
+  });
+
+  test("models Haskell qualified and hiding exposure exactly", async () => {
+    const outcome = await parse(".hs", Buffer.from("module Main where\nimport qualified Foo.Bar as FB\nimport Util hiding (secret)\nmain = FB.run"), {
+      packageName: "tree-sitter-haskell", version: "0.23.1",
+    });
+    expect(outcome.status).toBe("ok");
+    if (outcome.status !== "ok") return;
+    expect(outcome.structure.imports.map(({ specifier, bindings }) => ({ specifier, bindings }))).toEqual([
+      { specifier: "Foo/Bar", bindings: [{ imported: "*", local: "FB", typeOnly: false }] },
+      { specifier: "Util", bindings: [{ imported: "*", local: "*", typeOnly: false }, { imported: "!secret", local: "!secret", typeOnly: false }] },
+    ]);
+  });
+
+  test("emits only syntax-applicable functional relations and bare flow", async () => {
+    const cases = [
+      [".ex", { packageName: "tree-sitter-elixir", version: "0.3.5" }, "# docs\ndefprotocol Face do\n def run(x)\nend\nhelper(x)", "interface", undefined],
+      [".erl", { packageName: "tree-sitter-erlang", version: "github:WhatsApp/tree-sitter-erlang#836aa2b6c3af2c7cef3f84049b0ed6d44485a870" }, "%% docs\n-module(child).\n-behaviour(gen_server).\nrun(X) -> helper(X).", "module", "implement"],
+      [".clj", { packageName: "tree-sitter-clojure-orchard", version: "0.2.5" }, "; docs\n(ns child)\n(defprotocol Face (run [x]))\n(helper x)", "interface", undefined],
+      [".ml", { packageName: "tree-sitter-ocaml", version: "0.24.2", exportName: "ocaml" }, "(* docs *)\nclass child = object inherit base end\nlet run x = helper x", "class", "extend"],
+      [".hs", { packageName: "tree-sitter-haskell", version: "0.23.1" }, "-- | docs\nmodule Child where\nclass Face a where run :: a -> a\ninstance Face Int where run x = helper x", "interface", "implement"],
+    ] as const;
+    for (const [extension, artifact, source, kind, relation] of cases) {
+      const outcome = await parse(extension, Buffer.from(source), artifact);
+      expect(outcome.status, extension).toBe("ok");
+      if (outcome.status !== "ok") continue;
+      expect(outcome.structure.symbols.map((item) => item.kind), extension).toContain(kind);
+      expect(outcome.structure.symbols.some((item) => item.documentation), extension).toBe(true);
+      expect(outcome.structure.edges.map((item) => item.kind), extension).toContain("call");
+      expect(outcome.structure.edges.map((item) => item.kind), extension).toContain("data_flow");
+      if (relation) expect(outcome.structure.edges.map((item) => item.kind), extension).toContain(relation);
+    }
+  });
+
   test("normalizes Java static imports, every field declarator, and primary constructors", async () => {
     const java = await parse(".java", Buffer.from(
       "import static a.b.Util.run; import static a.b.Util.*; class Fields { int a, b; }",
