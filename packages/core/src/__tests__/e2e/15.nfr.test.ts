@@ -1,15 +1,13 @@
 /**
  * T9 — Non-functional: concurrency + PG integrity + auth (E2E, live stack).
  *
- * Domain: NFR. Read-only: no production source / prisma / route edits, no
- * restart of tools-api (pid 9524), no dist rebuild, no DB schema changes.
- * Real product bugs → test.skip("…: reason") + printed reason + report.
+ * Domain: NFR. Read-only: no production source / schema / route edits and no
+ * DB schema changes. Requested runs require the owned macOS arm64 stack.
  *
  * OOM GUARD: NEVER index the full repo here. Concurrency tests use the TINY
- * polyglot fixture (~9 small files at fixtures/polyglot/) or a throwaway
+ * polyglot fixture (33 small files at fixtures/polyglot/) or a throwaway
  * 2-3 file project, all into throwaway `e2e-th0th-nfr-*` projectIds.
- * Concurrent parallelism is capped at 3. The shared full-repo index is
- * reused (via SHARED_PID/ensureSharedIndex) but never re-indexed here.
+ * Concurrent parallelism is capped at 3. The full repository is never indexed.
  *
  * Scenarios (prefix-isolatable NFR only — destructive/shared-infra ones
  * SKIP+REASON, deferred to T13):
@@ -18,6 +16,8 @@
  *   Auth:         N18 (skip+reason), N19, N20
  */
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+import path from "node:path";
+import { Pool } from "pg";
 import {
   E2E_ENABLED,
   probeAvailability,
@@ -28,22 +28,25 @@ import {
   pollUntil,
   resetProject,
   isSearchable,
-  isSharedIndexWarm,
-  SHARED_PROBE_QUERIES,
-  ensureSharedIndex,
-  SHARED_PID,
   RUN_STAMP,
   PREFIX,
   POLY_FIXTURE_PATH,
   type Availability,
 } from "./_helpers";
+import { inspectPolyglotFixture } from "./polyglot-fixture.js";
 
 // ── Gating ─────────────────────────────────────────────────────────────────
-const READY = await (async () => {
-  if (!E2E_ENABLED) return false;
-  const a = await probeAvailability();
-  return a.API_UP && a.OLLAMA_UP;
-})();
+let READY = false;
+if (E2E_ENABLED) {
+  if (process.platform !== "darwin" || process.arch !== "arm64") {
+    throw new Error("NFR E2E is frozen to macOS arm64");
+  }
+  const availability = await probeAvailability();
+  if (!availability.API_UP || !availability.OLLAMA_UP || availability.BACKEND !== "postgres") {
+    throw new Error(`owned PostgreSQL E2E stack is not ready: ${JSON.stringify(availability)}`);
+  }
+  READY = true;
+}
 
 let AVAIL: Availability | null = null;
 
@@ -212,6 +215,7 @@ describe.skipIf(!READY)("T9 N5 — concurrent index SAME projectId serializes", 
       }
 
       const jobIds = starts.map((s) => s.json?.data?.jobId ?? null).filter(Boolean) as string[];
+      expect(jobIds).toHaveLength(3);
       // Poll each job to a terminal status.
       const finals = await Promise.all(
         jobIds.map((jid) =>
@@ -237,7 +241,8 @@ describe.skipIf(!READY)("T9 N5 — concurrent index SAME projectId serializes", 
           finals.map((f) => `${f.status}${f.errors ? `(${f.errors} errs)` : ""}`).join(", "),
       );
       for (const f of finals) {
-        expect(["completed", "indexed"]).toContain(f.status);
+        expect(f.ok).toBe(true);
+        expect(f.status).toBe("completed");
       }
 
       // Data-plane: final state must be searchable (LAST writer wins, coherent).
@@ -285,6 +290,7 @@ describe.skipIf(!READY)("T9 N6 — concurrent index DIFFERENT projectIds paralle
       }
 
       const jobIds = starts.map((s) => s.json?.data?.jobId ?? null).filter(Boolean) as string[];
+      expect(jobIds).toHaveLength(3);
       const finals = await Promise.all(
         jobIds.map((jid) =>
           pollUntil(
@@ -306,7 +312,8 @@ describe.skipIf(!READY)("T9 N6 — concurrent index DIFFERENT projectIds paralle
       );
       console.log(`[N6] ${jobIds.length} jobs fired; statuses: ${finals.map((f) => f.status).join(", ")}`);
       for (const f of finals) {
-        expect(["completed", "indexed"]).toContain(f.status);
+        expect(f.ok).toBe(true);
+        expect(f.status).toBe("completed");
       }
 
       // Each project must be independently searchable (no cross-project
@@ -323,17 +330,7 @@ describe.skipIf(!READY)("T9 N6 — concurrent index DIFFERENT projectIds paralle
       // polyglot fixture (no cross-project corruption). The search response
       // returns basenames or relative paths; sanity-check against the known
       // polyglot fixture filenames.
-      const polyFiles = [
-        "README.md",
-        "tsconfig.json",
-        "poly.dart",
-        "poly.go",
-        "poly.kt",
-        "poly.rs",
-        "indent-method.py",
-        "decorator-heavy.ts",
-        "unresolvable-import.ts",
-      ];
+      const polyFiles = [...(await inspectPolyglotFixture()).files];
       const probes = await Promise.all(
         [pidA, pidB, pidC].map((p) =>
           httpPost<any>("/api/v1/search/project", {
@@ -360,65 +357,89 @@ describe.skipIf(!READY)("T9 N6 — concurrent index DIFFERENT projectIds paralle
   );
 });
 
-describe.skipIf(!READY)("T9 N7 — search during active reindex (no torn-cache crash)", () => {
+describe.skipIf(!READY)("T9 N7 — active-generation visibility during reindex and failure", () => {
+  const pid = makePid(7);
+
+  afterAll(async () => {
+    await resetProject(pid);
+  });
+
   test(
-    "search on SHARED_PID returns coherent non-empty results while a tiny reindex runs",
+    "readers observe the old generation until one atomic switch to the new generation",
     async () => {
-      const shared = await ensureSharedIndex();
+      const initial = await indexTinyAndWait(pid, POLY_FIXTURE_PATH, 600_000);
+      expect(initial.status).toBe("completed");
+      const before = await httpGet<any>(`/api/v1/workspace/${pid}/map`);
+      const oldGeneration = before.data.activatedGraphGenerationId;
+      expect(oldGeneration).toEqual(expect.any(String));
 
-      // N7-local warmup: the memoized ensureSharedIndex gate may have settled
-      // on a borderline-warm snapshot for earlier consumers. Re-assert THIS
-      // test's own precondition right before the concurrent-reindex stress:
-      // poll until N7's exact probe query ("ContextualSearchRLM mutex queue
-      // serialization") returns ≥1 hit on SHARED_PID. Short timeout (120s)
-      // since the strong gate already ran; this only guards against a
-      // borderline-memoized settle, not a cold start.
-      const N7_QUERY = SHARED_PROBE_QUERIES[0];
-      const warm = await pollUntil(() => isSearchable(shared, N7_QUERY), {
-        timeoutMs: 120_000,
-        intervalMs: 3_000,
-      });
-      console.log(`[N7] warmup probe for "${N7_QUERY}" on ${shared} → ${warm ? "hit" : "miss"}`);
-      expect(warm).toBe(true);
-
-      // Kick off a tiny throwaway reindex (does NOT touch SHARED_PID — uses a
-      // separate throwaway projectId so the shared index is untouched).
-      const pid = makePid(7);
-      const reindexPromise = httpPost<any>("/api/v1/project/index", {
+      const start = await postLong("/api/v1/project/index", {
         projectPath: POLY_FIXTURE_PATH,
         projectId: pid,
         forceReindex: true,
       });
+      expect(start.json?.success).toBe(true);
+      const jobId = start.json?.data?.jobId;
+      expect(jobId).toEqual(expect.any(String));
 
-      // Immediately issue searches against SHARED_PID while the reindex runs.
-      // The contract is no torn-cache crash + coherent non-empty results.
-      const searches = await Promise.all(
-        Array.from({ length: 3 }, () =>
-          httpPost<any>("/api/v1/search/project", {
-            query: "ContextualSearchRLM mutex queue serialization",
-            projectId: shared,
-            maxResults: 3,
-            minScore: 0.05,
-            format: "json",
-          }).catch((e) => ({ _error: String(e?.message ?? e) })),
-        ),
-      );
-
-      await reindexPromise.catch(() => {});
-      await resetProject(pid);
-
-      for (let i = 0; i < searches.length; i++) {
-        const s = searches[i] as any;
-        if (s?._error) {
-          console.log(`[N7] search ${i} errored during reindex: ${s._error}`);
-        }
-        expect(s?._error ?? null).toBeNull();
-        const hits = s?.data?.results ?? [];
-        expect(hits.length).toBeGreaterThan(0);
+      const observed = [oldGeneration];
+      const completed = await pollUntil(async () => {
+        const [status, map] = await Promise.all([
+          getLong(`/api/v1/project/index/status/${jobId}`),
+          httpGet<any>(`/api/v1/workspace/${pid}/map`),
+        ]);
+        observed.push(map.data.activatedGraphGenerationId);
+        return status.json?.data?.status === "completed";
+      }, { timeoutMs: 600_000, intervalMs: 25 });
+      expect(completed).toBe(true);
+      const after = await httpGet<any>(`/api/v1/workspace/${pid}/map`);
+      const newGeneration = after.data.activatedGraphGenerationId;
+      observed.push(newGeneration);
+      expect(newGeneration).toEqual(expect.any(String));
+      expect(newGeneration).not.toBe(oldGeneration);
+      expect(observed.every((value) => value === oldGeneration || value === newGeneration)).toBe(true);
+      const firstNew = observed.indexOf(newGeneration);
+      expect(firstNew).toBeGreaterThan(0);
+      for (const generation of observed.slice(firstNew)) {
+        expect(generation).toBe(newGeneration);
       }
-      console.log(`[N7] 3 concurrent searches during reindex all returned non-empty coherent results`);
     },
-    600_000,
+    900_000,
+  );
+
+  test(
+    "a failed reindex leaves the previous generation and definitions visible",
+    async () => {
+      const before = await httpGet<any>(`/api/v1/workspace/${pid}/map`);
+      const generation = before.data.activatedGraphGenerationId;
+      const failedStart = await postLong("/api/v1/project/index", {
+        projectPath: path.join(POLY_FIXTURE_PATH, "does-not-exist"),
+        projectId: pid,
+        forceReindex: true,
+      });
+      expect(failedStart.status).toBeLessThan(500);
+      const jobId = failedStart.json?.data?.jobId;
+      if (jobId) {
+        const terminal = await pollUntil(async () => {
+          const status = await getLong(`/api/v1/project/index/status/${jobId}`);
+          return status.json?.data?.status === "failed";
+        }, { timeoutMs: 120_000, intervalMs: 250 });
+        expect(terminal).toBe(true);
+      } else {
+        expect(failedStart.json?.success).toBe(false);
+      }
+      const after = await httpGet<any>(`/api/v1/workspace/${pid}/map`);
+      expect(after.data.activatedGraphGenerationId).toBe(generation);
+      const definition = await httpGet<any>("/api/v1/symbol/definitions", {
+        projectId: pid,
+        search: "PolyRoot",
+        file: "decorator-heavy.ts",
+        kind: "class",
+        limit: 5,
+      });
+      expect(definition.data.definitions).toHaveLength(1);
+    },
+    180_000,
   );
 });
 
@@ -493,16 +514,15 @@ describe.skipIf(!READY)("T9 N14 — unresolved-target refs retained (PostgreSQL 
   test(
     "indexing a fixture with an unresolvable import retains the null-target reference row on PG",
     async () => {
-      // The polyglot fixture's unresolvable-import.ts imports `ghost` from
-      // "./does-not-exist" → alias resolver cannot map it → the call reference
-      // to `ghost` inside `usesGhost` carries no resolved target_fqn.
+      // The polyglot fixture's decorator-heavy.ts imports `ghost` from
+      // "./does-not-exist"; the call inside `usesGhost` has no resolved target.
       // Previously the PG repository dropped these refs entirely
       // (guard `if (!ref.target_fqn) continue;` + NOT NULL column). After the
       // fix (NOT NULL dropped + guards removed), the null-target reference row
       // is retained, matching the PostgreSQL backend which stores ref.target_fqn ?? null.
       const ir = await indexTinyAndWait(pid);
       console.log(`[N14] fixture with unresolvable import indexed → job status: ${ir.status}`);
-      expect(ir.status === "completed" || ir.status === "indexed").toBe(true);
+      expect(ir.status).toBe("completed");
 
       // Symbol tools must not 500 (the NOT-NULL violation is gone).
       const checks: { label: string; status: number; json: any }[] = [];
@@ -517,24 +537,26 @@ describe.skipIf(!READY)("T9 N14 — unresolved-target refs retained (PostgreSQL 
 
       for (const c of checks) {
         console.log(`[N14] ${c.label}: status=${c.status}`);
-        expect(c.status).toBeLessThan(500);
+        expect(c.status).toBe(200);
       }
 
       // The null-target reference to `ghost` must now be present (previously
       // silently dropped). get_references matches on symbol_name OR target_fqn,
       // so the call-site row with symbol_name="ghost" surfaces here.
       const ghostRefRows = ghostRefs.json?.data?.references ?? [];
-      console.log(
-        `[N14] get_references(ghost) returned ${ghostRefRows.length} row(s); ` +
-          `null-target retention is asserted by at least one reference surfacing.`,
+      const unresolved = ghostRefRows.filter((reference: any) =>
+        reference.fromFile === "decorator-heavy.ts" &&
+        reference.symbolName === "ghost" &&
+        reference.refKind === "call" &&
+        (reference.targetFqn ?? null) === null
       );
-      expect(ghostRefRows.length).toBeGreaterThan(0);
+      expect(unresolved).toHaveLength(1);
     },
     600_000,
   );
 });
 
-describe.skipIf(!READY)("T9 N15 — vector dimension integrity (best-effort)", () => {
+describe.skipIf(!READY)("T9 N15 — vector dimension and index integrity", () => {
   const pid = makePid(15);
 
   afterAll(async () => {
@@ -542,28 +564,55 @@ describe.skipIf(!READY)("T9 N15 — vector dimension integrity (best-effort)", (
   });
 
   test(
-    "after indexing a tiny fixture, search returns results (vectors landed with correct dim)",
+    "indexed vectors are exactly 4096d with binary HNSW and valid distance operators",
     async () => {
       const ir = await indexTinyAndWait(pid);
-      expect(ir.status === "completed" || ir.status === "indexed").toBe(true);
+      expect(ir.status).toBe("completed");
       const ok = await pollSearchable(pid, "polyglot", 120_000);
       expect(ok).toBe(true);
-      console.log(
-        `[N15] search works after tiny index → vectors landed with correct dimension. ` +
-          `Deep 4096-d / Hamming / cosine-rerank internals require direct DB access and are not ` +
-          `observable via the public API — that deep-dim assertion is intentionally skipped (see below).`,
-      );
+
+      const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+      try {
+        const vectors = await pool.query<{
+          dimensions: number;
+          binary_dimensions: number;
+          cosine_self_distance: number;
+          hamming_self_distance: number;
+        }>(
+          `SELECT vector_dims(embedding)::int AS dimensions,
+                  bit_length(embedding_bq)::int AS binary_dimensions,
+                  (embedding <=> embedding)::float8 AS cosine_self_distance,
+                  (embedding_bq <~> embedding_bq)::float8 AS hamming_self_distance
+             FROM vector_documents_4096d
+            WHERE project_id = $1`,
+          [pid],
+        );
+        expect(vectors.rows.length).toBeGreaterThan(0);
+        expect(vectors.rows.every((row) =>
+          row.dimensions === 4096 &&
+          row.binary_dimensions === 4096 &&
+          row.cosine_self_distance === 0 &&
+          row.hamming_self_distance === 0
+        )).toBe(true);
+
+        const index = await pool.query<{ indexdef: string }>(
+          `SELECT indexdef
+             FROM pg_indexes
+            WHERE tablename = 'vector_documents_4096d'
+              AND indexname = 'idx_vector_documents_4096d_embedding_bq'`,
+        );
+        expect(index.rows).toHaveLength(1);
+        expect(index.rows[0]!.indexdef).toContain("USING hnsw");
+        expect(index.rows[0]!.indexdef).toContain("bit_hamming_ops");
+      } finally {
+        await pool.end();
+      }
     },
     600_000,
   );
-
-  test.skip(
-    "N15-deep: verify 4096-d vector + Hamming + cosine-rerank internals — needs direct DB access (skipped: not API-observable)",
-    () => {},
-  );
 });
 
-describe.skipIf(!READY)("T9 N16 — symbol referential integrity (best-effort)", () => {
+describe.skipIf(!READY)("T9 N16 — symbol referential integrity", () => {
   const pid = makePid(16);
 
   afterAll(async () => {
@@ -571,45 +620,22 @@ describe.skipIf(!READY)("T9 N16 — symbol referential integrity (best-effort)",
   });
 
   test(
-    "get_references for a known polyglot symbol returns references that resolve (or skip+reason)",
+    "the known unresolved call is retained exactly without an invented target",
     async () => {
       const ir = await indexTinyAndWait(pid);
-      expect(ir.status === "completed" || ir.status === "indexed").toBe(true);
-      await pollSearchable(pid, "polyglot", 120_000);
-
-      // Try a few known polyglot symbols.
-      const candidates = ["PolyRoot", "polyFactory", "decoratedMethod"];
-      let collected: any[] = [];
-      for (const name of candidates) {
-        const r = await getLong(
-          `/api/v1/symbol/references?projectId=${encodeURIComponent(pid)}&symbolName=${encodeURIComponent(name)}`,
-        );
-        if (r.status < 400) {
-          const refs = r.json?.data?.references ?? r.json?.references ?? [];
-          collected = collected.concat(refs);
-        }
-      }
-
-      if (collected.length === 0) {
-        console.log(
-          `[N16] no references returned for polyglot probe symbols {${candidates.join(", ")}} — ` +
-            `cannot verify target resolvability on this fixture. Passing as best-effort.`,
-        );
-        expect(collected.length).toBeGreaterThanOrEqual(0);
-        return;
-      }
-
-      // Among collected refs, those that carry a target_fqn should not be null
-      // (cross-reference N14: the indexer drops unresolved targets rather than
-      // inserting NULLs).
-      const withTarget = collected.filter(
-        (ref) => ref?.target_fqn ?? ref?.targetFqn ?? null,
+      expect(ir.status).toBe("completed");
+      const response = await getLong(
+        `/api/v1/symbol/references?projectId=${encodeURIComponent(pid)}&symbolName=ghost&limit=20`,
       );
-      console.log(
-        `[N16] ${collected.length} refs collected; ${withTarget.length} carry a resolved target_fqn. ` +
-          `(Unresolved targets are dropped per N14-class guard.)`,
+      expect(response.status).toBe(200);
+      const references = response.json?.data?.references ?? [];
+      const unresolved = references.filter((reference: any) =>
+        reference.fromFile === "decorator-heavy.ts" &&
+        reference.symbolName === "ghost" &&
+        reference.refKind === "call",
       );
-      expect(withTarget.length).toBeGreaterThan(0);
+      expect(unresolved).toHaveLength(1);
+      expect(unresolved[0].targetFqn ?? null).toBeNull();
     },
     600_000,
   );
@@ -694,12 +720,7 @@ describe.skipIf(!READY)("T9 N18 — auth-on 401 without key", () => {
 describe.skipIf(!READY)("T9 N19 — auth-off (dev mode) returns 200 with no key", () => {
   test("GET /api/v1/workspace/list with NO X-API-Key returns 200 (dev mode, auth off)", async () => {
     AVAIL = AVAIL ?? (await probeAvailability());
-    // Confirm the live state first — if auth got turned on, document it.
-    if (AVAIL.AUTH_REQUIRED) {
-      console.log(`[N19] AUTH_REQUIRED=true now — dev-mode assertion no longer applies; passing as best-effort.`);
-      expect(AVAIL.AUTH_REQUIRED).toBe(true);
-      return;
-    }
+    expect(AVAIL.AUTH_REQUIRED).toBe(false);
     const res = await httpRaw("/api/v1/workspace/list", { method: "GET" });
     console.log(`[N19] GET /workspace/list with no key → ${res.status} (expect 200 in dev mode)`);
     expect(res.status).toBe(200);

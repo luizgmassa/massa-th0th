@@ -10,6 +10,7 @@ import { matchesStructuralPathAlias, resolveStructuralSpecifier } from "../servi
 import { smartChunk } from "../services/search/smart-chunker.js";
 import { StructuralRuntime } from "../services/structural/structural-runtime.js";
 import { buildHeaderLanguageEvidence } from "../services/etl/pipeline.js";
+import { LANGUAGE_MANIFEST } from "../services/structural/language-manifest.js";
 import type { EtlStageContext, ParsedFile } from "../services/etl/stage-context.js";
 import type { NormalizedStructure, SourceSpan } from "../services/structural/types.js";
 
@@ -40,6 +41,40 @@ function context(projectPath: string): EtlStageContext {
 }
 
 describe("TS/JS structural ETL adapter", () => {
+  test("routes every manifest extension through the structural runtime", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-manifest-etl-"));
+    tempDirs.push(dir);
+    const seen: string[] = [];
+    const files = await Promise.all(LANGUAGE_MANIFEST.map(async ({ extension }) => {
+      const name = `sentinel${extension}`;
+      const absolutePath = path.join(dir, name);
+      await fs.writeFile(absolutePath, "sentinel\n");
+      return {
+        absolutePath,
+        relativePath: name,
+        mtime: 0,
+        size: 9,
+        contentHash: extension,
+        needsReparse: true,
+      };
+    }));
+    const runtime = {
+      parse: async ({ extension }: { extension: string }) => {
+        seen.push(extension);
+        return {
+          status: "ok" as const,
+          structure: EMPTY,
+          diagnostics: [],
+          diagnosticCount: 0,
+        };
+      },
+    };
+
+    await new ParseStage(runtime).run(context(dir), files);
+
+    expect(seen.sort()).toEqual(LANGUAGE_MANIFEST.map((entry) => entry.extension).sort());
+  });
+
   test("derives AST importer and directory-aware build evidence through the real ParseStage seam", async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-header-evidence-"));
     tempDirs.push(dir);

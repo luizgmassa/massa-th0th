@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 through TASK-021 PASS; TASK-022 READY
+**Status:** TASK-001 through TASK-022 PASS; TASK-023 READY
 
 ## Project Testing Guidelines Scan
 
@@ -342,7 +342,7 @@ Phase 7 Validate:
 
 ### T22 / TASK-022: Replace polyglot limitation tests with deterministic E2E
 
-**Status:** READY.
+**Status:** PASS.
 
 **What:** Expand the polyglot fixture to all 33 extensions and replace best-effort/zero-symbol expectations with manifest-tier assertions, generation safety, and transport parity.  
 **Where:** E2E fixtures and `02.indexing`, `09.symbol-graph`, `15.nfr` tests.  
@@ -352,6 +352,8 @@ Phase 7 Validate:
 **Commit:** `test(e2e): enforce polyglot graph contracts`
 
 ### T23 / TASK-023: Verify macOS arm64 package artifacts
+
+**Status:** READY.
 
 **What:** With exact Node `22.22.2`/npm `10.9.7`, pack shared then core and prove clean source, built `dist`, and packed-package native grammar link/load/parse/disposal on macOS arm64 with only audited lifecycle scripts trusted. Prove the tarball contains the generated arm64 addon and resolves the exact nested patched `tree-sitter` runtime rather than stock or hoisted code.  
 **Where:** package manifests/scripts, packed-artifact helpers, native verifier tests.  
@@ -499,5 +501,5 @@ Counts below are minimum new focused cases/sensors, not total repository pass co
 ## Artifact Store Evidence
 
 - Active key: `.specs/features/multi-language-tree-sitter-breadth/tasks.md`
-- Version: 9; TASK-005 PASS and TASK-006 READY
+- Version: 26; TASK-022 PASS and TASK-023 READY
 - Checksum: recorded in `gate-manifest.md` after artifact freeze.

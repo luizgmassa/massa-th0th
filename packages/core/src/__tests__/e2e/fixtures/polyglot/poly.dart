@@ -13,5 +13,5 @@ class PolyDart {
 }
 
 int polyTopLevel(int n) {
-  return n * 3;
+  return PolyDart('poly').greet().length + n;
 }

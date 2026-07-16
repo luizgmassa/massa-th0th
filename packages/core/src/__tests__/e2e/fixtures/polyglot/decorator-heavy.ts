@@ -1,7 +1,6 @@
-// E8: decorator-heavy TS — exercises the regex symbol extractor on a file that
-// leans on decorators (the regex parser has no tree-sitter, so heavy decorator
-// syntax can mask the real class/method signatures).
+// Decorator-heavy TypeScript fixture for native structural extraction.
 import { Component, Input, Injectable } from "./fake-decorators";
+import { ghost } from "./does-not-exist";
 
 @Injectable()
 @Component({
@@ -21,4 +20,8 @@ export class PolyRoot {
 
 export function polyFactory(): PolyRoot {
   return new PolyRoot();
+}
+
+export function usesGhost(value: number): number {
+  return ghost(value);
 }

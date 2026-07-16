@@ -4,9 +4,9 @@
  * For each DiscoveredFile that needsReparse=true:
  *   1. Reads file content
  *   2. Runs smart-chunker for semantic embedding chunks
- *   3. Extracts raw symbols (functions, classes, variables, types, interfaces)
- *      via regex + heuristic AST-lite (no heavy ts-morph dependency)
- *   4. Extracts raw import statements for Resolve stage
+ *   3. Extracts normalized symbols, imports, and edges through the exact
+ *      manifest-owned native structural runtime
+ *   4. Leaves unsupported extensions on the existing semantic-only path
  *
  * Files with needsReparse=false are passed through with empty symbols/chunks.
  */
@@ -16,6 +16,7 @@ import fs from "fs/promises";
 import { logger } from "@massa-th0th/shared";
 import { smartChunk, type Chunk } from "../../search/smart-chunker.js";
 import { structuralRuntime, type StructuralRuntime } from "../../structural/structural-runtime.js";
+import { LANGUAGE_MANIFEST } from "../../structural/language-manifest.js";
 import { deriveLegacyLineRange } from "../../structural/source-span.js";
 import type { NormalizedStructure, ParseDiagnostic } from "../../structural/types.js";
 import type {
@@ -28,12 +29,9 @@ import type {
 } from "../stage-context.js";
 
 const BATCH_SIZE = 20;
-const STRUCTURAL_EXTENSIONS = new Set([
-  ".ts", ".tsx", ".js", ".jsx", ".c", ".h", ".cpp", ".hpp", ".go", ".rs", ".zig",
-  ".java", ".kt", ".kts", ".scala", ".cs", ".swift", ".dart",
-  ".ex", ".exs", ".erl", ".clj", ".ml", ".hs",
-  ".vue", ".md", ".json", ".yaml", ".yml",
-]);
+const STRUCTURAL_EXTENSIONS = new Set(
+  LANGUAGE_MANIFEST.map((entry) => entry.extension),
+);
 
 export class StructuralEtlParseError extends Error {
   constructor(

@@ -7,7 +7,7 @@
 - workflow: spec-driven
 - persona: AI Engineer
 - feature: `multi-language-tree-sitter-breadth`
-- status: EXECUTE ACTIVE; TASK-001 through TASK-021 PASS; TASK-022 READY
+- status: EXECUTE ACTIVE; TASK-001 through TASK-022 PASS; TASK-023 READY
 - branch: `main`
 - baseline: `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`
 - push: not attempted
@@ -42,7 +42,7 @@ Replace regex structural extraction with pinned native Tree-sitter grammars and 
 - Supplied plan revised until the Plan Critic reported no remaining critical/high contradiction.
 - Canonical `spec.md`, `context.md`, `design.md`, `tasks.md`, `capability-matrix.md`, and initial `gate-manifest.md` created.
 - 23 requirements, 12 acceptance criteria, 26 atomic tasks, seven phases, and independent verifier contract are frozen.
-- Current source evidence: 33 allowed extensions; structural extraction supports 8 symbol extensions, 7 import extensions, and 4 typed-edge extensions.
+- Current source evidence: all 33 allowed extensions route through native structural extraction; the deterministic polyglot fixture proves 29 Flow-tier extensions and four Structure-tier extensions.
 - TASK-001 target discovery measured macOS 26.5.2 arm64 with Bun 1.3.11. The user then narrowed platform scope to macOS arm64 only, reopening the grammar artifact loop. No production file changed yet.
 - TASK-001 PASS: exact Bun 1.2.0 was rejected; exact Bun 1.3.0 passed a second frozen clean install, all 33 extension parses twice, 27 loaded native modules with Mach-O arm64/system-only linkage, and missing/incompatible negative sensors.
 - Frozen selections include modern pinned Dart and Erlang Git commits, Clojure Orchard, and HTML as the Vue SFC host. No WASM or runtime download was used.
@@ -74,14 +74,15 @@ Replace regex structural extraction with pinned native Tree-sitter grammars and 
 - TASK-019 adds Vue/Markdown embedded parsing plus Markdown heading and JSON/YAML qualified-key packs. Host resources release before sequential depth-two child parsing, native UTF-16 offsets are centrally adapted to exact UTF-8 bytes, Vue `lang` uses native attributes, stable ordinal scopes remap child spans, and fallback/hard-failure diagnostics retain exact totals. Exact Bun 1.3.0 passed 141/141 with 915 assertions; type-check 6/6, build 5/5, diff, and independent review passed after resolver, native-attribute, and acceptance-matrix remediation.
 - TASK-020 routes definition, reference, trace, architecture, and impact consumers through one active-generation identity lookup; exact modern identities resolve, legacy ambiguity remains explicit and stable, overload impact analysis does not fall back to bare names, and search exposes all 18 canonical additive kinds. Exact Bun 1.3.0 focused tests passed 8/8 with 19 assertions; owned PostgreSQL passed 21/21 with 81 assertions; type-check 6/6, build 5/5, diff, and independent review passed. A supplemental broad trace/architecture run retained four pre-existing shared-database fixture failures outside the task-owned gate; no validation asset was weakened.
 - TASK-021 exposes one shared parser-summary, active-generation, FQN-resolution, and canonical 18-kind transport contract through HTTP and the production MCP CallTool proxy. Project-map graph inputs are captured in one share-locked PostgreSQL transaction so concurrent activation cannot mix generations; extension counts remain distinct from parser language counts and raw diagnostics are never expanded. Exact Bun 1.3.0 focused transport/readiness/identity tests passed 19/19 with 92 assertions; owned PostgreSQL passed 21/21 with 93 assertions including the activation-lock/pending-poison sensor; type-check 6/6, build 5/5, diff, and independent re-review passed after both initial P1 findings were remediated.
+- TASK-022 replaces the baseline-deleted indexing limitation suite with a PostgreSQL-native deterministic all-33 E2E contract. A 29-of-33 ParseStage integration escape—25/29 Flow tiers plus all four Structure tiers—was remediated by deriving routing from `LANGUAGE_MANIFEST`; the exact fixture now proves 29 Flow tiers, four Structure tiers, modern/legacy identity, HTTP/MCP parity, unresolved null targets, atomic activation, stale-failure preservation, deletion, and same/different-project concurrency. Owned sequential E2E passed 41 tests with 664 assertions plus one explained auth-on skip; focused indexing passed 7/7 with 249 assertions; static routing passed 20 tests with 278 assertions and seven expected E2E-off skips; type 6/6, build 5/5, qwen 69-entry hash validation, diff, and independent final review passed.
 
 ## Blocker
 
-No blocker at the TASK-021 boundary. TASK-022 is dependency-satisfied and remains sequential under the one-atomic-task contract. Four pre-existing shared-database fixture failures remain in a supplemental broad trace/architecture run from TASK-020; TASK-021's frozen focused, owned PostgreSQL, type, build, diff, and independent-review gates pass.
+No blocker at the TASK-022 boundary. TASK-023 is dependency-satisfied and remains sequential under the one-atomic-task contract. TASK-022 stayed macOS arm64-only and did not touch Linux, Docker, containers, non-arm64 paths, or TASK-023 package-artifact implementation. The single N18 auth-on case is explicitly skipped because the owned E2E server is intentionally auth-off; the exact auth-off contract passes.
 
 ## Next Step
 
-Execute the next READY task, TASK-022.
+Execute the next READY task, TASK-023.
 
 ## Previous Feature
 
