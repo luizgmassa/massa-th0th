@@ -95,16 +95,37 @@ export const STRUCTURAL_QUERY_MATCH_LIMIT = 4_096;
 
 function byteNodeAdapter(source: Buffer) {
   const decoded = source.toString("utf8");
-  const offsets = new Map<number, number>([[0, 0], [decoded.length, source.length]]);
+  // Build the utf16->byte offset table in ONE pass instead of lazily resolving
+  // each distinct node offset via Buffer.byteLength(decoded.slice(0, n), "utf8"),
+  // which re-scans and re-allocates the prefix string on every cache miss.
+  // Every wrapped node's startIndex/endIndex reads through this table, so the
+  // lazy path was O(distinct-offsets * offset) and allocated a transient prefix
+  // string per miss. The table matches Buffer.byteLength exactly: a high
+  // surrogate followed by a low surrogate encodes to 4 bytes; a lone surrogate
+  // or any BMP code point above 0x7ff encodes to 2-3 bytes (Node replaces lone
+  // surrogates with U+FFFD, also 3 bytes).
+  const table = new Int32Array(decoded.length + 1);
+  let bytes = 0;
+  for (let i = 0; i < decoded.length; i += 1) {
+    const unit = decoded.charCodeAt(i);
+    if (unit >= 0xd800 && unit <= 0xdbff) {
+      const next = decoded.charCodeAt(i + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        bytes += 4;
+        i += 1;
+        table[i + 1] = bytes;
+        continue;
+      }
+      bytes += 3;
+    } else {
+      bytes += unit < 0x80 ? 1 : unit < 0x800 ? 2 : 3;
+    }
+    table[i + 1] = bytes;
+  }
+  table[decoded.length] = source.length;
   const nativeToWrapped = new WeakMap<object, StructuralSyntaxNode>();
   const wrappedToNative = new WeakMap<object, StructuralSyntaxNode>();
-  const byteOffset = (utf16Offset: number): number => {
-    const cached = offsets.get(utf16Offset);
-    if (cached !== undefined) return cached;
-    const value = Buffer.byteLength(decoded.slice(0, utf16Offset), "utf8");
-    offsets.set(utf16Offset, value);
-    return value;
-  };
+  const byteOffset = (utf16Offset: number): number => table[utf16Offset];
   const wrap = (native: StructuralSyntaxNode): StructuralSyntaxNode => {
     const key = native as object;
     const cached = nativeToWrapped.get(key);
