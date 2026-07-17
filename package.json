@@ -24,6 +24,7 @@
     "bench:beir": "bun run --filter @massa-th0th/core bench:beir",
     "bench:needles": "bun benchmarks/needles/run.ts",
     "bench:needles:gate": "NEEDLE_FLOOR_HIT1=0.5 NEEDLE_FLOOR_MRR=0.65 bun benchmarks/needles/run.ts --label ci-gate",
+    "bench:parser": "bun benchmarks/parser/run.ts --baseline 5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03",
     "lint": "turbo run lint",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/dist packages/*/dist",
     "test:scripts": "bash scripts/tests/test-wsl-ip-detection.sh",

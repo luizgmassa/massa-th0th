@@ -806,3 +806,15 @@ Re-validated foundation under Bun `1.3.11`/Node `25.9.0`: cold reinstall (389 pa
 - type-check 6/6; build 5/5 (real, turbo cache cleared); `git diff --check` PASS.
 - Independent read-only review: VERDICT PASS, no findings; throwaway drift sensor confirmed the static test catches Bun-version and runs-on regressions.
 - Commit: `ci(parser): gate macos native grammars`.
+
+## TASK-025 Gate Evidence (BLOCKED ON PERF, 2026-07-17)
+
+- Deliverable complete: `benchmarks/parser/**` (frozen 48-file TS/JS corpus ~596 KB + `corpus-manifest.json` with per-file SHA-256 + corpus checksum `dd2686ec…`; fresh-process baseline-vs-candidate harness with variance rule; 100-cycle explicit-disposal/forced-GC sensor; `bench:parser` script) + `benchmarks/parser/benchmark.test.ts` (25/25 PASS).
+- Disposal stress (MLTS-004, 16 MiB bound): PASS — 98 KB median delta (cycles 81–100 vs 21–40); native binding disposal is healthy, not a leak.
+- Corpus checksum: PASS.
+- Measured (Bun 1.3.11/Node 25.9.0, macOS arm64, FAIR full-baseline-ParseStage comparison): baseline 7.64 MB/s / 90 MB RSS; candidate 1.46 MB/s / 411 MB RSS. Throughput regression 81% (≤25 required) → FAIL; RSS regression 353% (≤50 required) → FAIL.
+- Root cause (profiled): raw tree-sitter parse is fast (17 MB/s, 2× baseline, 102 MB RSS). The StructuralRuntime indexer (query-pack extraction + FQN + spans) is the cost — ~88% in the build phase.
+- Optimization applied (standalone commit `490f302 perf(structural): optimize indexer hot paths`): skip the non-embedded full-AST walk; precompute symbol byte ranges before the O(N²) parent scan; precompute documentation captures. Verified 2.2× throughput (661→1.46 MB/s) with structural output unchanged (154 structural/ETL tests pass, type-check clean).
+- Feasibility: residual build-phase cost is per-symbol rich extraction (signature strings, signatureMaterial, spans) that the regex baseline does not produce — spec-required (MLTS-005/006). Throughput 25% assessed likely infeasible for a full-AST indexer vs regex; RSS 50% may be reachable with further work (RSS is partly lazy-GC timing across the corpus, not a leak per the disposal sensor).
+- Independent measurement (subagent, two rounds incl. a fair-baseline re-measure) confirmed the numbers; no thresholds weakened, no data faked.
+- Unblock condition: MLTS-014 throughput (≤25%) and RSS (≤50%) thresholds met (further indexer optimization + RSS reduction). TASK-026 may proceed independently.

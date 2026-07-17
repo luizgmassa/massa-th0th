@@ -56,7 +56,7 @@ The network approval block cleared. User directive switched the native runtime t
 
 ## Exact Next Step
 
-TASK-023 (`build(parser): verify macos native artifacts`) and the native runtime re-baseline are committed (the re-baseline is folded into the same commit because it is entangled with TASK-023 in shared files). TASK-024 (`ci(parser): gate macos native grammars`) adds the frozen macOS arm64 CI workflow + static test + baseline non-touch sensor. Continue TASK-025 (frozen parser benchmark + explicit-disposal stress) and TASK-026 (docs) under Bun `1.3.11`/Node `25.9.0`, each with its declared commit and independent verification.
+TASK-023 + the native runtime re-baseline are committed (202bebf); TASK-024 CI workflow committed (02c8ea9). TASK-025 benchmark harness is complete and correct but the gate is BLOCKED ON PERF: MLTS-014 throughput (<=25%) and RSS (<=50%) thresholds are unmet (candidate 1.46 MB/s vs 5.73 MB/s target; RSS 411 MB vs 135 MB target). A standalone perf commit (`490f302`) applied 3 verified output-preserving indexer optimizations for 2.2× throughput. Profiling shows raw tree-sitter is fast (17 MB/s, 2× baseline) and the residual cost is per-symbol rich extraction (signatures/FQN/spans) the regex baseline does not produce — spec-required, so throughput 25% is assessed likely infeasible for a full-AST indexer vs regex; RSS 50% may be reachable. Disposal stress (16 MiB) + corpus checksum PASS. Continue TASK-026 (docs) under Bun `1.3.11`/Node `25.9.0`; the MLTS-014 perf optimization remains the unblock for TASK-025/AC-008.
 
 ## Worktree and Safety
 
