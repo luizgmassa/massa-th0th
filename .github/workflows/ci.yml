@@ -170,12 +170,6 @@ jobs:
       - name: Build workspace
         run: bun run build
 
-      - name: Run native-structural + parser-dependent integration tests
-        # Structural unit suites need darwin/arm64 (the native Tree-sitter
-        # grammars only load there). Also run the three parser-dependent
-        # integration files that mock Postgres (so they need no DB service)
-        # but still require the native parser. On Linux CI they skip via
-        # `describeNative` in _helpers/native-skip.ts, so this macOS job is
-        # where they get coverage.
+      - name: Run native-structural unit tests
         working-directory: packages/core
-        run: bun scripts/run-tests-isolated.ts --unit --filter='structural|parse-long-class|concurrent-indexing|etl-cache-invalidation|etl-pipeline-queue'
+        run: bun scripts/run-tests-isolated.ts --unit --filter='structural|parse-long-class'

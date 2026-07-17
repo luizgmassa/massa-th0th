@@ -27,6 +27,10 @@ COPY apps/tools-api/package.json apps/tools-api/
 COPY apps/mcp-client/package.json apps/mcp-client/
 COPY apps/opencode-plugin/package.json apps/opencode-plugin/
 
+# Bun patchedDependencies (the tree-sitter prebuilt-binary patch) must be in
+# the install context, or `bun install` fails resolving the patch file.
+COPY patches ./patches
+
 # Install dependencies (ignore Prisma postinstall that checks Node version)
 RUN bun install --ignore-scripts
 
