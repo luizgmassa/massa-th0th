@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test";
+import { expect, test } from "bun:test";
+import { describeNative } from "./_helpers/native-skip.js";
 import { loadNativeGrammarSet } from "../services/structural/grammar-loaders.js";
 import { StructuralRuntime } from "../services/structural/structural-runtime.js";
 import { SourceIndex } from "../services/structural/source-span.js";
@@ -12,7 +13,7 @@ async function runtime(capacity = 4) {
   return new StructuralRuntime({ grammarSet: () => loaded, pool: { capacity } });
 }
 
-describe("embedded and data structural packs", () => {
+describeNative("embedded and data structural packs", () => {
   test("runs five independent native fixtures for every document/data extension", async () => {
     const engine = await runtime(1);
     const cases: Readonly<Record<string, readonly string[]>> = {

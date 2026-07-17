@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { describeNative } from "./_helpers/native-skip.js";
 import {
   grammarArtifactKey,
   type LoadedNativeGrammarSet,
@@ -178,7 +179,7 @@ describe("bounded structural parser pool", () => {
   });
 });
 
-describe("structural runtime outcomes and lifetime", () => {
+describeNative("structural runtime outcomes and lifetime", () => {
   test("keeps semantic-only extensions outside readiness and native acquisition", async () => {
     let grammarCalls = 0;
     const runtime = new StructuralRuntime({ grammarSet() { grammarCalls += 1; throw new Error("must not load"); } });

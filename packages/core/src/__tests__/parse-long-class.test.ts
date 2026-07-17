@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, expect, test } from "bun:test";
+import { describeNative } from "./_helpers/native-skip.js";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -10,7 +11,7 @@ afterEach(async () => {
   await Promise.all(tempDirs.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true })));
 });
 
-describe("ParseStage long blocks", () => {
+describeNative("ParseStage long blocks", () => {
   test("keeps a class spanning more than 500 lines as the caller of its edges", async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-long-class-"));
     tempDirs.push(dir);

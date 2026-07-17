@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
+import { describeNative } from "../_helpers/native-skip.js";
 import { DEFAULT_ALLOWED_EXTENSIONS } from "@massa-th0th/shared";
 import { cp, mkdtemp, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -27,7 +28,7 @@ const PID = `${PREFIX}index-poly-${RUN_STAMP}`;
 const fixture = await inspectPolyglotFixture();
 setDefaultTimeout(900_000);
 
-describe("polyglot fixture contract", () => {
+describeNative("polyglot fixture contract", () => {
   test("covers exactly all 33 allowed extensions with a deterministic sentinel", () => {
     assertPolyglotContractStatic();
     expect(DEFAULT_ALLOWED_EXTENSIONS).toHaveLength(33);

@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, expect, test } from "bun:test";
+import { describeNative } from "./_helpers/native-skip.js";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -40,7 +41,7 @@ function context(projectPath: string): EtlStageContext {
   return { projectId: "structural-etl", projectPath, jobId: "job", emit: () => {} };
 }
 
-describe("TS/JS structural ETL adapter", () => {
+describeNative("TS/JS structural ETL adapter", () => {
   test("routes every manifest extension through the structural runtime", async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-manifest-etl-"));
     tempDirs.push(dir);

@@ -37,6 +37,12 @@ on:
       - ".github/workflows/needles-gate.yml"
   workflow_dispatch: {}
 
+# Let an in-flight gate finish instead of being cancelled by a superseding
+# push to the same ref (the historical cause of every "cancelled" run).
+concurrency:
+  group: needles-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   needles:
     runs-on: ubuntu-latest

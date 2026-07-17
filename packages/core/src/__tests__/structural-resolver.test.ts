@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { describeNative } from "./_helpers/native-skip.js";
 import {
   StructuralResolverRegistry,
   StructuralResolverSession,
@@ -167,7 +168,7 @@ describe("structural resolver registry", () => {
   });
 });
 
-describe("scripting structural resolver", () => {
+describeNative("scripting structural resolver", () => {
   test("registers every scripting dialect and resolves same-file, alias, global, ambiguity, and unresolved cases", () => {
     const registry = new StructuralResolverRegistry([SCRIPTING_LANGUAGE_RESOLVER]);
     for (const dialect of ["python", "ruby", "php", "lua-luajit"]) {
@@ -205,7 +206,7 @@ describe("scripting structural resolver", () => {
   });
 });
 
-describe("systems structural resolver", () => {
+describeNative("systems structural resolver", () => {
   test("resolves exact alias records produced by the native Rust grammar", async () => {
     const grammarSet = await loadNativeGrammarSet([{ packageName: "tree-sitter-rust", version: "0.24.0" }]);
     const outcome = await new StructuralRuntime({ grammarSet: () => grammarSet }).parse({
@@ -255,7 +256,7 @@ describe("systems structural resolver", () => {
   });
 });
 
-describe("managed structural resolver", () => {
+describeNative("managed structural resolver", () => {
   test("resolves grammar-derived imports while isolating dialects and non-path modules", async () => {
     const grammarSet = await loadNativeGrammarSet([{ packageName: "tree-sitter-java", version: "0.23.5" }]);
     const outcome = await new StructuralRuntime({ grammarSet: () => grammarSet }).parse({
@@ -366,7 +367,7 @@ describe("managed structural resolver", () => {
   });
 });
 
-describe("functional structural resolver", () => {
+describeNative("functional structural resolver", () => {
   test("resolves parser-produced Elixir imports across EX/EXS while isolating foreign dialects", async () => {
     const grammarSet = await loadNativeGrammarSet([{ packageName: "tree-sitter-elixir", version: "0.3.5" }]);
     const runtime = new StructuralRuntime({ grammarSet: () => grammarSet });
@@ -464,7 +465,7 @@ describe("functional structural resolver", () => {
   });
 });
 
-describe("TS/JS structural resolver", () => {
+describeNative("TS/JS structural resolver", () => {
   test("resolves a same-file definition before imports and globals", () => {
     const result = TYPESCRIPT_LANGUAGE_RESOLVER.resolve(
       file([imported("./lib", [{ imported: "run", local: "run" }])]),

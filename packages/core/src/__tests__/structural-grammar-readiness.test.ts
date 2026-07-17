@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { describeNative } from "./_helpers/native-skip.js";
 import {
   LANGUAGE_MANIFEST,
   resolveStructuralLanguage,
@@ -99,7 +100,7 @@ describe("serialized Bun marker masking", () => {
   });
 });
 
-describe("parser readiness", () => {
+describeNative("parser readiness", () => {
   test("loads and parses every real manifest entry on exact macOS arm64", async () => {
     resetParserReadinessForTests(loadNativeGrammarSet);
     const result = await validateAllGrammars();

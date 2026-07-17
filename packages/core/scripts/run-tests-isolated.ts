@@ -7,8 +7,13 @@ const testsRoot = path.join(packageRoot, "src", "__tests__");
 const argumentsList = process.argv.slice(2);
 const unitOnly = argumentsList.includes("--unit");
 const e2eOnly = argumentsList.includes("--e2e");
+const filterArgument = argumentsList.find((argument) => argument.startsWith("--filter="));
+const filterRegex = filterArgument ? new RegExp(filterArgument.slice("--filter=".length)) : undefined;
 const unknownArguments = argumentsList.filter(
-  (argument) => argument !== "--unit" && argument !== "--e2e",
+  (argument) =>
+    argument !== "--unit" &&
+    argument !== "--e2e" &&
+    !argument.startsWith("--filter="),
 );
 
 if (unknownArguments.length > 0) {
@@ -56,6 +61,19 @@ const discoveredFiles = (e2eOnly
       },
     )
 ).sort((left, right) => left.localeCompare(right));
+
+// `--filter=<regex>` narrows the selected files by path (relative to the tests
+// root). Used by the macOS arm64 CI gate to run only the native-structural
+// suites (which need darwin/arm64) without pulling in database/integration tests.
+if (filterRegex) {
+  const before = discoveredFiles.length;
+  for (let index = discoveredFiles.length - 1; index >= 0; index -= 1) {
+    if (!filterRegex.test(path.relative(testsRoot, discoveredFiles[index]!))) {
+      discoveredFiles.splice(index, 1);
+    }
+  }
+  console.log(`[test-isolation] --filter retained ${discoveredFiles.length}/${before} files`);
+}
 
 if (e2eOnly) {
   const cleanupFinalizer = discoveredFiles.find(

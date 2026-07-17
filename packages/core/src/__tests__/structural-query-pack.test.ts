@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test";
+import { expect, test } from "bun:test";
+import { describeNative } from "./_helpers/native-skip.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -41,7 +42,7 @@ async function parseTypeScriptWithCapabilities(
   });
 }
 
-describe("declarative structural query packs", () => {
+describeNative("declarative structural query packs", () => {
   test("normalizes CommonJS default and destructured bindings for resolvers", async () => {
     const outcome = await parseTypeScriptWithCapabilities(
       'const service = require("./service"); const { execute: run, stop } = require("./worker");',
