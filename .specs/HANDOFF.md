@@ -50,13 +50,13 @@ Implement `plan-multi-language.md` under workflow session `spec-multi-language`.
 - TASK-021 exposes exact durable parser summaries, active generation identity, one stable FQN resolution schema, and all 18 canonical kinds through HTTP and the production MCP CallTool proxy without expanding raw diagnostics. Project-map centrality, aggregates, typed edges, diagnostics, counts, recent files, and architecture inputs now come from one share-locked active-generation PostgreSQL snapshot; a deterministic concurrent-activation/pending-poison sensor proves no mixed-generation response. Exact Bun 1.3.0 focused tests passed 19/19 with 92 assertions; owned PostgreSQL passed 21/21 with 93 assertions; type-check 6/6, build 5/5, diff, and independent re-review passed after remediating both initial P1 findings.
 - TASK-022 restores the baseline-deleted indexing suite as a deterministic PostgreSQL-native all-33 E2E contract. ParseStage's 29-of-33 integration escape—25/29 Flow tiers plus all four Structure tiers—was fixed by deriving structural routing from the manifest. The fixture proves exactly 33 extensions/sentinels, 29 Flow-tier edges, four Structure-tier zero-edge declarations, overload identities and legacy ambiguity, HTTP/MCP parity, unresolved null targets, atomic generations, exact stale-snapshot failure preservation, deletion, and concurrency. Owned sequential E2E passed 41 tests/664 assertions with one explained auth-on skip; focused indexing passed 7/7 and 249 assertions; static routing passed 20/278 with seven expected E2E-off skips; type 6/6, build 5/5, qwen 69-entry/44-support hash validation, diff, and final independent re-review passed.
 
-## Blocking Gate
+## Native Runtime Re-baseline + TASK-023 PASS (2026-07-16)
 
-TASK-022 passed exact fixture, tier, identity, transport, generation, recovery, stale-failure, deletion, concurrency, type, build, sparse-fixture, diff, and independent-review gates. The remaining N18 skip is explained: the owned server is intentionally auth-off, and the exact auth-off path passes. No test was weakened.
+The network approval block cleared. User directive switched the native runtime to Bun `1.3.11` and Node `25.9.0` (npm `11.14.1`); Node 25.2.2 was requested but is not a real release, so the closest real, locally-installed Node 25.x (25.9.0) was used and confirmed. The TASK-023 empty-cache packed-consumer install now runs and exposed two real defects, both fixed in the `tree-sitter` patch (SHA `b0f73d00…` → `e79aec7b96eb8114e85ebcb90f0a8b12076bcd8aa08c09bb88929621e1c1446d`): (1) Node 25 headers require C++20, so `binding.gyp` moved from C++17 to C++20; (2) the bundled `tree-sitter` `install` script fell back to a missing `node-gyp` in consumers, so an install-guard now no-ops when the prebuilt addon is present (falling back to the upstream `node-gyp-build` only for fresh source builds). The package verifier materializes the hoisted patched runtime into `packages/core/node_modules` before `npm pack` so the core tarball bundles the exact nested patched runtime. Gates under the new versions: cold install; source/dist native 33+33 parses, 27+27 modules, 10 sensors, RSS within bound; package gate 33 parses, 27 modules/paths, 10 sensors; focused verifier tests 14/14; type-check 6/6; build 5/5.
 
 ## Exact Next Step
 
-Execute TASK-023 macOS arm64 package-artifact verification only.
+Commit the native runtime re-baseline (`build(parser): re-baseline native runtime to bun 1.3.11 and node 25.9.0`), then run TASK-023 independent review and commit `build(parser): verify macos native artifacts`. Continue TASK-024 (frozen macOS arm64 CI), TASK-025 (parser benchmark), and TASK-026 (docs) under Bun `1.3.11`/Node `25.9.0`, each with its declared commit and independent verification.
 
 ## Worktree and Safety
 
@@ -64,5 +64,5 @@ Execute TASK-023 macOS arm64 package-artifact verification only.
 - User commit `7245aaa` and its files are preserved; TASK-021 is committed on top without modifying that commit.
 - `plan-multi-language.md` was supplied untracked and is now an in-scope revised artifact.
 - No push attempted.
-- TASK-001 through TASK-022 are claimed with recorded gates, including deterministic all-33 PostgreSQL E2E coverage. No TASK-023 package-artifact work, Linux, Docker, container, non-arm64 implementation, or final parser benchmark has been claimed.
+- TASK-001 through TASK-023 are claimed with recorded gates. The native runtime re-baseline (Bun `1.3.11`/Node `25.9.0`) plus the TASK-023 package verifier are committed on top. No Linux, Docker, container, or non-arm64 implementation has been started; TASK-024/025/026 remain.
 - Preserve existing SQLite-removal artifacts and follow-up status.

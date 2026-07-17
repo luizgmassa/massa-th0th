@@ -17,9 +17,9 @@ export const INITIAL_QUERY_PACK_VERSION = "1.0.0";
 export const INITIAL_RESOLVER_VERSION = "1.0.0";
 export const TREE_SITTER_RUNTIME_VERSION = "0.25.0";
 export const TREE_SITTER_NATIVE_MODULE_ABI = 137;
-export const STRUCTURAL_BUN_VERSION = "1.3.0";
+export const STRUCTURAL_BUN_VERSION = "1.3.11";
 export const TREE_SITTER_PATCH_SHA256 =
-  "b0f73d0031e70f3585fca701076e1c6a05c30968b62f2d939de32af6df39a06a";
+  "e79aec7b96eb8114e85ebcb90f0a8b12076bcd8aa08c09bb88929621e1c1446d";
 
 const STRUCTURE_CAPABILITIES = Object.freeze({
   declarations: "required",

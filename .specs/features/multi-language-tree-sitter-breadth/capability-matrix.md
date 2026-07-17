@@ -1,6 +1,8 @@
 # Multi-Language Tree-sitter Capability and Native Feasibility Matrix
 
-**Status:** TASK-001 and TASK-002 PASS on macOS arm64 with exact Bun 1.3.0
+> **Native Runtime Re-baseline (2026-07-16):** the active native runtime is Bun `1.3.11` with Node `25.9.0` (npm `11.14.1`) as the build-only `node-gyp` helper, and the `tree-sitter` patch SHA is `e79aec7b96eb8114e85ebcb90f0a8b12076bcd8aa08c09bb88929621e1c1446d` (adds a C++20 `binding.gyp` and an install-guard). These supersede earlier Bun `1.3.0`/Node `22.22.2`/npm `10.9.7`/patch `b0f73d00…` mentions below, which remain as historical measurement evidence. See `gate-manifest.md` → "Native Runtime Re-baseline" for re-validated gates.
+
+**Status:** TASK-001 and TASK-002 PASS on macOS arm64; re-baselined to Bun `1.3.11`/Node `25.9.0` on 2026-07-16 (originally exact Bun `1.3.0`)
 **Canonical source:** `packages/shared/src/config/index.ts` (`DEFAULT_ALLOWED_EXTENSIONS`)  
 **Legend:** `R` required and tested; `F` forbidden false positive; `U` unsupported/no output; `E` embedded-child capability.
 

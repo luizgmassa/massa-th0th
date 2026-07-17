@@ -1,5 +1,7 @@
 # Multi-Language Tree-sitter Breadth Design
 
+> **Native Runtime Re-baseline (2026-07-16):** the active native runtime is Bun `1.3.11` with Node `25.9.0` (npm `11.14.1`) as the build-only helper and the `tree-sitter` patch SHA `e79aec7b96eb8114e85ebcb90f0a8b12076bcd8aa08c09bb88929621e1c1446d` (C++20 `binding.gyp` + install-guard). Earlier Bun `1.3.0`/Node `22.22.2` mentions below are historical; see `gate-manifest.md` → "Native Runtime Re-baseline".
+
 **Spec:** `.specs/features/multi-language-tree-sitter-breadth/spec.md`  
 **Context:** `.specs/features/multi-language-tree-sitter-breadth/context.md`  
 **Status:** Approved by supplied plan plus completed full pre-mortem revisions

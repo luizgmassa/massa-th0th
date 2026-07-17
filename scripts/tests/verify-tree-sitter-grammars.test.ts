@@ -35,8 +35,8 @@ describe("native Tree-sitter package contract", () => {
     assertRuntimeTarget();
     const result = verifyStaticContract();
 
-    expect(EXPECTED_BUN_VERSION).toBe("1.3.0");
-    expect(EXPECTED_NODE_BUILD_VERSION).toBe("22.22.2");
+    expect(EXPECTED_BUN_VERSION).toBe("1.3.11");
+    expect(EXPECTED_NODE_BUILD_VERSION).toBe("25.9.0");
     expect(EXPECTED_NATIVE_MODULE_ABI).toBe(137);
     expect(Object.keys(NATIVE_DEPENDENCIES)).toHaveLength(27);
     expect(Object.keys(NATIVE_LOCK_IDENTITIES)).toHaveLength(27);
@@ -52,7 +52,7 @@ describe("native Tree-sitter package contract", () => {
     expect(TREE_SITTER_PATCH).toEqual({
       package: "tree-sitter@0.25.0",
       path: "patches/tree-sitter@0.25.0.patch",
-      sha256: "b0f73d0031e70f3585fca701076e1c6a05c30968b62f2d939de32af6df39a06a",
+      sha256: "e79aec7b96eb8114e85ebcb90f0a8b12076bcd8aa08c09bb88929621e1c1446d",
     });
   });
 
@@ -146,7 +146,7 @@ describe("native Tree-sitter package contract", () => {
     expect(consumers.source).toMatchObject({
       status: "PASS",
       consumer: "source",
-      bun: "1.3.0",
+      bun: "1.3.11",
       entryImported: true,
       resolvable: 27,
       parses: 33,
@@ -156,7 +156,7 @@ describe("native Tree-sitter package contract", () => {
     expect(consumers.dist).toMatchObject({
       status: "PASS",
       consumer: "dist",
-      bun: "1.3.0",
+      bun: "1.3.11",
       entryImported: true,
       resolvable: 27,
       parses: 33,
@@ -183,7 +183,7 @@ describe("native Tree-sitter package contract", () => {
   test("guards every patched post-delete behavior in a cold child", () => {
     const behavior = verifyPatchBehaviorProcess();
     expect(behavior.status).toBe("PASS");
-    expect(behavior.bun).toBe("1.3.0");
+    expect(behavior.bun).toBe("1.3.11");
     expect(behavior.sensors.doubleDelete).toBe(true);
     expect(behavior.sensors.cachedNode).toContain("Argument must be a live tree");
     expect(behavior.sensors.query).toContain("Missing argument tree");

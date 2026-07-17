@@ -1,7 +1,7 @@
 # Multi-Language Tree-sitter Breadth Gate Manifest
 
 **Workflow session:** `spec-multi-language`  
-**Feature status:** Execute active; TASK-001 through TASK-022 PASS; TASK-023 READY
+**Feature status:** Execute in progress; native runtime re-baselined to Bun `1.3.11`/Node `25.9.0` (npm `11.14.1`) on 2026-07-16; TASK-001 through TASK-023 PASS
 **Baseline commit:** `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`  
 **Baseline worktree:** supplied `plan-multi-language.md` was the only user-owned untracked file before feature artifact creation.
 
@@ -777,3 +777,23 @@ These draft checksums are retained as failed-review evidence and are not an acti
 - Exact owned sequential E2E command: `RUN_E2E=1 MASSA_TH0TH_DEDICATED=1 MASSA_TH0TH_API_URL=http://127.0.0.1:3334 MASSA_TH0TH_E2E_PROJECT_PATH=<frozen-qwen-sparse-root> DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/e2e/02.indexing.test.ts packages/core/src/__tests__/e2e/09.symbol-graph.test.ts packages/core/src/__tests__/e2e/15.nfr.test.ts` — PASS, 41 tests, 664 assertions, zero failures, and one explained N18 auth-on skip because the owned server is intentionally auth-off. Focused `02.indexing` rerun — PASS, 7 tests, 249 assertions.
 - Final regression gates: static routing/native slice — PASS, 20 tests, 278 assertions, with seven expected `RUN_E2E`-off skips; type-check — PASS, 6/6 packages; build — PASS, 5/5 tasks; `git diff --check` — PASS.
 - Independent read-only review: initial P1 findings covered missing nonterminal lifecycle evidence, tautological tier assertions, missing modern MCP parity, FIFO cleanup, omitted qwen sentinels, and weak N14 assertions. Remediation added deterministic lifecycle gates, real tier-specific edges, exact modern/legacy transport parity, owned FIFO cleanup, complete sparse support, and exact unresolved-target checks. Final re-review found one remaining stale-failure race; first-read/33-of-33 synchronization and exact `graph_generation_stale_snapshot` assertion closed it. Independent final verdict: PASS with no remaining P0-P2 finding.
+
+## Native Runtime Re-baseline (2026-07-16)
+
+User directive switched the native runtime to Bun `1.3.11` and Node `25.9.0` (npm `11.14.1`). Node 25.2.2 was requested but is not a real release; the closest real, locally-installed Node 25.x (25.9.0) was selected and user-confirmed. The prior network approval block cleared, so the TASK-023 empty-cache packed-consumer install now runs and exposed two real defects, both remediated in the `tree-sitter` patch (SHA `b0f73d0031e70f3585fca701076e1c6a05c30968b62f2d939de32af6df39a06a` → `e79aec7b96eb8114e85ebcb90f0a8b12076bcd8aa08c09bb88929621e1c1446d`):
+
+- **C++20 build:** Node 25 headers require C++20 while `tree-sitter@0.25.0` declared C++17 (20 compile errors under Node 25.9.0). The patch sets `binding.gyp` (`-std=c++20`, `CLANG_CXX_LANGUAGE_STANDARD`, `/std:c++20`) so the addon compiles and links under the Node 25.9.0 `node-gyp` helper; a from-source rebuild loads and parses under Node 25.9.0.
+- **Consumer install guard:** the bundled `tree-sitter` `install` script (`node-gyp-build`) fell back to a missing `node-gyp` in consumers (ENOENT). The patch adds `install-guard.js` (declared in `files`, invoked by the `install` script) that no-ops when the prebuilt `build/Release/tree_sitter_runtime_binding.node` is present and falls back to the upstream `node-gyp-build` only for fresh source builds.
+- **Bundled-runtime staging:** bun hoists `tree-sitter` to the workspace root, but `npm pack` only bundles dependencies physically present in the workspace package's own `node_modules`. The package verifier materializes the patched runtime into `packages/core/node_modules/tree-sitter` before packing (the pack runs with `--ignore-scripts`, so no `prepack` can stage it), mirroring the staging a publisher performs.
+
+Re-validated foundation under Bun `1.3.11`/Node `25.9.0`: cold reinstall (389 packages, patch applied, addon built from source under Node 25.9.0+C++20); `verify:tree-sitter-source-dist` PASS — 33+33 parses, 27+27 native modules, 54 linkage checks, 10 behavior sensors, RSS patched median delta 991,232 bytes (< 16 MiB) vs 125 MiB no-delete control, missing/incompatible sensors, patch SHA `e79aec7b…`; focused verifier tests 14/14; type-check 6/6; build 5/5.
+
+## TASK-023 Accepted Gate Evidence (2026-07-16)
+
+- Platform/scope: macOS arm64 only; exact Bun `1.3.11`; Node `25.9.0`; npm `11.14.1`. No Linux, Docker, container, or non-arm64 implementation.
+- Exact command: prepend `~/.nvm/versions/node/v25.9.0/bin` to `PATH` and run `bun run verify:tree-sitter-package` under Bun `1.3.11`.
+- PASS JSON: `target darwin-arm64`, `bun 1.3.11`, `node 25.9.0`, `npm 11.14.1`, `sharedVersion/coreVersion 1.0.0`, pack order shared→core, fresh npm and Bun caches, publish semver, bundled runtime addon `package/node_modules/tree-sitter/build/Release/tree_sitter_runtime_binding.node`, nested runtime `tree-sitter`, `extensions 33`, `nativeModules 27`, `nativePackagePaths 27`, `behaviorSensors 10`, `trustedDependencies 27`.
+- The empty-cache Bun consumer install of the packed shared/core tarballs resolved the full dependency closure (registry + pinned Dart/Erlang Git tarballs), the consumer resolved the exact nested patched runtime (not hoisted/stock/alternate), parsed all 33 extensions, loaded 27 modules from 27 expected roots, ran ten disposal/lifetime sensors, and confirmed Mach-O arm64/system-only linkage.
+- Focused verifier tests 14/14; type-check 6/6; build 5/5; `git diff --check` PASS.
+- Independent read-only review: PASS (recorded separately).
+- Commit: `build(parser): verify macos native artifacts`.

@@ -29,7 +29,9 @@
     "test:scripts": "bash scripts/tests/test-wsl-ip-detection.sh",
     "diagnose": "bun scripts/diagnose.ts",
     "version:sync": "bun scripts/version-sync.ts",
-    "verify:tree-sitter-native": "bun scripts/verify-tree-sitter-grammars.ts"
+    "verify:tree-sitter-source-dist": "bun scripts/verify-tree-sitter-grammars.ts",
+    "verify:tree-sitter-package": "bun scripts/verify-tree-sitter-package-artifact.ts",
+    "verify:tree-sitter-native": "bun scripts/verify-tree-sitter-grammars.ts && bun scripts/verify-tree-sitter-package-artifact.ts"
   },
   "keywords": [
     "mcp",
@@ -54,7 +56,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "packageManager": "bun@1.3.0",
+  "packageManager": "bun@1.3.11",
   "trustedDependencies": [
     "@tree-sitter-grammars/tree-sitter-kotlin",
     "@tree-sitter-grammars/tree-sitter-lua",

@@ -7,14 +7,14 @@ import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { flattenDiagnosticMessageText, parseConfigFileTextToJson } from "typescript";
 
-export const EXPECTED_BUN_VERSION = "1.3.0";
-export const EXPECTED_NODE_BUILD_VERSION = "22.22.2";
+export const EXPECTED_BUN_VERSION = "1.3.11";
+export const EXPECTED_NODE_BUILD_VERSION = "25.9.0";
 export const EXPECTED_NATIVE_MODULE_ABI = 137;
 export const EXPECTED_NATIVE_MODULE_COUNT = 27;
 export const TREE_SITTER_PATCH = Object.freeze({
   package: "tree-sitter@0.25.0",
   path: "patches/tree-sitter@0.25.0.patch",
-  sha256: "b0f73d0031e70f3585fca701076e1c6a05c30968b62f2d939de32af6df39a06a",
+  sha256: "e79aec7b96eb8114e85ebcb90f0a8b12076bcd8aa08c09bb88929621e1c1446d",
 });
 const RSS_DISCRIMINATION_BYTES = 16 * 1024 * 1024;
 const RSS_SENSOR_CYCLES = 100;
@@ -365,11 +365,27 @@ export interface RssSensorResult {
   patchedRuntimeModule: string;
 }
 
+export interface PackedConsumerVerificationResult {
+  status: "PASS";
+  consumer: "packed";
+  pid: number;
+  bun: string;
+  entry: string;
+  resolvable: number;
+  parses: number;
+  nativeModules: number;
+  nativePackagePaths: number;
+  patchedRuntimePackage: string;
+  patchedRuntimeModule: string;
+  behaviorSensors: number;
+}
+
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const CONSUMER_RESULT_PREFIX = "TREE_SITTER_CONSUMER_RESULT=";
 const BEHAVIOR_RESULT_PREFIX = "TREE_SITTER_BEHAVIOR_RESULT=";
 const RSS_RESULT_PREFIX = "TREE_SITTER_RSS_RESULT=";
+export const PACKED_CONSUMER_RESULT_PREFIX = "TREE_SITTER_PACKED_CONSUMER_RESULT=";
 export const CORE_CONSUMER_ENTRIES: Readonly<Record<ConsumerKind, string>> = Object.freeze({
   source: resolve(ROOT, "packages/core/src/index.ts"),
   dist: resolve(ROOT, "packages/core/dist/index.js"),
@@ -564,8 +580,18 @@ export function verifyStaticContract(): {
   invariant(rootPackage.packageManager === `bun@${EXPECTED_BUN_VERSION}`, "root Bun pin drifted");
   invariant(
     rootPackage.scripts?.["verify:tree-sitter-native"] ===
-      "bun scripts/verify-tree-sitter-grammars.ts",
+      "bun scripts/verify-tree-sitter-grammars.ts && bun scripts/verify-tree-sitter-package-artifact.ts",
     "root native verifier script drifted",
+  );
+  invariant(
+    rootPackage.scripts?.["verify:tree-sitter-source-dist"] ===
+      "bun scripts/verify-tree-sitter-grammars.ts",
+    "root source/dist native verifier script drifted",
+  );
+  invariant(
+    rootPackage.scripts?.["verify:tree-sitter-package"] ===
+      "bun scripts/verify-tree-sitter-package-artifact.ts",
+    "root packed-package native verifier script drifted",
   );
   invariant(
     readFileSync(resolve(ROOT, ".node-version"), "utf8").trim() === EXPECTED_NODE_BUILD_VERSION,
@@ -723,7 +749,7 @@ async function loadNativeGrammarSet(requireFromConsumer: Require): Promise<Loade
 }
 
 function verifyConsumerResolution(
-  consumer: ConsumerKind,
+  consumer: ConsumerKind | "packed",
   requireFromConsumer: Require,
 ): number {
   for (const packageName of TRUSTED_NATIVE_PACKAGES) {
@@ -736,7 +762,7 @@ function verifyConsumerResolution(
 }
 
 function parseMinimalCase(
-  consumer: ConsumerKind,
+  consumer: ConsumerKind | "packed",
   loaded: LoadedGrammarSet,
   parseCase: MinimalParseCase,
 ): void {
@@ -764,7 +790,7 @@ function parseMinimalCase(
   }
 }
 
-function runMinimalParses(consumer: ConsumerKind, loaded: LoadedGrammarSet): number {
+function runMinimalParses(consumer: ConsumerKind | "packed", loaded: LoadedGrammarSet): number {
   let parsed = 0;
   for (const parseCase of MINIMAL_PARSE_CASES) {
     parseMinimalCase(consumer, loaded, parseCase);
@@ -844,6 +870,69 @@ function verifyPatchedRuntimeModule(
     `unexpected tree-sitter runtime module: ${runtimeModules[0]}`,
   );
   return runtimeModules[0];
+}
+
+function findPackageRoot(requireFromConsumer: Require, packageName: string): string {
+  let cursor = dirname(realpathSync(requireFromConsumer.resolve(packageName)));
+  while (true) {
+    const manifestPath = resolve(cursor, "package.json");
+    if (existsSync(manifestPath)) {
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { name?: string };
+      if (manifest.name === packageName) return realpathSync(cursor);
+    }
+    const parent = dirname(cursor);
+    invariant(parent !== cursor, `could not locate package root for ${packageName}`);
+    cursor = parent;
+  }
+}
+
+function verifyExactNativePackagePaths(
+  requireFromConsumer: Require,
+  nativeModules: readonly string[],
+  expectedRuntimePackage: string,
+): { packagePaths: number; runtimePackage: string; runtimeModule: string } {
+  const roots = new Map(
+    TRUSTED_NATIVE_PACKAGES.map((packageName) => [
+      packageName,
+      findPackageRoot(requireFromConsumer, packageName),
+    ]),
+  );
+  const runtimePackage = roots.get("tree-sitter");
+  invariant(runtimePackage, "packed consumer tree-sitter package root is missing");
+  invariant(
+    runtimePackage === realpathSync(expectedRuntimePackage),
+    `packed consumer resolved tree-sitter from ${runtimePackage}, expected ${expectedRuntimePackage}`,
+  );
+
+  const matchedPackages = new Set<string>();
+  for (const nativeModule of nativeModules) {
+    const owners = [...roots.entries()].filter(([, root]) =>
+      nativeModule.startsWith(`${root}${sep}`)
+    );
+    invariant(
+      owners.length === 1,
+      `${nativeModule} belongs to ${owners.length} audited package roots`,
+    );
+    matchedPackages.add(owners[0][0]);
+  }
+  invariant(
+    matchedPackages.size === TRUSTED_NATIVE_PACKAGES.length,
+    `native inventory covered ${matchedPackages.size}/${TRUSTED_NATIVE_PACKAGES.length} audited packages`,
+  );
+
+  const runtimeModule = verifyPatchedRuntimeModule(requireFromConsumer, nativeModules);
+  const expectedRuntimeModule = realpathSync(
+    resolve(runtimePackage, "build/Release/tree_sitter_runtime_binding.node"),
+  );
+  invariant(
+    runtimeModule === expectedRuntimeModule,
+    `packed consumer loaded alternate tree-sitter addon ${runtimeModule}`,
+  );
+  return {
+    packagePaths: matchedPackages.size,
+    runtimePackage,
+    runtimeModule,
+  };
 }
 
 export function assertCompatibleNativeAbi(
@@ -936,17 +1025,11 @@ function assertImmutableTreeOwner(
   invariant(target.tree === expectedTree, `${sensor} owner substitution succeeded`);
 }
 
-async function verifyPatchBehaviorInCurrentProcess(): Promise<PatchBehaviorResult> {
-  assertRuntimeTarget();
-  const entry = realpathSync(verifyConsumerEntries().source);
-  await import(pathToFileURL(entry).href);
-  const requireFromConsumer = createRequire(pathToFileURL(entry));
-  const baselineNativeModules = new Set(currentNativeModules(requireFromConsumer));
+async function verifyPatchBehaviorForRequire(
+  requireFromConsumer: Require,
+  patchedRuntimeModule: string,
+): Promise<PatchBehaviorResult> {
   const { Parser, language } = await loadJavascriptRuntime(requireFromConsumer);
-  const runtimeModules = currentNativeModules(requireFromConsumer).filter(
-    (path) => !baselineNativeModules.has(path),
-  );
-  const patchedRuntimeModule = verifyPatchedRuntimeModule(requireFromConsumer, runtimeModules);
   const parser = new Parser();
   parser.setLanguage(language);
 
@@ -1094,6 +1177,20 @@ async function verifyPatchBehaviorInCurrentProcess(): Promise<PatchBehaviorResul
   };
 }
 
+async function verifyPatchBehaviorInCurrentProcess(): Promise<PatchBehaviorResult> {
+  assertRuntimeTarget();
+  const entry = realpathSync(verifyConsumerEntries().source);
+  await import(pathToFileURL(entry).href);
+  const requireFromConsumer = createRequire(pathToFileURL(entry));
+  const baselineNativeModules = new Set(currentNativeModules(requireFromConsumer));
+  await loadJavascriptRuntime(requireFromConsumer);
+  const runtimeModules = currentNativeModules(requireFromConsumer).filter(
+    (path) => !baselineNativeModules.has(path),
+  );
+  const patchedRuntimeModule = verifyPatchedRuntimeModule(requireFromConsumer, runtimeModules);
+  return verifyPatchBehaviorForRequire(requireFromConsumer, patchedRuntimeModule);
+}
+
 function median(values: readonly number[]): number {
   invariant(values.length > 0, "median requires at least one value");
   const ordered = [...values].sort((left, right) => left - right);
@@ -1211,6 +1308,46 @@ async function verifyConsumerInCurrentProcess(
     parses,
     nativeModules: nativeModules.length,
     patchedRuntimeModule,
+  };
+}
+
+export async function verifyPackedConsumerInCurrentProcess(
+  entryPath: string,
+  expectedRuntimePackage: string,
+): Promise<PackedConsumerVerificationResult> {
+  assertRuntimeTarget();
+  const entry = realpathSync(entryPath);
+  invariant(statSync(entry).isFile(), `packed consumer entry is not a file: ${entry}`);
+  await import(pathToFileURL(entry).href);
+  const requireFromConsumer = createRequire(pathToFileURL(entry));
+  const baselineNativeModules = new Set(currentNativeModules(requireFromConsumer));
+  const resolvable = verifyConsumerResolution("packed", requireFromConsumer);
+  const loaded = await loadNativeGrammarSet(requireFromConsumer);
+  const parses = runMinimalParses("packed", loaded);
+  const nativeModules = verifyNativeLinkage(requireFromConsumer, baselineNativeModules);
+  const inventory = verifyExactNativePackagePaths(
+    requireFromConsumer,
+    nativeModules,
+    expectedRuntimePackage,
+  );
+  const behavior = await verifyPatchBehaviorForRequire(
+    requireFromConsumer,
+    inventory.runtimeModule,
+  );
+
+  return {
+    status: "PASS",
+    consumer: "packed",
+    pid: process.pid,
+    bun: process.versions.bun ?? "",
+    entry,
+    resolvable,
+    parses,
+    nativeModules: nativeModules.length,
+    nativePackagePaths: inventory.packagePaths,
+    patchedRuntimePackage: inventory.runtimePackage,
+    patchedRuntimeModule: inventory.runtimeModule,
+    behaviorSensors: Object.keys(behavior.sensors).length,
   };
 }
 
@@ -1408,8 +1545,19 @@ if (import.meta.main) {
     : undefined;
   const rssArgumentIndex = process.argv.indexOf("--rss-sensor");
   const requestedRssMode = rssArgumentIndex >= 0 ? process.argv[rssArgumentIndex + 1] : undefined;
+  const packedArgumentIndex = process.argv.indexOf("--packed-consumer");
+  const packedEntry = packedArgumentIndex >= 0 ? process.argv[packedArgumentIndex + 1] : undefined;
+  const packedRuntimePackage = packedArgumentIndex >= 0
+    ? process.argv[packedArgumentIndex + 2]
+    : undefined;
   let operation: Promise<void>;
-  if (requestedConsumer === "source" || requestedConsumer === "dist") {
+  if (packedEntry && packedRuntimePackage) {
+    operation = verifyPackedConsumerInCurrentProcess(packedEntry, packedRuntimePackage).then(
+      (result) => {
+        console.log(`${PACKED_CONSUMER_RESULT_PREFIX}${JSON.stringify(result)}`);
+      },
+    );
+  } else if (requestedConsumer === "source" || requestedConsumer === "dist") {
     operation = verifyConsumerInCurrentProcess(requestedConsumer).then((result) => {
       console.log(`${CONSUMER_RESULT_PREFIX}${JSON.stringify(result)}`);
     });

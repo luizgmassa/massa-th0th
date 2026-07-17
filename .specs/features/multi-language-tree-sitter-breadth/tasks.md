@@ -6,7 +6,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
-**Status:** TASK-001 through TASK-022 PASS; TASK-023 READY
+**Status:** TASK-001 through TASK-023 PASS; native runtime re-baselined to Bun `1.3.11`/Node `25.9.0` (npm `11.14.1`) on 2026-07-16
 
 ## Project Testing Guidelines Scan
 
@@ -353,9 +353,9 @@ Phase 7 Validate:
 
 ### T23 / TASK-023: Verify macOS arm64 package artifacts
 
-**Status:** READY.
+**Status:** PASS on 2026-07-16 after the native runtime re-baseline to Bun `1.3.11`/Node `25.9.0`. The network approval block cleared, so the mandatory empty-cache packed-consumer install ran. Two defects were fixed in the `tree-sitter` patch (now SHA `e79aec7b…`): the `binding.gyp` C++ standard moved to C++20 (Node 25 headers) and an install-guard no-ops when the prebuilt addon is present so consumers without a build toolchain install cleanly. The package verifier materializes the hoisted patched runtime into `packages/core/node_modules` before `npm pack` so the core tarball bundles the exact nested patched runtime. Exact Bun `1.3.0`/Node `22.22.2`/npm `10.9.7` history is retained as prior evidence.
 
-**What:** With exact Node `22.22.2`/npm `10.9.7`, pack shared then core and prove clean source, built `dist`, and packed-package native grammar link/load/parse/disposal on macOS arm64 with only audited lifecycle scripts trusted. Prove the tarball contains the generated arm64 addon and resolves the exact nested patched `tree-sitter` runtime rather than stock or hoisted code.  
+**What:** With exact Node `25.9.0`/npm `11.14.1`, pack shared then core and prove clean source, built `dist`, and packed-package native grammar link/load/parse/disposal on macOS arm64 with only audited lifecycle scripts trusted. Prove the tarball contains the generated arm64 addon and resolves the exact nested patched `tree-sitter` runtime rather than stock or hoisted code.
 **Where:** package manifests/scripts, packed-artifact helpers, native verifier tests.  
 **Depends on:** T2,T5,T15,T16,T17,T18,T19. **Requirements:** MLTS-002-004,020.  
 **Tests:** Clean-cache source/dist/packed-package parse, disposal, publish-manifest semver, exact loaded-module path, generated-addon presence, and arm64 linkage. **Gate:** Native + Build.  
