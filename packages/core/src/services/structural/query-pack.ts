@@ -427,18 +427,32 @@ function buildSymbols(
   drafts.sort((left, right) =>
     left.node.startIndex - right.node.startIndex || right.node.endIndex - left.node.endIndex,
   );
-  for (const draft of drafts) {
-    let parent: SymbolDraft | undefined;
-    for (const candidate of drafts) {
-      if (candidate === draft) continue;
-      if (candidate.kind !== "export" && candidate.kind !== "constructor" && candidate.node.startIndex <= draft.node.startIndex && candidate.node.endIndex >= draft.node.endIndex) {
-        if (!parent || candidate.node.endIndex - candidate.node.startIndex < parent.node.endIndex - parent.node.startIndex) {
-          parent = candidate;
+  // Precompute each draft's byte range once. The wrapped capture node's
+  // startIndex/endIndex are getter-backed byte-offset computations; resolving
+  // them inside the O(drafts^2) parent scan re-runs that work on every
+  // comparison. Containment is monotonic, so the precomputed byte ranges
+  // identify the same smallest-enclosing parent.
+  const draftRanges = drafts.map((draft) => ({ start: draft.node.startIndex, end: draft.node.endIndex }));
+  for (let i = 0; i < drafts.length; i += 1) {
+    const draft = drafts[i]!;
+    const draftRange = draftRanges[i]!;
+    let parentIndex = -1;
+    for (let j = 0; j < drafts.length; j += 1) {
+      if (j === i) continue;
+      const candidate = drafts[j]!;
+      if (candidate.kind === "export" || candidate.kind === "constructor") continue;
+      const candidateRange = draftRanges[j]!;
+      if (candidateRange.start <= draftRange.start && candidateRange.end >= draftRange.end) {
+        if (parentIndex === -1 || candidateRange.end - candidateRange.start < draftRanges[parentIndex]!.end - draftRanges[parentIndex]!.start) {
+          parentIndex = j;
         }
       }
     }
-    draft.qualifiedName = parent ? `${parent.qualifiedName}.${draft.name}` : draft.name;
+    draft.qualifiedName = parentIndex >= 0 ? `${drafts[parentIndex]!.qualifiedName}.${draft.name}` : draft.name;
   }
+  // Precompute the documentation captures once; the per-draft filter below
+  // would otherwise allocate + scan every capture for every symbol.
+  const documentationCaptures = captures.filter((capture) => capture.name === "documentation");
   let symbols = drafts.map((draft) => {
     const nameNode = field(draft.node, "name") ?? field(draft.node, "property") ??
       (["pair", "block_mapping_pair", "flow_pair"].includes(draft.node.type) ? field(draft.node, "key") : undefined) ??
@@ -448,8 +462,7 @@ function buildSymbols(
       : draft.node.type === "type_spec" && draft.node.parent?.type === "type_declaration"
         ? draft.node.parent.startIndex
       : draft.node.startIndex;
-    const capturedDocumentation = captures
-      .filter((capture) => capture.name === "documentation")
+    const capturedDocumentation = documentationCaptures
       .find((capture) => {
         if (capture.node.startIndex >= draft.node.startIndex && capture.node.endIndex <= draft.node.endIndex) {
           return family === "python" && !captures.some((item) =>
@@ -473,7 +486,7 @@ function buildSymbols(
       });
     const documentation = includeDocumentation
       ? capturedDocumentation ? family === "elixir"
-        ? captures.filter((item) => item.name === "documentation" && item.node.startIndex >= capturedDocumentation.node.startIndex && item.node.endIndex <= documentationStart)
+        ? documentationCaptures.filter((item) => item.node.startIndex >= capturedDocumentation.node.startIndex && item.node.endIndex <= documentationStart)
           .map((item) => text(source, item.node).trim()).join("\n")
         : text(source, capturedDocumentation.node).trim() : family === "typescript"
         ? leadingDocumentation(source, documentationStart)
@@ -1169,6 +1182,13 @@ function collectEmbeddedChildren(
   source: Buffer,
   context: StructuralQueryContext,
 ): void {
+  // Only Vue and Markdown host embedded child languages. Walking the full AST
+  // (via the byte-wrapping adapter, which materializes a wrapper per node) for
+  // every other family is pure waste on the hot parse path, so skip it entirely
+  // unless this pack actually declares embedded children.
+  if (pack.family !== "vue" && pack.family !== "markdown") {
+    return;
+  }
   const root = tree.rootNode as NativeQueryNode;
   const nodes = [root, ...descendants(root)];
   if (pack.family === "vue") {
