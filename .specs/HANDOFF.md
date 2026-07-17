@@ -56,7 +56,7 @@ The network approval block cleared. User directive switched the native runtime t
 
 ## Exact Next Step
 
-Commit the native runtime re-baseline (`build(parser): re-baseline native runtime to bun 1.3.11 and node 25.9.0`), then run TASK-023 independent review and commit `build(parser): verify macos native artifacts`. Continue TASK-024 (frozen macOS arm64 CI), TASK-025 (parser benchmark), and TASK-026 (docs) under Bun `1.3.11`/Node `25.9.0`, each with its declared commit and independent verification.
+TASK-023 (`build(parser): verify macos native artifacts`) and the native runtime re-baseline are committed (the re-baseline is folded into the same commit because it is entangled with TASK-023 in shared files). TASK-024 (`ci(parser): gate macos native grammars`) adds the frozen macOS arm64 CI workflow + static test + baseline non-touch sensor. Continue TASK-025 (frozen parser benchmark + explicit-disposal stress) and TASK-026 (docs) under Bun `1.3.11`/Node `25.9.0`, each with its declared commit and independent verification.
 
 ## Worktree and Safety
 

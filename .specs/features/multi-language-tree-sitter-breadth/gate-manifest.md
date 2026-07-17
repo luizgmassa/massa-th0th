@@ -797,3 +797,12 @@ Re-validated foundation under Bun `1.3.11`/Node `25.9.0`: cold reinstall (389 pa
 - Focused verifier tests 14/14; type-check 6/6; build 5/5; `git diff --check` PASS.
 - Independent read-only review: PASS (recorded separately).
 - Commit: `build(parser): verify macos native artifacts`.
+
+## TASK-024 Accepted Gate Evidence (2026-07-16)
+
+- Platform/scope: macOS arm64 only; additive CI workflow. No pre-existing workflow, container, or non-arm64 path modified.
+- Artifact: `.github/workflows/native-macos-arm64.yml` — `runs-on: macos-14` (Apple Silicon); pins Bun `1.3.11` (oven-sh/setup-bun@v2) and Node `25.9.0`/npm `11.14.1` (actions/setup-node@v4); inline exact-version guards; `bun install --frozen-lockfile`; `bun run build`; `bun run verify:tree-sitter-native`; uploads `native-macos-arm64-verification.log` via actions/upload-artifact@v4 with `if: always()` and `if-no-files-found: error`. Triggers: push/PR to main + workflow_dispatch.
+- Static gate: `scripts/tests/native-macos-arm64-workflow.test.ts` — asserts exact runtime/build-helper pins, macos-14-only target (rejects ubuntu/macos-13/macos-12/windows), the frozen native verifier + provenance upload, and a baseline non-touch sensor over `5d43a96..HEAD` rejecting feature changes to `Dockerfile`, `.dockerignore`, `docker-compose.*`, `docker/**`, and the four pre-existing workflows. Static test 3 pass / 0 fail.
+- type-check 6/6; build 5/5 (real, turbo cache cleared); `git diff --check` PASS.
+- Independent read-only review: VERDICT PASS, no findings; throwaway drift sensor confirmed the static test catches Bun-version and runs-on regressions.
+- Commit: `ci(parser): gate macos native grammars`.

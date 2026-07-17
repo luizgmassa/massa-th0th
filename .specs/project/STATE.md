@@ -7,7 +7,7 @@
 - workflow: spec-driven
 - persona: AI Engineer
 - feature: `multi-language-tree-sitter-breadth`
-- status: EXECUTE in progress; native runtime re-baselined to Bun `1.3.11` + Node `25.9.0` (npm `11.14.1`); TASK-001 through TASK-023 PASS; TASK-024 next
+- status: EXECUTE in progress; native runtime re-baselined to Bun `1.3.11` + Node `25.9.0` (npm `11.14.1`); TASK-001 through TASK-024 PASS; TASK-025 next
 - branch: `main`
 - baseline: `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`
 - push: not attempted

@@ -364,6 +364,8 @@ Phase 7 Validate:
 
 ### T24 / TASK-024: Add frozen macOS arm64 CI and publish gates
 
+**Status:** PASS on 2026-07-16. Added `.github/workflows/native-macos-arm64.yml` (additive; `runs-on: macos-14`, Bun `1.3.11`, Node `25.9.0`/npm `11.14.1`, frozen install, build, `verify:tree-sitter-native`, provenance artifact upload) and `scripts/tests/native-macos-arm64-workflow.test.ts` (workflow structure assertions + baseline non-touch sensor over `5d43a96..HEAD`). Static test 3/3; type-check 6/6; build 5/5; `git diff --check` PASS. No pre-existing workflow, container, or non-arm64 path modified. Independent read-only review PASS.
+
 **What:** Pin exact Bun for the native check; add a dedicated macOS arm64 smoke with provenance/linkage artifacts while leaving every pre-existing workflow and platform job unchanged.  
 **Where:** new `.github/workflows/native-macos-arm64.yml`, scripts/config tests.  
 **Depends on:** T23. **Requirements:** MLTS-002,020-021.  
