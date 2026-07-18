@@ -21,7 +21,7 @@
 
 services:
   postgres:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:pg17
     container_name: massa-th0th-postgres
     restart: unless-stopped
     ports:
