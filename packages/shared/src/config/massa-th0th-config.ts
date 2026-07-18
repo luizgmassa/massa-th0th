@@ -115,6 +115,12 @@ export interface MassaTh0thConfig {
     };
   };
   synapse: SynapseConfig;
+  // Cross-session handoffs (Phase 6). begin/accept/cancel have no LLM dep; the
+  // optional summary-polish inherits the top-level `llm.enabled` gate. Mirrors the
+  // runtime ServerConfig declaration (config/index.ts).
+  handoffs: {
+    enabled: boolean;
+  };
   // NOTE: `scheduler` is intentionally NOT a config key — it is env-driven
   // (MASSA_TH0TH_SCHEDULER_ENABLED + job-stale/reaper env vars). Do not add it.
 }
@@ -310,5 +316,8 @@ export const defaultMassaTh0thConfig: MassaTh0thConfig = {
       hitBoost: 1.3,
       matchThreshold: 0.4,
     },
+  },
+  handoffs: {
+    enabled: true,
   },
 };
