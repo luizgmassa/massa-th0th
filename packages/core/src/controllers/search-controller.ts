@@ -48,6 +48,19 @@ export interface ProjectSearchResult {
     filteredResults: number;
   };
   results: FormattedResult[];
+  /**
+   * Admission preflight warning (Tier 2). Present only when the project is
+   * indexed but `isIndexStale` flagged it (files_changed / path_mismatch /
+   * age_threshold). Search still ran; callers MAY surface this to the user.
+   * Absent when fresh, or when no projectPath was supplied (stale check skipped).
+   */
+  warning?: string;
+  stale?: {
+    reason: string;
+    modifiedFiles?: number;
+    newFiles?: number;
+    deletedFiles?: number;
+  };
 }
 
 interface FormattedResult {
@@ -115,6 +128,20 @@ export class SearchController {
       autoReindex,
       explainScores,
     });
+
+    // Admission preflight (M10): two-tier gate before any retrieval.
+    //   Tier 1 — HARD-FAIL: no index metadata → throw, caller wraps as
+    //            success:false. Replaces the prior silent `results:[]` path.
+    //   Tier 2 — WARN: indexed but stale (needs projectPath) → search proceeds,
+    //            `staleWarning` attached to the returned result.
+    const admission = await this.contextualSearch.checkSearchAdmission(
+      projectId,
+      projectPath,
+    );
+    if (!admission.admitted) {
+      throw new Error(admission.error ?? `Project '${projectId}' is not indexed`);
+    }
+    const staleWarning = admission.stale ?? null;
 
     // Auto-reindex if requested
     let reindexInfo = null;
@@ -257,6 +284,12 @@ export class SearchController {
         filteredResults: filteredResults.length,
       },
       results: formattedResults,
+      ...(staleWarning
+        ? {
+            warning: `Index may be stale (reason: ${staleWarning.reason}). Results reflect the indexed snapshot, not the current files.`,
+            stale: staleWarning,
+          }
+        : {}),
     };
   }
 

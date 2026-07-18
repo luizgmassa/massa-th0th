@@ -295,9 +295,13 @@ export class IndexManager {
   }
 
   /**
-   * Get index metadata from vector store
+   * Get index metadata from vector store.
+   *
+   * Public so the search admission preflight can do a cheap existence check
+   * (Tier 1: unindexed → hard-fail) without a projectPath or filesystem scan.
+   * `isIndexStale` still owns the full filesystem-aware staleness check.
    */
-  private async getIndexMetadata(
+  async getIndexMetadata(
     projectId: string,
   ): Promise<IndexMetadata | null> {
     // Check cache first

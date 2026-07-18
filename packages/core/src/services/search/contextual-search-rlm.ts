@@ -491,6 +491,63 @@ export class ContextualSearchRLM {
   }
 
   /**
+   * Search admission preflight — two-tier gate run before `search()`.
+   *
+   * Tier 1 (HARD-FAIL): pure metadata-existence check, no projectPath needed.
+   *   Returns `{admitted:false, error}` when the project has no index metadata
+   *   at all. Caller MUST surface the error and NOT call `search()`.
+   *
+   * Tier 2 (WARN): only evaluated when `projectPath` is supplied (the staleness
+   *   check needs it). If metadata exists but `isIndexStale` reports any reason
+   *   (files_changed / path_mismatch / age_threshold), admission still succeeds
+   *   but a `stale` descriptor is attached for the caller to relay as a warning.
+   *   When `projectPath` is absent the stale check is skipped gracefully.
+   */
+  async checkSearchAdmission(
+    projectId: string,
+    projectPath?: string,
+  ): Promise<{
+    admitted: boolean;
+    error?: string;
+    stale?: {
+      reason: string;
+      modifiedFiles?: number;
+      newFiles?: number;
+      deletedFiles?: number;
+    };
+  }> {
+    await this.ensureInitialized();
+
+    const metadata = await this.indexManager.getIndexMetadata(projectId);
+    if (!metadata) {
+      return {
+        admitted: false,
+        error: `Project '${projectId}' is not indexed. Run index_project first, then retry.`,
+      };
+    }
+
+    if (projectPath) {
+      const staleCheck = await this.indexManager.isIndexStale(
+        projectId,
+        projectPath,
+      );
+      if (staleCheck.isStale) {
+        return {
+          admitted: true,
+          stale: {
+            reason: staleCheck.reason ?? "unknown",
+            modifiedFiles: staleCheck.modifiedFiles?.length,
+            newFiles: staleCheck.newFiles?.length,
+            deletedFiles: staleCheck.deletedFiles?.length,
+          },
+        };
+      }
+    }
+
+    return { admitted: true };
+  }
+
+  /**
    * Index a single file, splitting it into semantic chunks
    *
    * Uses the smart chunker which is language-aware:
