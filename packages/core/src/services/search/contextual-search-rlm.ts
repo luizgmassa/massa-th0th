@@ -67,6 +67,21 @@ import {
   correctQueryImpl,
   buildGraphStreamImpl,
 } from "./rlm-synapse.js";
+import {
+  searchImpl,
+  fuseResultsImpl,
+  generateScoreExplanationImpl,
+  addContextToResultsImpl,
+  extractPreviewImpl,
+  calculateAvgScoreImpl,
+  filterByPatternsImpl,
+} from "./rlm-search.js";
+import {
+  clearProjectIndexImpl,
+  getProjectStatsImpl,
+  warmupCacheImpl,
+  getAnalyticsImpl,
+} from "./rlm-admin.js";
 
 const globAsync = glob;
 
@@ -85,10 +100,13 @@ export class ContextualSearchRLM {
   searchCache!: Awaited<ReturnType<typeof getSearchCache>>;
   analytics!: Awaited<ReturnType<typeof getSearchAnalytics>>;
   symbolRepo!: Awaited<ReturnType<typeof getSymbolRepository>>;
-  private fileFilterCache: FileFilterCache;
+  // Visibility relaxed from `private` so rlm-admin.ts can read via rlm param.
+  fileFilterCache: FileFilterCache;
   /** Phase 2: query understanding (LLM rewrite + HyDE). Default-off, silent-degrade. */
-  private queryUnderstanding: QueryUnderstandingService;
-  private readonly RRF_K = 60; // Constant for Reciprocal Rank Fusion
+  // Visibility relaxed from `private` so rlm-search.ts can read via rlm param.
+  queryUnderstanding: QueryUnderstandingService;
+  // Visibility relaxed from `private` so rlm-search.ts (fuseResults) can read.
+  readonly RRF_K = 60; // Constant for Reciprocal Rank Fusion
   initialized = false;
 
   // Per-project mutex to prevent concurrent indexing
@@ -269,391 +287,15 @@ export class ContextualSearchRLM {
       sessionId?: string;
     } = {},
   ): Promise<SearchResult[]> {
-    await this.ensureInitialized();
-    const maxResults = options.maxResults ?? 10;
-    const minScore = options.minScore ?? 0.3;
-    const explainScores = options.explainScores || false;
-    const includeFilters = options.includeFilters;
-    const excludeFilters = options.excludeFilters;
-    const hasFileFilters =
-      (includeFilters?.length ?? 0) > 0 || (excludeFilters?.length ?? 0) > 0;
-    const retrievalLimit = hasFileFilters
-      ? Math.min(maxResults * 5, maxResults + 200)
-      : maxResults * 2;
-
-    // Honor an explicit maxResults:0 as "zero results" (previously `|| 10`
-    // coerced 0 → 10). Short-circuit here, BEFORE the cache probe and vector/
-    // keyword fan-out, so 0 doesn't do unnecessary work or hit a degenerate
-    // `maxResults * 2 === 0` vector call. Returns the same empty shape the
-    // function uses on a no-hit search / caught-error path.
-    if (maxResults <= 0) {
-      logger.debug("maxResults <= 0 — returning empty result set", {
-        query,
-        projectId,
-        maxResults,
-      });
-      return [];
-    }
-
-    // Embedding providers such as Ollama reject an empty input. Treat a blank
-    // query as the valid no-hit search the public API has historically
-    // advertised, and avoid fan-out to vector/keyword dependencies entirely.
-    if (!query.trim()) {
-      logger.debug("Blank query — returning empty result set", {
-        projectId,
-      });
-      return [];
-    }
-
-    const startTime = performance.now(); // Use performance.now() for sub-millisecond precision
-
-    logger.debug("Starting contextual search", {
-      query,
-      projectId,
-      maxResults,
-      explainScores,
-      includeFilters,
-      excludeFilters,
-      startTime, // Add startTime to logging
-    });
-
-    // Check cache first
-    const cacheOptions = {
-      maxResults,
-      minScore,
-      explainScores,
-      includeFilters,
-      excludeFilters,
-      retrievalWindow: "bounded-v1",
-    };
-    const cachedResults = await this.searchCache.get(
-      query,
-      projectId,
-      cacheOptions,
-    );
-
-    if (cachedResults) {
-      const endTime = performance.now();
-      const duration = Math.max(1, Math.round(endTime - startTime)); // Minimum 1ms to avoid 0ms for sub-ms operations
-
-      // DEBUG: Log all timing values to diagnose the issue
-      logger.debug("Cache hit timing details", {
-        startTime,
-        endTime,
-        duration,
-        calculatedDuration: endTime - startTime,
-        preciseMs: (endTime - startTime).toFixed(3),
-      });
-
-      // Track cache hit
-      this.analytics.trackSearch({
-        timestamp: Date.now(),
-        projectId,
-        query,
-        resultCount: cachedResults.length,
-        duration,
-        cacheHit: true,
-        score: this.calculateAvgScore(cachedResults),
-      });
-
-      logger.info("Cache hit - returning cached results", {
-        projectId,
-        resultCount: cachedResults.length,
-        duration,
-        durationMs: `${duration}ms`,
-        preciseMs: `${(endTime - startTime).toFixed(3)}ms`,
-      });
-      return this.applySynapseState(
-        cachedResults,
-        query,
-        projectId,
-        options.sessionId,
-      );
-    }
-
-    try {
-      const disableKeyword = process.env.SEARCH_DISABLE_KEYWORD === "true";
-
-      // ── Phase 2: query understanding (default-off, silent degrade) ──
-      // On any LLM throw/timeout/disabled, `understand()` returns null and we
-      // fall through silently to the original 2-stream path. This branch is
-      // also guarded by an outer try/catch so a defensive throw never escapes.
-      let resultSets: SearchResult[][] = [];
-      let usedQueryUnderstanding = false;
-      try {
-        const qu = config.get("search").queryUnderstanding;
-        if (qu?.enabled && query.trim()) {
-          const understood = await this.queryUnderstanding.understand(
-            query,
-            projectId,
-          );
-          if (understood) {
-            eventBus.publish("search:query-rewritten", {
-              query,
-              projectId,
-              expansions: understood.expansions,
-              keywords: understood.keywords,
-              hydeUsed: understood.hydeVector !== null,
-            });
-            const rewrittenFTS = buildRewrittenFTSQuery(
-              query,
-              understood.keywords,
-            );
-            const [v, k, h] = await Promise.all([
-              this.vectorStore.search(query, retrievalLimit, projectId),
-              disableKeyword
-                ? Promise.resolve([] as SearchResult[])
-                : this.keywordSearch
-                    .searchWithFilter(rewrittenFTS, { projectId }, retrievalLimit)
-                    .catch((err) => {
-                      logger.warn(
-                        "Keyword search (rewritten) failed — falling back to vector-only",
-                        { err: (err as Error).message },
-                      );
-                      return [] as SearchResult[];
-                    }),
-              understood.hydeVector
-                ? this.vectorStore.searchByEmbedding(
-                    understood.hydeVector,
-                    retrievalLimit,
-                    projectId,
-                  )
-                : Promise.resolve([]),
-            ]);
-            resultSets = understood.hydeVector ? [v, k, h] : [v, k];
-            usedQueryUnderstanding = true;
-
-            logger.debug("Query understanding fan-out", {
-              vectorCount: v.length,
-              keywordCount: k.length,
-              hydeCount: h.length,
-              hydeUsed: understood.hydeVector !== null,
-            });
-          }
-        }
-      } catch (e) {
-        logger.warn("query understanding failed — falling back to original path", {
-          err: (e as Error).message,
-        });
-        resultSets = [];
-        usedQueryUnderstanding = false;
-      }
-
-      if (!usedQueryUnderstanding) {
-        // ORIGINAL Phase-1 path, now with two additional lexical RRF streams:
-        // trigram (identifier-substring recall) and fuzzy-corrected keyword
-        // (Levenshtein correction over the per-store vocabulary). All four
-        // streams fuse via RRF; empty streams contribute nothing.
-        const fetchN = retrievalLimit;
-        const [vectorResults, keywordResults, trigramResults] =
-          await Promise.all([
-            this.vectorStore.search(query, fetchN, projectId),
-            disableKeyword
-              ? Promise.resolve([] as SearchResult[])
-              : this.keywordSearch
-                  .searchWithFilter(query, { projectId }, fetchN)
-                  .catch((err) => {
-                    logger.warn(
-                      "Keyword search failed — falling back to vector-only",
-                      { err: (err as Error).message },
-                    );
-                    return [] as SearchResult[];
-                  }),
-            // Trigram stream (best-effort; [] when tokenizer unavailable).
-            disableKeyword || !this.keywordSearch.searchTrigram
-              ? Promise.resolve([] as SearchResult[])
-              : this.keywordSearch
-                  .searchTrigram!(query, { projectId }, fetchN)
-                  .catch((err) => {
-                    logger.debug("Trigram search failed (non-fatal)", {
-                      err: (err as Error).message,
-                    });
-                    return [] as SearchResult[];
-                  }),
-          ]);
-
-        logger.debug("Search results retrieved", {
-          vectorCount: vectorResults.length,
-          keywordCount: keywordResults.length,
-          trigramCount: trigramResults.length,
-        });
-        resultSets = [vectorResults, keywordResults, trigramResults].filter(
-          (s) => s.length > 0,
-        );
-
-        // Fuzzy correction stream: if any query word corrects to a different
-        // vocabulary word, re-run keyword + trigram on the corrected query and
-        // add both as RRF streams. This recovers typos like "useEffct" →
-        // "useEffect" that porter/trigram miss. Best-effort; skipped when no
-        // correction applies or fuzzyCorrect is unavailable.
-        if (!disableKeyword && typeof this.keywordSearch.fuzzyCorrect === "function") {
-          const corrected = await this.correctQuery(query);
-          if (corrected && corrected !== query.toLowerCase().trim()) {
-            try {
-              const [fuzzyKeyword, fuzzyTrigram] = await Promise.all([
-                this.keywordSearch
-                  .searchWithFilter(corrected, { projectId }, fetchN)
-                  .catch(() => [] as SearchResult[]),
-                this.keywordSearch.searchTrigram
-                  ? this.keywordSearch
-                      .searchTrigram!(corrected, { projectId }, fetchN)
-                      .catch(() => [] as SearchResult[])
-                  : Promise.resolve([] as SearchResult[]),
-              ]);
-              if (fuzzyKeyword.length > 0) resultSets.push(fuzzyKeyword);
-              if (fuzzyTrigram.length > 0) resultSets.push(fuzzyTrigram);
-              logger.debug("Fuzzy correction stream added", {
-                corrected,
-                fuzzyKeywordCount: fuzzyKeyword.length,
-                fuzzyTrigramCount: fuzzyTrigram.length,
-              });
-            } catch (err) {
-              logger.debug("Fuzzy correction stream failed (non-fatal)", {
-                err: (err as Error).message,
-              });
-            }
-          }
-        }
-      }
-
-      // Phase 7c: graph-neighbor as an extra RRF stream. BFS depth-2 over
-      // outgoing memory-graph edges from the top-N vector-hit ids; resolved to
-      // SearchResults via the memory repo at a fixed sub-hit score (0.45) so
-      // RRF surfaces them mid-list. Silent-omit when empty/unavailable (the
-      // resultSets length — and thus the search:reranked streamCount — reflects
-      // the actual stream count). No graph-stream throw escapes this optional path.
-      const graphStream = await this.buildGraphStream(resultSets, maxResults, projectId);
-      if (graphStream.length > 0) {
-        resultSets = [...resultSets, graphStream];
-      }
-
-      // Combine results using RRF (with score explanation if requested)
-      const fusedResults = this.fuseResults(resultSets, query, explainScores);
-
-      // A2: proximity + title re-ranking pass (post-RRF, pre-filter). Stable
-      // re-rank on top of RRF: boosts results whose title contains query terms
-      // and whose body positions the terms close together; code chunks get a
-      // stronger title boost. Applied to a bounded candidate pool so the cost
-      // stays low; equally-boosted results keep their RRF order.
-      const rerankPool = Math.max(maxResults * 3, 20);
-      const rerankInput = fusedResults.slice(0, rerankPool);
-      const rerankedTop = applyProximityRerank(rerankInput, query);
-      const fusedReranked = [
-        ...rerankedTop,
-        ...fusedResults.slice(rerankPool),
-      ];
-
-      if (usedQueryUnderstanding) {
-        eventBus.publish("search:reranked", {
-          query,
-          projectId,
-          streamCount: resultSets.length,
-          resultCount: fusedResults.length,
-        });
-      }
-
-      // Apply file pattern filters if provided
-      // Note: For maximum efficiency, filters could be applied DURING vector/keyword search
-      // by pre-computing valid files. For now, we apply post-search but cache the filter computation.
-      let filteredByPattern = fusedReranked;
-      if (includeFilters || excludeFilters) {
-        const filterStartTime = performance.now();
-        filteredByPattern = this.filterByPatterns(
-          fusedReranked,
-          includeFilters,
-          excludeFilters,
-        );
-        const filterDuration = performance.now() - filterStartTime;
-
-        logger.debug("Applied file pattern filters", {
-          beforeFilter: fusedReranked.length,
-          afterFilter: filteredByPattern.length,
-          includePatterns: includeFilters,
-          excludePatterns: excludeFilters,
-          filterDurationMs: filterDuration.toFixed(2),
-        });
-      }
-
-      // Filter by minimum score and limit results.
-      //
-      // minScore is applied to the RAW vector similarity (cosine distance from
-      // the embedding model), not the normalized RRF score.  RRF normalization
-      // divides by the max score, so the top result always gets ~1.0 regardless
-      // of actual semantic relevance — making a score-based filter useless for
-      // noise rejection.  The raw vectorScore is an absolute measure (0–1) that
-      // is meaningful across queries.
-      //
-      // Keyword-only results (no vectorScore) fall back to the normalized score
-      // so they are still subject to some threshold.
-      const aboveThreshold = filteredByPattern
-        .filter((result) => {
-          const meta = result.metadata as Record<string, unknown>;
-          const rawVs = meta?._rrfRawVectorScore as number | undefined;
-          return rawVs !== undefined ? rawVs >= minScore : result.score >= minScore;
-        })
-        .map((result) => {
-          const { _rrfRawVectorScore, ...cleanMeta } = result.metadata as Record<string, unknown>;
-          return { ...result, metadata: cleanMeta };
-        });
-
-      const maxChunksPerFile = Number(process.env.RRF_MAX_CHUNKS_PER_FILE ?? "2");
-      const fileChunkCount = new Map<string, number>();
-      const filtered = maxChunksPerFile > 0
-        ? aboveThreshold.filter((r) => {
-            const fp = (r.metadata as Record<string, unknown>)?.filePath as string ?? r.id;
-            const count = fileChunkCount.get(fp) ?? 0;
-            if (count >= maxChunksPerFile) return false;
-            fileChunkCount.set(fp, count + 1);
-            return true;
-          }).slice(0, maxResults)
-        : aboveThreshold.slice(0, maxResults);
-
-      // Add context to results
-      const withContext = await this.addContextToResults(filtered, projectId);
-
-      // Cache the results
-      await this.searchCache.set(query, projectId, withContext, cacheOptions);
-
-      const duration = Math.round(performance.now() - startTime); // Use performance.now() for consistency
-
-      // Track cache miss
-      this.analytics.trackSearch({
-        timestamp: Date.now(),
-        projectId,
-        query,
-        resultCount: withContext.length,
-        duration,
-        cacheHit: false,
-        score: this.calculateAvgScore(withContext),
-      });
-
-      logger.info("Contextual search completed", {
-        projectId,
-        totalResults: withContext.length,
-        avgScore: this.calculateAvgScore(withContext),
-        duration,
-      });
-
-      return this.applySynapseState(
-        withContext,
-        query,
-        projectId,
-        options.sessionId,
-      );
-    } catch (error) {
-      logger.error("Contextual search failed", error as Error, {
-        query,
-        projectId,
-      });
-      throw error;
-    }
+    return searchImpl(this, query, projectId, options);
   }
 
   /**
    * Apply session state after the session-independent base result is cached.
    * Invalid and workspace-mismatched sessions return the exact base array.
    */
-  private async applySynapseState(
+  // Visibility relaxed from `private` so rlm-search.ts can call via rlm param.
+  async applySynapseState(
     baseResults: SearchResult[],
     query: string,
     projectId: string,
@@ -669,7 +311,8 @@ export class ContextualSearchRLM {
    * unavailable. Only words of length >= 3 are considered (shorter tokens
    * can't be reliably corrected).
    */
-  private async correctQuery(query: string): Promise<string | null> {
+  // Visibility relaxed from `private` so rlm-search.ts can call via rlm param.
+  async correctQuery(query: string): Promise<string | null> {
     return correctQueryImpl(this, query);
   }
 
@@ -693,7 +336,8 @@ export class ContextualSearchRLM {
    * appends the stream when non-empty, so `resultSets.length` (and thus the
    * `search:reranked` streamCount) always reflects the real stream count.
    */
-  private async buildGraphStream(
+  // Visibility relaxed from `private` so rlm-search.ts can call via rlm param.
+  async buildGraphStream(
     resultSets: SearchResult[][],
     maxResults: number,
     projectId?: string,
@@ -708,212 +352,20 @@ export class ContextualSearchRLM {
    * - Keywords get higher weight when query contains function/class names
    * - Exact matches in keyword results get additional boost
    */
-  private fuseResults(
+  // Visibility relaxed from `private` so rlm-search.ts can call via rlm param.
+  fuseResults(
     resultSets: SearchResult[][],
     query: string,
     explainScores: boolean = false,
   ): SearchResult[] {
-    const scoreMap = new Map<
-      string,
-      {
-        result: SearchResult;
-        rrfScore: number;
-        vectorRank?: number;
-        keywordRank?: number;
-        vectorScore?: number;
-        keywordScore?: number;
-        vectorRrfScore: number;
-        lexicalRrfScore: number;
-        memoryRrfScore: number;
-      }
-    >();
-
-    // Detect if query contains code-specific patterns (functions, classes, etc.)
-    const hasCodePattern = (text: string): boolean => {
-      const codePatterns = [
-        /\w+\(\)/, // function calls: cn(), useState()
-        /\bfunction\b/i, // "function" keyword
-        /\bclass\b/i, // "class" keyword
-        /\binterface\b/i, // "interface" keyword
-        /\benum\b/i, // "enum" keyword
-        /\btype\b/i, // "type" keyword
-        /\bconst\b/i, // "const" keyword
-        /\bimport\b/i, // "import" keyword
-        /\bexport\b/i, // "export" keyword
-      ];
-      return codePatterns.some((pattern) => pattern.test(text));
-    };
-
-    // Check if this is a code-focused query
-    const isCodeQuery = hasCodePattern(query);
-
-    // Keyword weight multiplier (higher = more weight to keyword results)
-    // For code queries: 2.5x boost to keyword matches
-    // For general queries: 1.0x (equal weight)
-    const codeKeywordBoostRaw = Number(process.env.RRF_KEYWORD_BOOST ?? "2.5");
-    const codeKeywordBoost = Number.isFinite(codeKeywordBoostRaw) && codeKeywordBoostRaw > 0 ? codeKeywordBoostRaw : 2.5;
-    const KEYWORD_BOOST = isCodeQuery ? codeKeywordBoost : 1.0;
-
-    logger.debug("RRF fusion parameters", {
-      query,
-      isCodeQuery,
-      keywordBoost: KEYWORD_BOOST,
-      vectorResults: resultSets[0]?.length || 0,
-      keywordResults: resultSets[1]?.length || 0,
-    });
-
-    // Calculate RRF score for each result.
-    // Stream roles: index 0 is always the vector stream (see search()). All
-    // other streams are lexical (porter keyword, trigram, fuzzy) or memory
-    // (graph). Lexical streams get the code-query keyword boost; the memory
-    // graph stream gets neutral weight (1.0) since it surfaces context, not a
-    // direct lexical match.
-    for (let i = 0; i < resultSets.length; i++) {
-      const results = resultSets[i];
-      const isVector = i === 0;
-      const isMemoryStream = results.some(
-        (r) =>
-          (r.source as string) === "memory" ||
-          ((r.metadata as Record<string, unknown>)?.context as Record<string, unknown>)
-            ?.graphNeighbor === true,
-      );
-      const boost = isVector ? 1.0 : isMemoryStream ? 1.0 : KEYWORD_BOOST;
-
-      results.forEach((result, rank) => {
-        const rrfScore = (1 / (this.RRF_K + rank + 1)) * boost;
-
-        if (scoreMap.has(result.id)) {
-          const existing = scoreMap.get(result.id)!;
-
-          if (isVector) {
-            existing.vectorRrfScore += rrfScore;
-            existing.vectorRank = rank;
-            existing.vectorScore = result.score;
-          } else if (isMemoryStream) {
-            existing.memoryRrfScore += rrfScore;
-          } else {
-            // Porter, trigram, and fuzzy are correlated lexical views of the
-            // same document. Count the best lexical rank once so duplicate
-            // matches cannot overwhelm a strong vector-only result.
-            existing.lexicalRrfScore = Math.max(
-              existing.lexicalRrfScore,
-              rrfScore,
-            );
-            // Record the best lexical rank/score (porter/trigram/fuzzy).
-            if (
-              existing.keywordRank === undefined ||
-              rank < existing.keywordRank
-            ) {
-              existing.keywordRank = rank;
-              existing.keywordScore = result.score;
-            }
-          }
-          existing.rrfScore =
-            existing.vectorRrfScore +
-            existing.lexicalRrfScore +
-            existing.memoryRrfScore;
-        } else {
-          const vectorRrfScore = isVector ? rrfScore : 0;
-          const lexicalRrfScore = !isVector && !isMemoryStream ? rrfScore : 0;
-          const memoryRrfScore = isMemoryStream ? rrfScore : 0;
-          scoreMap.set(result.id, {
-            result: { ...result },
-            rrfScore: vectorRrfScore + lexicalRrfScore + memoryRrfScore,
-            vectorRrfScore,
-            lexicalRrfScore,
-            memoryRrfScore,
-            vectorRank: isVector ? rank : undefined,
-            keywordRank: !isVector && !isMemoryStream ? rank : undefined,
-            vectorScore: isVector ? result.score : undefined,
-            keywordScore: !isVector && !isMemoryStream ? result.score : undefined,
-          });
-        }
-      });
-    }
-
-    // Convert to array and sort by RRF score
-    const sorted = Array.from(scoreMap.values())
-      .sort((a, b) => b.rrfScore - a.rrfScore);
-
-    // Dynamic normalization: use the top RRF score as divisor so results
-    // span the full [0, 1] range instead of being capped by a fixed constant.
-    const maxRrfScore = sorted[0]?.rrfScore || 1;
-    const vectorWeightRaw = Number(process.env.RRF_VECTOR_WEIGHT ?? "0.3");
-    const vectorWeight = Number.isFinite(vectorWeightRaw) ? Math.min(1, Math.max(0, vectorWeightRaw)) : 0.3;
-
-    return sorted
-      .map(
-        (
-          {
-            result,
-            rrfScore,
-            vectorRank,
-            keywordRank,
-            vectorScore,
-            keywordScore,
-            vectorRrfScore,
-            lexicalRrfScore,
-            memoryRrfScore,
-          },
-          index,
-        ) => {
-          const rrfNormalized = rrfScore / maxRrfScore;
-
-          // Combine RRF score with vector similarity for better relevance measurement
-          // Weight: 70% RRF (ranking-based) + 30% vector similarity (semantic)
-          const vectorSimilarity = vectorScore || 0;
-          const combinedScore = rrfNormalized * (1 - vectorWeight) + vectorSimilarity * vectorWeight;
-
-          // Centrality boost: symbols with higher PageRank get a mild re-ranking bonus.
-          // finalScore = combined_score * (1 + 0.2 * centralityScore)
-          // centralityScore is in [0, 1]; clamped to [0, 1] after boost.
-          const centralityScore =
-            typeof (result.metadata as Record<string, unknown>)?.centralityScore === "number"
-              ? ((result.metadata as Record<string, unknown>).centralityScore as number)
-              : 0;
-          const normalizedScore = Math.min(1, combinedScore * (1 + 0.2 * centralityScore));
-          const memoryOnly =
-            memoryRrfScore > 0 && vectorRrfScore === 0 && lexicalRrfScore === 0;
-
-          // Generate explanation if requested
-          const explanation = explainScores
-            ? this.generateScoreExplanation(
-                normalizedScore,
-                rrfScore,
-                vectorScore,
-                keywordScore,
-                vectorRank,
-                keywordRank,
-                index,
-              )
-            : undefined;
-
-          return {
-            ...result,
-            score: normalizedScore,
-            explanation,
-            // Internal field: raw cosine similarity from the vector store.
-            // Used by search() to apply minScore as an absolute relevance gate
-            // (normalized RRF score is always ~1.0 for the top result and
-            // therefore cannot filter semantic noise). Stripped before caching.
-            metadata: {
-              ...(result.metadata as Record<string, unknown>),
-              // Graph-only context has no direct query-relevance signal. Give
-              // it an explicit zero for minScore gating so dynamic RRF
-              // normalization cannot turn an unrelated neighbor into a 0.7
-              // hit. A result also found by vector/lexical retrieval keeps its
-              // direct relevance behavior.
-              _rrfRawVectorScore: vectorScore ?? (memoryOnly ? 0 : undefined),
-            } as typeof result.metadata,
-          };
-        },
-      );
+    return fuseResultsImpl(this, resultSets, query, explainScores);
   }
 
   /**
    * Generate detailed score explanation
    */
-  private generateScoreExplanation(
+  // Visibility relaxed from `private` so rlm-search.ts (fuseResults) can call via rlm param.
+  generateScoreExplanation(
     finalScore: number,
     rrfScore: number,
     vectorScore?: number,
@@ -922,147 +374,61 @@ export class ContextualSearchRLM {
     keywordRank?: number,
     combinedRank?: number,
   ): any {
-    const parts: string[] = [];
-
-    if (vectorScore != null && vectorRank != null) {
-      parts.push(
-        `Vector: ${(vectorScore * 100).toFixed(1)}% (rank #${vectorRank + 1})`,
-      );
-    }
-
-    if (keywordScore != null && keywordRank != null) {
-      parts.push(
-        `Keyword: ${(keywordScore * 100).toFixed(1)}% (rank #${keywordRank + 1})`,
-      );
-    }
-
-    const breakdown =
-      parts.join(" + ") +
-      ` → RRF: ${rrfScore.toFixed(4)} → Final: ${(finalScore * 100).toFixed(1)}%`;
-
-    return {
+    return generateScoreExplanationImpl(
       finalScore,
-      vectorScore: vectorScore ?? undefined,
-      keywordScore: keywordScore ?? undefined,
       rrfScore,
-      vectorRank: vectorRank != null ? vectorRank + 1 : undefined,
-      keywordRank: keywordRank != null ? keywordRank + 1 : undefined,
-      combinedRank: combinedRank != null ? combinedRank + 1 : undefined,
-      breakdown,
-    };
+      vectorScore,
+      keywordScore,
+      vectorRank,
+      keywordRank,
+      combinedRank,
+    );
   }
 
   /**
    * Add expanded context to results
    */
-  private async addContextToResults(
+  // Visibility relaxed from `private` so rlm-search.ts can call via rlm param.
+  async addContextToResults(
     results: SearchResult[],
     _projectId: string,
   ): Promise<SearchResult[]> {
-    return results.map((result) => {
-      const metadata = result.metadata;
-      const filePath = metadata?.filePath as string;
-      const lineStart = metadata?.lineStart as number;
-      const lineEnd = metadata?.lineEnd as number;
-
-      if (filePath && lineStart && lineEnd) {
-        return {
-          ...result,
-          highlights: [`${filePath}:${lineStart}-${lineEnd}`],
-          metadata: {
-            ...metadata,
-            context: {
-              filePath,
-              lineStart,
-              lineEnd,
-              preview: this.extractPreview(result.content),
-            },
-          },
-        };
-      }
-
-      return result;
-    });
+    return addContextToResultsImpl(this, results, _projectId);
   }
 
   /**
    * Extract content preview (first lines)
    */
-  private extractPreview(content: string, maxLines: number = 5): string {
-    const lines = content.split("\n");
-    const preview = lines.slice(0, maxLines).join("\n");
-    return lines.length > maxLines ? preview + "\n..." : preview;
+  // Visibility relaxed from `private` so rlm-search.ts can call via rlm param.
+  extractPreview(content: string, maxLines: number = 5): string {
+    return extractPreviewImpl(content, maxLines);
   }
 
   /**
    * Calculate average score
    */
-  private calculateAvgScore(results: SearchResult[]): number {
-    if (results.length === 0) return 0;
-    const sum = results.reduce((acc, r) => acc + r.score, 0);
-    return sum / results.length;
+  // Visibility relaxed from `private` so rlm-search.ts can call via rlm param.
+  calculateAvgScore(results: SearchResult[]): number {
+    return calculateAvgScoreImpl(results);
   }
 
   /**
    * Filter results by glob patterns
    */
-  private filterByPatterns(
+  // Visibility relaxed from `private` so rlm-search.ts can call via rlm param.
+  filterByPatterns(
     results: SearchResult[],
     include?: string[],
     exclude?: string[],
   ): SearchResult[] {
-    if (!include && !exclude) {
-      return results;
-    }
-
-    return results.filter((result) => {
-      const filePath = result.metadata?.filePath as string;
-      if (!filePath) return !include?.length;
-
-      // Check exclude patterns first (blacklist)
-      if (exclude && exclude.length > 0) {
-        const isExcluded = exclude.some((pattern) => minimatch(filePath, pattern));
-        if (isExcluded) return false;
-      }
-
-      // Check include patterns (whitelist)
-      if (include && include.length > 0) {
-        const isIncluded = include.some((pattern) => minimatch(filePath, pattern));
-        return isIncluded;
-      }
-
-      // No include patterns specified, include by default (unless excluded above)
-      return true;
-    });
+    return filterByPatternsImpl(results, include, exclude);
   }
 
   /**
    * Clear project index
    */
   async clearProjectIndex(projectId: string): Promise<{ deleted: number }> {
-    await this.ensureInitialized();
-    try {
-      const [deleted, keywordDeleted] = await Promise.all([
-        this.vectorStore.deleteByProject(projectId),
-        this.keywordSearch.deleteByProject(projectId),
-      ]);
-
-      // Clear associated caches
-      await this.searchCache.invalidateProject(projectId);
-      this.fileFilterCache.invalidateProject(projectId);
-
-      logger.info("Project index and caches cleared", {
-        projectId,
-        deleted,
-        keywordDeleted,
-      });
-      return { deleted };
-    } catch (error) {
-      logger.error("Failed to clear project index", error as Error, {
-        projectId,
-      });
-      return { deleted: 0 };
-    }
+    return clearProjectIndexImpl(this, projectId);
   }
 
   /**
@@ -1072,8 +438,7 @@ export class ContextualSearchRLM {
     totalDocuments: number;
     totalSize: number;
   }> {
-    await this.ensureInitialized();
-    return this.vectorStore.getStats(projectId);
+    return getProjectStatsImpl(this, projectId);
   }
 
   /**
@@ -1086,64 +451,13 @@ export class ContextualSearchRLM {
     _projectPath: string,
     customQueries?: string[],
   ): Promise<{ queriesWarmed: number; errors: number }> {
-    await this.ensureInitialized();
-    logger.info("Starting cache warmup", { projectId });
-
-    // Common search patterns based on file types and structure
-    const commonQueries = customQueries || [
-      "authentication",
-      "api endpoints",
-      "database models",
-      "components",
-      "utils",
-      "configuration",
-      "routes",
-      "services",
-      "tests",
-      "types",
-      "interfaces",
-      "error handling",
-      "validation",
-      "middleware",
-      "hooks",
-    ];
-
-    let queriesWarmed = 0;
-    let errors = 0;
-
-    // Run searches in background to populate cache
-    for (const query of commonQueries) {
-      try {
-        await this.search(query, projectId, {
-          maxResults: 10,
-          minScore: 0.3,
-        });
-        queriesWarmed++;
-
-        logger.debug("Warmed cache for query", { query, projectId });
-      } catch (error) {
-        logger.error("Failed to warm cache for query", error as Error, {
-          query,
-          projectId,
-        });
-        errors++;
-      }
-    }
-
-    logger.info("Cache warmup completed", {
-      projectId,
-      queriesWarmed,
-      errors,
-      totalQueries: commonQueries.length,
-    });
-
-    return { queriesWarmed, errors };
+    return warmupCacheImpl(this, projectId, _projectPath, customQueries);
   }
 
   /**
    * Get analytics instance for querying metrics
    */
   getAnalytics(): SearchAnalytics | SearchAnalyticsPg {
-    return this.analytics;
+    return getAnalyticsImpl(this);
   }
 }
