@@ -23,15 +23,10 @@ import {
   VectorDocument,
 } from "@massa-th0th/shared";
 import { logger } from "@massa-th0th/shared";
-import { getKeywordSearch } from "../../data/keyword/keyword-search-factory.js";
-import { getVectorStore } from "../../data/vector/vector-store-factory.js";
 import { config } from "@massa-th0th/shared";
 import { IndexManager } from "./index-manager.js";
-import { getSearchCache } from "./cache-factory.js";
-import { getSearchAnalytics } from "./analytics-factory.js";
 import { SearchAnalytics } from "./search-analytics.js";
 import type { SearchAnalyticsPg } from "./search-analytics-pg.js";
-import { getSymbolRepository } from "../../data/symbol/symbol-repository-factory.js";
 import { getGraphStore } from "../graph/graph-store-factory.js";
 import { getMemoryRepository } from "../../data/memory/memory-repository-factory.js";
 import fs from "fs/promises";
@@ -40,7 +35,6 @@ import { glob } from "glob";
 import { minimatch } from "minimatch";
 import { FileFilterCache } from "./file-filter-cache.js";
 import { smartChunk } from "./smart-chunker.js";
-import { loadProjectIgnore } from "./ignore-patterns.js";
 import {
   QueryUnderstandingService,
   buildRewrittenFTSQuery,
@@ -53,6 +47,21 @@ import type { SynapseManager } from "../synapse/synapse-manager.js";
 import type { SessionRegistry } from "../synapse/session/session-registry.js";
 import type { AgentSession } from "../synapse/types.js";
 import { assertParserReadyForIndexing } from "../structural/parser-readiness.js";
+import type { getKeywordSearch } from "../../data/keyword/keyword-search-factory.js";
+import type { getVectorStore } from "../../data/vector/vector-store-factory.js";
+import type { getSearchCache } from "./cache-factory.js";
+import type { getSearchAnalytics } from "./analytics-factory.js";
+import type { getSymbolRepository } from "../../data/symbol/symbol-repository-factory.js";
+import {
+  runWithIndexLock,
+  _indexProjectInternalImpl,
+  ensureFreshIndexImpl,
+  indexFileImpl,
+  loadGitignoreImpl,
+  checkSearchAdmissionImpl,
+  ensureInitializedImpl,
+  type IndexProjectOptions,
+} from "./rlm-indexing.js";
 
 const globAsync = glob;
 
@@ -60,17 +69,22 @@ const globAsync = glob;
  * ContextualSearchRLM - Main contextual search service
  */
 export class ContextualSearchRLM {
-  private keywordSearch!: Awaited<ReturnType<typeof getKeywordSearch>>;
-  private vectorStore!: Awaited<ReturnType<typeof getVectorStore>>;
-  private indexManager!: IndexManager;
-  private searchCache!: Awaited<ReturnType<typeof getSearchCache>>;
-  private analytics!: Awaited<ReturnType<typeof getSearchAnalytics>>;
-  private symbolRepo!: Awaited<ReturnType<typeof getSymbolRepository>>;
+  // NOTE (M14 Phase 3): fields below were `private`. Relaxed to `public`
+  // (modifier dropped) so the extracted delegate modules in rlm-indexing.ts /
+  // rlm-synapse.ts / rlm-search.ts / rlm-admin.ts can read them via the passed
+  // `rlm` parameter. Runtime-identical; type-surface only. See design.md
+  // "Encapsulation decision (accepted cost)".
+  keywordSearch!: Awaited<ReturnType<typeof getKeywordSearch>>;
+  vectorStore!: Awaited<ReturnType<typeof getVectorStore>>;
+  indexManager!: IndexManager;
+  searchCache!: Awaited<ReturnType<typeof getSearchCache>>;
+  analytics!: Awaited<ReturnType<typeof getSearchAnalytics>>;
+  symbolRepo!: Awaited<ReturnType<typeof getSymbolRepository>>;
   private fileFilterCache: FileFilterCache;
   /** Phase 2: query understanding (LLM rewrite + HyDE). Default-off, silent-degrade. */
   private queryUnderstanding: QueryUnderstandingService;
   private readonly RRF_K = 60; // Constant for Reciprocal Rank Fusion
-  private initialized = false;
+  initialized = false;
 
   // Per-project mutex to prevent concurrent indexing
   private static indexingLocks = new Map<string, Promise<void>>();
@@ -81,7 +95,7 @@ export class ContextualSearchRLM {
    * mock.module targets in the full test suite) and uses these instances
    * directly. Production callers pass nothing and resolve via factories.
    */
-  private readonly injectedDeps?: {
+  readonly injectedDeps?: {
     keywordSearch?: Awaited<ReturnType<typeof getKeywordSearch>>;
     vectorStore?: Awaited<ReturnType<typeof getVectorStore>>;
     searchCache?: Awaited<ReturnType<typeof getSearchCache>>;
@@ -105,52 +119,21 @@ export class ContextualSearchRLM {
     this.injectedDeps = deps;
   }
 
-  private async ensureInitialized(): Promise<void> {
-    if (this.initialized) return;
-
-    const injected = this.injectedDeps ?? {};
-    const resolveKeyword = injected.keywordSearch
-      ? Promise.resolve(injected.keywordSearch)
-      : getKeywordSearch();
-    const resolveVector = injected.vectorStore
-      ? Promise.resolve(injected.vectorStore)
-      : getVectorStore();
-    const resolveCache = injected.searchCache
-      ? Promise.resolve(injected.searchCache)
-      : getSearchCache();
-    const resolveAnalytics = injected.analytics
-      ? Promise.resolve(injected.analytics)
-      : getSearchAnalytics();
-    const resolveSymbolRepo = injected.symbolRepo
-      ? Promise.resolve(injected.symbolRepo)
-      : getSymbolRepository();
-
-    [
-      this.keywordSearch,
-      this.vectorStore,
-      this.searchCache,
-      this.analytics,
-      this.symbolRepo,
-    ] = await Promise.all([
-      resolveKeyword,
-      resolveVector,
-      resolveCache,
-      resolveAnalytics,
-      resolveSymbolRepo,
-    ]);
-
-    this.indexManager = new IndexManager(this.vectorStore);
-    this.initialized = true;
-    logger.info("ContextualSearchRLM initialized", {
-      via: injected.vectorStore ? "injected-seam" : "factory",
-    });
+  // Delegate-preservation contract: stays an instance method (thin delegate
+  // to the module function) because concurrent-indexing.test.ts:67 and the
+  // characterization test monkey-patch `(inst as any).ensureInitialized` on
+  // the instance; routing through a module-local function would bypass that.
+  // Visibility relaxed from `private` to public-equivalent so rlm-indexing.ts
+  // can dispatch through `rlm.ensureInitialized()` (runtime-identical).
+  async ensureInitialized(): Promise<void> {
+    return ensureInitializedImpl(this);
   }
 
   /**
    * Load and parse .gitignore file (delegates to shared ignore-patterns module)
    */
   private loadGitignore(projectPath: string) {
-    return loadProjectIgnore(projectPath);
+    return loadGitignoreImpl(projectPath);
   }
 
   /**
@@ -163,9 +146,7 @@ export class ContextualSearchRLM {
   async indexProject(
     projectPath: string,
     projectId: string,
-    options: {
-      onProgress?: (current: number, total: number) => void;
-    } = {},
+    options: IndexProjectOptions = {},
   ): Promise<{
     filesIndexed: number;
     chunksIndexed: number;
@@ -173,163 +154,29 @@ export class ContextualSearchRLM {
   }> {
     // This legacy direct indexing path must fail before mutating its queue.
     await assertParserReadyForIndexing();
-    // Per-project queue mutex: serializes concurrent indexing for the same project.
-    //
-    // Pattern: each caller chains its lock after the current tail, then waits
-    // for the previous lock before proceeding. This guarantees correct ordering
-    // for any number of concurrent callers (3+), unlike a simple check-and-set.
-    //
-    //   A sets map[proj] = lock_A, awaits null  → starts immediately
-    //   B sets map[proj] = lock_B, awaits lock_A → waits for A
-    //   C sets map[proj] = lock_C, awaits lock_B → waits for B
-    //   A finishes → releases lock_A → B starts
-    //   B finishes → releases lock_B → C starts
-    //   C finishes → map[proj] === lock_C, so we clean up the entry
-    const prevLock = ContextualSearchRLM.indexingLocks.get(projectId);
-    const isQueued = prevLock !== undefined;
-
-    let releaseLock!: () => void;
-    const myLock = new Promise<void>((resolve) => { releaseLock = resolve; });
-    ContextualSearchRLM.indexingLocks.set(projectId, myLock);
-
-    if (isQueued) {
-      logger.info("Waiting for existing indexing to complete", { projectId });
-      await prevLock;
-    }
-
-    try {
-      return await this._indexProjectInternal(projectPath, projectId, options);
-    } finally {
-      // Only remove the map entry if we are still the tail (no new waiter after us)
-      if (ContextualSearchRLM.indexingLocks.get(projectId) === myLock) {
-        ContextualSearchRLM.indexingLocks.delete(projectId);
-      }
-      releaseLock();
-    }
+    // `work` lambda captures virtual dispatch through `this` so the test's
+    // `(inst as any)._indexProjectInternal` patch still routes (Challenge #1).
+    return runWithIndexLock(
+      ContextualSearchRLM.indexingLocks,
+      projectId,
+      () => this._indexProjectInternal(projectPath, projectId, options),
+    );
   }
 
+  // Delegate-preservation contract: stays an instance method (thin delegate
+  // to the module function) because concurrent-indexing.test.ts:181-289 and
+  // the characterization test monkey-patch `(inst as any)._indexProjectInternal`
+  // on the instance; routing through a module-local function would bypass it.
   private async _indexProjectInternal(
     projectPath: string,
     projectId: string,
-    options: {
-      onProgress?: (current: number, total: number) => void;
-    } = {},
+    options: IndexProjectOptions = {},
   ): Promise<{
     filesIndexed: number;
     chunksIndexed: number;
     errors: number;
   }> {
-    await this.ensureInitialized();
-    logger.info("Starting project indexing", { projectPath, projectId });
-
-    const securityConfig = config.get("security");
-    const allowedExtensions = securityConfig.allowedExtensions || [
-      ".ts",
-      ".js",
-      ".tsx",
-      ".jsx",
-      ".dart",
-      ".py",
-    ];
-
-    try {
-      // Load .gitignore rules
-      const ig = await this.loadGitignore(projectPath);
-
-      // Find all relevant files
-      const files = await globAsync(`**/*{${allowedExtensions.join(",")}}`, {
-        cwd: projectPath,
-        absolute: true,
-        nodir: true,
-        dot: false,
-      });
-
-      // Filter files using .gitignore rules
-      const filteredFiles = files.filter((file) => {
-        const relativePath = path.relative(projectPath, file);
-        const shouldIgnore = ig.ignores(relativePath);
-
-        if (shouldIgnore) {
-          logger.debug("Ignoring file per .gitignore during indexing", {
-            filePath: relativePath,
-          });
-        }
-
-        return !shouldIgnore;
-      });
-
-      logger.info(
-        `Found ${filteredFiles.length} files to index (${files.length - filteredFiles.length} ignored)`,
-        {
-          projectId,
-        },
-      );
-
-      options.onProgress?.(0, filteredFiles.length);
-
-      // Load centrality map once for the whole project so each chunk
-      // carries its file's PageRank score in metadata.
-      const centralityMap = await this.symbolRepo.getCentrality(projectId);
-
-      let filesIndexed = 0;
-      let chunksIndexed = 0;
-      let errors = 0;
-
-      // Process files in batches to avoid overloading
-      const BATCH_SIZE = 20;
-      let processedFiles = 0;
-      for (let i = 0; i < filteredFiles.length; i += BATCH_SIZE) {
-        const batch = filteredFiles.slice(i, i + BATCH_SIZE);
-
-        await Promise.all(
-          batch.map(async (file) => {
-            try {
-              const result = await this.indexFile(file, projectId, projectPath, centralityMap);
-              filesIndexed++;
-              chunksIndexed += result.chunks;
-            } catch (error) {
-              logger.error("Failed to index file", error as Error, { file });
-              errors++;
-            } finally {
-              processedFiles++;
-              options.onProgress?.(processedFiles, filteredFiles.length);
-            }
-          }),
-        );
-
-        // Log progress
-        if (i % 50 === 0) {
-          logger.info(
-            `Progress: ${i}/${filteredFiles.length} files processed`,
-            {
-              projectId,
-            },
-          );
-        }
-      }
-
-      // Update index metadata after successful indexing
-      const indexedFilesList = filteredFiles.map((f) =>
-        path.relative(projectPath, f),
-      );
-      await this.indexManager.updateIndexMetadata(
-        projectId,
-        projectPath,
-        indexedFilesList,
-      );
-
-      logger.info("Project indexing completed", {
-        projectId,
-        filesIndexed,
-        chunksIndexed,
-        errors,
-      });
-
-      return { filesIndexed, chunksIndexed, errors };
-    } catch (error) {
-      logger.error("Project indexing failed", error as Error, { projectId });
-      throw error;
-    }
+    return _indexProjectInternalImpl(this, projectPath, projectId, options);
   }
 
   /**
@@ -349,145 +196,7 @@ export class ContextualSearchRLM {
     deferred?: boolean;
     filesPending?: number;
   }> {
-    await this.ensureInitialized();
-    const allowFullReindex = options.allowFullReindex ?? false;
-    const maxSyncFiles =
-      options.maxSyncFiles ?? config.get("search").autoReindexMaxFiles;
-
-    const staleCheck = await this.indexManager.isIndexStale(
-      projectId,
-      projectPath,
-    );
-
-    if (!staleCheck.isStale) {
-      return { wasStale: false, reindexed: false };
-    }
-
-    logger.info("Index is stale, performing incremental reindex", {
-      projectId,
-      reason: staleCheck.reason,
-      modifiedFiles: staleCheck.modifiedFiles?.length,
-      newFiles: staleCheck.newFiles?.length,
-      deletedFiles: staleCheck.deletedFiles?.length,
-    });
-
-    // Get files that need reindexing (pass staleCheck to avoid double filesystem scan)
-    const filesToReindex = await this.indexManager.getFilesToReindex(
-      projectId,
-      projectPath,
-      staleCheck,
-    );
-
-    if (filesToReindex.length > maxSyncFiles) {
-      logger.warn("Skipping sync reindex due to file limit", {
-        projectId,
-        reason: staleCheck.reason,
-        filesToReindex: filesToReindex.length,
-        maxSyncFiles,
-      });
-
-      return {
-        wasStale: true,
-        reindexed: false,
-        deferred: true,
-        reason: staleCheck.reason || "files_changed",
-        filesPending: filesToReindex.length,
-      };
-    }
-
-    if (filesToReindex.length === 0) {
-      return {
-        wasStale: true,
-        reindexed: false,
-        reason: "no_files_to_reindex",
-      };
-    }
-
-    // For full reindex or many changes, clear and reindex
-    const needsFullReindex =
-      staleCheck.reason === "no_index" ||
-      staleCheck.reason === "path_mismatch" ||
-      filesToReindex.length > maxSyncFiles;
-
-    if (needsFullReindex && !allowFullReindex) {
-      logger.warn("Deferring full reindex in latency-sensitive path", {
-        projectId,
-        reason: staleCheck.reason,
-        filesToReindex: filesToReindex.length,
-      });
-
-      return {
-        wasStale: true,
-        reindexed: false,
-        deferred: true,
-        reason: staleCheck.reason || "full_reindex_needed",
-        filesPending: filesToReindex.length,
-      };
-    }
-
-    if (needsFullReindex) {
-      logger.info("Performing full reindex", { projectId });
-      await this.indexProject(projectPath, projectId);
-
-      // Invalidate cache after reindex
-      await this.searchCache.invalidateProject(projectId);
-
-      return {
-        wasStale: true,
-        reindexed: true,
-        reason: "full_reindex",
-      };
-    }
-
-    // Incremental reindex
-    logger.info("Performing incremental reindex", {
-      projectId,
-      fileCount: filesToReindex.length,
-    });
-
-    // Load centrality map so chunks carry PageRank scores
-    const centralityMap = await this.symbolRepo.getCentrality(projectId);
-
-    let filesIndexed = 0;
-    let chunksIndexed = 0;
-    let errors = 0;
-
-    for (const relativeFilePath of filesToReindex) {
-      try {
-        const fullPath = path.join(projectPath, relativeFilePath);
-        const result = await this.indexFile(fullPath, projectId, projectPath, centralityMap);
-        filesIndexed++;
-        chunksIndexed += result.chunks;
-      } catch (error) {
-        logger.error("Failed to reindex file", error as Error, {
-          file: relativeFilePath,
-        });
-        errors++;
-      }
-    }
-
-    // Update metadata
-    await this.indexManager.updateIndexMetadata(
-      projectId,
-      projectPath,
-      filesToReindex,
-    );
-
-    // Invalidate cache after incremental reindex
-    await this.searchCache.invalidateProject(projectId);
-
-    logger.info("Incremental reindex completed", {
-      projectId,
-      filesIndexed,
-      chunksIndexed,
-      errors,
-    });
-
-    return {
-      wasStale: true,
-      reindexed: true,
-      reason: "incremental_reindex",
-    };
+    return ensureFreshIndexImpl(this, projectId, projectPath, options);
   }
 
   /**
@@ -516,35 +225,7 @@ export class ContextualSearchRLM {
       deletedFiles?: number;
     };
   }> {
-    await this.ensureInitialized();
-
-    const metadata = await this.indexManager.getIndexMetadata(projectId);
-    if (!metadata) {
-      return {
-        admitted: false,
-        error: `Project '${projectId}' is not indexed. Run index_project first, then retry.`,
-      };
-    }
-
-    if (projectPath) {
-      const staleCheck = await this.indexManager.isIndexStale(
-        projectId,
-        projectPath,
-      );
-      if (staleCheck.isStale) {
-        return {
-          admitted: true,
-          stale: {
-            reason: staleCheck.reason ?? "unknown",
-            modifiedFiles: staleCheck.modifiedFiles?.length,
-            newFiles: staleCheck.newFiles?.length,
-            deletedFiles: staleCheck.deletedFiles?.length,
-          },
-        };
-      }
-    }
-
-    return { admitted: true };
+    return checkSearchAdmissionImpl(this, projectId, projectPath);
   }
 
   /**
@@ -556,66 +237,15 @@ export class ContextualSearchRLM {
    * - YAML: splits by document separators or top-level keys
    * - Code: splits by functions/classes with preceding comments
    */
-  private async indexFile(
+  // Visibility relaxed from `private` so rlm-indexing.ts can dispatch through
+  // `rlm.indexFile()` (runtime-identical; type-additive only).
+  async indexFile(
     filePath: string,
     projectId: string,
     projectRoot: string,
     centralityMap?: Map<string, number>,
   ): Promise<{ chunks: number }> {
-    const content = await fs.readFile(filePath, "utf-8");
-    const relativePath = path.relative(projectRoot, filePath);
-
-    // Check maximum file size
-    const maxFileSize = config.get("security").maxFileSize || 1024 * 1024;
-    if (content.length > maxFileSize) {
-      logger.warn("File too large, skipping", {
-        filePath,
-        size: content.length,
-      });
-      return { chunks: 0 };
-    }
-
-    // Smart chunking: language/format-aware splitting
-    const chunks = smartChunk(content, relativePath);
-
-    // Look up the file's PageRank centrality score (0 if unavailable)
-    const centralityScore = centralityMap?.get(relativePath) ?? 0;
-
-    const documents: VectorDocument[] = chunks.map((chunk, i) => ({
-      id: `${projectId}:${relativePath}:${i}`,
-      content: chunk.content,
-      metadata: {
-        projectId,
-        filePath: relativePath,
-        chunkIndex: i,
-        totalChunks: chunks.length,
-        type: chunk.type,
-        language: path.extname(filePath).slice(1),
-        lineStart: chunk.lineStart,
-        lineEnd: chunk.lineEnd,
-        label: chunk.label,
-        centralityScore,
-        ...(chunk.fileImports && { fileImports: chunk.fileImports }),
-        ...(chunk.parentSymbol && { parentSymbol: chunk.parentSymbol }),
-      },
-    }));
-
-    // Run vector and keyword indexing in parallel (I/O optimization)
-    // Since embeddings are generated during addDocuments(), we can run
-    // FTS5 keyword indexing concurrently to save ~30% total time
-    await Promise.all([
-      // Vector store: sub-batched embedding + insert
-      this.vectorStore.addDocuments(documents),
-      
-      // Keyword search: parallel FTS5 inserts
-      Promise.all(
-        documents.map((doc) =>
-          this.keywordSearch.index(doc.id, doc.content, doc.metadata),
-        ),
-      ),
-    ]);
-
-    return { chunks: chunks.length };
+    return indexFileImpl(this, filePath, projectId, projectRoot, centralityMap);
   }
 
   /**
