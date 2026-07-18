@@ -12,7 +12,7 @@
 # ============================================
 
 # ---- Base: install dependencies & build ----
-FROM oven/bun:1.3-alpine AS base
+FROM oven/bun:1.3.11-alpine AS base
 
 # Node.js required by Prisma
 RUN apk add --no-cache nodejs-current
@@ -34,7 +34,7 @@ COPY patches ./patches
 # Install dependencies (ignore Prisma postinstall that checks Node version)
 RUN bun install --ignore-scripts
 
-# Copy source code (exclude ui-client - not needed for API/MCP)
+# Copy source code (web-ui is served by tools-api; plugins install separately)
 COPY packages ./packages
 COPY apps/tools-api ./apps/tools-api
 COPY apps/mcp-client ./apps/mcp-client
@@ -47,7 +47,7 @@ RUN cd packages/core && bunx prisma generate
 RUN bun run build
 
 # ---- API Target ----
-FROM oven/bun:1.3-alpine AS api
+FROM oven/bun:1.3.11-alpine AS api
 
 RUN apk add --no-cache nodejs-current curl
 
@@ -82,7 +82,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bun", "./apps/tools-api/src/index.ts"]
 
 # ---- MCP Target ----
-FROM oven/bun:1.3-alpine AS mcp
+FROM oven/bun:1.3.11-alpine AS mcp
 
 RUN apk add --no-cache nodejs-current
 

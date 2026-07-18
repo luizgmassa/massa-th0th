@@ -43,6 +43,7 @@ export function loadConfig(): MassaTh0thConfig {
       llm: { ...defaultMassaTh0thConfig.llm, ...userConfig.llm },
       memory: { ...defaultMassaTh0thConfig.memory, ...userConfig.memory },
       hooks: { ...defaultMassaTh0thConfig.hooks, ...userConfig.hooks },
+      handoffs: { ...defaultMassaTh0thConfig.handoffs, ...userConfig.handoffs },
     };
   } catch (error) {
     console.error(`Error loading config from ${CONFIG_FILE}:`, error);

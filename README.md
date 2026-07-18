@@ -682,10 +682,7 @@ rows default **OFF** and degrade silently when disabled.
 | — | `WEB_UI_ENABLED` | `true` | on |
 
 > **Note:** `compression.llm` is a deprecated alias of top-level `llm` (same env
-> vars). There is a known drift between the typed `MassaTh0thConfig` interface and the
-> runtime loader — the loader reads `llm`/`hooks`/`memory`/`search` from env
-> correctly even though the TS interface doesn't yet declare them. Tracked as a
-> separate code follow-up.
+> vars).
 
 ### Operational knobs
 
@@ -778,7 +775,7 @@ npx @massa-th0th/mcp-client --config-set embedding.dimensions 4096
 ```
 massa-th0th/
 ├── apps/
-│   ├── mcp-client/           # MCP Server (stdio) — 35 tools
+│   ├── mcp-client/           # MCP Server (stdio) — 42 tools
 │   ├── tools-api/            # REST API (port 3333) + Web UI at /ui
 │   ├── web-ui/               # Read-only memory/search/handoff/checkpoint browser
 │   ├── claude-plugin/        # Passive-capture hook scripts + install guide

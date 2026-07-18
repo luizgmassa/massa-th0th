@@ -14,7 +14,7 @@ jobs:
 
     services:
       postgres:
-        image: pgvector/pgvector:pg16
+        image: pgvector/pgvector:pg17
         env:
           POSTGRES_USER: massa_th0th
           POSTGRES_PASSWORD: massa_th0th_password
@@ -57,7 +57,7 @@ jobs:
 
     services:
       postgres:
-        image: pgvector/pgvector:pg16
+        image: pgvector/pgvector:pg17
         env:
           POSTGRES_USER: massa_th0th
           POSTGRES_PASSWORD: massa_th0th_password

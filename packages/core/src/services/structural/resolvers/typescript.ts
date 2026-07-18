@@ -243,6 +243,16 @@ function exportedMatches(
   return namedDefault.length > 0 ? namedDefault : direct;
 }
 
+// require()-style imports can rebind the same local name at a narrower scope
+// (e.g. a function-scoped `const lib = require("./b")` shadowing a module-scope
+// `const lib = require("./a")`). Only the nearest preceding require should claim
+// a reference; otherwise inner-scope member access resolves to the wrong module.
+// Only require-style forms are shadowers — ESM/typed redeclarations are illegal
+// in JS/TS, so an esm_import with the same local name can't shadow. Lexical-scope
+// tracking would be exact, but resolver definitions carry no span, so this
+// positional approximation handles the common inner-shadow pattern.
+const REQUIRE_IMPORT_FORMS = new Set(["commonjs_require", "dynamic_import", "ruby_require", "lua_require"]);
+
 function importedMatches(
   file: StructuralResolverFile,
   reference: NormalizedReference,
@@ -273,6 +283,19 @@ function importedMatches(
         continue;
       }
       claimed = true;
+      if (REQUIRE_IMPORT_FORMS.has(imported.form) && imported.span.startByte <= reference.span.startByte) {
+        let shadowed = false;
+        for (const candidate of file.imports) {
+          if (candidate === imported || !REQUIRE_IMPORT_FORMS.has(candidate.form)) continue;
+          if (candidate.span.startByte <= reference.span.startByte &&
+              candidate.span.startByte > imported.span.startByte &&
+              candidate.bindings.some((b) => b.local === binding.local)) {
+            shadowed = true;
+            break;
+          }
+        }
+        if (shadowed) continue;
+      }
       if ((imported.typeOnly || binding.typeOnly) && !typeEdge) continue;
       const importedFile = resolveStructuralSpecifier(imported.specifier, file.file, build, file.dialect) ??
         (["python_import", "ruby_require", "php_use", "lua_require", "c_include", "cpp_include", "go_import", "rust_use", "zig_import", "java_import", "java_static_import", "kotlin_import", "scala_import", "dart_import", "elixir_alias", "elixir_import", "elixir_require", "elixir_use", "erlang_import", "clojure_require", "clojure_import", "ocaml_open", "ocaml_include", "ocaml_module_alias", "haskell_import"].includes(imported.form)

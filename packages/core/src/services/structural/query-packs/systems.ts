@@ -3,6 +3,8 @@ import type { StructuralQueryPack } from "../query-pack.js";
 export const C_QUERY_PACK: StructuralQueryPack = Object.freeze({
   version: "1.0.0", dialects: Object.freeze(["c", "header-default-c"]), family: "c", querySources: Object.freeze([`
     (function_definition) @symbol.function
+    (preproc_function_def name: (identifier)) @symbol.function
+    (preproc_def name: (identifier)) @symbol.constant
     (type_definition) @symbol.type
     (struct_specifier name: (type_identifier)) @symbol.class
     (enum_specifier name: (type_identifier)) @symbol.enum
@@ -17,6 +19,8 @@ export const C_QUERY_PACK: StructuralQueryPack = Object.freeze({
 export const CPP_QUERY_PACK: StructuralQueryPack = Object.freeze({
   version: "1.0.0", dialects: Object.freeze(["cpp", "header", "header-cpp"]), family: "cpp", querySources: Object.freeze([`
     (function_definition) @symbol.function
+    (preproc_function_def name: (identifier)) @symbol.function
+    (preproc_def name: (identifier)) @symbol.constant
     (class_specifier) @symbol.class
     (struct_specifier name: (type_identifier)) @symbol.class
     (enum_specifier name: (type_identifier)) @symbol.enum

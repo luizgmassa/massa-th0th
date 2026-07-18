@@ -16,6 +16,7 @@ import {
   type StructuralResolverDefinition,
   type StructuralResolverFile,
   type StructuralReference,
+  type SourceSpan,
 } from "../services/index.js";
 import { StructuralRuntime } from "../services/structural/structural-runtime.js";
 import { loadNativeGrammarSet } from "../services/structural/grammar-loaders.js";
@@ -484,6 +485,44 @@ describeNative("TS/JS structural resolver", () => {
       BUILD,
     );
     expect(result).toMatchObject({ status: "resolved", fqn: "src/lib.ts#execute", source: "import" });
+  });
+
+  test("prefers an inner-scope require() binding over a shadowed module-scope one", () => {
+    const span = (startByte: number, endByte: number): SourceSpan => Object.freeze({
+      startByte,
+      endByte,
+      start: Object.freeze({ row: 0, column: startByte }),
+      end: Object.freeze({ row: 0, column: endByte }),
+    });
+    const requireImport = (specifier: string, startByte: number, endByte: number): NormalizedStructuralImport => Object.freeze({
+      form: "commonjs_require",
+      specifier,
+      span: span(startByte, endByte),
+      bindings: Object.freeze([{ imported: "default", local: "lib", typeOnly: false }]),
+      names: Object.freeze(["lib"]),
+      typeOnly: false,
+    });
+    // Module-scope require at byte 10; function-scope rebinding require at byte 100;
+    // reference at byte 160 is textually after the inner require, so the inner
+    // binding should win and resolve to ./b (not the shadowed module ./a).
+    const fileObj = Object.freeze({
+      file: "src/main.js",
+      dialect: "javascript",
+      resolverVersion: "1.0.0",
+      imports: Object.freeze([requireImport("./a", 10, 40), requireImport("./b", 100, 130)]),
+    });
+    const ref = Object.freeze({
+      kind: "call",
+      span: span(160, 175),
+      target: Object.freeze({ status: "unresolved", name: "shadowedFn", qualifier: "lib" }),
+    }) as StructuralReference;
+    const result = TYPESCRIPT_LANGUAGE_RESOLVER.resolve(
+      fileObj,
+      ref,
+      [definition("src/a.js", "shadowedFn"), definition("src/b.js", "shadowedFn")],
+      { knownFiles: ["src/main.js", "src/a.js", "src/b.js"] },
+    );
+    expect(result).toMatchObject({ status: "resolved", fqn: "src/b.js#shadowedFn", source: "import" });
   });
 
   test("forwards a default reexport alias past its barrel export marker", () => {

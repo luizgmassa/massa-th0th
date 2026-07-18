@@ -498,6 +498,34 @@ describeNative("declarative structural query packs", () => {
     }
   });
 
+  test("recovers C/C++ preprocessor macro definitions and #ifdef-guarded functions", async () => {
+    const cOutcome = await parse(".c", Buffer.from(
+      "#define MAX(a, b) ((a) > (b) ? (a) : (b))\n" +
+      "#ifdef _WIN32\nvoid platform_init(void) { win_setup(); }\n" +
+      "#else\nvoid platform_init(void) { posix_setup(); }\n#endif\n" +
+      "int main(void) { return MAX(1, 2); }\n",
+    ), { packageName: "tree-sitter-c", version: "0.24.1" });
+    expect(cOutcome.status).toBe("ok");
+    if (cOutcome.status !== "ok") throw new Error(`c parse failed: ${cOutcome.status === "failed" ? cOutcome.diagnostics[0]?.message : ""}`);
+    const cSymbols = cOutcome.structure.symbols.map((item) => ({ name: item.name, kind: item.kind }));
+    expect(cSymbols).toEqual(expect.arrayContaining([
+      { name: "MAX", kind: "function" },
+      { name: "main", kind: "function" },
+      { name: "platform_init", kind: "function" },
+    ]));
+
+    const cppOutcome = await parse(".cpp", Buffer.from(
+      "#define BUFFER_SIZE 256\nclass Container { public: int size(); };\n",
+    ), { packageName: "tree-sitter-cpp", version: "0.23.4" });
+    expect(cppOutcome.status).toBe("ok");
+    if (cppOutcome.status !== "ok") throw new Error(`cpp parse failed: ${cppOutcome.status === "failed" ? cppOutcome.diagnostics[0]?.message : ""}`);
+    const cppSymbols = cppOutcome.structure.symbols.map((item) => ({ name: item.name, kind: item.kind }));
+    expect(cppSymbols).toEqual(expect.arrayContaining([
+      { name: "BUFFER_SIZE", kind: "constant" },
+      { name: "Container", kind: "class" },
+    ]));
+  });
+
   test("extracts managed/mobile native capabilities with honest import policy", async () => {
     const cases = [
       [".java", { packageName: "tree-sitter-java", version: "0.23.5" },
