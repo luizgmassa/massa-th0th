@@ -6,15 +6,15 @@
   "needleTargets": [
     { "path": "packages/core/src/data/vector/postgres-vector-store.ts", "sha256": "4f54bbb4a079d91629693ffbf9f440cd70f1ca1aafca7440111fb358bd04e49e" },
     { "path": "packages/core/src/services/etl/stages/discover.ts", "sha256": "c342d7f6589d37fdbc70a9bbd3bc557928fb1bd1b0451f7f46bf5fe2ccb3ed20" },
-    { "path": "packages/core/src/services/search/contextual-search-rlm.ts", "sha256": "23e563a00452b40c9ded2544047356be6e63daed32bbefae60a2ff4e7dab7306" },
+    { "path": "packages/core/src/services/search/contextual-search-rlm.ts", "sha256": "a08d3f18a5464d6693a5eb5f69158f64752d95cfbe0a1b0bdf1c6293151ca2ff" },
     { "path": "packages/core/src/services/search/smart-chunker.ts", "sha256": "89ff025d601bfa7acc741d1aeaccfa6767367a90a1530800822743a9b95ba81a" },
     { "path": "packages/core/src/services/symbol/centrality.ts", "sha256": "c639810dc6ac0c352df66c800127b0f4ba3c7c9246351fde2b9ac09bbfdfa6c7" }
   ],
   "distractors": [
-    { "path": "packages/core/src/controllers/search-controller.ts", "sha256": "8cec4f7f9c86d451128ee7360e33f9c2fa98bd7c77ebe8ff226ff9506258ff78" },
+    { "path": "packages/core/src/controllers/search-controller.ts", "sha256": "1c5beaada2105c17ddc7a0372550d994cc6e2bda8ab283f269f94da2d937cdb1" },
     { "path": "packages/core/src/services/query/prisma-client.ts", "sha256": "71084d1647bb24e17680fee32b63ee946bef1634c8c36926fc4f5b80160d9a7e" },
     { "path": "packages/core/src/services/embeddings/embedding-service.ts", "sha256": "1bc69f4c59937246aa99c1d685c73fc876433a45aea49a110a924b5678104550" },
-    { "path": "packages/core/src/services/search/index-manager.ts", "sha256": "dea4b701ed36d34ada2ed1435737c3637f2312673ce264dd12529ae93cd378dc" },
+    { "path": "packages/core/src/services/search/index-manager.ts", "sha256": "c88082dc9a9e11d1237408c849120199d6a1618b26797dbd3dddbae080bcdcf5" },
     { "path": "packages/core/src/services/search/lexical-search.ts", "sha256": "7cefe2912ed9468ad4346b82aea2cd5b7353b5a5e90691a4dc58a3444e92c9f7" },
     { "path": "packages/core/src/services/search/query-understanding.ts", "sha256": "552e560d766ff1e48fecbd08ae944bc2213d64f187bfc91b52d371649e653c92" },
     { "path": "packages/core/src/services/search/reranker.ts", "sha256": "d9ee860aa77745210802b818dba01aea9dfee4e606f2aac6bfdff9dbf47fc309" },
@@ -24,12 +24,12 @@
     { "path": "packages/core/src/services/etl/stages/resolve.ts", "sha256": "3548efb18b160071c36a97e9de8ed28ce764f40142bb4ff1f42dea56aaaee072" },
     { "path": "packages/core/src/services/etl/stages/load.ts", "sha256": "e366c67fa1346b2f9b690c94d5abe1b97215797cf3d901051dcad2f9a394945b" },
     { "path": "packages/core/src/services/symbol/symbol-graph.service.ts", "sha256": "252bb53ed6a58fb801b50f84c34b1844d0e6f16ee6530612c55ac9172c2d6b2a" },
-    { "path": "packages/core/src/index.ts", "sha256": "86afbe0bf67d027dcabe5cde3ef4f9c6b43911b3c1ad880bca0031c63fdf2ad6" },
+    { "path": "packages/core/src/index.ts", "sha256": "39c6ede98326bdf57f4b01f2a23f855b58d15d770e153582cd0fa00d5f63311e" },
     { "path": "packages/shared/src/index.ts", "sha256": "f3c3eaa09980e0f1c8373ae19ca31e5f0cb10f80f2fffa74d5960a43903c6c1b" },
     { "path": "apps/tools-api/src/index.ts", "sha256": "9d63d3cfb5c37abd9df06fc9d886da50c4349a7dcf5e4246c39e55606c01ca22" },
-    { "path": "packages/core/src/tools/search_project.ts", "sha256": "208f6e02b2369557b4a9ce278f3eac6adeeac54a8c17245d90a6b10767c43df6" },
-    { "path": "packages/core/src/tools/trace_path.ts", "sha256": "089a3c76277fd7063620f233e9bd5543e3487e8abfd16787a1b3fc94763c72f6" },
-    { "path": "packages/core/src/tools/impact_analysis.ts", "sha256": "f10e104c03ae167ca6826cc6ef2c303242f4341a2c5dd7a4d869d7168a172be3" },
+    { "path": "packages/core/src/tools/search_project.ts", "sha256": "83f67d05dd30253e202fdb0e58826fbaea77941a6a02b249b7a5b095db36efe4" },
+    { "path": "packages/core/src/tools/trace_path.ts", "sha256": "abb20d19be70f92eeb2ea2950a5270df071627d6cfdb102fc180a6a43aa53de9" },
+    { "path": "packages/core/src/tools/impact_analysis.ts", "sha256": "817935325f9f7d045b6f01dd4385bfd9b3dcc4789c0826bd0193027af1fda9b6" },
     { "path": "packages/core/src/services/graph/graph-store-pg.ts", "sha256": "4ab6dd9425cd0f4819fa0bbfc0fb75c76f94673eca1c562263d2e0bf9ed1c029" }
   ],
   "supportFiles": [
