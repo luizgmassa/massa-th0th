@@ -21,6 +21,7 @@ interface StoreMemoryParams {
   tags?: string[];
   linkTo?: string[];
   format?: "json" | "toon";
+  fields?: string[];
 }
 
 export class StoreMemoryTool implements IToolHandler {
@@ -63,6 +64,12 @@ export class StoreMemoryTool implements IToolHandler {
         description: "Output format (json or toon)",
         default: "toon",
       },
+      fields: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+      },
     },
     required: ["content", "type"],
   };
@@ -85,6 +92,7 @@ export class StoreMemoryTool implements IToolHandler {
       tags,
       linkTo,
       format = "toon",
+      fields,
     } = params as StoreMemoryParams;
 
     try {
@@ -100,7 +108,7 @@ export class StoreMemoryTool implements IToolHandler {
         linkTo,
       });
 
-      return serializeToolResponse(result, { format });
+      return serializeToolResponse(result, { format, fields });
     } catch (error) {
       logger.error("Failed to store memory", error as Error, { type });
       return {

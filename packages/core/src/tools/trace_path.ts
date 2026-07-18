@@ -34,6 +34,7 @@ interface TracePathParams {
   include_tests?: boolean;
   edge_types?: EdgeType[];
   format?: "json" | "toon";
+  fields?: string[];
 }
 
 export class TracePathTool implements IToolHandler {
@@ -91,13 +92,19 @@ export class TracePathTool implements IToolHandler {
         description: "Output format (json or toon). Default: json.",
         default: "json",
       },
+      fields: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+      },
     },
     required: ["projectId", "function_name"],
   };
 
   async handle(params: unknown): Promise<ToolResponse> {
     const p = params as TracePathParams;
-    const { format = "json" } = p;
+    const { format = "json", fields } = p;
     const seed = p.function_name ?? p.symbol ?? p.qualifiedName;
     if (!seed) {
       return { success: false, error: "function_name (or symbol/qualifiedName) is required" };
@@ -153,7 +160,7 @@ export class TracePathTool implements IToolHandler {
           })),
           chains: result.chains,
         },
-        { format },
+        { format, fields },
       );
     } catch (error) {
       return {

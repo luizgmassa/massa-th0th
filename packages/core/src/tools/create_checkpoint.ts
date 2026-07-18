@@ -41,6 +41,7 @@ interface CreateCheckpointParams {
   /** Pending validations */
   pendingValidations?: string[];
   format?: "json" | "toon";
+  fields?: string[];
 }
 
 export class CreateCheckpointTool implements IToolHandler {
@@ -135,6 +136,12 @@ export class CreateCheckpointTool implements IToolHandler {
         description: "Output format",
         default: "toon",
       },
+      fields: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+      },
     },
     required: ["taskId", "description"],
   };
@@ -164,6 +171,7 @@ export class CreateCheckpointTool implements IToolHandler {
       nextAction,
       pendingValidations = [],
       format = "toon",
+      fields,
     } = params as CreateCheckpointParams;
 
     try {
@@ -219,7 +227,7 @@ export class CreateCheckpointTool implements IToolHandler {
         expiresAt: checkpoint.expiresAt,
       };
 
-      return serializeToolResponse(responseData, { format });
+      return serializeToolResponse(responseData, { format, fields });
     } catch (error) {
       logger.error("Failed to create checkpoint", error as Error, { taskId });
       return {

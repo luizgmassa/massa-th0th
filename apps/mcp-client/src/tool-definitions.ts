@@ -138,6 +138,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           type: "string",
           description: "Synapse session ID from synapse_session. Activates cognitive modulation: task alignment, agent affinity, working-memory boost.",
         },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+        },
       },
       required: ["query", "projectId"],
     },
@@ -180,6 +186,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           enum: ["json", "toon"],
           description: "Output format (json or toon)",
           default: "toon",
+        },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
         },
       },
       required: ["content", "type"],
@@ -235,6 +247,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           description: "Output format (json or toon)",
           default: "toon",
         },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+        },
       },
       required: ["query"],
     },
@@ -275,6 +293,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           description: "Output format (json or toon)",
           default: "toon",
         },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+        },
       },
       required: ["id"],
     },
@@ -294,6 +318,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           enum: ["json", "toon"],
           description: "Output format (json or toon)",
           default: "toon",
+        },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
         },
       },
       required: ["id"],
@@ -326,6 +356,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           enum: ["json", "toon"],
           description: "Output format (json or toon)",
           default: "toon",
+        },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
         },
       },
       required: [],
@@ -402,6 +438,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           description: "Output format (json or toon)",
           default: "toon",
         },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+        },
       },
       required: ["taskId", "description"],
     },
@@ -428,6 +470,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           enum: ["json", "toon"],
           description: "Output format (json or toon)",
           default: "toon",
+        },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
         },
       },
       required: [],
@@ -504,6 +552,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           enum: ["json", "toon"],
           description: "Output format (json or toon). Default: json.",
           default: "json",
+        },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
         },
       },
       required: ["query", "projectId"],
@@ -754,6 +808,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           description: "Output format (json or toon). Default: json.",
           default: "json",
         },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+        },
       },
       required: ["projectId"],
       anyOf: [
@@ -810,6 +870,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           enum: ["json", "toon"],
           description: "Output format (json or toon). Default: json.",
           default: "json",
+        },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['impacted.symbol']). Absent/empty → full data.",
         },
       },
       required: ["projectId", "projectPath"],
@@ -868,6 +934,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         compress: { type: "boolean", description: "Auto-compress content > 100 lines (default: true)", default: true },
         targetRatio: { type: "number", description: "Compression target ratio (0.3 = 70% reduction)", default: 0.3 },
         format: { type: "string", enum: ["json", "toon"], description: "Output format", default: "json" },
+        fields: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+        },
         includeSymbols: { type: "boolean", description: "Include symbol definitions/references (default: true)", default: true },
         includeImports: { type: "boolean", description: "Extract file imports (default: true)", default: true },
       },

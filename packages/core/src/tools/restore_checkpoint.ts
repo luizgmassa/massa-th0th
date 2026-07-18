@@ -19,6 +19,7 @@ interface RestoreCheckpointParams {
   /** Or restore the latest checkpoint for a task */
   taskId?: string;
   format?: "json" | "toon";
+  fields?: string[];
 }
 
 export class RestoreCheckpointTool implements IToolHandler {
@@ -46,6 +47,12 @@ export class RestoreCheckpointTool implements IToolHandler {
         description: "Output format",
         default: "toon",
       },
+      fields: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+      },
     },
     required: [],
   };
@@ -61,6 +68,7 @@ export class RestoreCheckpointTool implements IToolHandler {
       checkpointId,
       taskId,
       format = "toon",
+      fields,
     } = params as RestoreCheckpointParams;
 
     try {
@@ -117,7 +125,7 @@ export class RestoreCheckpointTool implements IToolHandler {
         createdAt: result.checkpoint.createdAt,
       };
 
-      return serializeToolResponse(responseData, { format });
+      return serializeToolResponse(responseData, { format, fields });
     } catch (error) {
       logger.error("Failed to restore checkpoint", error as Error, {
         checkpointId,

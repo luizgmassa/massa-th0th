@@ -31,6 +31,7 @@ interface ReadFileParams {
   format?: "json" | "toon";
   includeSymbols?: boolean;
   includeImports?: boolean;
+  fields?: string[];
 }
 
 interface ReadRange {
@@ -103,6 +104,12 @@ export class ReadFileTool implements IToolHandler {
         description: "Output format",
         default: "json",
       },
+      fields: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+      },
       includeSymbols: {
         type: "boolean",
         description: "Include symbol metadata from graph (default: true)",
@@ -153,6 +160,7 @@ export class ReadFileTool implements IToolHandler {
     const shouldCompress = p.compress !== false;
     const targetRatio = p.targetRatio || 0.3;
     const format = p.format || "json";
+    const { fields } = p;
     const includeSymbols = p.includeSymbols !== false;
     const includeImports = p.includeImports !== false;
 
@@ -276,7 +284,7 @@ export class ReadFileTool implements IToolHandler {
         );
       }
 
-      return serializeToolResponse(result, { format });
+      return serializeToolResponse(result, { format, fields });
     } catch (error) {
       logger.error("Failed to read file", error as Error, {
         filePath: p.filePath,

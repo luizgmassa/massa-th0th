@@ -5,6 +5,49 @@ import {
   serializeToolResponse,
 } from "../tools/serialize.js";
 
+/**
+ * Real trace_path-shaped payload (plan-critic F3): scalar counts + truncated
+ * flag + nested arrays of node/edge objects. Used by the projection-shape test.
+ */
+const traceShape = {
+  projectId: "p1",
+  symbol: "Service.run",
+  mode: "calls",
+  direction: "outbound",
+  edgeTypes: ["call"],
+  seeds: ["src/s.ts#Service.run"],
+  truncated: true,
+  nodeCount: 2,
+  edgeCount: 1,
+  nodes: [
+    {
+      symbol: "Service.run",
+      kind: "method",
+      fqn: "src/s.ts#Service.run",
+      file: "src/s.ts",
+      line: 10,
+    },
+    {
+      symbol: "helper",
+      kind: "function",
+      fqn: "src/h.ts#helper",
+      file: "src/h.ts",
+      line: 3,
+    },
+  ],
+  edges: [
+    {
+      type: "call",
+      from: "src/s.ts#Service.run",
+      to: "src/h.ts#helper",
+      fromFile: "src/s.ts",
+      fromLine: 12,
+      meta: { reason: "direct" },
+    },
+  ],
+  chains: [["src/s.ts#Service.run", "src/h.ts#helper"]],
+};
+
 const sample = {
   projectId: "p1",
   symbol: "run",
@@ -135,6 +178,52 @@ describe("projectFields — projection semantics", () => {
       "run",
       "stop",
     ]);
+  });
+
+  test("plan-critic F3: real trace_path-shaped projection (scalars + nested arrays + dotted)", () => {
+    const out = projectFields(
+      traceShape,
+      ["nodes.symbol", "edges.type", "nodeCount", "truncated"],
+    ) as Record<string, unknown>;
+    // top-level scalars survive
+    expect(Object.keys(out).sort()).toEqual([
+      "edges",
+      "nodeCount",
+      "nodes",
+      "truncated",
+    ]);
+    expect(out.nodeCount).toBe(2);
+    expect(out.truncated).toBe(true);
+    // nodes projected element-wise, each keeps ONLY symbol
+    const nodes = out.nodes as Array<Record<string, unknown>>;
+    expect(nodes).toHaveLength(2);
+    expect(nodes[0]).toEqual({ symbol: "Service.run" });
+    expect(nodes[1]).toEqual({ symbol: "helper" });
+    // edges projected element-wise, each keeps ONLY type
+    const edges = out.edges as Array<Record<string, unknown>>;
+    expect(edges).toHaveLength(1);
+    expect(edges[0]).toEqual({ type: "call" });
+  });
+
+  test("plan-critic F3: impact_analysis-shaped projection (impacted.symbol + impacted.risk merge)", () => {
+    const impactShape = {
+      projectId: "p1",
+      changedFileCount: 1,
+      impactedCount: 2,
+      impacted: [
+        { symbol: "run", risk: 0.9, fqn: "a.ts#run", depth: 1 },
+        { symbol: "stop", risk: 0.4, fqn: "b.ts#stop", depth: 2 },
+      ],
+    };
+    const out = projectFields(
+      impactShape,
+      ["impacted.symbol", "impacted.risk"],
+    ) as Record<string, unknown>;
+    const impacted = out.impacted as Array<Record<string, unknown>>;
+    expect(impacted).toHaveLength(2);
+    // both dotted fields targeting the same head merge per element
+    expect(impacted[0]).toEqual({ symbol: "run", risk: 0.9 });
+    expect(impacted[1]).toEqual({ symbol: "stop", risk: 0.4 });
   });
 });
 

@@ -22,6 +22,7 @@ interface SearchMemoriesParams {
   includePersistent?: boolean;
   includeRelated?: boolean;
   format?: "json" | "toon";
+  fields?: string[];
 }
 
 export class SearchMemoriesTool implements IToolHandler {
@@ -73,6 +74,12 @@ export class SearchMemoriesTool implements IToolHandler {
         description: "Output format (json or toon)",
         default: "toon",
       },
+      fields: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+      },
     },
     required: ["query"],
   };
@@ -96,6 +103,7 @@ export class SearchMemoriesTool implements IToolHandler {
       includePersistent,
       includeRelated,
       format = "toon",
+      fields,
     } = params as SearchMemoriesParams;
 
     try {
@@ -132,7 +140,7 @@ export class SearchMemoriesTool implements IToolHandler {
         total: result.total,
       };
 
-      return serializeToolResponse(responseData, { format });
+      return serializeToolResponse(responseData, { format, fields });
     } catch (error) {
       logger.error("Failed to search memories", error as Error, { query });
       return {

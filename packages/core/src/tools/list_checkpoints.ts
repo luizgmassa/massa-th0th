@@ -19,6 +19,7 @@ interface ListCheckpointsParams {
   includeExpired?: boolean;
   limit?: number;
   format?: "json" | "toon";
+  fields?: string[];
 }
 
 export class ListCheckpointsTool implements IToolHandler {
@@ -59,6 +60,12 @@ export class ListCheckpointsTool implements IToolHandler {
         description: "Output format",
         default: "toon",
       },
+      fields: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
+      },
     },
     required: [],
   };
@@ -77,6 +84,7 @@ export class ListCheckpointsTool implements IToolHandler {
       includeExpired = false,
       limit = 10,
       format = "toon",
+      fields,
     } = params as ListCheckpointsParams;
 
     try {
@@ -120,7 +128,7 @@ export class ListCheckpointsTool implements IToolHandler {
         },
       };
 
-      return serializeToolResponse(responseData, { format });
+      return serializeToolResponse(responseData, { format, fields });
     } catch (error) {
       logger.error("Failed to list checkpoints", error as Error);
       return {

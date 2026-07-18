@@ -33,6 +33,7 @@ interface ImpactAnalysisParams {
   depth?: number;
   paths?: string[];
   format?: "json" | "toon";
+  fields?: string[];
 }
 
 export class ImpactAnalysisTool implements IToolHandler {
@@ -81,13 +82,19 @@ export class ImpactAnalysisTool implements IToolHandler {
         description: "Output format (json or toon). Default: json.",
         default: "json",
       },
+      fields: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Projection — keep only these keys (dotted paths supported, e.g. ['impacted.symbol']). Absent/empty → full data.",
+      },
     },
     required: ["projectId", "projectPath"],
   };
 
   async handle(params: unknown): Promise<ToolResponse> {
     const p = params as ImpactAnalysisParams;
-    const { format = "json" } = p;
+    const { format = "json", fields } = p;
     if (!p.projectId) {
       return { success: false, error: "projectId is required" };
     }
@@ -123,7 +130,7 @@ export class ImpactAnalysisTool implements IToolHandler {
             hint:
               "No indexed source files in the diff. Check scope/base_branch, or index the project first (index_project).",
           },
-          { format },
+          { format, fields },
         );
       }
 
@@ -150,7 +157,7 @@ export class ImpactAnalysisTool implements IToolHandler {
             via: s.via,
           })),
         },
-        { format },
+        { format, fields },
       );
     } catch (error) {
       return {
