@@ -21,6 +21,7 @@
 import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
 import { impactAnalysisService } from "../services/symbol/impact-analysis.js";
 import type { ImpactScope } from "../services/symbol/impact-analysis.js";
+import { serializeToolResponse } from "./serialize.js";
 
 interface ImpactAnalysisParams {
   projectId: string;
@@ -31,6 +32,7 @@ interface ImpactAnalysisParams {
   since?: string;
   depth?: number;
   paths?: string[];
+  format?: "json" | "toon";
 }
 
 export class ImpactAnalysisTool implements IToolHandler {
@@ -73,12 +75,19 @@ export class ImpactAnalysisTool implements IToolHandler {
         items: { type: "string" },
         description: "Optional filter — only analyze these changed relative paths.",
       },
+      format: {
+        type: "string",
+        enum: ["json", "toon"],
+        description: "Output format (json or toon). Default: json.",
+        default: "json",
+      },
     },
     required: ["projectId", "projectPath"],
   };
 
   async handle(params: unknown): Promise<ToolResponse> {
     const p = params as ImpactAnalysisParams;
+    const { format = "json" } = p;
     if (!p.projectId) {
       return { success: false, error: "projectId is required" };
     }
@@ -103,9 +112,8 @@ export class ImpactAnalysisTool implements IToolHandler {
       });
 
       if (result.changedFiles.length === 0) {
-        return {
-          success: true,
-          data: {
+        return serializeToolResponse(
+          {
             projectId: result.projectId,
             scope: result.scope,
             changedFiles: [],
@@ -115,12 +123,12 @@ export class ImpactAnalysisTool implements IToolHandler {
             hint:
               "No indexed source files in the diff. Check scope/base_branch, or index the project first (index_project).",
           },
-        };
+          { format },
+        );
       }
 
-      return {
-        success: true,
-        data: {
+      return serializeToolResponse(
+        {
           projectId: result.projectId,
           scope: result.scope,
           baseBranch: result.baseBranch,
@@ -142,7 +150,8 @@ export class ImpactAnalysisTool implements IToolHandler {
             via: s.via,
           })),
         },
-      };
+        { format },
+      );
     } catch (error) {
       return {
         success: false,

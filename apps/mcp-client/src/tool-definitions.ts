@@ -499,6 +499,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           description: "Maximum search results to include",
           default: 5,
         },
+        format: {
+          type: "string",
+          enum: ["json", "toon"],
+          description: "Output format (json or toon). Default: json.",
+          default: "json",
+        },
       },
       required: ["query", "projectId"],
     },
@@ -742,6 +748,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           items: { type: "string" },
           description: "Explicit edge-type override (wins over mode): call|data_flow|http_call|emit|listen|import|type_ref|extend|implement.",
         },
+        format: {
+          type: "string",
+          enum: ["json", "toon"],
+          description: "Output format (json or toon). Default: json.",
+          default: "json",
+        },
       },
       required: ["projectId"],
       anyOf: [
@@ -792,6 +804,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           type: "array",
           items: { type: "string" },
           description: "Optional filter — only analyze these changed relative paths.",
+        },
+        format: {
+          type: "string",
+          enum: ["json", "toon"],
+          description: "Output format (json or toon). Default: json.",
+          default: "json",
         },
       },
       required: ["projectId", "projectPath"],

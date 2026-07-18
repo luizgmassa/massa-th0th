@@ -20,6 +20,7 @@
 import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
 import { tracePathService } from "../services/symbol/trace-path.js";
 import type { EdgeType } from "../services/symbol/symbol-graph.service.js";
+import { serializeToolResponse } from "./serialize.js";
 
 interface TracePathParams {
   projectId: string;
@@ -32,6 +33,7 @@ interface TracePathParams {
   depth?: number;
   include_tests?: boolean;
   edge_types?: EdgeType[];
+  format?: "json" | "toon";
 }
 
 export class TracePathTool implements IToolHandler {
@@ -83,12 +85,19 @@ export class TracePathTool implements IToolHandler {
         items: { type: "string" },
         description: "Explicit edge-type override (wins over mode): call|data_flow|http_call|emit|listen|import|type_ref|extend|implement.",
       },
+      format: {
+        type: "string",
+        enum: ["json", "toon"],
+        description: "Output format (json or toon). Default: json.",
+        default: "json",
+      },
     },
     required: ["projectId", "function_name"],
   };
 
   async handle(params: unknown): Promise<ToolResponse> {
     const p = params as TracePathParams;
+    const { format = "json" } = p;
     const seed = p.function_name ?? p.symbol ?? p.qualifiedName;
     if (!seed) {
       return { success: false, error: "function_name (or symbol/qualifiedName) is required" };
@@ -122,9 +131,8 @@ export class TracePathTool implements IToolHandler {
         };
       }
 
-      return {
-        success: true,
-        data: {
+      return serializeToolResponse(
+        {
           projectId: result.projectId,
           symbol: result.symbol,
           mode: result.mode,
@@ -145,7 +153,8 @@ export class TracePathTool implements IToolHandler {
           })),
           chains: result.chains,
         },
-      };
+        { format },
+      );
     } catch (error) {
       return {
         success: false,
