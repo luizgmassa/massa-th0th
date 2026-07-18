@@ -33,7 +33,7 @@
     { "path": "packages/core/src/services/graph/graph-store-pg.ts", "sha256": "4ab6dd9425cd0f4819fa0bbfc0fb75c76f94673eca1c562263d2e0bf9ed1c029" }
   ],
   "supportFiles": [
-    { "path": "README.md", "sha256": "287bafa95c6c79a124fd7ae3931eb080e9a1525b93003817e072dff9570b6ba2" },
+    { "path": "README.md", "sha256": "c8351b321a1d2981b7731ebf739d894f5d9da0e4eb53f10f133349351bf43afd" },
     { "path": "package.json", "sha256": "4a216c7dd4bc32b5f02b6de7c70ba63182dff236f50b24ea44e1151026ec75f1" },
     { "path": "turbo.json", "sha256": "b8f5065deaabb015f606a82a27a3ecfd8a746d41f61dbe19d3437b914a15b8d9" },
     { "path": "tsconfig.json", "sha256": "e324f7293caff5e0dd855aa64aded767c448c665188a9b615e6c23a614baa03d" },
