@@ -7,7 +7,8 @@
  *
  * Contract (spec.md R1–R8):
  *  - Trigger-driven with a debounce (every minObservations OR minIntervalMs),
- *    fired from the observation-ingest path. Fire-and-forget; never throws.
+ *    fired from the observation-ingest path. Optional enrichment degrades;
+ *    canonical proposal persistence failures remain fail-loud.
  *  - Pattern detection is RULE-BASED and never requires the LLM. LLM
  *    enrichment is optional (only when `llm.isEnabled()`), best-effort, and
  *    silent-degrades to the rule-based candidates on `{ok:false}`/throw.
@@ -45,6 +46,7 @@ import type { InsertMemoryInput, MemoryRow, UpdateMemoryPatch } from "../../data
 import { eventBus } from "../events/event-bus.js";
 import { llm as defaultLlmSurface } from "../memory/llm-client.js";
 import type { LlmSurface } from "../memory/consolidator.js";
+import { SearchServiceError } from "../search/search-diagnostics.js";
 
 // ── Public types ────────────────────────────────────────────────────────────
 
@@ -597,7 +599,8 @@ export class AutoImproveJob {
   /**
    * Run one auto-improve pass for `projectId`. Detects patterns, persists
    * pending proposals, and (when reviewGate is false) auto-applies them.
-   * Never throws.
+   * Optional analysis failures degrade, but durable proposal persistence
+   * failures propagate so callers cannot mistake a lost write for success.
    */
   async runOnce(projectId: string): Promise<AutoImproveResult> {
     this.runCalls++;
@@ -660,16 +663,8 @@ export class AutoImproveJob {
         createdAt: Date.now(),
         decidedAt: null,
       };
-      try {
-        this.proposalStore.insert(record);
-        created.push(record);
-      } catch (e) {
-        logger.warn("auto-improve: proposal insert failed (skip)", {
-          projectId,
-          signalKey: c.signalKey,
-          error: (e as Error).message,
-        });
-      }
+      await this.proposalStore.insert(record);
+      created.push(record);
     }
     if (created.length === 0) return noop;
 
@@ -702,6 +697,7 @@ export class AutoImproveJob {
             });
           }
         } catch (e) {
+          if (e instanceof SearchServiceError) throw e;
           logger.warn("proposal:auto-approved:threw", {
             id: r.id,
             projectId,
@@ -726,8 +722,9 @@ export class AutoImproveJob {
 
     let row: ProposalRecord | null;
     try {
-      row = this.proposalStore.getById(id);
-    } catch {
+      row = await this.proposalStore.getById(id);
+    } catch (error) {
+      if (error instanceof SearchServiceError) throw error;
       return { ok: false, reason: "store-failed" };
     }
     if (!row) return { ok: false, reason: "not-found" };
@@ -764,8 +761,9 @@ export class AutoImproveJob {
     // Flip status → approved.
     let updated: ProposalRecord | null;
     try {
-      updated = this.proposalStore.setStatus(id, "approved");
-    } catch {
+      updated = await this.proposalStore.setStatus(id, "approved");
+    } catch (error) {
+      if (error instanceof SearchServiceError) throw error;
       return { ok: false, reason: "store-failed" };
     }
     if (!updated) return { ok: false, reason: "store-failed" };
@@ -800,8 +798,9 @@ export class AutoImproveJob {
 
     let row: ProposalRecord | null;
     try {
-      row = this.proposalStore.getById(id);
-    } catch {
+      row = await this.proposalStore.getById(id);
+    } catch (error) {
+      if (error instanceof SearchServiceError) throw error;
       return { ok: false, reason: "store-failed" };
     }
     if (!row) return { ok: false, reason: "not-found" };
@@ -815,8 +814,9 @@ export class AutoImproveJob {
 
     let updated: ProposalRecord | null;
     try {
-      updated = this.proposalStore.setStatus(id, "rejected");
-    } catch {
+      updated = await this.proposalStore.setStatus(id, "rejected");
+    } catch (error) {
+      if (error instanceof SearchServiceError) throw error;
       return { ok: false, reason: "store-failed" };
     }
     if (!updated) return { ok: false, reason: "store-failed" };
@@ -941,12 +941,8 @@ export class AutoImproveJob {
 
   // ── listPending (surfacing) ──────────────────────────────────────────────
 
-  listPending(projectId: string): ProposalRecord[] {
-    try {
-      return this.proposalStore.listPending(projectId);
-    } catch {
-      return [];
-    }
+  async listPending(projectId: string): Promise<ProposalRecord[]> {
+    return this.proposalStore.listPending(projectId);
   }
 }
 

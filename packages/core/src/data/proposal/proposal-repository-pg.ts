@@ -1,14 +1,19 @@
-/** PostgreSQL implementation of the synchronous ProposalStore contract. */
+/** PostgreSQL implementation of the durable asynchronous ProposalStore contract. */
 
-import { logger } from "@massa-th0th/shared";
 import type { PrismaClient } from "../../generated/prisma/index.js";
 import { getPrismaClient } from "../../services/query/prisma-client.js";
-import type {
-  ProposalKind,
-  ProposalPayload,
-  ProposalRecord,
-  ProposalStatus,
-  ProposalStore,
+import {
+  searchBackendUnavailable,
+  storeCorruption,
+} from "../../services/search/search-diagnostics.js";
+import {
+  PROPOSAL_KINDS,
+  PROPOSAL_STATUSES,
+  type ProposalKind,
+  type ProposalPayload,
+  type ProposalRecord,
+  type ProposalStatus,
+  type ProposalStore,
 } from "./proposal-contract.js";
 
 interface PgProposalRow {
@@ -23,28 +28,84 @@ interface PgProposalRow {
   decided_at: Date | null;
 }
 
-function payload(raw: string): ProposalPayload {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function stringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function validKeys(value: Record<string, unknown>, allowed: readonly string[]): boolean {
+  return Object.keys(value).every((key) => allowed.includes(key));
+}
+
+function parsePayload(raw: string, kind: ProposalKind): ProposalPayload {
+  let value: unknown;
   try {
-    const value = JSON.parse(raw || "{}");
-    return value && typeof value === "object"
-      ? (value as ProposalPayload)
-      : ({ content: "" } as ProposalPayload);
-  } catch {
-    return { content: "" } as ProposalPayload;
+    value = JSON.parse(raw);
+  } catch (error) {
+    throw storeCorruption("proposal.payload_json", error);
   }
+  if (!isRecord(value)) {
+    throw storeCorruption("proposal.payload_json", new TypeError("expected object"));
+  }
+
+  let valid = false;
+  if (kind === "memory.create") {
+    valid =
+      validKeys(value, ["content", "type", "level", "importance", "tags"]) &&
+      typeof value.content === "string" &&
+      (value.type === undefined || typeof value.type === "string") &&
+      (value.level === undefined || typeof value.level === "number") &&
+      (value.importance === undefined || typeof value.importance === "number") &&
+      (value.tags === undefined || stringArray(value.tags));
+  } else if (kind === "memory.update") {
+    valid =
+      validKeys(value, ["content", "importance", "tags"]) &&
+      Object.keys(value).length > 0 &&
+      (value.content === undefined || typeof value.content === "string") &&
+      (value.importance === undefined || typeof value.importance === "number") &&
+      (value.tags === undefined || stringArray(value.tags));
+  } else {
+    valid = validKeys(value, ["tags"]) && stringArray(value.tags);
+  }
+  if (!valid) {
+    throw storeCorruption("proposal.payload_json", new TypeError("invalid proposal payload"));
+  }
+  return value as ProposalPayload;
+}
+
+function timestamp(value: unknown, field: string, nullable = false): number | null {
+  if (nullable && value === null) return null;
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+    throw storeCorruption(`proposal.${field}`, new TypeError("expected valid date"));
+  }
+  return value.getTime();
 }
 
 function toRecord(row: PgProposalRow): ProposalRecord {
+  if (!(PROPOSAL_KINDS as readonly string[]).includes(row.kind)) {
+    throw storeCorruption("proposal.kind", new TypeError("invalid kind"));
+  }
+  if (!(PROPOSAL_STATUSES as readonly string[]).includes(row.status)) {
+    throw storeCorruption("proposal.status", new TypeError("invalid status"));
+  }
+  const decidedAt = timestamp(row.decided_at, "decided_at", true);
+  if ((row.status === "pending") !== (decidedAt === null)) {
+    throw storeCorruption("proposal.decided_at", new TypeError("status/date mismatch"));
+  }
+  const kind = row.kind as ProposalKind;
   return {
     id: row.id,
     projectId: row.project_id,
-    kind: row.kind as ProposalKind,
+    kind,
     targetMemoryId: row.target_memory_id,
-    payload: payload(row.payload_json),
+    payload: parsePayload(row.payload_json, kind),
     rationale: row.rationale,
     status: row.status as ProposalStatus,
-    createdAt: row.created_at.getTime(),
-    decidedAt: row.decided_at?.getTime() ?? null,
+    createdAt: timestamp(row.created_at, "created_at")!,
+    decidedAt,
   };
 }
 
@@ -53,8 +114,10 @@ export class PgProposalStore implements ProposalStore {
   private mirror = new Map<string, ProposalRecord>();
   private hydrated = false;
   private hydrating: Promise<void> | null = null;
-  private pendingById = new Map<string, Promise<void>>();
-  private pending = new Set<Promise<void>>();
+
+  constructor(client?: PrismaClient) {
+    if (client) this.prisma = client;
+  }
 
   private getClient(): PrismaClient {
     if (!this.prisma) this.prisma = getPrismaClient();
@@ -66,17 +129,16 @@ export class PgProposalStore implements ProposalStore {
     if (this.hydrating) return this.hydrating;
     this.hydrating = (async () => {
       try {
-        const rows = await this.getClient().$queryRaw<PgProposalRow[]>`
-          SELECT id, project_id, kind, target_memory_id, payload_json,
-                 rationale, status, created_at, decided_at FROM proposals`;
-        const next = new Map(rows.map((row) => [row.id, toRecord(row)]));
-        for (const [id, record] of this.mirror) next.set(id, record);
-        this.mirror = next;
+        let rows: PgProposalRow[];
+        try {
+          rows = await this.getClient().$queryRaw<PgProposalRow[]>`
+            SELECT id, project_id, kind, target_memory_id, payload_json,
+                   rationale, status, created_at, decided_at FROM proposals`;
+        } catch (error) {
+          throw searchBackendUnavailable("proposal_store", error);
+        }
+        this.mirror = new Map(rows.map((row) => [row.id, toRecord(row)]));
         this.hydrated = true;
-      } catch (error) {
-        logger.warn("PgProposalStore hydrate failed (best-effort)", {
-          error: (error as Error).message,
-        });
       } finally {
         this.hydrating = null;
       }
@@ -84,99 +146,75 @@ export class PgProposalStore implements ProposalStore {
     return this.hydrating;
   }
 
-  private enqueue(id: string, operation: () => Promise<void>): void {
-    const previous = this.pendingById.get(id);
-    const run = async () => {
-      await this.ensureHydrated();
-      try {
-        await operation();
-      } catch (error) {
-        logger.warn("PgProposalStore persistence failed (best-effort)", {
-          id,
-          error: (error as Error).message,
-        });
-      }
-    };
-    const task = previous ? previous.then(run, run) : run();
-    this.pendingById.set(id, task);
-    this.pending.add(task);
-    void task.finally(() => {
-      this.pending.delete(task);
-      if (this.pendingById.get(id) === task) this.pendingById.delete(id);
-    });
-  }
-
-  insert(record: ProposalRecord): void {
+  async insert(record: ProposalRecord): Promise<void> {
+    await this.ensureHydrated();
     const captured = structuredClone(record);
-    this.mirror.set(record.id, captured);
-    this.enqueue(record.id, async () => {
+    try {
       await this.getClient().$executeRaw`
         INSERT INTO proposals (
           id, project_id, kind, target_memory_id, payload_json, rationale,
           status, created_at, decided_at
         ) VALUES (
           ${captured.id}, ${captured.projectId}, ${captured.kind},
-          ${captured.targetMemoryId}, ${JSON.stringify(captured.payload ?? {})},
+          ${captured.targetMemoryId}, ${JSON.stringify(captured.payload)},
           ${captured.rationale}, ${captured.status}, ${new Date(captured.createdAt)},
           ${captured.decidedAt === null ? null : new Date(captured.decidedAt)}
         )`;
-    });
+    } catch (error) {
+      throw searchBackendUnavailable("proposal_store", error);
+    }
+    this.mirror.set(record.id, captured);
   }
 
-  getById(id: string): ProposalRecord | null {
-    void this.ensureHydrated();
+  async getById(id: string): Promise<ProposalRecord | null> {
+    await this.ensureHydrated();
     const record = this.mirror.get(id);
     return record ? structuredClone(record) : null;
   }
 
-  listPending(projectId: string): ProposalRecord[] {
-    void this.ensureHydrated();
+  async listPending(projectId: string): Promise<ProposalRecord[]> {
+    await this.ensureHydrated();
     return [...this.mirror.values()]
       .filter((record) => record.projectId === projectId && record.status === "pending")
       .sort((a, b) => b.createdAt - a.createdAt)
       .map((record) => structuredClone(record));
   }
 
-  setStatus(
+  async setStatus(
     id: string,
     status: "approved" | "rejected",
     decidedAt?: number,
-  ): ProposalRecord | null {
+  ): Promise<ProposalRecord | null> {
+    await this.ensureHydrated();
     const current = this.mirror.get(id);
-    if (!current) {
-      void this.ensureHydrated();
-      return null;
-    }
+    if (!current) return null;
     if (current.status !== "pending") return structuredClone(current);
 
-    const next: ProposalRecord = {
-      ...current,
-      status,
-      decidedAt: decidedAt ?? Date.now(),
-    };
-    this.mirror.set(id, next);
-    this.enqueue(id, async () => {
-      const rows = await this.getClient().$queryRaw<PgProposalRow[]>`
+    let rows: PgProposalRow[];
+    try {
+      rows = await this.getClient().$queryRaw<PgProposalRow[]>`
         UPDATE proposals
-        SET status = ${status}, decided_at = ${new Date(next.decidedAt!)}
+        SET status = ${status}, decided_at = ${new Date(decidedAt ?? Date.now())}
         WHERE id = ${id} AND status = 'pending'
         RETURNING id, project_id, kind, target_memory_id, payload_json,
                   rationale, status, created_at, decided_at`;
-      if (rows[0]) {
-        this.mirror.set(id, toRecord(rows[0]));
-        return;
+      if (!rows[0]) {
+        rows = await this.getClient().$queryRaw<PgProposalRow[]>`
+          SELECT id, project_id, kind, target_memory_id, payload_json,
+                 rationale, status, created_at, decided_at
+          FROM proposals WHERE id = ${id}`;
       }
-      const persisted = await this.getClient().$queryRaw<PgProposalRow[]>`
-        SELECT id, project_id, kind, target_memory_id, payload_json,
-               rationale, status, created_at, decided_at
-        FROM proposals WHERE id = ${id}`;
-      if (persisted[0]) this.mirror.set(id, toRecord(persisted[0]));
-    });
-    return structuredClone(next);
+    } catch (error) {
+      throw searchBackendUnavailable("proposal_store", error);
+    }
+    if (!rows[0]) return null;
+    const persisted = toRecord(rows[0]);
+    this.mirror.set(id, persisted);
+    return structuredClone(persisted);
   }
 
-  journalMode(): string {
-    void this.ensureHydrated();
+  async journalMode(): Promise<string> {
+    await this.ensureHydrated();
     return "postgres";
   }
 
@@ -185,13 +223,6 @@ export class PgProposalStore implements ProposalStore {
   }
 
   async __drain(): Promise<void> {
-    do {
-      const tasks = [
-        ...(this.hydrating ? [this.hydrating] : []),
-        ...this.pending,
-      ];
-      if (tasks.length === 0) break;
-      await Promise.all(tasks);
-    } while (this.hydrating || this.pending.size > 0);
+    await this.ensureHydrated();
   }
 }

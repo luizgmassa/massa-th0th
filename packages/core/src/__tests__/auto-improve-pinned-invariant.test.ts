@@ -114,14 +114,14 @@ function makeJob(
 }
 
 /** Insert a proposal directly into the store and return it. */
-function seedProposal(
+async function seedProposal(
   store: MemoryProposalStore,
   partial: Partial<ProposalRecord> & {
     kind: ProposalRecord["kind"];
     targetMemoryId?: string | null;
     payload: ProposalRecord["payload"];
   },
-): ProposalRecord {
+): Promise<ProposalRecord> {
   const rec: ProposalRecord = {
     id: `prop_${Math.random().toString(36).slice(2, 8)}`,
     projectId: "proj-m40",
@@ -133,7 +133,7 @@ function seedProposal(
     createdAt: Date.now(),
     decidedAt: null,
   };
-  store.insert(rec);
+  await store.insert(rec);
   return rec;
 }
 
@@ -143,7 +143,7 @@ describe("M40 — pinned-memory invariant", () => {
   it("memory.update on a pinned (pinned=1) target → reason 'pinned', NO mutation", async () => {
     const repo = makeFakeRepo([makeRow("mem-1", 1)]);
     const { job, store } = makeJob(repo);
-    const prop = seedProposal(store, {
+    const prop = await seedProposal(store, {
       kind: "memory.update",
       targetMemoryId: "mem-1",
       payload: { content: "attacker-overwrite", importance: 0.1 },
@@ -155,14 +155,14 @@ describe("M40 — pinned-memory invariant", () => {
     expect(res.reason).toBe("pinned");
     expect(repo.updateCalls).toHaveLength(0); // invariant: NO mutation
     // Status stays pending (apply never flipped it).
-    const row = store.getById(prop.id);
+    const row = await store.getById(prop.id);
     expect(row!.status).toBe("pending");
   });
 
   it("memory.tag on a pinned (pinned=true-equivalent via row=1) target → reason 'pinned', NO mutation", async () => {
     const repo = makeFakeRepo([makeRow("mem-tag", 1)]);
     const { job, store } = makeJob(repo);
-    const prop = seedProposal(store, {
+    const prop = await seedProposal(store, {
       kind: "memory.tag",
       targetMemoryId: "mem-tag",
       payload: { tags: ["evil", "overwrite"] },
@@ -182,7 +182,7 @@ describe("M40 — fail CLOSED on unreadable/missing target", () => {
   it("memory.update on a missing target → reason 'unreadable_target', NO mutation", async () => {
     const repo = makeFakeRepo([]); // no rows → target not found
     const { job, store } = makeJob(repo);
-    const prop = seedProposal(store, {
+    const prop = await seedProposal(store, {
       kind: "memory.update",
       targetMemoryId: "does-not-exist",
       payload: { content: "x" },
@@ -199,7 +199,7 @@ describe("M40 — fail CLOSED on unreadable/missing target", () => {
     const repo = makeFakeRepo([makeRow("mem-2", 0)]);
     repo.getByIdThrow = true;
     const { job, store } = makeJob(repo);
-    const prop = seedProposal(store, {
+    const prop = await seedProposal(store, {
       kind: "memory.tag",
       targetMemoryId: "mem-2",
       payload: { tags: ["t"] },
@@ -219,7 +219,7 @@ describe("M40 — behavior-preserving on unpinned readable target", () => {
   it("memory.update on an unpinned readable target → applies the patch as before", async () => {
     const repo = makeFakeRepo([makeRow("mem-ok", 0)]);
     const { job, store } = makeJob(repo);
-    const prop = seedProposal(store, {
+    const prop = await seedProposal(store, {
       kind: "memory.update",
       targetMemoryId: "mem-ok",
       payload: { content: "new content", importance: 0.8, tags: ["a", "b"] },
@@ -238,7 +238,7 @@ describe("M40 — behavior-preserving on unpinned readable target", () => {
   it("memory.tag on an unpinned readable target → applies the tags as before", async () => {
     const repo = makeFakeRepo([makeRow("mem-ok2", 0)]);
     const { job, store } = makeJob(repo);
-    const prop = seedProposal(store, {
+    const prop = await seedProposal(store, {
       kind: "memory.tag",
       targetMemoryId: "mem-ok2",
       payload: { tags: ["x", "y"] },
@@ -258,7 +258,7 @@ describe("M40 — malformed proposal payload rejected (fail-closed)", () => {
   it("memory.update with present-but-invalid importance → reason 'malformed-payload', NO mutation", async () => {
     const repo = makeFakeRepo([makeRow("mem-p", 0)]);
     const { job, store } = makeJob(repo);
-    const prop = seedProposal(store, {
+    const prop = await seedProposal(store, {
       kind: "memory.update",
       targetMemoryId: "mem-p",
       payload: { importance: 42 }, // out of [0,1]
@@ -274,7 +274,7 @@ describe("M40 — malformed proposal payload rejected (fail-closed)", () => {
   it("memory.update with non-string content → reason 'malformed-payload', NO mutation", async () => {
     const repo = makeFakeRepo([makeRow("mem-p2", 0)]);
     const { job, store } = makeJob(repo);
-    const prop = seedProposal(store, {
+    const prop = await seedProposal(store, {
       kind: "memory.update",
       targetMemoryId: "mem-p2",
       payload: { content: 12345 }, // wrong type
@@ -290,7 +290,7 @@ describe("M40 — malformed proposal payload rejected (fail-closed)", () => {
   it("memory.create with invalid type → reason 'malformed-payload', NO insert", async () => {
     const repo = makeFakeRepo();
     const { job, store } = makeJob(repo);
-    const prop = seedProposal(store, {
+    const prop = await seedProposal(store, {
       kind: "memory.create",
       targetMemoryId: null,
       payload: { type: "not-a-real-memory-type", content: "x" },
@@ -306,7 +306,7 @@ describe("M40 — malformed proposal payload rejected (fail-closed)", () => {
   it("memory.create with valid optional-absent payload still applies (well-formed)", async () => {
     const repo = makeFakeRepo();
     const { job, store } = makeJob(repo);
-    const prop = seedProposal(store, {
+    const prop = await seedProposal(store, {
       kind: "memory.create",
       targetMemoryId: null,
       payload: { content: "legit" }, // no type/importance → defaults OK

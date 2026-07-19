@@ -30,6 +30,7 @@ import {
 import type { InsertMemoryInput, UpdateMemoryPatch } from "../data/memory/memory-repository.js";
 import type { LlmSurface } from "../services/memory/consolidator.js";
 import { eventBus } from "../services/events/event-bus.js";
+import { SearchServiceError } from "../services/search/search-diagnostics.js";
 
 // ── Fakes ────────────────────────────────────────────────────────────────────
 
@@ -214,7 +215,7 @@ describe("AutoImproveJob — runOnce + review gate", () => {
     expect(res.improved).toBe(true);
     expect(res.proposalsCreated).toBeGreaterThanOrEqual(1);
     expect(res.proposalsApplied).toBe(0); // review gate on → no auto-apply
-    const pending = store.listPending("proj-ai");
+    const pending = await store.listPending("proj-ai");
     expect(pending.length).toBeGreaterThanOrEqual(1);
     const fileProp = pending.find((p) => p.rationale.includes("src/auth.ts"));
     expect(fileProp).toBeDefined();
@@ -234,7 +235,7 @@ describe("AutoImproveJob — runOnce + review gate", () => {
     const res = await job.runOnce("p");
     expect(res.improved).toBe(false);
     expect(res.proposalsCreated).toBe(0);
-    expect(store.listPending("p").length).toBe(0);
+    expect((await store.listPending("p")).length).toBe(0);
   });
 
   it("P5-DETECT-02 (edge): < 2 observations → noop", async () => {
@@ -280,7 +281,7 @@ describe("AutoImproveJob — runOnce + review gate", () => {
     expect(res.improved).toBe(true);
     expect(res.proposalsCreated).toBeGreaterThanOrEqual(1);
     expect(res.source).toBe("rule-based");
-    expect(store.listPending("proj-ai").length).toBeGreaterThanOrEqual(1);
+    expect((await store.listPending("proj-ai")).length).toBeGreaterThanOrEqual(1);
   });
 
   it("P5-DEGRADE-02: LLM on + {ok:false} → rule-based candidates verbatim", async () => {
@@ -313,7 +314,7 @@ describe("AutoImproveJob — runOnce + review gate", () => {
     expect(res.improved).toBe(true);
     expect(res.proposalsCreated).toBeGreaterThanOrEqual(1);
     expect(res.source).toBe("rule-based");
-    expect(store.listPending("proj-ai").length).toBeGreaterThanOrEqual(1);
+    expect((await store.listPending("proj-ai")).length).toBeGreaterThanOrEqual(1);
   });
 
   it("P5-DEGRADE-02 (enrich ok): LLM enriches content + rationale, source='llm'", async () => {
@@ -358,7 +359,7 @@ describe("AutoImproveJob — approve / reject state machine", () => {
 
   it("P5-LIST-01: listPending returns pending proposals for the project", async () => {
     await job.runOnce("proj-ai");
-    const pending = job.listPending("proj-ai");
+    const pending = await job.listPending("proj-ai");
     expect(pending.length).toBeGreaterThanOrEqual(1);
     for (const p of pending) {
       expect(p.status).toBe("pending");
@@ -368,7 +369,7 @@ describe("AutoImproveJob — approve / reject state machine", () => {
 
   it("P5-APPROVE-01: approve applies the edit, flips status, emits memory:auto-improved", async () => {
     await job.runOnce("proj-ai");
-    const pending = job.listPending("proj-ai");
+    const pending = await job.listPending("proj-ai");
     const target = pending[0];
     const events: any[] = [];
     const unsub = eventBus.subscribe("memory:auto-improved", (e) => events.push(e));
@@ -394,7 +395,7 @@ describe("AutoImproveJob — approve / reject state machine", () => {
 
   it("P5-EVENT-01: memory:auto-improved is in EventMap with the R6 shape", async () => {
     await job.runOnce("proj-ai");
-    const target = job.listPending("proj-ai")[0];
+    const target = (await job.listPending("proj-ai"))[0];
     const events: any[] = [];
     const unsub = eventBus.subscribe("memory:auto-improved", (e) => events.push(e));
     try {
@@ -415,7 +416,7 @@ describe("AutoImproveJob — approve / reject state machine", () => {
 
   it("P5-REJECT-01: reject flips status, does NOT apply, does NOT emit", async () => {
     await job.runOnce("proj-ai");
-    const target = job.listPending("proj-ai")[0];
+    const target = (await job.listPending("proj-ai"))[0];
     const beforeInserted = mem.inserted.length;
     const events: any[] = [];
     const unsub = eventBus.subscribe("memory:auto-improved", (e) => events.push(e));
@@ -446,7 +447,7 @@ describe("AutoImproveJob — approve / reject state machine", () => {
 
   it("P5-FAIL-01: approve on already-approved → {ok:false, not-pending}", async () => {
     await job.runOnce("proj-ai");
-    const target = job.listPending("proj-ai")[0];
+    const target = (await job.listPending("proj-ai"))[0];
     const first = await job.approve(target.id, "proj-ai");
     expect(first.ok).toBe(true);
     const second = await job.approve(target.id, "proj-ai");
@@ -456,7 +457,7 @@ describe("AutoImproveJob — approve / reject state machine", () => {
 
   it("P5-FAIL-01: approve with project mismatch → {ok:false, project-mismatch}", async () => {
     await job.runOnce("proj-ai");
-    const target = job.listPending("proj-ai")[0];
+    const target = (await job.listPending("proj-ai"))[0];
     const res = await job.approve(target.id, "other-project");
     expect(res.ok).toBe(false);
     expect(res.reason).toBe("project-mismatch");
@@ -470,14 +471,47 @@ describe("AutoImproveJob — approve / reject state machine", () => {
 
   it("apply-failed: memoryRepo.insert throws → status stays pending, {ok:false, apply-failed}", async () => {
     await job.runOnce("proj-ai");
-    const target = job.listPending("proj-ai")[0];
+    const target = (await job.listPending("proj-ai"))[0];
     mem.failNext = true;
     const res = await job.approve(target.id, "proj-ai");
     expect(res.ok).toBe(false);
     expect(res.reason).toBe("apply-failed");
     // Status unchanged.
-    const row = store.getById(target.id);
+    const row = await store.getById(target.id);
     expect(row!.status).toBe("pending");
+  });
+
+  it("canonical read failures propagate from approve and reject", async () => {
+    const failure = new SearchServiceError("STORE_CORRUPTION", "proposal.payload_json");
+    store.getById = async () => {
+      throw failure;
+    };
+    await expect(job.approve("proposal-1", "proj-ai")).rejects.toBe(failure);
+    await expect(job.reject("proposal-1", "proj-ai")).rejects.toBe(failure);
+  });
+
+  it("canonical status failures propagate from approve and reject", async () => {
+    await job.runOnce("proj-ai");
+    const [target] = await job.listPending("proj-ai");
+    const failure = new SearchServiceError("SEARCH_BACKEND_UNAVAILABLE", "proposal_store");
+    store.setStatus = async () => {
+      throw failure;
+    };
+    await expect(job.approve(target.id, "proj-ai")).rejects.toBe(failure);
+    await expect(job.reject(target.id, "proj-ai")).rejects.toBe(failure);
+  });
+
+  it("auto-approval rethrows canonical persistence failures", async () => {
+    const auto = makeJob({
+      observations: hotFileObservations(),
+      reviewGate: false,
+      llm: disabledSurface(),
+    });
+    const failure = new SearchServiceError("SEARCH_BACKEND_UNAVAILABLE", "proposal_store");
+    auto.store.setStatus = async () => {
+      throw failure;
+    };
+    await expect(auto.job.runOnce("proj-ai")).rejects.toBe(failure);
   });
 });
 

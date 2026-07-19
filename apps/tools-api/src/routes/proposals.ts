@@ -5,11 +5,12 @@
  * POST /api/v1/proposal/approve - Approve a pending proposal (apply + flip + event)
  * POST /api/v1/proposal/reject  - Reject a pending proposal (flip, no apply/event)
  *
- * Returns 423 when auto-improve is disabled via config, 400 on missing required
- * fields. The job/service never throws; all failures surface as {ok:false, reason}.
+ * Returns 423 when auto-improve is disabled via config and 400 on missing
+ * required fields. Canonical persistence failures flow to the global sanitized
+ * error envelope; domain rejections surface as {ok:false, reason}.
  */
 
-import { getAutoImproveJob } from "@massa-th0th/core";
+import { getAutoImproveJob, SearchServiceError } from "@massa-th0th/core";
 import { config, logger } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
 
@@ -34,7 +35,7 @@ const EVENT_DETAIL = {
 export const proposalRoutes = new Elysia({ prefix: "/api/v1/proposal" })
   .post(
     "/list",
-    ({ body, set }) => {
+    async ({ body, set }) => {
       if (autoImproveDisabled()) {
         set.status = 423;
         return { status: 423, error: "auto-improve disabled" };
@@ -45,13 +46,14 @@ export const proposalRoutes = new Elysia({ prefix: "/api/v1/proposal" })
         return { status: 400, error: "projectId required" };
       }
       try {
-        const pending = job().listPending(b.projectId);
+        const pending = await job().listPending(b.projectId);
         set.status = 200;
         return {
           success: true,
           data: { pending, count: pending.length },
         };
       } catch (e) {
+        if (e instanceof SearchServiceError) throw e;
         const err = e as Error;
         logger.error("proposal list failed", err);
         set.status = 500;
@@ -87,6 +89,7 @@ export const proposalRoutes = new Elysia({ prefix: "/api/v1/proposal" })
         set.status = result.ok ? 200 : 400;
         return { success: result.ok, data: result };
       } catch (e) {
+        if (e instanceof SearchServiceError) throw e;
         const err = e as Error;
         logger.error("proposal approve failed", err);
         set.status = 500;
@@ -124,6 +127,7 @@ export const proposalRoutes = new Elysia({ prefix: "/api/v1/proposal" })
         set.status = result.ok ? 200 : 400;
         return { success: result.ok, data: result };
       } catch (e) {
+        if (e instanceof SearchServiceError) throw e;
         const err = e as Error;
         logger.error("proposal reject failed", err);
         set.status = 500;

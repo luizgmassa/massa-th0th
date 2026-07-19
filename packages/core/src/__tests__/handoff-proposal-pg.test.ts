@@ -202,16 +202,16 @@ describe.skipIf(!DEDICATED_DB)("handoff/proposal PostgreSQL parity", () => {
         targetMemoryId: null,
         payload: { content: "edited", importance: 0.9, tags: ["x", "y"] },
       });
-      store.insert(record);
-      expect(store.getById(record.id)).toEqual(record);
+      await store.insert(record);
+      expect(await store.getById(record.id)).toEqual(record);
       await store.__drain();
       const rows = await prisma.$queryRaw<any[]>`
         SELECT * FROM proposals WHERE id = ${record.id}`;
       expect(rows).toHaveLength(1);
       expect(rows[0].target_memory_id).toBeNull();
       expect(JSON.parse(rows[0].payload_json)).toEqual(record.payload);
-      expect(store.getById("missing")).toBeNull();
-      expect(store.journalMode()).toBe("postgres");
+      expect(await store.getById("missing")).toBeNull();
+      expect(await store.journalMode()).toBe("postgres");
     });
 
     test("listPending mirrors project/status filtering and newest-first ordering", async () => {
@@ -221,11 +221,11 @@ describe.skipIf(!DEDICATED_DB)("handoff/proposal PostgreSQL parity", () => {
       const older = proposal({ projectId: pid, createdAt: 1000 });
       const newer = proposal({ projectId: pid, createdAt: 2000 });
       const approved = proposal({ projectId: pid, status: "approved", decidedAt: 1500 });
-      store.insert(older);
-      store.insert(newer);
-      store.insert(approved);
-      store.insert(proposal({ projectId: projectId() }));
-      expect(store.listPending(pid).map((row) => row.id)).toEqual([newer.id, older.id]);
+      await store.insert(older);
+      await store.insert(newer);
+      await store.insert(approved);
+      await store.insert(proposal({ projectId: projectId() }));
+      expect((await store.listPending(pid)).map((row) => row.id)).toEqual([newer.id, older.id]);
       await store.__drain();
     });
 
@@ -233,16 +233,16 @@ describe.skipIf(!DEDICATED_DB)("handoff/proposal PostgreSQL parity", () => {
       const store = new PgProposalStore();
       await store.__hydrate();
       const record = proposal();
-      store.insert(record);
-      expect(store.setStatus(record.id, "approved", 12345)).toMatchObject({
+      await store.insert(record);
+      expect(await store.setStatus(record.id, "approved", 12345)).toMatchObject({
         status: "approved",
         decidedAt: 12345,
       });
-      expect(store.setStatus(record.id, "rejected", 2000)).toMatchObject({
+      expect(await store.setStatus(record.id, "rejected", 2000)).toMatchObject({
         status: "approved",
         decidedAt: 12345,
       });
-      expect(store.setStatus("missing", "approved")).toBeNull();
+      expect(await store.setStatus("missing", "approved")).toBeNull();
       await store.__drain();
     });
 
@@ -250,25 +250,26 @@ describe.skipIf(!DEDICATED_DB)("handoff/proposal PostgreSQL parity", () => {
       const record = proposal();
       const first = new PgProposalStore();
       await first.__hydrate();
-      first.insert(record);
+      await first.insert(record);
       await first.__drain();
       const restarted = new PgProposalStore();
       await restarted.__hydrate();
-      expect(restarted.getById(record.id)).toEqual(record);
+      expect(await restarted.getById(record.id)).toEqual(record);
     });
 
     test("concurrent terminal transitions have one durable winner", async () => {
       const seed = new PgProposalStore();
       await seed.__hydrate();
       const record = proposal();
-      seed.insert(record);
+      await seed.insert(record);
       await seed.__drain();
       const approver = new PgProposalStore();
       const rejecter = new PgProposalStore();
       await Promise.all([approver.__hydrate(), rejecter.__hydrate()]);
-      approver.setStatus(record.id, "approved", 1000);
-      rejecter.setStatus(record.id, "rejected", 2000);
-      await Promise.all([approver.__drain(), rejecter.__drain()]);
+      await Promise.all([
+        approver.setStatus(record.id, "approved", 1000),
+        rejecter.setStatus(record.id, "rejected", 2000),
+      ]);
       const rows = await prisma.$queryRaw<any[]>`
         SELECT status, decided_at FROM proposals WHERE id = ${record.id}`;
       expect(["approved", "rejected"]).toContain(rows[0].status);
@@ -290,7 +291,7 @@ describe.skipIf(!DEDICATED_DB)("handoff/proposal PostgreSQL parity", () => {
     const h = handoff();
     const p = proposal();
     await handoffStore.insert(h);
-    proposalStore.insert(p);
+    await proposalStore.insert(p);
     await Promise.all([
       (handoffStore as PgHandoffStore).__drain(),
       (proposalStore as PgProposalStore).__drain(),
