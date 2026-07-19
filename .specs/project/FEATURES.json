@@ -246,13 +246,13 @@
     {
       "slug": "installer-race-safety",
       "title": "M19 — installer race safety",
-      "status": "in_progress", "priority": "P0",
-      "phases": { "specify": true, "design": true, "tasks": true, "execute": false }
+      "status": "complete", "priority": "P0",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
     },
     {
       "slug": "synapse-mcp-parity-discovery-pagination",
       "title": "M20 + M54 — Synapse MCP parity and discovery pagination",
-      "status": "pending", "priority": "P1",
+      "status": "in_progress", "priority": "P1",
       "phases": { "specify": false, "design": false, "tasks": false, "execute": false }
     },
     {
@@ -280,5 +280,5 @@
       "phases": { "specify": false, "design": false, "tasks": false, "execute": false }
     }
   ],
-  "active_feature": "installer-race-safety"
+  "active_feature": "synapse-mcp-parity-discovery-pagination"
 }

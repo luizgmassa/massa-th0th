@@ -5,15 +5,15 @@
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-wave-3`
 - workflow: spec-driven
-- feature: `installer-race-safety` (M19)
-- status: M19 code PASS on native macOS; feature BLOCKED on mandatory native Debian 12 amd64 validation
+- feature: `synapse-mcp-parity-discovery-pagination` (M20 + M54)
+- status: M19 complete; M20 + M54 investigation active
 - branch/worktree: `wave-3` / `massa-th0th-wt-wave-3`
 - sequence: M19 → M20+M54 → M50 → M16+M17 → M45+M47 → M21
 - invariant: `sqlite-removal` stays `in_progress`; `multi-language-tree-sitter-breadth` reconciled to `complete` from its recorded PASS evidence.
 
 ### Wave 3 Next Step
 
-Provision a true/native Debian 12 amd64 environment and run `bash scripts/tests/test-installer-env-race-safety.sh`. A pass closes M19; until then no later Wave 3 feature is activated.
+Specify M20 transport parity and M54 discovery pagination from current REST/MCP source, splitting them into atomic tasks if their write contracts diverge.
 
 ---
 

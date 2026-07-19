@@ -1,11 +1,12 @@
 # AI Engineering Handoff
 
-## Current: Wave 3 / M19 Installer Race Safety
+## Current: Wave 3 / M20 + M54 Synapse MCP Parity and Discovery Pagination
 
 - projectId: `massa-th0th`; workflowSessionId: `spec-wave-3`
 - branch: `wave-3`; isolated worktree: `massa-th0th-wt-wave-3`
-- active feature: `installer-race-safety`
-- exact next step: run the unchanged focused M19 harness on true/native Debian 12 amd64. macOS code and discrimination gates pass; `.specs/features/installer-race-safety/validation.md` records the platform blocker.
+- active feature: `synapse-mcp-parity-discovery-pagination`
+- M19 complete: macOS 22/22, Ubuntu Codespace 22/22, three discrimination mutations killed. Ubuntu/glibc-x64 was an explicit user-approved substitution for Debian 12.
+- exact next step: investigate current MCP API client/proxy, Synapse REST lifecycle, tool registry ordering, and `tools/list` protocol handler; then freeze separate M20/M54 tasks.
 - sequence after M19: M20+M54, M50, M16+M17, M45+M47, M21.
 - mandatory unavailable gates block the relevant feature. Do not weaken validation assets.
 
