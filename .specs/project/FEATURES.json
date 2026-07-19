@@ -253,7 +253,7 @@
       "slug": "synapse-mcp-parity-discovery-pagination",
       "title": "M20 + M54 — Synapse MCP parity and discovery pagination",
       "status": "in_progress", "priority": "P1",
-      "phases": { "specify": false, "design": false, "tasks": false, "execute": false }
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": false }
     },
     {
       "slug": "tiered-fail-loud-search",
