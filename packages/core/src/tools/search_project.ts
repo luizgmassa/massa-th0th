@@ -9,6 +9,7 @@ import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
 import { logger } from "@massa-th0th/shared";
 import { SearchController } from "../controllers/search-controller.js";
 import { serializeToolResponse } from "./serialize.js";
+import { SearchServiceError } from "../services/search/search-diagnostics.js";
 
 interface SearchProjectParams {
   query: string;
@@ -126,6 +127,11 @@ export class SearchProjectTool implements IToolHandler {
         query: p.query,
         projectId: p.projectId,
       });
+
+      // Transport layers own status codes and the shared sanitized envelope.
+      // Preserve the typed error so HTTP and MCP cannot mistake an outage for
+      // an ordinary tool-level failure returned with status 200.
+      if (error instanceof SearchServiceError) throw error;
 
       return {
         success: false,

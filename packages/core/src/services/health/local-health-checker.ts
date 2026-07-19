@@ -5,11 +5,16 @@ import { getPgPool } from "../../data/db-connection.js";
 import fs from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
+import {
+  getSearchDiagnostics,
+  type SearchDiagnostic,
+} from "../search/search-diagnostics.js";
 
 export interface ServiceStatus { available: boolean; latency?: number; error?: string; details?: Record<string, unknown>; }
 export interface LocalHealthReport {
   status: "healthy" | "degraded" | "unhealthy"; mode: "postgresql"; timestamp: string;
   services: { ollama: ServiceStatus; dataDirectory: ServiceStatus; vectorStore: ServiceStatus; keywordSearch: ServiceStatus; cache: ServiceStatus; embeddingCache: ServiceStatus; };
+  diagnostics: { search: readonly SearchDiagnostic[] };
   summary: { total: number; healthy: number; degraded: number; failed: number; }; recommendations: string[];
 }
 export interface OllamaModelInfo { name: string; size: number; digest: string; modified_at: string; }
@@ -25,7 +30,7 @@ export class LocalHealthChecker {
     const healthy = unique.filter((status) => status.available).length;
     const failed = unique.length - healthy;
     const status = failed === 0 ? "healthy" : healthy > failed ? "degraded" : "unhealthy";
-    return { status, mode: "postgresql", timestamp: new Date().toISOString(), services, summary: { total: unique.length, healthy, degraded: 0, failed }, recommendations: this.generateRecommendations(services) };
+    return { status, mode: "postgresql", timestamp: new Date().toISOString(), services, diagnostics: { search: getSearchDiagnostics() }, summary: { total: unique.length, healthy, degraded: 0, failed }, recommendations: this.generateRecommendations(services) };
   }
 
   async checkOllama(): Promise<ServiceStatus> {

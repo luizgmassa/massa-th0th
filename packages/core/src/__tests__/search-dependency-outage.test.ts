@@ -2,8 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { SearchSource, type SearchResult } from "@massa-th0th/shared";
 import { ContextualSearchRLM } from "../services/search/contextual-search-rlm.js";
 import { SearchProjectTool } from "../tools/search_project.js";
+import { SearchController } from "../controllers/search-controller.js";
+import { LocalHealthChecker } from "../services/health/local-health-checker.js";
 import {
   getSearchDiagnostics,
+  recordSearchDegradation,
   resetSearchDiagnosticsForTests,
   SearchServiceError,
   type SearchDegradation,
@@ -167,22 +170,76 @@ describe("ContextualSearchRLM dependency-outage transparency", () => {
 });
 
 describe("SearchProjectTool outage envelope", () => {
-  test("required retrieval rejection becomes the existing success:false envelope", async () => {
+  test("typed required retrieval rejection remains typed for transports", async () => {
     const tool = Object.create(SearchProjectTool.prototype) as SearchProjectTool;
     (tool as any).controller = {
       searchProject: async () => {
-        throw new Error("vector backend offline");
+        throw new SearchServiceError("SEARCH_BACKEND_UNAVAILABLE", "vector_search", {
+          cause: new Error("vector backend password=secret"),
+        });
       },
     };
 
-    const response = await tool.handle({
+    await expect(tool.handle({
       query: "required retrieval",
       projectId: "outage-project",
       format: "json",
+    })).rejects.toMatchObject({
+      code: "SEARCH_BACKEND_UNAVAILABLE",
+      component: "vector_search",
+      statusCode: 503,
+      message: "A required search backend is unavailable",
     });
+  });
 
+  test("non-service failures retain the tool-level compatibility envelope", async () => {
+    const tool = Object.create(SearchProjectTool.prototype) as SearchProjectTool;
+    (tool as any).controller = {
+      searchProject: async () => { throw new Error("project is not indexed"); },
+    };
+
+    const response = await tool.handle({ query: "query", projectId: "missing" });
     expect(response.success).toBe(false);
     expect(response.error).toContain("Failed to search project");
-    expect(response.error).toContain("vector backend offline");
+  });
+});
+
+describe("search transport metadata", () => {
+  test("SearchController includes bounded degradations only when present", async () => {
+    const controller = Object.create(SearchController.prototype) as SearchController;
+    (controller as any).contextualSearch = {
+      checkSearchAdmission: async () => ({ admitted: true }),
+      search: async (_query: string, _projectId: string, options: any) => {
+        options.onDegradations(Array.from({ length: 12 }, (_, index) => ({
+          code: "TRIGRAM_UNAVAILABLE",
+          component: `optional-${index}`,
+          message: "Trigram enrichment was unavailable",
+        })));
+        return [];
+      },
+    };
+
+    const result = await controller.searchProject({ query: "query", projectId: "project" });
+
+    expect(result.degradations).toHaveLength(10);
+    expect(JSON.stringify(result.degradations)).not.toContain("cause");
+  });
+
+  test("local health exposes at most 100 sanitized search diagnostics", async () => {
+    resetSearchDiagnosticsForTests();
+    for (let index = 0; index < 105; index += 1) {
+      recordSearchDegradation("TRIGRAM_UNAVAILABLE", `trigram-${index}`, "project");
+    }
+    const checker = new LocalHealthChecker();
+    const healthy = { available: true, details: { pgvector: true } };
+    (checker as any).checkOllama = async () => healthy;
+    (checker as any).checkDataDirectory = async () => healthy;
+    (checker as any).checkPostgres = async () => healthy;
+
+    const report = await checker.checkAll();
+
+    expect(report.diagnostics.search).toHaveLength(100);
+    expect(report.diagnostics.search[0]?.component).toBe("trigram-5");
+    expect(JSON.stringify(report.diagnostics.search)).not.toContain("cause");
   });
 });

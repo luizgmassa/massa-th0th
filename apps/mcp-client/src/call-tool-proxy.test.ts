@@ -174,6 +174,25 @@ describe("MCP CallTool HTTP method dispatch", () => {
     expect(result.content[0]!.text).not.toContain("API error");
   });
 
+  test("returns the exact sanitized search REST envelope with isError", async () => {
+    const envelope = {
+      success: false,
+      error: {
+        code: "SEARCH_BACKEND_UNAVAILABLE",
+        message: "A required search backend is unavailable",
+        component: "keyword_search",
+      },
+    };
+    const result = await proxyCallTool({
+      get: async () => { throw new Error("unexpected GET"); },
+      post: async () => { throw new ApiHttpError(503, envelope); },
+    }, "search", { query: "required", projectId: "project" });
+
+    expect(result.isError).toBe(true);
+    expect(JSON.parse(result.content[0]!.text)).toEqual(envelope);
+    expect(result.content[0]!.text).not.toContain("cause");
+  });
+
   test("preserves PATCH and DELETE authentication failures with isError", async () => {
     const envelope = { success: false, error: { code: "UNAUTHORIZED", message: "Invalid API key" } };
     const methods: string[] = [];

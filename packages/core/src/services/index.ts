@@ -8,6 +8,21 @@ export { SearchCachePg } from "./search/search-cache-pg.js";
 export { getSearchCache } from "./search/cache-factory.js";
 export { SearchAnalyticsPg } from "./search/search-analytics-pg.js";
 export { IndexManager } from "./search/index-manager.js";
+export {
+  SearchServiceError,
+  getSearchDiagnostics,
+  recordSearchDegradation,
+  recordSearchFailure,
+  resetSearchDiagnosticsForTests,
+  searchBackendUnavailable,
+  storeCorruption,
+} from "./search/search-diagnostics.js";
+export type {
+  SearchDegradation,
+  SearchDegradationCode,
+  SearchDiagnostic,
+  SearchFailureCode,
+} from "./search/search-diagnostics.js";
 
 // Cache
 export { L1MemoryCache } from "./cache/l1-memory-cache.js";

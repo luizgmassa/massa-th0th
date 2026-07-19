@@ -48,7 +48,11 @@ export const searchRoutes = new Elysia({ prefix: "/api/v1/search" })
   .post(
     "/project",
     async ({ body }) => {
-      return await getSearchProjectTool().handle(body);
+      const response = await getSearchProjectTool().handle(body);
+      if (!response.success) {
+        throw new Error("Search request failed");
+      }
+      return response;
     },
     {
       transform({ body }: any) {

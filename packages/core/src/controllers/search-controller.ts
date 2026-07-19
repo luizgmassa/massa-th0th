@@ -10,6 +10,7 @@ import { logger, config } from "@massa-th0th/shared";
 import { ContextualSearchRLM } from "../services/search/contextual-search-rlm.js";
 import { eventBus } from "../services/events/event-bus.js";
 import { LLMJudgeReranker } from "../services/search/reranker.js";
+import type { SearchDegradation } from "../services/search/search-diagnostics.js";
 import { minimatch } from "minimatch";
 
 // ── Types ────────────────────────────────────────────────────
@@ -61,6 +62,8 @@ export interface ProjectSearchResult {
     newFiles?: number;
     deletedFiles?: number;
   };
+  /** Optional subsystems that failed without invalidating mandatory retrieval. */
+  degradations?: SearchDegradation[];
 }
 
 interface FormattedResult {
@@ -150,6 +153,7 @@ export class SearchController {
     }
 
     // Execute search
+    let degradations: readonly SearchDegradation[] = [];
     const results = await this.contextualSearch.search(query, projectId, {
       maxResults,
       minScore,
@@ -157,6 +161,9 @@ export class SearchController {
       includeFilters: include,
       excludeFilters: exclude,
       sessionId,
+      onDegradations: (entries) => {
+        degradations = entries.slice(0, 10);
+      },
     });
 
     logger.info("Project search completed", {
@@ -284,6 +291,7 @@ export class SearchController {
         filteredResults: filteredResults.length,
       },
       results: formattedResults,
+      ...(degradations.length > 0 ? { degradations: [...degradations] } : {}),
       ...(staleWarning
         ? {
             warning: `Index may be stale (reason: ${staleWarning.reason}). Results reflect the indexed snapshot, not the current files.`,
