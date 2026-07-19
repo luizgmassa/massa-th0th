@@ -1,6 +1,6 @@
 {
   "name": "@massa-th0th/opencode-plugin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "massa-th0th plugin for OpenCode - Semantic code search, memory, and context compression",
   "type": "module",
   "main": "dist/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@massa-th0th/mcp-client",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "massa-th0th MCP server - Semantic code search, memory, and context compression via Model Context Protocol",
   "author": "luizgmassa",
   "type": "module",
