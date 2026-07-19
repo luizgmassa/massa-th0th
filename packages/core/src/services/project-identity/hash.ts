@@ -1,6 +1,29 @@
 import { createHash } from "node:crypto";
 
-import type { ProjectIdentityPlanMaterial } from "./contracts.js";
+import type { ProjectIdentityMode, ProjectIdentityPlanMaterial } from "./contracts.js";
+
+/**
+ * Stable digest of an APPLY request's identity material. Used by the operation
+ * table to detect operationId reuse with different request material. Excludes
+ * every preview-derived field (expectedPlanHash) so a stale preview hash does
+ * not change the request identity.
+ */
+export function hashProjectIdentityRequest(material: {
+  mode: ProjectIdentityMode;
+  sourceProjectId: string;
+  targetProjectId: string;
+  operationId: string;
+}): string {
+  return createHash("sha256")
+    .update("project-identity-request:v1\n", "utf8")
+    .update(canonicalProjectIdentityJson({
+      mode: material.mode,
+      source: material.sourceProjectId,
+      target: material.targetProjectId,
+      operationId: material.operationId,
+    }), "utf8")
+    .digest("hex");
+}
 
 type CanonicalJson = null | boolean | number | string | CanonicalJson[] | {
   [key: string]: CanonicalJson;

@@ -19,10 +19,12 @@ export type {
   ProjectIdentityPreviewRequest,
   ProjectIdentityService,
   ProjectIdentityStoreCount,
+  ProjectIdentityTransactionClient,
 } from "./contracts.js";
 export {
   canonicalProjectIdentityJson,
   hashProjectIdentityPlan,
+  hashProjectIdentityRequest,
 } from "./hash.js";
 export { ProjectIdentityError } from "./errors.js";
 export type { ProjectIdentityErrorCode } from "./errors.js";
@@ -39,7 +41,13 @@ export type {
   ProjectIdentityQueryClient,
   ProjectIdentityQueryResult,
 } from "./discovery.js";
-export { ProjectIdentityPreviewPlanner } from "./planner.js";
+export { ProjectIdentityPreviewPlanner, computeIdentityPlan } from "./planner.js";
+export type { ProjectIdentityPlan } from "./planner.js";
+export {
+  ProjectIdentityApplyService,
+  createProjectIdentityApplyService,
+} from "./apply.js";
+export type { ProjectIdentityTransactionRunner } from "./apply.js";
 export {
   PROJECT_IDENTITY_REGISTRY_VERSION,
   directStorePolicy,

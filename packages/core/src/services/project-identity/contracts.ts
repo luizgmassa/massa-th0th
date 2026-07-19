@@ -119,6 +119,23 @@ export interface ProjectIdentityService {
   apply(request: ProjectIdentityApplyInput): Promise<ProjectIdentityApplyResult>;
 }
 
+/**
+ * Query client that also owns a transaction lifecycle. Apply receives one of
+ * these inside `withIdentityTransaction`; the body must COMMIT or ROLLBACK via
+ * the client. Kept as an interface so tests can substitute a transaction-aware
+ * fake without a real PostgreSQL connection.
+ */
+export interface ProjectIdentityTransactionClient {
+  query<Row = Record<string, unknown>>(
+    text: string,
+    values?: readonly unknown[],
+  ): Promise<{ rows: Row[] }>;
+  /** SELECT setval('BEGIN') semantics — begin is implicit on the pooled client. */
+  beginTransaction(): Promise<void>;
+  commitTransaction(): Promise<void>;
+  rollbackTransaction(): Promise<void>;
+}
+
 function parseRequest<T>(schema: z.ZodType<T>, input: unknown): T {
   const parsed = schema.safeParse(input);
   if (!parsed.success) {
