@@ -168,6 +168,9 @@ installer_env_publish() (
         [ -z "$owner_temp" ] || rm -f "$owner_temp"
         if [ "$acquired" = "1" ] && [ -n "$token" ]; then
             installer_env_release_lock "$lock_dir" "$token"
+            if [ ! -e "${lock_dir}/owner" ] && [ ! -L "${lock_dir}/owner" ]; then
+                rmdir "$lock_dir" 2>/dev/null || true
+            fi
         fi
     }
     trap installer_env_cleanup_transaction EXIT
@@ -194,9 +197,25 @@ installer_env_publish() (
     }
     host="$(hostname 2>/dev/null || uname -n)"
     backup_temp="${backup}.tmp.${token}"
+    owner_temp="${target}.owner.${token}.tmp"
     lock_timeout="${MASSA_TH0TH_INSTALLER_LOCK_TIMEOUT_SECONDS:-30}"
     stale_after="${MASSA_TH0TH_INSTALLER_STALE_LOCK_SECONDS:-300}"
     started="$(date +%s)"
+
+    # Write complete ownership proof before mkdir. The mkdir-to-publish gap is
+    # then one rename; TERM cleanup can remove this exact temp plus an empty
+    # owned lock. A SIGKILL in that gap leaves an ownerless lock, which cannot
+    # be proven dead and must time out rather than be reclaimed.
+    sh -c 'printf %s "$PPID"' > "$owner_temp" || exit 1
+    owner_pid="$(sed -n '1p' "$owner_temp")" || exit 1
+    process_start="$(installer_env_process_start "$owner_pid")" || exit 1
+    [ -n "$process_start" ] || {
+        installer_env_error "could not determine installer process identity"
+        exit 1
+    }
+    timestamp="$(date +%s)"
+    printf '%s|%s|%s|%s|%s|%s|%s\n' \
+        "$host" "$owner_pid" "$process_start" "$token" "$timestamp" "$candidate" "$backup_temp" > "$owner_temp" || exit 1
 
     while ! mkdir "$lock_dir" 2>/dev/null; do
         installer_env_read_owner "${lock_dir}/owner" 2>/dev/null || true
@@ -210,17 +229,7 @@ installer_env_publish() (
         sleep 1
     done
     acquired=1
-    owner_temp="${lock_dir}/owner.${token}.tmp"
-    sh -c 'printf %s "$PPID"' > "$owner_temp" || exit 1
-    owner_pid="$(sed -n '1p' "$owner_temp")" || exit 1
-    process_start="$(installer_env_process_start "$owner_pid")" || exit 1
-    [ -n "$process_start" ] || {
-        installer_env_error "could not determine installer process identity"
-        exit 1
-    }
-    timestamp="$(date +%s)"
-    printf '%s|%s|%s|%s|%s|%s|%s\n' \
-        "$host" "$owner_pid" "$process_start" "$token" "$timestamp" "$candidate" "$backup_temp" > "$owner_temp" || exit 1
+    installer_env_test_barrier "${MASSA_TH0TH_INSTALLER_TEST_AFTER_MKDIR_BARRIER_DIR:-}" "mkdir" || exit 1
     mv "$owner_temp" "${lock_dir}/owner" || exit 1
     owner_temp=""
 
@@ -254,6 +263,7 @@ installer_env_publish() (
             installer_env_error "published backup verification failed: ${backup}"
             exit 1
         }
+        installer_env_test_barrier "${MASSA_TH0TH_INSTALLER_TEST_AFTER_BACKUP_PUBLISH_BARRIER_DIR:-}" "backup-published" || exit 1
     fi
 
     current_snapshot="$(installer_env_snapshot "$target")" || exit 1

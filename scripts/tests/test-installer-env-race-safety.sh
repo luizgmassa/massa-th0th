@@ -50,6 +50,7 @@ no_transaction_artifacts() {
     ! find "$(dirname "$target")" -maxdepth 1 \
         \( -name "$(basename "$target").candidate.*" \
         -o -name "$(basename "$target").bak.tmp.*" \
+        -o -name "$(basename "$target").owner.*.tmp" \
         -o -name "$(basename "$target").install.lock*" \) | grep -q .
 }
 
@@ -176,6 +177,48 @@ else
     fail "candidate mutation aborts before env replacement"
 fi
 
+# Ownership metadata is prepared before mkdir; TERM closes the empty-lock gap.
+case_dir="${TEST_ROOT}/acquisition-gap-term"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
+target="${case_dir}/.env"; printf 'old\n' > "$target"
+MASSA_TH0TH_INSTALLER_TEST_AFTER_MKDIR_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
+' >/dev/null 2>&1 & publisher_wrapper=$!
+require_barrier "${barrier}/mkdir.ready" "$publisher_wrapper"
+prepared_owner="$(find "$case_dir" -maxdepth 1 -name '.env.owner.*.tmp' -print | head -1)"
+owner_pid="$(cut -d'|' -f2 "$prepared_owner")"
+if kill -0 "$owner_pid" 2>/dev/null && [ "$owner_pid" != "$$" ] && [ "$owner_pid" != "$publisher_wrapper" ] &&
+    [ ! -e "${target}.install.lock/owner" ]; then
+    ok "prepared owner PID is live transaction, not harness or caller wrapper"
+else
+    fail "prepared owner PID is live transaction, not harness or caller wrapper"
+fi
+kill -TERM "$owner_pid"; wait "$publisher_wrapper" 2>/dev/null
+if cmp -s "$target" <(printf 'old\n') && no_transaction_artifacts "$target"; then
+    ok "TERM during mkdir-owner gap removes empty owned lock and temporaries"
+else
+    fail "TERM during mkdir-owner gap removes empty owned lock and temporaries"
+fi
+
+# An ownerless SIGKILL gap is deliberately unprovable and must time out.
+case_dir="${TEST_ROOT}/acquisition-gap-kill"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
+target="${case_dir}/.env"; printf 'old\n' > "$target"
+MASSA_TH0TH_INSTALLER_TEST_AFTER_MKDIR_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
+' >/dev/null 2>&1 & publisher_wrapper=$!
+require_barrier "${barrier}/mkdir.ready" "$publisher_wrapper"
+prepared_owner="$(find "$case_dir" -maxdepth 1 -name '.env.owner.*.tmp' -print | head -1)"
+owner_pid="$(cut -d'|' -f2 "$prepared_owner")"
+kill -KILL "$owner_pid"; wait "$publisher_wrapper" 2>/dev/null
+MASSA_TH0TH_INSTALLER_STALE_LOCK_SECONDS=0 MASSA_TH0TH_INSTALLER_LOCK_TIMEOUT_SECONDS=1 \
+    publish_text "$target" 'must-not-publish
+' >/dev/null 2>&1; unknown_rc=$?
+if [ "$unknown_rc" -ne 0 ] && [ -d "${target}.install.lock" ] &&
+    [ ! -e "${target}.install.lock/owner" ] && cmp -s "$target" <(printf 'old\n'); then
+    ok "ownerless SIGKILL lock times out without unsafe reclamation"
+else
+    fail "ownerless SIGKILL lock times out without unsafe reclamation"
+fi
+rm -f "$case_dir"/.env.candidate.* "$case_dir"/.env.owner.*.tmp
+rmdir "${target}.install.lock"
+
 # AC4: live lock cannot be reclaimed, even with zero stale-age threshold.
 case_dir="${TEST_ROOT}/live-lock"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"
@@ -230,6 +273,28 @@ if [ "$retry_rc" -eq 0 ] && cmp -s "$target" <(printf 'recovered\n') &&
     ok "retry removes dead owner backup temp and publishes exact backup"
 else
     fail "retry removes dead owner backup temp and publishes exact backup"
+fi
+
+# SIGKILL after atomic backup publication must leave target and backup exact.
+case_dir="${TEST_ROOT}/dead-after-backup-publish"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
+target="${case_dir}/.env"; printf 'old\n' > "$target"
+MASSA_TH0TH_INSTALLER_TEST_AFTER_BACKUP_PUBLISH_BARRIER_DIR="$barrier" publish_text "$target" 'killed
+' >/dev/null 2>&1 & killed=$!
+require_barrier "${barrier}/backup-published.ready" "$killed"
+owner_pid="$(cut -d'|' -f2 "${target}.install.lock/owner")"
+kill -KILL "$owner_pid"; wait "$killed" 2>/dev/null
+if cmp -s "$target" <(printf 'old\n') && cmp -s "${target}.bak" <(printf 'old\n'); then
+    ok "SIGKILL after backup publication preserves old target and exact backup"
+else
+    fail "SIGKILL after backup publication preserves old target and exact backup"
+fi
+MASSA_TH0TH_INSTALLER_STALE_LOCK_SECONDS=0 publish_text "$target" 'recovered
+' >/dev/null 2>&1; retry_rc=$?
+if [ "$retry_rc" -eq 0 ] && cmp -s "$target" <(printf 'recovered\n') &&
+    cmp -s "${target}.bak" <(printf 'old\n') && no_transaction_artifacts "$target"; then
+    ok "retry after published-backup SIGKILL cleans stale state"
+else
+    fail "retry after published-backup SIGKILL cleans stale state"
 fi
 
 # AC6: TERM cleans owned files; changed owner token preserves foreign lock.
