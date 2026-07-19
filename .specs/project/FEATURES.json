@@ -264,8 +264,8 @@
     {
       "slug": "transactional-project-identity",
       "title": "M16 + M17 — project rename, merge, and cache invalidation",
-      "status": "pending", "priority": "P0",
-      "phases": { "specify": false, "design": false, "tasks": false, "execute": false }
+      "status": "in_progress", "priority": "P0",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": false }
     },
     {
       "slug": "hook-attribution-repair",
@@ -280,5 +280,5 @@
       "phases": { "specify": false, "design": false, "tasks": false, "execute": false }
     }
   ],
-  "active_feature": null
+  "active_feature": "transactional-project-identity"
 }

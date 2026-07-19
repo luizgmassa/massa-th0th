@@ -4,11 +4,11 @@
 
 - projectId: `massa-th0th`; workflowSessionId: `spec-wave-3`
 - branch: `wave-3`; isolated worktree: `massa-th0th-wt-wave-3`
-- active feature: none; M16+M17 is next to activate
+- active feature: `transactional-project-identity`
 - M19 complete: macOS 22/22, Ubuntu Codespace 22/22, three discrimination mutations killed. Ubuntu/glibc-x64 was an explicit user-approved substitution for Debian 12.
 - M20+M54 complete: 15 focused tests, live Synapse 21-pass gate, two killed mutations, strict 47-tool roster, cursor page size 100.
 - M50 complete: local focused 45/45, workspace type/build pass, Ubuntu PostgreSQL/API/MCP gates pass, independent re-verification PASS after two review fixes.
-- exact next step: freeze the transactional identity spec and map all project-scoped PostgreSQL writers, identity-bearing storage, aliases, queues, and cache invalidators.
+- exact next step: finish the read-only inventory, then implement the frozen alias/operation schema and Core contracts.
 - remaining sequence: M16+M17, M45+M47, M21.
 - mandatory unavailable gates block the relevant feature. Do not weaken validation assets.
 

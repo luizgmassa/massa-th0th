@@ -5,15 +5,15 @@
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-wave-3`
 - workflow: spec-driven
-- feature: none (M50 validation complete; M16+M17 next)
-- status: M19, M20+M54, and M50 complete
+- feature: `transactional-project-identity` (M16+M17)
+- status: M19, M20+M54, and M50 complete; M16+M17 specification active
 - branch/worktree: `wave-3` / `massa-th0th-wt-wave-3`
 - sequence: M19 → M20+M54 → M50 → M16+M17 → M45+M47 → M21
 - invariant: `sqlite-removal` stays `in_progress`; `multi-language-tree-sitter-breadth` reconciled to `complete` from its recorded PASS evidence.
 
 ### Wave 3 Next Step
 
-Activate M16+M17 transactional project identity, then investigate every project-scoped PostgreSQL writer and runtime cache invalidator before freezing its implementation tasks.
+Complete the read-only identity storage/writer inventory, reconcile it with the frozen adapter and guard design, then implement schema/contracts as the first bounded slice.
 
 ---
 
