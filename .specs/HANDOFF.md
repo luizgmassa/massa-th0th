@@ -1,14 +1,15 @@
 # AI Engineering Handoff
 
-## Current: Wave 3 / M50 Tiered Fail-Loud Search
+## Current: Wave 3 / M16+M17 Transactional Project Identity
 
 - projectId: `massa-th0th`; workflowSessionId: `spec-wave-3`
 - branch: `wave-3`; isolated worktree: `massa-th0th-wt-wave-3`
-- active feature: `tiered-fail-loud-search`
+- active feature: none; M16+M17 is next to activate
 - M19 complete: macOS 22/22, Ubuntu Codespace 22/22, three discrimination mutations killed. Ubuntu/glibc-x64 was an explicit user-approved substitution for Debian 12.
 - M20+M54 complete: 15 focused tests, live Synapse 21-pass gate, two killed mutations, strict 47-tool roster, cursor page size 100.
-- exact next step: map mandatory vs optional failure sites on the real search path and audit Handoff/Proposal hydration/persist/cache ordering before freezing M50 tasks.
-- sequence after M19: M20+M54, M50, M16+M17, M45+M47, M21.
+- M50 complete: local focused 45/45, workspace type/build pass, Ubuntu PostgreSQL/API/MCP gates pass, independent re-verification PASS after two review fixes.
+- exact next step: freeze the transactional identity spec and map all project-scoped PostgreSQL writers, identity-bearing storage, aliases, queues, and cache invalidators.
+- remaining sequence: M16+M17, M45+M47, M21.
 - mandatory unavailable gates block the relevant feature. Do not weaken validation assets.
 
 ---

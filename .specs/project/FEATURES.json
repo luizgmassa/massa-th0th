@@ -258,8 +258,8 @@
     {
       "slug": "tiered-fail-loud-search",
       "title": "M50 — corruption surfacing and tiered fail-loud search",
-      "status": "in_progress", "priority": "P0",
-      "phases": { "specify": true, "design": true, "tasks": true, "execute": false }
+      "status": "complete", "priority": "P0",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
     },
     {
       "slug": "transactional-project-identity",
@@ -280,5 +280,5 @@
       "phases": { "specify": false, "design": false, "tasks": false, "execute": false }
     }
   ],
-  "active_feature": "tiered-fail-loud-search"
+  "active_feature": null
 }
