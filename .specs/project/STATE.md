@@ -5,15 +5,15 @@
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-wave-3`
 - workflow: spec-driven
-- feature: `synapse-mcp-parity-discovery-pagination` (M20 + M54)
-- status: M19 complete; M20 + M54 investigation active
+- feature: `tiered-fail-loud-search` (M50)
+- status: M19 and M20+M54 complete; M50 investigation active
 - branch/worktree: `wave-3` / `massa-th0th-wt-wave-3`
 - sequence: M19 → M20+M54 → M50 → M16+M17 → M45+M47 → M21
 - invariant: `sqlite-removal` stays `in_progress`; `multi-language-tree-sitter-breadth` reconciled to `complete` from its recorded PASS evidence.
 
 ### Wave 3 Next Step
 
-Specify M20 transport parity and M54 discovery pagination from current REST/MCP source, splitting them into atomic tasks if their write contracts diverge.
+Investigate the real SearchController → ContextualSearchRLM failure path plus Handoff/Proposal persistence hydration and strict payload validation; split search taxonomy from repository async conversion.
 
 ---
 
