@@ -5,7 +5,7 @@
 - projectId: `massa-th0th`; workflowSessionId: `spec-wave-3`
 - branch: `wave-3`; isolated worktree: `massa-th0th-wt-wave-3`
 - active feature: `installer-race-safety`
-- exact next step: implement TASK-M19-1, run focused gate, then dispatch independent verifier.
+- exact next step: run the unchanged focused M19 harness on true/native Debian 12 amd64. macOS code and discrimination gates pass; `.specs/features/installer-race-safety/validation.md` records the platform blocker.
 - sequence after M19: M20+M54, M50, M16+M17, M45+M47, M21.
 - mandatory unavailable gates block the relevant feature. Do not weaken validation assets.
 

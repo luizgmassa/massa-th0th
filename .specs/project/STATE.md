@@ -6,14 +6,14 @@
 - workflowSessionId: `spec-wave-3`
 - workflow: spec-driven
 - feature: `installer-race-safety` (M19)
-- status: Specify, Design, and Tasks approved from supplied Wave 3 plan; Execute pending
+- status: M19 code PASS on native macOS; feature BLOCKED on mandatory native Debian 12 amd64 validation
 - branch/worktree: `wave-3` / `massa-th0th-wt-wave-3`
 - sequence: M19 → M20+M54 → M50 → M16+M17 → M45+M47 → M21
 - invariant: `sqlite-removal` stays `in_progress`; `multi-language-tree-sitter-breadth` reconciled to `complete` from its recorded PASS evidence.
 
 ### Wave 3 Next Step
 
-Implement and independently verify M19 installer race safety. Mandatory unavailable platform gates block completion rather than being waived.
+Provision a true/native Debian 12 amd64 environment and run `bash scripts/tests/test-installer-env-race-safety.sh`. A pass closes M19; until then no later Wave 3 feature is activated.
 
 ---
 
