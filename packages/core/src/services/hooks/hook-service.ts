@@ -28,6 +28,10 @@ import {
 import { QueueSaturatedError, WriterQueue } from "./writer-queue.js";
 import { extractCategory } from "./observation-extractor.js";
 import { observationConsolidationJob } from "../jobs/observation-consolidation-job.js";
+import {
+  getAttributionResolver,
+  type AttributionResolverLike,
+} from "./attribution-resolver.js";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -150,12 +154,21 @@ export interface HookServiceOptions {
   bridge?: BridgeTrigger;
   /** Override id factory (deterministic tests). */
   idFactory?: () => string;
+  /** Override attribution resolver (deterministic tests). */
+  resolver?: AttributionResolverLike;
+}
+
+/** Attribution cwd: `payload.cwd` wins, `payload.workingDirectory` fallback. */
+function extractAttributionCwd(payload: Record<string, unknown>): string | undefined {
+  const cwd = payload.cwd ?? payload.workingDirectory;
+  return typeof cwd === "string" && cwd.trim() ? cwd : undefined;
 }
 
 export class HookService {
   readonly store: ObservationStore;
   readonly queue: WriterQueue;
   readonly bridge: BridgeTrigger;
+  readonly resolver: AttributionResolverLike;
   private readonly maxPayloadBytes: number;
   private readonly idFactory: () => string;
 
@@ -167,6 +180,7 @@ export class HookService {
       opts.maxPayloadBytes ?? readHooksConfig().maxPayloadBytes;
     this.bridge = opts.bridge ?? new NoopBridge();
     this.idFactory = opts.idFactory ?? (() => newObservationId());
+    this.resolver = opts.resolver ?? getAttributionResolver();
   }
 
   validate(raw: IncomingEvent): ValidationResult {
@@ -183,42 +197,7 @@ export class HookService {
   async ingestOne(raw: IncomingEvent): Promise<string> {
     const v = this.validate(raw);
     if (!v.ok) throw new ValidationError(v.code, v.error);
-
-    const id = this.idFactory();
-    const ev = v.event;
-    // Enqueue the persist + event + bridge trigger. If saturated, throws before
-    // any side effect.
-    void this.queue.enqueue(async () => {
-      const obs: Observation = {
-        id,
-        projectId: ev.projectId,
-        sessionId: ev.sessionId,
-        source: ev.event,
-        category: extractCategory(ev.event, ev.payload),
-        payloadJson: JSON.stringify(ev.payload),
-        importance: ev.importance,
-        createdAt: ev.ts,
-      };
-      try {
-        this.store.insert(obs);
-        eventBus.publish("observation:ingested", {
-          observationId: obs.id,
-          projectId: obs.projectId,
-          sessionId: obs.sessionId ?? undefined,
-          source: obs.source,
-          importance: obs.importance,
-        });
-        this.bridge.maybeRun(obs.projectId);
-      } catch (e) {
-        // Fire-and-forget: a persist failure after admission is logged, not
-        // retried, and does NOT poison the queue (spec §11 / design §5).
-        logger.warn("observation persist failed", {
-          id: obs.id,
-          error: (e as Error).message,
-        });
-      }
-    });
-    return id;
+    return this.ingestOneNormalized(v.event);
   }
 
   /**
@@ -247,17 +226,28 @@ export class HookService {
   }
 
   private async ingestOneNormalized(ev: NormalizedEvent): Promise<string> {
+    // Attribution resolution runs pre-enqueue (M45/HAR-01): one seam for
+    // single + batch. The resolver never throws (fail-open verbatim).
+    const attribution = await this.resolver.resolve({
+      callerProjectId: ev.projectId,
+      sessionId: ev.sessionId,
+      cwd: extractAttributionCwd(ev.payload),
+    });
     const id = this.idFactory();
+    // Enqueue may throw QueueSaturatedError BEFORE any side effect; pinning
+    // happens only after admission survives (HAR-04, no pin on rejection).
     void this.queue.enqueue(async () => {
       const obs: Observation = {
         id,
-        projectId: ev.projectId,
+        projectId: attribution.projectId,
         sessionId: ev.sessionId,
         source: ev.event,
         category: extractCategory(ev.event, ev.payload),
         payloadJson: JSON.stringify(ev.payload),
         importance: ev.importance,
         createdAt: ev.ts,
+        agentId: ev.agentId,
+        attributionSource: attribution.source,
       };
       try {
         this.store.insert(obs);
@@ -270,12 +260,16 @@ export class HookService {
         });
         this.bridge.maybeRun(obs.projectId);
       } catch (e) {
+        // Fire-and-forget: a persist failure after admission is logged, not
+        // retried, and does NOT poison the queue (spec §11 / design §5).
         logger.warn("observation persist failed", {
           id: obs.id,
           error: (e as Error).message,
         });
       }
     });
+    // Admission survived: record sticky pin (no-op for verbatim / no session).
+    this.resolver.pinSession(ev.sessionId, attribution.projectId, attribution.source);
     return id;
   }
 }

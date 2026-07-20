@@ -15,17 +15,40 @@
  */
 
 import { IToolHandler, ToolResponse, logger } from "@massa-th0th/shared";
-import { getObservationStore, newObservationId } from "../data/memory/observation-repository.js";
+import {
+  getObservationStore,
+  newObservationId,
+  type ObservationStore,
+} from "../data/memory/observation-repository.js";
 import { getCompactionSnapshotService } from "../services/hooks/compaction-snapshot-service.js";
+import {
+  getAttributionResolver,
+  type AttributionResolverLike,
+} from "../services/hooks/attribution-resolver.js";
 
 interface CompactSnapshotParams {
   sessionId: string;
   projectId?: string;
   persist?: boolean;
+  cwd?: string;
+}
+
+export interface CompactSnapshotToolOptions {
+  /** Injectable store (tests); defaults to the shared observation store. */
+  store?: ObservationStore;
+  /** Injectable attribution resolver (tests); defaults to the shared resolver. */
+  resolver?: AttributionResolverLike;
 }
 
 export class CompactSnapshotTool implements IToolHandler {
   name = "compact_snapshot";
+  private readonly storeOverride?: ObservationStore;
+  private readonly resolverOverride?: AttributionResolverLike;
+
+  constructor(options: CompactSnapshotToolOptions = {}) {
+    this.storeOverride = options.store;
+    this.resolverOverride = options.resolver;
+  }
   description =
     "Build a reference-based compaction snapshot — bounded table-of-contents with " +
     "runnable search/recall calls for the current session's observations (SESSION " +
@@ -50,19 +73,24 @@ export class CompactSnapshotTool implements IToolHandler {
         description:
           "If true, persist the snapshot as an observation of category 'compaction-snapshots'",
       },
+      cwd: {
+        type: "string",
+        description:
+          "Optional working directory of the session (used for attribution containment when the caller projectId is not a registered workspace)",
+      },
     },
     required: ["sessionId"],
   };
 
   async handle(params: unknown): Promise<ToolResponse> {
-    const { sessionId, projectId = "default", persist = false } = params as CompactSnapshotParams;
+    const { sessionId, projectId = "default", persist = false, cwd } = params as CompactSnapshotParams;
 
     if (!sessionId || typeof sessionId !== "string") {
       return { success: false, error: "sessionId is required" };
     }
 
     try {
-      const store = getObservationStore();
+      const store = this.storeOverride ?? getObservationStore();
       const service = getCompactionSnapshotService(store);
 
       const snapshot = service.build({
@@ -77,9 +105,12 @@ export class CompactSnapshotTool implements IToolHandler {
       if (persist && snapshot.eventCount > 0) {
         persistedId = newObservationId();
         try {
+          const attribution = await (
+            this.resolverOverride ?? getAttributionResolver()
+          ).resolve({ callerProjectId: projectId, sessionId, cwd });
           store.insert({
             id: persistedId,
-            projectId,
+            projectId: attribution.projectId,
             sessionId,
             source: "pre-compact",
             category: "compaction-snapshots",
@@ -92,7 +123,14 @@ export class CompactSnapshotTool implements IToolHandler {
             }),
             importance: 0.8,
             createdAt: Date.now(),
+            attributionSource: attribution.source,
           });
+          // Mirror HookService: admission (insert) survived → record sticky pin.
+          (this.resolverOverride ?? getAttributionResolver()).pinSession(
+            sessionId,
+            attribution.projectId,
+            attribution.source,
+          );
           logger.info("compact_snapshot: persisted", {
             persistedId,
             sessionId,

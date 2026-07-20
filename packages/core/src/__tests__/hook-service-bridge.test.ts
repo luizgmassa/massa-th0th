@@ -17,6 +17,10 @@ import {
   resetHookService,
   type IncomingEvent,
 } from "../services/hooks/hook-service.js";
+import {
+  resetAttributionResolver,
+  setAttributionResolverForTests,
+} from "../services/hooks/attribution-resolver.js";
 import { observationConsolidationJob } from "../services/jobs/observation-consolidation-job.js";
 import { eventBus } from "../services/events/event-bus.js";
 
@@ -24,6 +28,15 @@ import { eventBus } from "../services/events/event-bus.js";
 async function flush(): Promise<void> {
   await sleep(15);
 }
+
+// Hermetic verbatim resolver — prevents the production PG-backed resolver from
+// touching shared DB state during these singleton-wiring tests (M45 regression
+// guard). Defined once, reused across cases.
+const VERBATIM_RESOLVER = {
+  resolve: async (input: { callerProjectId: string }) =>
+    ({ projectId: input.callerProjectId, source: "verbatim" as const }),
+  pinSession: () => {},
+};
 
 function validEvent(over: Partial<IncomingEvent> = {}): IncomingEvent {
   return {
@@ -40,6 +53,8 @@ function validEvent(over: Partial<IncomingEvent> = {}): IncomingEvent {
 describe("getHookService bridge wiring (#20)", () => {
   beforeEach(() => {
     resetHookService();
+    resetAttributionResolver();
+    setAttributionResolverForTests(VERBATIM_RESOLVER);
     // Reset the singleton job's counters so cases don't bleed.
     observationConsolidationJob.runCalls = 0;
     (observationConsolidationJob as any).newSinceRun = 0;
@@ -106,6 +121,7 @@ describe("NoopBridge fallback intact", () => {
     const svc = new HookService({
       bridge: noopBridge,
       maxPending: 16,
+      resolver: VERBATIM_RESOLVER,
       idFactory: () => `id-${Math.random().toString(36).slice(2, 8)}`,
     });
     await svc.ingestOne(validEvent({ projectId: "p-noop" }));

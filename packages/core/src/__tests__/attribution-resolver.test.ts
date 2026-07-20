@@ -58,7 +58,8 @@ describe("AttributionResolver order matrix (HAR-01)", () => {
     });
     const out = await r.resolve({ callerProjectId: "live-proj", sessionId: "s1", cwd: "/other" });
     expect(out).toEqual({ projectId: "live-proj", source: "explicit" });
-    // re-pins session to the winning id
+    // Caller re-pins session to the winning id after admission.
+    r.pinSession("s1", out.projectId, out.source);
     expect(pins.get("s1")).toBe("live-proj");
   });
 
@@ -82,7 +83,7 @@ describe("AttributionResolver order matrix (HAR-01)", () => {
     expect(out).toEqual({ projectId: "pinned-proj", source: "sticky" });
   });
 
-  test("containment: cwd inside one root resolves + pins session", async () => {
+  test("containment: cwd inside one root resolves + caller pins session", async () => {
     const pins = new SessionPinStore();
     const r = resolver({
       roots: provider([{ projectId: "repo", projectPath: "/repo" }]),
@@ -90,14 +91,16 @@ describe("AttributionResolver order matrix (HAR-01)", () => {
     });
     const out = await r.resolve({ callerProjectId: "sub", sessionId: "s1", cwd: "/repo/apps/x" });
     expect(out).toEqual({ projectId: "repo", source: "containment" });
+    r.pinSession("s1", out.projectId, out.source);
     expect(pins.get("s1")).toBe("repo");
   });
 
-  test("verbatim: zero matches leaves caller id and never pins", async () => {
+  test("verbatim: zero matches leaves caller id; caller pinSession is a no-op", async () => {
     const pins = new SessionPinStore();
     const r = resolver({ roots: provider([{ projectId: "repo", projectPath: "/repo" }]), pins });
     const out = await r.resolve({ callerProjectId: "unknown", sessionId: "s1", cwd: "/elsewhere" });
     expect(out).toEqual({ projectId: "unknown", source: "verbatim" });
+    r.pinSession("s1", out.projectId, out.source);
     expect(pins.get("s1")).toBeUndefined();
   });
 
@@ -315,7 +318,7 @@ describe("SessionPinStore bounds (HAR-04)", () => {
     expect(pins.get("a")).toBeUndefined();
   });
 
-  test("sticky hit refreshes pin expiry (long-lived sessions stay sticky)", async () => {
+  test("sticky hit + caller re-pin refreshes expiry (long-lived sessions stay sticky)", async () => {
     let now = 0;
     const pins = new SessionPinStore({ ttlMs: 100, now: () => now });
     const r = resolver({ roots: provider([]), pins });
@@ -323,7 +326,10 @@ describe("SessionPinStore bounds (HAR-04)", () => {
     now = 90; // inside first TTL window
     const first = await r.resolve({ callerProjectId: "junk", sessionId: "s1" });
     expect(first).toEqual({ projectId: "pinned-proj", source: "sticky" });
-    now = 150; // would be expired without refresh; alive with re-pin
+    // Caller re-pins after admission (HookService does this); refresh moves
+    // expiry to now+ttl so the next hit inside the new window still resolves.
+    r.pinSession("s1", first.projectId, first.source);
+    now = 150; // would be expired without the re-pin; alive with it
     const second = await r.resolve({ callerProjectId: "junk", sessionId: "s1" });
     expect(second).toEqual({ projectId: "pinned-proj", source: "sticky" });
   });

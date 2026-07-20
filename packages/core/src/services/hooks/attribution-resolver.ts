@@ -57,6 +57,17 @@ export interface AttributionResult {
   readonly source: AttributionSource;
 }
 
+/** Minimal resolver surface for injection (HookService, CompactSnapshotTool, tests). */
+export interface AttributionResolverLike {
+  resolve(input: AttributionInput): Promise<AttributionResult>;
+  /**
+   * Record a winning resolution for future sticky hits. Callers MUST call this
+   * AFTER admission survives (never before a QueueSaturatedError check) so a
+   * rejected event leaves no pin behind.
+   */
+  pinSession(sessionId: string | null | undefined, projectId: string, source: AttributionSource): void;
+}
+
 /** Minimal alias-resolution surface (satisfied by ProjectIdentityAliasResolver). */
 export interface AttributionAliasResolver {
   resolve(projectId: string): Promise<string>;
@@ -129,7 +140,7 @@ export class PgWorkspaceRootProvider implements WorkspaceRootProvider {
 
 // ── Resolver ────────────────────────────────────────────────────────────────
 
-export class AttributionResolver {
+export class AttributionResolver implements AttributionResolverLike {
   private readonly roots: WorkspaceRootProvider;
   private readonly aliasResolver: AttributionAliasResolver;
   private readonly pins: SessionPinStore;
@@ -160,22 +171,22 @@ export class AttributionResolver {
       const canonicalCaller = await this.aliasResolver.resolve(caller);
       if (liveIds.has(canonicalCaller) || liveIds.has(caller)) {
         const winner = liveIds.has(canonicalCaller) ? canonicalCaller : caller;
-        return this.win(input, { projectId: winner, source: "explicit" });
+        return { projectId: winner, source: "explicit" };
       }
 
-      // 2. sticky — session pin hit. Routed through win() so the pin's
-      // expiry refreshes for long-lived sessions (design: (re)pin on success).
+      // 2. sticky — session pin hit. Read-only; pinning is the caller's job
+      // after admission survives (see pinSession).
       if (input.sessionId) {
         const pinned = this.pins.get(input.sessionId);
         if (pinned) {
-          return this.win(input, { projectId: pinned, source: "sticky" });
+          return { projectId: pinned, source: "sticky" };
         }
       }
 
       // 3. containment — canonical cwd inside exactly one deduped non-broad root.
       if (input.cwd) {
         const result = this.resolveContainment(input, roots);
-        if (result) return this.win(input, result);
+        if (result) return result;
       }
 
       // 4. verbatim — fail-open.
@@ -188,12 +199,15 @@ export class AttributionResolver {
     }
   }
 
-  /** Record a winning resolution for future sticky hits, then return it. */
-  private win(input: AttributionInput, result: AttributionResult): AttributionResult {
-    if (input.sessionId) {
-      this.pins.set(input.sessionId, result.projectId);
-    }
-    return result;
+  /**
+   * Record a winning resolution for future sticky hits. No-op for verbatim
+   * results (a fail-open outcome carries no signal worth pinning) and when no
+   * sessionId is present. Sticky hits refresh expiry via SessionPinStore.get.
+   */
+  pinSession(sessionId: string | null | undefined, projectId: string, source: AttributionSource): void {
+    if (!sessionId) return;
+    if (source === "verbatim") return;
+    this.pins.set(sessionId, projectId);
   }
 
   private resolveContainment(
@@ -277,4 +291,11 @@ export function getAttributionResolver(): AttributionResolver {
 /** @internal — reset the singleton (tests only). */
 export function resetAttributionResolver(): void {
   sharedResolver = null;
+}
+
+/** @internal — swap the singleton with a stubbed resolver (tests only). */
+export function setAttributionResolverForTests(
+  resolver: AttributionResolverLike | null,
+): void {
+  sharedResolver = resolver as AttributionResolver | null;
 }

@@ -153,6 +153,11 @@ export const hookRoutes = new Elysia({ prefix: "/api/v1/hook" })
               "If true, persist the snapshot as an observation of category 'compaction-snapshots'",
           }),
         ),
+        cwd: t.Optional(
+          t.String({
+            description: "Session working directory (attribution containment hint)",
+          }),
+        ),
       }),
       detail: {
         ...EVENT_DETAIL,

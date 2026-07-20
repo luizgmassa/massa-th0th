@@ -22,6 +22,15 @@ import {
   type ObservationStore,
 } from "../data/memory/observation-repository.js";
 import { eventBus } from "../services/events/event-bus.js";
+import type {
+  AttributionResolverLike,
+} from "../services/hooks/attribution-resolver.js";
+
+/** Hermetic default: never lets tests touch the production PG-backed resolver. */
+const VERBATIM_RESOLVER: AttributionResolverLike = {
+  resolve: async (input) => ({ projectId: input.callerProjectId, source: "verbatim" }),
+  pinSession: () => {},
+};
 
 function validEvent(over: Partial<IncomingEvent> = {}): IncomingEvent {
   return {
@@ -40,6 +49,7 @@ function makeService(opts: {
   maxPending?: number;
   maxPayloadBytes?: number;
   bridge?: BridgeTrigger;
+  resolver?: AttributionResolverLike;
 } = {}): { svc: HookService; store: MemoryObservationStore; bridge: FakeBridge } {
   const store = opts.store ?? new MemoryObservationStore();
   const bridge = opts.bridge ?? new FakeBridge();
@@ -48,6 +58,7 @@ function makeService(opts: {
     maxPending: opts.maxPending ?? 256,
     maxPayloadBytes: opts.maxPayloadBytes ?? 65_536,
     bridge,
+    resolver: opts.resolver ?? VERBATIM_RESOLVER,
     idFactory: () => `id-${Math.random().toString(36).slice(2, 8)}`,
   });
   return { svc, store, bridge };
@@ -147,6 +158,7 @@ describe("HookService.ingestOne", () => {
       store: env.store,
       maxPayloadBytes: 50,
       bridge: env.bridge,
+      resolver: VERBATIM_RESOLVER,
       idFactory: () => "x",
     });
     expect(() => svc.ingestOne(validEvent({ payload: { big: "x".repeat(200) } }))).toThrow(ValidationError);
@@ -161,6 +173,7 @@ describe("HookService.ingestOne", () => {
       store: env.store,
       maxPending: 256,
       bridge: env.bridge,
+      resolver: VERBATIM_RESOLVER,
       idFactory: () => `o${counter++}`,
     });
     // Fire 5 concurrently; the promise-chain serializes them.
@@ -273,6 +286,7 @@ describe("WriterQueue saturation (P3-BACKPRESSURE)", () => {
       store,
       maxPending: 1,
       bridge: blockingBridge,
+      resolver: VERBATIM_RESOLVER,
       idFactory: () => `s${Math.random()}`,
     });
     // Block the writer turn so the slot stays occupied.
@@ -317,5 +331,185 @@ describe("WriterQueue saturation (P3-BACKPRESSURE)", () => {
     const e = new QueueSaturatedError(2);
     expect(e.retryAfterSeconds).toBe(2);
     expect(e).toBeInstanceOf(Error);
+  });
+});
+
+// ── Attribution wiring (M45/HAR-01/04/05/06) ────────────────────────────────
+
+import type {
+  AttributionInput,
+  AttributionResult,
+  AttributionResolverLike,
+} from "../services/hooks/attribution-resolver.js";
+
+class FakeResolver implements AttributionResolverLike {
+  calls: AttributionInput[] = [];
+  pins: Array<{ sessionId: string; projectId: string; source: string }> = [];
+  script: AttributionResult[];
+  constructor(script: AttributionResult[]) {
+    this.script = [...script];
+  }
+  async resolve(input: AttributionInput): Promise<AttributionResult> {
+    this.calls.push(input);
+    return (
+      this.script.shift() ?? {
+        projectId: input.callerProjectId,
+        source: "verbatim",
+      }
+    );
+  }
+  pinSession(sessionId: string | null | undefined, projectId: string, source: AttributionSource): void {
+    if (!sessionId) return;
+    this.pins.push({ sessionId, projectId, source });
+  }
+}
+
+function makeAttributedService(
+  resolver: AttributionResolverLike,
+): { svc: HookService; store: MemoryObservationStore; bridge: FakeBridge } {
+  const store = new MemoryObservationStore();
+  const bridge = new FakeBridge();
+  const svc = new HookService({
+    store,
+    maxPending: 256,
+    maxPayloadBytes: 65_536,
+    bridge,
+    resolver,
+    idFactory: () => `id-${Math.random().toString(36).slice(2, 8)}`,
+  });
+  return { svc, store, bridge };
+}
+
+describe("HookService attribution wiring (M45)", () => {
+  it("HAR-01: resolved id + provenance + agentId persist on the observation", async () => {
+    const resolver = new FakeResolver([{ projectId: "resolved-proj", source: "containment" }]);
+    const { svc, store } = makeAttributedService(resolver);
+    await svc.ingestOne(
+      validEvent({ projectId: "sub", sessionId: "s1", agentId: "agent-7", payload: { cwd: "/repo/sub" } }),
+    );
+    await flush();
+    expect(store.countByProject("resolved-proj")).toBe(1);
+    expect(store.countByProject("sub")).toBe(0);
+    const obs = store.listRecent("resolved-proj", 1)[0];
+    expect(obs.attributionSource).toBe("containment");
+    expect(obs.agentId).toBe("agent-7");
+    expect(resolver.calls[0]).toEqual({
+      callerProjectId: "sub",
+      sessionId: "s1",
+      cwd: "/repo/sub",
+    });
+  });
+
+  it("HAR-04: sticky source flows for later events of the same session", async () => {
+    const resolver = new FakeResolver([
+      { projectId: "proj-a", source: "containment" },
+      { projectId: "proj-a", source: "sticky" },
+    ]);
+    const { svc, store } = makeAttributedService(resolver);
+    await svc.ingestOne(validEvent({ projectId: "junk-1", sessionId: "s9", payload: { cwd: "/repo" } }));
+    await svc.ingestOne(validEvent({ projectId: "junk-2", sessionId: "s9", payload: { note: "x" } }));
+    await flush();
+    const rows = store.listRecent("proj-a", 10);
+    expect(rows.length).toBe(2);
+    const sources = rows.map((r) => r.attributionSource).sort();
+    expect(sources).toEqual(["containment", "sticky"]);
+    // second event had no cwd → resolver still consulted with undefined cwd
+    expect(resolver.calls[1].cwd).toBeUndefined();
+    // Admission of the first (containment) event recorded a sticky pin.
+    expect(resolver.pins).toEqual([
+      { sessionId: "s9", projectId: "proj-a", source: "containment" },
+      { sessionId: "s9", projectId: "proj-a", source: "sticky" },
+    ]);
+  });
+
+  it("HAR-01: resolution runs pre-enqueue (mutation guard)", async () => {
+    const resolver = new FakeResolver([{ projectId: "p", source: "explicit" }]);
+    const { svc } = makeAttributedService(resolver);
+    await svc.ingestOne(validEvent({ projectId: "p" }));
+    // Called BEFORE the writer turn flushes — proves resolution is at admission,
+    // not deferred into the enqueue callback.
+    expect(resolver.calls.length).toBe(1);
+    await flush();
+  });
+
+  it("HAR-04: QueueSaturatedError leaves NO pin behind (admission-before-side-effect)", async () => {
+    const resolver = new FakeResolver([{ projectId: "p", source: "explicit" }]);
+    const store = new MemoryObservationStore();
+    // maxPending:1 so a single blocking work saturates the queue.
+    const svc = new HookService({
+      store,
+      maxPending: 1,
+      bridge: new FakeBridge(),
+      resolver,
+      idFactory: () => "saturated-id",
+    });
+    // Occupy the only slot with a never-resolving work item.
+    void svc.queue.enqueue(() => new Promise<void>(() => {}));
+    await expect(
+      svc.ingestOne(validEvent({ projectId: "p", sessionId: "sat-s" })),
+    ).rejects.toThrow(QueueSaturatedError);
+    expect(resolver.calls.length).toBe(1); // resolve ran at admission...
+    expect(resolver.pins.length).toBe(0); // ...but no pin was recorded
+    expect(store.rows.length).toBe(0);
+  });
+
+  it("HAR-01: explicit source persists verbatim and bridge targets resolved id", async () => {
+    const resolver = new FakeResolver([{ projectId: "live-proj", source: "explicit" }]);
+    const { svc, store, bridge } = makeAttributedService(resolver);
+    await svc.ingestOne(validEvent({ projectId: "live-proj", payload: { cwd: "/anywhere" } }));
+    await flush();
+    const obs = store.listRecent("live-proj", 1)[0];
+    expect(obs.attributionSource).toBe("explicit");
+    expect(bridge.calls).toEqual(["live-proj"]);
+  });
+
+  it("HAR-01: verbatim fail-open keeps the caller id", async () => {
+    const resolver = new FakeResolver([]); // default verbatim script
+    const { svc, store } = makeAttributedService(resolver);
+    await svc.ingestOne(validEvent({ projectId: "unknown-x", payload: { cwd: "/nowhere" } }));
+    await flush();
+    const obs = store.listRecent("unknown-x", 1)[0];
+    expect(obs.attributionSource).toBe("verbatim");
+    expect(obs.projectId).toBe("unknown-x");
+  });
+
+  it("cwd extraction: workingDirectory fallback, cwd precedence, absent → undefined", async () => {
+    const resolver = new FakeResolver([
+      { projectId: "p", source: "verbatim" },
+      { projectId: "p", source: "verbatim" },
+      { projectId: "p", source: "verbatim" },
+    ]);
+    const { svc } = makeAttributedService(resolver);
+    await svc.ingestOne(validEvent({ projectId: "p", payload: { workingDirectory: "/wd" } }));
+    await svc.ingestOne(validEvent({ projectId: "p", payload: { cwd: "/c", workingDirectory: "/wd" } }));
+    await svc.ingestOne(validEvent({ projectId: "p", payload: { prompt: "none" } }));
+    await flush();
+    expect(resolver.calls[0].cwd).toBe("/wd");
+    expect(resolver.calls[1].cwd).toBe("/c");
+    expect(resolver.calls[2].cwd).toBeUndefined();
+  });
+
+  it("HAR-01: batch path resolves attribution per event", async () => {
+    const resolver = new FakeResolver([
+      { projectId: "proj-b", source: "containment" },
+      { projectId: "proj-b", source: "sticky" },
+    ]);
+    const { svc, store } = makeAttributedService(resolver);
+    await svc.ingestBatch([
+      validEvent({ projectId: "junk", sessionId: "sb", payload: { cwd: "/repo" } }),
+      validEvent({ projectId: "junk", sessionId: "sb", payload: { note: 1 } }),
+    ]);
+    await flush();
+    expect(store.countByProject("proj-b")).toBe(2);
+    expect(resolver.calls.length).toBe(2);
+  });
+
+  it("missing agentId persists as null-ish (honest absence)", async () => {
+    const resolver = new FakeResolver([{ projectId: "p", source: "explicit" }]);
+    const { svc, store } = makeAttributedService(resolver);
+    await svc.ingestOne(validEvent({ projectId: "p" }));
+    await flush();
+    const obs = store.listRecent("p", 1)[0];
+    expect(obs.agentId ?? null).toBeNull();
   });
 });
