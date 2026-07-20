@@ -6,14 +6,14 @@
 - workflowSessionId: `spec-wave-3`
 - workflow: spec-driven
 - feature: `transactional-project-identity` (M16+M17)
-- status: M19, M20+M54, and M50 complete; M16+M17 specification active
+- status: M19, M20+M54, M50 complete; M16+M17 executing — T1–T6 committed (`3dc85b5`→T6 `test(identity): prove transactional rename and merge`, independently verified 2 rounds); T7 validation next
 - branch/worktree: `wave-3` / `massa-th0th-wt-wave-3`
 - sequence: M19 → M20+M54 → M50 → M16+M17 → M45+M47 → M21
 - invariant: `sqlite-removal` stays `in_progress`; `multi-language-tree-sitter-breadth` reconciled to `complete` from its recorded PASS evidence.
 
 ### Wave 3 Next Step
 
-Complete the read-only identity storage/writer inventory, reconcile it with the frozen adapter and guard design, then implement schema/contracts as the first bounded slice.
+T6 committed (9/9 acceptance ×3, 10 production fixes, 2 review rounds). Next: T7 validation.md + full regression + independent verifier, commit `docs(specs): validate transactional project identity`; then M45+M47, M21.
 
 ---
 
