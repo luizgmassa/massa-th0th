@@ -6,14 +6,14 @@
 - workflowSessionId: `spec-wave-3`
 - workflow: spec-driven
 - feature: `transactional-project-identity` (M16+M17)
-- status: M19, M20+M54, M50 complete; M16+M17 executing — T1–T6 committed (`3dc85b5`→T6 `test(identity): prove transactional rename and merge`, independently verified 2 rounds); T7 validation next
+- status: M19, M20+M54, M50, M16+M17 complete (T1–T7 `3dc85b5`→`b68910d` `docs(specs): validate transactional project identity`; independent verifier PASS, surviving mutant M4 closed by new planner fixture); M45+M47 next
 - branch/worktree: `wave-3` / `massa-th0th-wt-wave-3`
 - sequence: M19 → M20+M54 → M50 → M16+M17 → M45+M47 → M21
 - invariant: `sqlite-removal` stays `in_progress`; `multi-language-tree-sitter-breadth` reconciled to `complete` from its recorded PASS evidence.
 
 ### Wave 3 Next Step
 
-T6 committed (9/9 acceptance ×3, 10 production fixes, 2 review rounds). Next: T7 validation.md + full regression + independent verifier, commit `docs(specs): validate transactional project identity`; then M45+M47, M21.
+T7 committed (`b68910d`): validation.md PASS, full regression with T6 gate 9/9 inside the suite, baseline failure classification, verifier PASS. Next: M45+M47 (`hook-attribution-repair`, P1) verify-first per ~/Downloads/massa-th0th-improvement-plan.md as its own spec-driven feature; then M21 (`linux-native-structural-runtime`, P0).
 
 ---
 
