@@ -18,6 +18,7 @@
       "cache": false,
       "passThroughEnv": [
         "DATABASE_URL",
+        "IDENTITY_ACCEPTANCE_DATABASE_URL",
         "MASSA_TH0TH_API_URL",
         "MASSA_TH0TH_API_KEY",
         "MASSA_TH0TH_DEDICATED",

@@ -47,6 +47,17 @@ mock.module("@massa-th0th/core", () => ({
     },
   }),
   UNKNOWN_ACTOR: { actorType: "api_key", actorId: "unknown" },
+  // T5 identity surface — the reset routes never invoke these, but the module
+  // mock must satisfy every runtime binding that routes/project.ts imports.
+  ProjectIdentityError: class ProjectIdentityError extends Error {},
+  createProjectIdentityService: () => ({
+    preview: async () => {
+      throw new Error("project-reset tests never invoke identity preview");
+    },
+    apply: async () => {
+      throw new Error("project-reset tests never invoke identity apply");
+    },
+  }),
 }));
 
 const { projectRoutes } = await import("../routes/project.js");

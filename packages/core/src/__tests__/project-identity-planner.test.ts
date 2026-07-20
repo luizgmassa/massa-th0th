@@ -146,6 +146,33 @@ describe("project identity preview planner", () => {
     expect(changed.planHash).not.toBe(first.planHash);
   });
 
+  test("payload fingerprint ignores unrelated projects in project_id-bearing tables", async () => {
+    const request = { mode: "merge" as const, sourceProjectId: "source", targetProjectId: "target" };
+    const baseline = await new ProjectIdentityPreviewPlanner(new FakeClient()).preview(request);
+
+    // Spec req 1 (only relevant storage change may flip a preview) + T6 ledger
+    // #10: a third project's payload row in a project_id-bearing table is
+    // outside the source∪target scan, so an unrelated write between preview
+    // and apply must leave the plan untouched. A global-scan regression
+    // (T7 verifier mutant M4) flips this hash.
+    const withThird = new FakeClient();
+    withThird.tables.memories!.push({
+      id: "m3",
+      project_id: "third",
+      metadata: { projectId: "third", note: "unrelated write between preview and apply" },
+      tags: ["handoff:third"],
+    });
+    const planner = new ProjectIdentityPreviewPlanner(withThird);
+    const first = await planner.preview(request);
+    expect(first.planHash).toBe(baseline.planHash);
+    expect(first.stores).toEqual(baseline.stores);
+    expect(first.conflicts).toEqual([]);
+
+    withThird.tables.memories!.at(-1)!.metadata = { projectId: "third", note: "changed again" };
+    const second = await planner.preview(request);
+    expect(second.planHash).toBe(baseline.planHash);
+  });
+
   test("reports key collisions, malformed payloads, and unknown storage without mutation", async () => {
     const client = new FakeClient();
     client.tables.memories = [
