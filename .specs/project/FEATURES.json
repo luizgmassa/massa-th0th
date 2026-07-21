@@ -222,11 +222,23 @@
     {
       "slug": "sqlite-removal",
       "title": "PostgreSQL-only storage; SQLite runtime removal",
-      "status": "in_progress",
+      "status": "complete",
       "priority": "P1",
       "phases": {
         "specify": true,
         "design": true,
+        "tasks": true,
+        "execute": true
+      }
+    },
+    {
+      "slug": "sqlite-removal-followup",
+      "title": "SQLite removal non-gating follow-ups (legacy Prisma probe rerun, qwen fixture manifest rebuild, final aggregate capture)",
+      "status": "in_progress",
+      "priority": "P2",
+      "phases": {
+        "specify": true,
+        "design": false,
         "tasks": true,
         "execute": true
       }
@@ -286,5 +298,5 @@
       "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
     }
   ],
-  "active_feature": "native-runtime-rebaseline"
+  "active_feature": "sqlite-removal-followup"
 }
