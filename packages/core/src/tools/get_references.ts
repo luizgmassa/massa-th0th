@@ -7,12 +7,21 @@
 
 import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
 import { symbolGraphService } from "../services/symbol/symbol-graph.service.js";
+import { ToolError } from "./enum-validation.js";
+import { getActiveGeneration, assertGenerationNotStale } from "../services/symbol/active-generation.js";
 
 interface GetReferencesParams {
   projectId: string;
   symbolName: string;
   fqn?: string;
   maxResults?: number;
+  /**
+   * N1 (WAVE4-N1): optional precondition — the client's last-known
+   * `activatedGraphGenerationId`. If it mismatches the current active
+   * generation, the tool throws a 412 teaching error. Opt-in: omitted →
+   * no precondition.
+   */
+  ifNoneMatch?: string;
 }
 
 export class GetReferencesTool implements IToolHandler {
@@ -41,6 +50,11 @@ export class GetReferencesTool implements IToolHandler {
         description: "Maximum references to return (default: 50)",
         default: 50,
       },
+      ifNoneMatch: {
+        type: "string",
+        description:
+          "Optional precondition: the client's last-known `activatedGraphGenerationId`. If it mismatches the current active generation, the tool returns a 412 teaching error.",
+      },
     },
     required: ["projectId", "symbolName"],
   };
@@ -51,7 +65,20 @@ export class GetReferencesTool implements IToolHandler {
       symbolName,
       fqn,
       maxResults = 50,
+      ifNoneMatch,
     } = params as GetReferencesParams;
+
+    // N1 (WAVE4-N1): surface the active graph generation id + opt-in stale
+    // precondition. get_references reads the symbol graph, so it participates.
+    const activatedGraphGenerationId = await getActiveGeneration(projectId);
+    try {
+      assertGenerationNotStale(ifNoneMatch, activatedGraphGenerationId);
+    } catch (e) {
+      if (e instanceof ToolError) {
+        return { success: false, error: e.message };
+      }
+      throw e;
+    }
 
     try {
       const refs = await symbolGraphService.getReferences(projectId, symbolName, fqn);
@@ -89,6 +116,8 @@ export class GetReferencesTool implements IToolHandler {
             ]),
           ),
           projectId,
+          // N1 (WAVE4-N1): the active graph generation id at query time.
+          activatedGraphGenerationId,
         },
       };
     } catch (error) {

@@ -777,4 +777,20 @@ describe("SearchController — N4 results_total/shown/omitted", () => {
     expect(result.results_omitted).toBe(0);
     expect(result.results).toEqual([]);
   });
+
+  // N1 (WAVE4-N1) AC 7: search_code is EXCLUDED from the generation-staleness
+  // contract. It neither calls getActiveGeneration nor surfaces
+  // activatedGraphGenerationId. The controller's ProjectSearchResult has no
+  // activatedGraphGenerationId field — this test asserts that invariant so a
+  // future change that adds the field to the search path fails loudly.
+  test("N1 AC 7: search_code result has NO activatedGraphGenerationId field", async () => {
+    const reachable = Array.from({ length: 5 }, (_, i) => makeSearchResult(`r${i}`));
+    const controller = freshControllerWithResults(reachable);
+
+    const result = await controller.searchProject({ query: "q", projectId: "p", maxResults: 10 });
+
+    // The result object MUST NOT have an activatedGraphGenerationId own property.
+    expect(Object.prototype.hasOwnProperty.call(result, "activatedGraphGenerationId")).toBe(false);
+    expect((result as any).activatedGraphGenerationId).toBeUndefined();
+  });
 });

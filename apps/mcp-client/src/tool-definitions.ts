@@ -689,6 +689,11 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           description: "Maximum number of results (default: 20)",
           default: 20,
         },
+        ifNoneMatch: {
+          type: "string",
+          description:
+            "Optional precondition: the client's last-known `activatedGraphGenerationId`. If it mismatches the current active generation, the tool returns a 412 teaching error.",
+        },
       },
       required: ["projectId"],
     },
@@ -719,6 +724,11 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           type: "number",
           description: "Maximum references to return (default: 50)",
           default: 50,
+        },
+        ifNoneMatch: {
+          type: "string",
+          description:
+            "Optional precondition: the client's last-known `activatedGraphGenerationId`. If it mismatches the current active generation, the tool returns a 412 teaching error.",
         },
       },
       required: ["projectId", "symbolName"],
@@ -820,6 +830,11 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           description:
             "Projection — keep only these keys (dotted paths supported, e.g. ['nodes.symbol']). Absent/empty → full data.",
         },
+        ifNoneMatch: {
+          type: "string",
+          description:
+            "Optional precondition: the client's last-known `activatedGraphGenerationId`. If it mismatches the current active generation, the tool returns a 412 teaching error.",
+        },
       },
       required: ["projectId"],
       anyOf: [
@@ -888,6 +903,11 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           items: { type: "string" },
           description:
             "Projection — keep only these keys (dotted paths supported, e.g. ['impacted.symbol']). Absent/empty → full data.",
+        },
+        ifNoneMatch: {
+          type: "string",
+          description:
+            "Optional precondition: the client's last-known `activatedGraphGenerationId`. If it mismatches the current active generation, the tool returns a 412 teaching error.",
         },
       },
       required: ["projectId", "projectPath"],

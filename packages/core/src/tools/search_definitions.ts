@@ -12,7 +12,8 @@ import {
   ToolResponse,
 } from "@massa-th0th/shared";
 import { symbolGraphService } from "../services/symbol/symbol-graph.service.js";
-import { validateEnum } from "./enum-validation.js";
+import { validateEnum, ToolError } from "./enum-validation.js";
+import { getActiveGeneration, assertGenerationNotStale } from "../services/symbol/active-generation.js";
 
 interface SearchDefinitionsParams {
   projectId: string;
@@ -21,6 +22,13 @@ interface SearchDefinitionsParams {
   file?: string;
   exportedOnly?: boolean;
   maxResults?: number;
+  /**
+   * N1 (WAVE4-N1): optional precondition — the client's last-known
+   * `activatedGraphGenerationId`. If it mismatches the current active
+   * generation, the tool throws a 412 teaching error. Opt-in: omitted →
+   * no precondition.
+   */
+  ifNoneMatch?: string;
 }
 
 export class SearchDefinitionsTool implements IToolHandler {
@@ -58,6 +66,11 @@ export class SearchDefinitionsTool implements IToolHandler {
         description: "Maximum number of results to return (default: 20)",
         default: 20,
       },
+      ifNoneMatch: {
+        type: "string",
+        description:
+          "Optional precondition: the client's last-known `activatedGraphGenerationId`. If it mismatches the current active generation, the tool returns a 412 teaching error.",
+      },
     },
     required: ["projectId"],
   };
@@ -70,6 +83,7 @@ export class SearchDefinitionsTool implements IToolHandler {
       file,
       exportedOnly = false,
       maxResults = 20,
+      ifNoneMatch,
     } = params as SearchDefinitionsParams;
 
     // Validate each kind entry against the 18 canonical structural kinds.
@@ -84,6 +98,19 @@ export class SearchDefinitionsTool implements IToolHandler {
           ),
         )
       : undefined;
+
+    // N1 (WAVE4-N1): surface the active graph generation id + opt-in stale
+    // precondition. search_definitions reads the symbol graph, so it
+    // participates; search_code is excluded (vector + keyword only).
+    const activatedGraphGenerationId = await getActiveGeneration(projectId);
+    try {
+      assertGenerationNotStale(ifNoneMatch, activatedGraphGenerationId);
+    } catch (e) {
+      if (e instanceof ToolError) {
+        return { success: false, error: e.message };
+      }
+      throw e;
+    }
 
     try {
       const { definitions, total, total_exact } = await symbolGraphService.listDefinitions(projectId, {
@@ -124,6 +151,8 @@ export class SearchDefinitionsTool implements IToolHandler {
           total: shown,
           projectId,
           query: query ?? null,
+          // N1 (WAVE4-N1): the active graph generation id at query time.
+          activatedGraphGenerationId,
         },
       };
     } catch (error) {

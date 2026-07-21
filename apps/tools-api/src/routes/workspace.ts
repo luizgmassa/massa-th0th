@@ -22,6 +22,7 @@ import { Elysia, t } from "elysia";
 import fs from "fs/promises";
 import path from "path";
 import { realpathSync } from "fs";
+import { getActiveGeneration, assertGenerationNotStale } from "@massa-th0th/core";
 
 let indexProjectTool: IndexProjectTool | null = null;
 
@@ -210,7 +211,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
 
   .get(
     "/symbol/definitions",
-    async ({ query }) => {
+    async ({ query, headers }) => {
       try {
         const {
           projectId,
@@ -223,6 +224,23 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
 
         if (!projectId)
           return { success: false, error: "projectId is required" };
+
+        // N1 (WAVE4-N1): opt-in stale-generation precondition. ifNoneMatch is
+        // accepted as a query param OR an If-None-Match header (HTTP ETag
+        // convention). Omitted → no precondition.
+        const ifNoneMatch = firstQueryValue(query.ifNoneMatch as string | string[] | undefined)
+          ?? (headers["if-none-match"] as string | undefined);
+
+        const activatedGraphGenerationId = await getActiveGeneration(projectId);
+        try {
+          assertGenerationNotStale(ifNoneMatch, activatedGraphGenerationId);
+        } catch (e) {
+          return {
+            success: false,
+            error: (e as Error).message,
+            statusCode: 412,
+          };
+        }
 
         const limitBounded = boundedInt(limit, 20, 1, 500);
         const { definitions: defs, total, total_exact } = await symbolGraphService.listDefinitions(projectId, {
@@ -248,6 +266,8 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
             definitions_total_exact: total_exact,
             // Legacy `total` kept for back-compat (equals the page length, as before).
             total: shown,
+            // N1 (WAVE4-N1): the active graph generation id at query time.
+            activatedGraphGenerationId,
           },
         };
       } catch (error) {
@@ -266,7 +286,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
 
   .get(
     "/symbol/references",
-    async ({ query }) => {
+    async ({ query, headers }) => {
       try {
         const {
           projectId,
@@ -279,6 +299,21 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           return { success: false, error: "projectId is required" };
         if (!symbolName)
           return { success: false, error: "symbolName is required" };
+
+        // N1 (WAVE4-N1): opt-in stale-generation precondition.
+        const ifNoneMatch = firstQueryValue(query.ifNoneMatch as string | string[] | undefined)
+          ?? (headers["if-none-match"] as string | undefined);
+
+        const activatedGraphGenerationId = await getActiveGeneration(projectId);
+        try {
+          assertGenerationNotStale(ifNoneMatch, activatedGraphGenerationId);
+        } catch (e) {
+          return {
+            success: false,
+            error: (e as Error).message,
+            statusCode: 412,
+          };
+        }
 
         const lookup = fqn
           ? await symbolGraphService.lookupDefinition(projectId, fqn)
@@ -296,6 +331,8 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
               shown: 0,
               // N4 (WAVE4-N4): omitted = total - shown. Zero on the missing/ambiguous path.
               omitted: 0,
+              // N1 (WAVE4-N1): still surface the generation id on the missing/ambiguous path.
+              activatedGraphGenerationId,
             },
           };
         }
@@ -319,6 +356,8 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
             shown,
             // N4 (WAVE4-N4): omitted = total - shown.
             omitted: total - shown,
+            // N1 (WAVE4-N1): the active graph generation id at query time.
+            activatedGraphGenerationId,
             ...(identity ? { identity } : {}),
           },
         };
@@ -377,7 +416,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
 
   .get(
     "/symbol/trace",
-    async ({ query }) => {
+    async ({ query, headers }) => {
       try {
         const {
           projectId,
@@ -389,6 +428,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           depth,
           include_tests,
           edge_types,
+          ifNoneMatch: ifNoneMatchQ,
         } = query as Record<string, string | string[] | undefined>;
 
         const normalizedProjectId = firstQueryValue(projectId);
@@ -402,6 +442,21 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
             success: false,
             error: "function_name (or symbol/qualifiedName) is required",
           };
+
+        // N1 (WAVE4-N1): opt-in stale-generation precondition.
+        const ifNoneMatch = firstQueryValue(ifNoneMatchQ as string | string[] | undefined)
+          ?? (headers["if-none-match"] as string | undefined);
+
+        const activatedGraphGenerationId = await getActiveGeneration(normalizedProjectId);
+        try {
+          assertGenerationNotStale(ifNoneMatch, activatedGraphGenerationId);
+        } catch (e) {
+          return {
+            success: false,
+            error: (e as Error).message,
+            statusCode: 412,
+          };
+        }
 
         const result = await getGraphController().tracePath({
           projectId: normalizedProjectId,
@@ -439,17 +494,34 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           if (identity?.status === "ambiguous") {
             return {
               success: true,
-              data: { found: false, identity },
+              data: {
+                found: false,
+                identity,
+                // N1 (WAVE4-N1): surface the generation id on the not-found path.
+                activatedGraphGenerationId,
+              },
             };
           }
           return {
             success: false,
             error: `Symbol '${result.symbol}' not found in project '${result.projectId}'.`,
-            data: { hint: result.hint, ...(identity ? { identity } : {}) },
+            data: {
+              hint: result.hint,
+              // N1 (WAVE4-N1): surface the generation id on the not-found path.
+              activatedGraphGenerationId,
+              ...(identity ? { identity } : {}),
+            },
           };
         }
 
-        return { success: true, data: result.result };
+        return {
+          success: true,
+          data: {
+            ...result.result,
+            // N1 (WAVE4-N1): the active graph generation id at query time.
+            activatedGraphGenerationId,
+          },
+        };
       } catch (error) {
         return { success: false, error: (error as Error).message };
       }
@@ -469,7 +541,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
 
   .post(
     "/symbol/impact",
-    async ({ body }) => {
+    async ({ body, headers }) => {
       try {
         const {
           projectId,
@@ -479,6 +551,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           since,
           depth,
           paths,
+          ifNoneMatch: ifNoneMatchBody,
         } = body as Record<string, unknown> as {
           projectId: string;
           projectPath: string;
@@ -487,6 +560,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           since?: string;
           depth?: number;
           paths?: string[];
+          ifNoneMatch?: string;
         };
 
         if (!projectId)
@@ -497,6 +571,22 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
             error:
               "projectPath is required (absolute path to the working tree where git runs).",
           };
+
+        // N1 (WAVE4-N1): opt-in stale-generation precondition. Accepted from
+        // the body OR the If-None-Match header.
+        const ifNoneMatch = ifNoneMatchBody
+          ?? (headers["if-none-match"] as string | undefined);
+
+        const activatedGraphGenerationId = await getActiveGeneration(projectId);
+        try {
+          assertGenerationNotStale(ifNoneMatch, activatedGraphGenerationId);
+        } catch (e) {
+          return {
+            success: false,
+            error: (e as Error).message,
+            statusCode: 412,
+          };
+        }
 
         // Boundary: the caller-supplied projectPath must match (or be within)
         // the workspace's registered project_path. This prevents a caller from
@@ -529,7 +619,14 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           paths,
         });
 
-        return { success: true, data: result };
+        return {
+          success: true,
+          data: {
+            ...result,
+            // N1 (WAVE4-N1): the active graph generation id at query time.
+            activatedGraphGenerationId,
+          },
+        };
       } catch (error) {
         return { success: false, error: (error as Error).message };
       }
@@ -557,6 +654,12 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
         ),
         paths: t.Optional(
           t.Array(t.String(), { description: "Optional filter — only these changed relative paths" }),
+        ),
+        ifNoneMatch: t.Optional(
+          t.String({
+            description:
+              "Optional precondition: the client's last-known `activatedGraphGenerationId`. If it mismatches the current active generation, returns 412.",
+          }),
         ),
       }),
       detail: {

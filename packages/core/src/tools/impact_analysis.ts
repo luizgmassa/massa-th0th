@@ -22,7 +22,8 @@ import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
 import { impactAnalysisService } from "../services/symbol/impact-analysis.js";
 import type { ImpactScope } from "../services/symbol/impact-analysis.js";
 import { serializeToolResponse } from "./serialize.js";
-import { validateEnum } from "./enum-validation.js";
+import { validateEnum, ToolError } from "./enum-validation.js";
+import { getActiveGeneration, assertGenerationNotStale } from "../services/symbol/active-generation.js";
 
 interface ImpactAnalysisParams {
   projectId: string;
@@ -37,6 +38,13 @@ interface ImpactAnalysisParams {
   deadline_ms?: number;
   format?: "json" | "toon";
   fields?: string[];
+  /**
+   * N1 (WAVE4-N1): optional precondition — the client's last-known
+   * `activatedGraphGenerationId`. If it mismatches the current active
+   * generation, the tool throws a 412 teaching error. Opt-in: omitted →
+   * no precondition.
+   */
+  ifNoneMatch?: string;
 }
 
 export class ImpactAnalysisTool implements IToolHandler {
@@ -98,6 +106,11 @@ export class ImpactAnalysisTool implements IToolHandler {
         description:
           "Projection — keep only these keys (dotted paths supported, e.g. ['impacted.symbol']). Absent/empty → full data.",
       },
+      ifNoneMatch: {
+        type: "string",
+        description:
+          "Optional precondition: the client's last-known `activatedGraphGenerationId`. If it mismatches the current active generation, the tool returns a 412 teaching error.",
+      },
     },
     required: ["projectId", "projectPath"],
   };
@@ -120,6 +133,22 @@ export class ImpactAnalysisTool implements IToolHandler {
       p.scope ?? "unstaged",
       ["unstaged", "staged", "committed", "all"] as const,
     );
+
+    // N1 (WAVE4-N1): surface the active graph generation id + opt-in stale
+    // precondition. The lookup is cheap (single row from workspaces); the
+    // precondition is opt-in (omitted ifNoneMatch → no throw). The 412
+    // teaching error is thrown BEFORE the expensive git diff + reverse BFS.
+    // Catch the ToolError here so the MCP transport sees a structured
+    // {success:false, error, statusCode} response (not an uncaught throw).
+    const activatedGraphGenerationId = await getActiveGeneration(p.projectId);
+    try {
+      assertGenerationNotStale(p.ifNoneMatch, activatedGraphGenerationId);
+    } catch (e) {
+      if (e instanceof ToolError) {
+        return { success: false, error: e.message };
+      }
+      throw e;
+    }
 
     try {
       const result = await impactAnalysisService.analyze({
@@ -145,6 +174,8 @@ export class ImpactAnalysisTool implements IToolHandler {
             impacted_total: result.impacted_total,
             impacted_shown: result.impacted_shown,
             impacted_omitted: result.impacted_omitted,
+            // N1 (WAVE4-N1): the active graph generation id at query time.
+            activatedGraphGenerationId,
             note: result.note,
             hint:
               "No indexed source files in the diff. Check scope/base_branch, or index the project first (index_project).",
@@ -168,6 +199,8 @@ export class ImpactAnalysisTool implements IToolHandler {
           impacted_total: result.impacted_total,
           impacted_shown: result.impacted_shown,
           impacted_omitted: result.impacted_omitted,
+          // N1 (WAVE4-N1): the active graph generation id at query time.
+          activatedGraphGenerationId,
           impacted: result.impacted.map((s) => ({
             symbol: s.name,
             fqn: s.fqn,

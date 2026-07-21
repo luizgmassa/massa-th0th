@@ -261,6 +261,8 @@ export {
 } from "./symbol/definition-lookup.js";
 export type { DefinitionLookupResult } from "./symbol/definition-lookup.js";
 export { ImpactAnalysisService, impactAnalysisService, defaultDiffRunner } from "./symbol/impact-analysis.js";
+// N1 (WAVE4-N1): active-graph-generation lookup + opt-in stale precondition.
+export { getActiveGeneration, assertGenerationNotStale } from "./symbol/active-generation.js";
 export type {
   DefinitionResult,
   ReferenceResult,
