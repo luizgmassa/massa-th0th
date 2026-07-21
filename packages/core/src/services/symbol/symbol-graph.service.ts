@@ -33,6 +33,7 @@ import { runLouvain, type WeightedEdge } from "./communities.js";
 import {
   computeArchitectureMap,
   type ArchitectureMap,
+  type CallEdge,
   type HttpEdgeLite,
   type InternalImport,
   type SymbolDefLite,
@@ -541,6 +542,7 @@ export class SymbolGraphService {
       importEdges: importEdgesRaw,
       definitions: defsRaw,
       httpEdges: httpEdgesRaw,
+      callEdges: callEdgesRaw,
       centrality: centralityRaw,
     } = snapshot;
 
@@ -592,6 +594,29 @@ export class SymbolGraphService {
       route: (r.meta?.route as string | undefined) ?? undefined,
     }));
 
+    // Wave 5 FR-02 / N2: CALL edges → file-level directed edges for the
+    // `cycles` aspect (iterative Tarjan SCC). `from` = caller's file (raw
+    // `from_file`); `to` = callee's file, extracted from the callee's
+    // structural FQN (`relative/path.ts#Name` → `relative/path.ts`). Rows
+    // lacking a `target_fqn` or whose target does not resolve to an indexed
+    // file are dropped: a CALL edge without a resolvable callee cannot be
+    // part of a file-level cycle. The SCC detector itself runs only when the
+    // caller opts in via `aspects: ["cycles"]` (T03); this transformation is
+    // always-on so the snapshotter cost stays predictable.
+    const knownFiles = fileIndex;
+    const callEdges: CallEdge[] = [];
+    for (const r of callEdgesRaw) {
+      if (!r.target_fqn) continue;
+      const hashIdx = r.target_fqn.indexOf("#");
+      // Strip the `#Name` segment; a FQN without `#` is treated as-is.
+      const calleeFile = hashIdx >= 0 ? r.target_fqn.slice(0, hashIdx) : r.target_fqn;
+      if (!calleeFile || calleeFile === r.from_file) continue;
+      // Drop edges whose callee file is not in the indexed set: external
+      // callees (or stale FQNs) cannot close a file-level cycle.
+      if (!knownFiles.has(calleeFile)) continue;
+      callEdges.push({ from: r.from_file, to: calleeFile });
+    }
+
     // Run community detection over the file-import graph.
     const commResult = runLouvain(files.length, weightedEdges);
 
@@ -601,6 +626,7 @@ export class SymbolGraphService {
       internalEdges,
       definitions,
       httpEdges,
+      callEdges,
       centrality: centralityRaw,
       symbolCounts,
       communities: commResult.communities,

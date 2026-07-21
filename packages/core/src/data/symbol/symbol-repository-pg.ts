@@ -167,6 +167,14 @@ export interface ProjectMapGraphSnapshot {
     importEdges: Array<{ from_file: string; to_file?: string }>;
     definitions: SymbolDefinition[];
     httpEdges: SymbolReference[];
+    /**
+     * CALL-kind references (Wave 5 FR-02 / N2). Populated from
+     * `symbol_references WHERE ref_kind='call'` rows; consumed by the
+     * `cycles` aspect in {@link computeArchitectureMap} via Tarjan SCC.
+     * Bounded by `callEdgeBudget` (default 400_000) — over the budget, rows
+     * are simply truncated (the cycles result sets `cycles_truncated=true`).
+     */
+    callEdges: SymbolReference[];
     centrality: Map<string, number>;
   };
 }
@@ -174,6 +182,15 @@ export interface ProjectMapGraphSnapshot {
 export interface ProjectMapSnapshotOptions {
   centralityLimit?: number;
   recentLimit?: number;
+  /**
+   * Wave 5 (FR-02 / N2): hard cap on CALL-kind reference rows read for the
+   * architecture snapshot's `callEdges` slot. Default 400_000 — over the
+   * budget, rows are truncated and the `cycles` aspect surfaces
+   * `cycles_truncated=true`. The cap matches the iterative Tarjan edge budget
+   * (AD-W5-017) so the SCC detector never receives more edges than it can
+   * process within the RSS guard.
+   */
+  callEdgeBudget?: number;
   /** @internal Deterministic concurrency sensor used by DB-backed tests. */
   afterGenerationCaptured?: (generationId: string | null) => void | Promise<void>;
 }
@@ -1125,6 +1142,11 @@ export class SymbolRepositoryPg {
   ): Promise<ProjectMapGraphSnapshot | null> {
     const centralityLimit = opts.centralityLimit ?? 20;
     const recentLimit = opts.recentLimit ?? 10;
+    // Wave 5 FR-02 / N2: CALL-edge budget. Matches the iterative Tarjan edge
+    // budget (AD-W5-017) so the SCC detector never receives more edges than
+    // it can process within the RSS guard. Over the budget, rows are
+    // truncated and the `cycles` aspect surfaces `cycles_truncated=true`.
+    const callEdgeBudget = opts.callEdgeBudget ?? 400_000;
 
     return getPrismaClient().$transaction(async (tx) => {
       const workspaceRows = await tx.$queryRaw<Array<WsRaw & { active_graph_generation_id: string | null }>>`
@@ -1148,7 +1170,7 @@ export class SymbolRepositoryPg {
         recentFiles: [],
         edgesByKind: {},
         architecture: {
-          files: [], importEdges: [], definitions: [], httpEdges: [], centrality: new Map(),
+          files: [], importEdges: [], definitions: [], httpEdges: [], callEdges: [], centrality: new Map(),
         },
       };
       if (!generationId) return empty;
@@ -1194,6 +1216,18 @@ export class SymbolRepositoryPg {
           AND ref_kind = 'http_call'
         ORDER BY from_file, from_line
         LIMIT 200
+      `;
+      // Wave 5 FR-02 / N2: CALL-kind edges drive the `cycles` aspect (Tarjan
+      // SCC). Bounded by `callEdgeBudget` (default 400_000); over the budget,
+      // the rows are truncated and `cycles_truncated=true` is surfaced. The
+      // budget matches the iterative Tarjan edge ceiling (AD-W5-017) so the
+      // SCC detector never overflows the JS stack under the RSS guard.
+      const callRows = await tx.$queryRaw<RefRaw[]>`
+        SELECT * FROM symbol_references
+        WHERE project_id = ${projectId} AND generation_id = ${generationId}
+          AND ref_kind = 'call'
+        ORDER BY from_file, from_line
+        LIMIT ${callEdgeBudget}
       `;
       const centralityRows = await tx.$queryRaw<Array<{
         file_path: string;
@@ -1280,6 +1314,7 @@ export class SymbolRepositoryPg {
           })),
           definitions: definitionRows.map(mapDef),
           httpEdges: httpRows.map(mapRef),
+          callEdges: callRows.map(mapRef),
           centrality,
         },
       };

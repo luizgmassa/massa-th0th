@@ -29,6 +29,7 @@ export {
 export type {
   ArchitectureMap,
   ArchitectureInput,
+  ArchitectureOptions,
   PackageInfo,
   EntryPoint,
   RouteInfo,
@@ -38,6 +39,7 @@ export type {
   InternalImport,
   SymbolDefLite,
   HttpEdgeLite,
+  CallEdge,
 } from "./architecture.js";
 export { TracePathService, tracePathService } from "./trace-path.js";
 export type {

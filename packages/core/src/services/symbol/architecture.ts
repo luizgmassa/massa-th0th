@@ -99,6 +99,20 @@ export interface InternalImport {
   toFile: string;
 }
 
+/**
+ * Directed CALL edge between two files (Wave 5 — FR-02 / N2).
+ *
+ * `from` = caller's file (relative path); `to` = callee's file (relative path,
+ * stripped from the callee's structural FQN `path/to/file.ts#Name`). The Tarjan
+ * SCC detector ({@link detectCycles}) runs over CALL edges to surface cyclic
+ * call graphs. Endpoint identity is FILE-level (not symbol-level) so the SCC
+ * partitions reflect file-grained dependency cycles.
+ */
+export interface CallEdge {
+  from: string;
+  to: string;
+}
+
 export interface SymbolDefLite {
   filePath: string;
   name: string;
@@ -549,6 +563,14 @@ export interface ArchitectureInput {
   internalEdges: InternalImport[];
   definitions: SymbolDefLite[];
   httpEdges: HttpEdgeLite[];
+  /**
+   * Directed CALL edges (Wave 5 FR-02 / N2). Populated from
+   * `symbol_references WHERE ref_kind='call'` rows by the snapshot reader;
+   * the `cycles` aspect (T03) runs iterative Tarjan SCC over these. Optional
+   * for backward-compat: pre-Wave-5 callers omit it and `cycles` stays absent
+   * from the resulting {@link ArchitectureMap}.
+   */
+  callEdges?: CallEdge[];
   centrality?: Map<string, number>;
   symbolCounts?: Map<string, number>;
   communities?: Community[];
