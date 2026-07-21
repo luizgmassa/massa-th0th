@@ -210,7 +210,7 @@ describe("AutoImproveJob — runOnce + review gate", () => {
   });
 
   it("P5-DETECT-01: produces >=1 pending proposal from a deterministic pattern (reviewGate=true)", async () => {
-    const { job, store } = makeJob({ observations: hotFileObservations(), reviewGate: true });
+    const { job, store } = makeJob({ observations: hotFileObservations(), reviewGate: true, llm: disabledSurface() });
     const res = await job.runOnce("proj-ai");
     expect(res.improved).toBe(true);
     expect(res.proposalsCreated).toBeGreaterThanOrEqual(1);
@@ -245,7 +245,7 @@ describe("AutoImproveJob — runOnce + review gate", () => {
   });
 
   it("P5-AUTOAPPROVE-01: reviewGate=false (default) auto-applies, flips status, emits event, logs", async () => {
-    const { job, store, mem } = makeJob({ observations: hotFileObservations() });
+    const { job, store, mem } = makeJob({ observations: hotFileObservations(), llm: disabledSurface() });
     const events: any[] = [];
     const unsub = eventBus.subscribe("memory:auto-improved", (e) => events.push(e));
     try {
