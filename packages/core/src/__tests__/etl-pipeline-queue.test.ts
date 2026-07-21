@@ -2,6 +2,10 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { describeNative } from "./_helpers/native-skip.js";
 import { EtlPipeline } from "../services/etl/pipeline.js";
 import { indexJobTracker } from "../services/jobs/index-job-tracker.js";
+import { resetParserReadinessForTests } from "../services/structural/parser-readiness.js";
+import { LANGUAGE_MANIFEST } from "../services/structural/language-manifest.js";
+import { grammarArtifactKey } from "../services/structural/grammar-loaders.js";
+import { ProjectIdentityAliasResolver, setProjectIdentityAliasResolverForTests } from "../services/project-identity/alias-resolver.js";
 
 function deferred(): { promise: Promise<void>; resolve: () => void } {
   let resolve!: () => void;
@@ -26,6 +30,23 @@ function result(errors = 0) {
   };
 }
 
+function stubGrammarSet(): { Parser: any; grammars: Map<string, unknown> } {
+  const grammars = new Map<string, unknown>();
+  for (const entry of LANGUAGE_MANIFEST) {
+    grammars.set(grammarArtifactKey(entry.grammarArtifact), { lang: entry.extension });
+  }
+  class StubParser {
+    setLanguage() {}
+    parse(source: string) {
+      return {
+        rootNode: { hasError: false, endIndex: Buffer.byteLength(source, "utf8"), type: "program" },
+        delete() {},
+      };
+    }
+  }
+  return { Parser: StubParser as any, grammars };
+}
+
 describeNative("EtlPipeline per-project run queue", () => {
   const pipeline = EtlPipeline.getInstance() as any;
   let originalRunInternal: (input: any) => Promise<any>;
@@ -33,6 +54,7 @@ describeNative("EtlPipeline per-project run queue", () => {
   let originalParseRun: (context: any, input: any) => Promise<any>;
   let originalResolveRun: (context: any, input: any) => Promise<any>;
   let originalLoadRun: (context: any, input: any) => Promise<any>;
+  let originalGraphGenerations: any;
 
   beforeEach(() => {
     originalRunInternal = pipeline.runInternal;
@@ -40,7 +62,18 @@ describeNative("EtlPipeline per-project run queue", () => {
     originalParseRun = pipeline.parse.run;
     originalResolveRun = pipeline.resolve.run;
     originalLoadRun = pipeline.load.run;
+    originalGraphGenerations = pipeline.graphGenerations;
     (EtlPipeline as any).runTails = new Map();
+    resetParserReadinessForTests(async () => stubGrammarSet());
+    setProjectIdentityAliasResolverForTests(new ProjectIdentityAliasResolver({ querier: { async lookupCanonical() { return null; } } }));
+    const fakeLease = { generationId: "g1", projectId: "stub", expectedActiveGenerationId: null, leaseToken: "t1", leaseExpiresAt: Date.now() + 60000, fingerprint: "f", inputSnapshotHash: "h", expectedFilesCount: 0 };
+    pipeline.graphGenerations = {
+      begin: async () => fakeLease,
+      heartbeat: async () => {},
+      activate: async () => ({ status: "activated", generationId: "g1", activeGenerationId: "g1" }),
+      abort: async () => {},
+      cleanup: async () => {},
+    };
   });
 
   afterEach(() => {
@@ -49,7 +82,10 @@ describeNative("EtlPipeline per-project run queue", () => {
     pipeline.parse.run = originalParseRun;
     pipeline.resolve.run = originalResolveRun;
     pipeline.load.run = originalLoadRun;
+    pipeline.graphGenerations = originalGraphGenerations;
     (EtlPipeline as any).runTails = new Map();
+    resetParserReadinessForTests();
+    setProjectIdentityAliasResolverForTests(null);
   });
 
   test("A, B, and C for one project execute in FIFO order", async () => {

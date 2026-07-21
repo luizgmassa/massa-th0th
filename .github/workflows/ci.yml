@@ -214,6 +214,9 @@ jobs:
         with:
           node-version: '25.9.0'
 
+      - name: Reconcile npm to contract version (11.14.1)
+        run: npm install -g npm@11.14.1
+
       - name: Install dependencies (build native addon from source)
         run: bun install --frozen-lockfile
 
