@@ -302,7 +302,13 @@
       "title": "Wave 4 — Correctness, hygiene, and spec reconciliation (N1 generation staleness, N4 clamped-list totals, N6 enum teaching errors, N7 untracked merge + secrets denylist, N8 git-ref guard, N9 read_file cap, N10 SQL bounds, N25 spec reconciliation, M29 sqlite-removal close, N33 dead code sweep, N34 CI grammar gate, N36 xdg extraction, M35 scheduler seam)",
       "status": "complete", "priority": "P1",
       "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
+    },
+    {
+      "slug": "wave-5-cross-pollination",
+      "title": "Wave 5 — Cross-pollination features (N2 cycle detection, N3 BFS CTE, N5 grouped tree, N41 cbm drift, N11 lease single-writer, N12 idempotent import, N13 capture policy, N14 persisted scheduler, N26 synapse_task_begin/end, N27 SSE push, N15 Moonshot transport, N16 server-side filter revalidation, N45 hook-attribution confirmation)",
+      "status": "in_progress", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
     }
   ],
-  "active_feature": "wave-4-correctness-hygiene"
+  "active_feature": "wave-5-cross-pollination"
 }

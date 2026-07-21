@@ -1,5 +1,19 @@
 # massa-th0th Spec State
 
+## Wave 5 — Active
+
+- projectId: `massa-th0th`
+- workflowSessionId: `spec-wave-5`
+- workflow: spec-driven (Large/Complex)
+- feature: `wave-5-cross-pollination` (Wave 5, P1) — SPECIFY in progress
+- branch: `wave-5` (off `main` post-`92b7fb4`)
+- baseline: `92b7fb4`
+- scope: 19 requirements (FR-01..FR-19), 21 acceptance criteria, 8 features (N2/N3/N5/N41/N11/N12/N13/N14/N26/N27/N15/N16/N45)
+- gray areas: all 8 resolved (see `.specs/features/wave-5-cross-pollination/context.md`)
+- next step: spec approval → design → tasks → execute
+
+---
+
 ## Wave 4 — Complete
 
 - projectId: `massa-th0th`
