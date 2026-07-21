@@ -270,15 +270,15 @@
     {
       "slug": "hook-attribution-repair",
       "title": "M45 + M47 — sticky hook attribution and repair",
-      "status": "in_progress", "priority": "P1",
-      "phases": { "specify": true, "design": true, "tasks": true, "execute": false }
+      "status": "complete", "priority": "P1",
+      "phases": { "specify": true, "design": true, "tasks": true, "execute": true }
     },
     {
       "slug": "linux-native-structural-runtime",
       "title": "M21 — native Linux glibc x64 support",
-      "status": "pending", "priority": "P0",
+      "status": "in_progress", "priority": "P0",
       "phases": { "specify": false, "design": false, "tasks": false, "execute": false }
     }
   ],
-  "active_feature": "hook-attribution-repair"
+  "active_feature": "linux-native-structural-runtime"
 }

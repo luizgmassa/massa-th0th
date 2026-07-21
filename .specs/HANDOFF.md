@@ -1,16 +1,25 @@
 # AI Engineering Handoff
 
-## Current: Wave 3 / M45+M47 Hook Attribution Repair
+## Current: Wave 3 / M21 Linux Native Structural Runtime
 
 - projectId: `massa-th0th`; workflowSessionId: `spec-wave-3`
 - branch: `wave-3`; isolated worktree: `massa-th0th-wt-wave-3`
-- active feature: `hook-attribution-repair` (tasks.md T1–T8)
-- feature spec HEAD: `21bb272` (`docs(specs): specify hook attribution repair`) + activate `89217f4`. Execute progress: T1 `b015508` (additive cols), T2 `0b78e32` (resolver + pin store), T3 `34fa019` (resolver wired all seams + compact-snapshot cwd closure), T4 `fc8b81b` (PG persist provenance + canonical mirror + acceptance suite + turbo passThroughEnv). T5–T8 remain.
-- Specify COMPLETE (2026-07-20): verify-first fan-out (3 read-only subagents) confirmed M45 precondition + all four bug modes REAL; user decisions locked (server+emitters, fail-open+provenance, agentId+mirror in scope); spec/design/tasks with HAR-01..10 committed. Full The Fool pre-mortem plan-critic found C1–C5; all incorporated: (C1/C2) resolver+migration dedupe roots by path, self-match preference, NULL-safe NOT EXISTS, `_pre_repair_project_id` preservation, shared-DB grooming runbook authored (execution needs user approval; `e2e-th0th-shared` preserved per standing ops decision); (C3) `_pin.sh` runs AFTER stdin capture (single-read constraint); (C4) compact-snapshot gains optional `cwd` + resolver routing + route-level test; (C5) OpenCode populates agentId, Claude honestly NULL.
-- owned acceptance DB `massa_th0th_hook_attribution` already created @ 127.0.0.1:5432 role luizmassa (all migrations applied incl. new add_observation_attribution). Gate var `HOOK_ATTRIBUTION_ACCEPTANCE_DATABASE_URL` (turbo passThroughEnv added in T4 — without it the suite silently skips).
-- exact next step: Execute T5 (Claude `_pin.sh` session pinning, stdin-safe per plan-critic C3) per `.specs/features/hook-attribution-repair/tasks.md`. Gates under pinned Bun 1.3.11 (`/var/folders/2s/y7r9gt5d15s48_z4nxkhyldr0000gn/T/opencode/bun-1.3.11/node_modules/.bin`, recreate via `npm i bun@1.3.11` if temp-cleaned). Acceptance command: `HOOK_ATTRIBUTION_ACCEPTANCE_DATABASE_URL=postgres://luizmassa@127.0.0.1:5432/massa_th0th_hook_attribution bun test packages/core/src/__tests__/hook-attribution-acceptance.test.ts`.
-- remaining sequence: M45+M47 → M21 (`linux-native-structural-runtime`, P0; Linux gate env pre-decided by user 2026-07-20: Ubuntu Codespace, M19 precedent; native runtime contract frozen per AD-004/005/006).
-- mandatory unavailable gates block the relevant feature. Do not weaken validation assets.
+- active feature: `linux-native-structural-runtime` (M21, P0) — starting
+- M45+M47 `hook-attribution-repair` COMPLETE + validated PASS (`da858ab`). T1–T8 commits: `b015508` (additive cols), `0b78e32` (resolver + pin store), `34fa019` (all-seam wiring + compact-snapshot cwd), `fc8b81b` (PG persist + canonical mirror + acceptance suite + turbo passThroughEnv), `de78480` (Claude `_pin.sh` stdin-safe per plan-critic C3), `4e8f1a9` (OpenCode `SessionProjectPin` + `agentIdOf`), `397f4f9` (idempotent repair migration + extended acceptance), `da858ab` (validation.md). Independent verifier: all ACs covered, all gates reproduced, M1/M2/M4 mutations killed, M3 documented equivalent mutant (3 killed ≥ 2 required). Owned acceptance DB `massa_th0th_hook_attribution` @ 127.0.0.1:5432 role luizmassa retains both new migrations applied.
+- exact next step: spec-driven Specify for M21 (spec/design/tasks under `.specs/features/linux-native-structural-runtime/`). Native runtime contract frozen (AD-004/005/006): exact Bun `1.3.11` + Node `25.9.0`, patched tree-sitter SHA `e79aec7b96eb8114e85ebcb90f0a8b12076bcd8aa08c09bb88929621e1c1446d`, 16 MiB disposal-stress hard gate. Linux gate env PRE-DECIDED: Ubuntu Codespace (M19 precedent — Ubuntu/glibc-x64 was an explicit user-approved substitution for Debian 12, 2026-07-20). Mandatory unavailable gates block the feature; never weaken validation assets.
+- Bun 1.3.11 shim at `/var/folders/2s/y7r9gt5d15s48_z4nxkhyldr0000gn/T/opencode/bun-1.3.11/node_modules/.bin` — prepend PATH for all gates (recreate via `npm i bun@1.3.11` into a temp dir if OS-cleaned). Machine default Bun is 1.3.14 which fails the exact-version native parser gate.
+- remaining sequence: M21 only. No push.
+
+---
+
+## Previous: Wave 3 / M45+M47 Hook Attribution Repair
+
+- projectId: `massa-th0th`; workflowSessionId: `spec-wave-3`
+- branch: `wave-3`; isolated worktree: `massa-th0th-wt-wave-3`
+- feature COMPLETE: `hook-attribution-repair` (T1–T8). HEAD `da858ab` (validation).
+- One app-layer `AttributionResolver` (explicit→sticky→containment→verbatim, fail-open, sanitized warns) runs pre-enqueue at every hook ingestion path; emitters pin per session (Claude `_pin.sh`, OpenCode `SessionProjectPin`); persistence gains additive `agent_id`+`attribution_source` with a canonical-keyed mirror; idempotent repair migration re-derives history via path-deduped containment (broad `/` excluded, unambiguous-only) and unambiguous session linkage, preserving `_pre_repair_project_id`. Plan-critic pre-mortem C1–C5 all incorporated. M16+M17 alias resolution unchanged at the repo seam.
+- Residual (contract-legal): rows with no cwd / ambiguous shared-path / multi-id sessions stay `verbatim` (counted via `DO $$` NOTICE). Shared-DB grooming runbook is docs-only (needs user approval; `e2e-th0th-shared` preserved per ops decision).
+- Canonical evidence: `.specs/features/hook-attribution-repair/validation.md`.
 
 ---
 
