@@ -225,7 +225,7 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           return { success: false, error: "projectId is required" };
 
         const limitBounded = boundedInt(limit, 20, 1, 500);
-        const { definitions: defs, total } = await symbolGraphService.listDefinitions(projectId, {
+        const { definitions: defs, total, total_exact } = await symbolGraphService.listDefinitions(projectId, {
           search,
           kind: kind ? kind.split(",") : undefined,
           file,
@@ -240,9 +240,12 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
           data: {
             definitions: defs,
             // N4 (WAVE4-N4): pre-LIMIT total, post-LIMIT shown, omitted.
+            // T10: definitions_total_exact is false when the match set exceeded
+            // the 100k sentinel cap (total is a floor, not exact).
             definitions_total: total,
             definitions_shown: shown,
             definitions_omitted: omitted,
+            definitions_total_exact: total_exact,
             // Legacy `total` kept for back-compat (equals the page length, as before).
             total: shown,
           },

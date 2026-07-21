@@ -383,11 +383,21 @@ export class SymbolGraphService {
    * can emit `definitions_total` / `definitions_shown` / `definitions_omitted`
    * (spec AC 4). The total is computed on the SAME code path (same WHERE
    * clauses) as the displayed list — the cbm invariant from the spec.
+   *
+   * `total_exact` is `true` when `total` is the exact pre-LIMIT count, and
+   * `false` when the match set exceeded the 100k sentinel cap (T10, N4 perf).
+   * In the sentinel case `total` is the cap value (100000) — a floor of the
+   * true count — so callers can emit `definitions_total_exact: false` per
+   * spec AC 4 without scanning the full match set on every query.
    */
   async listDefinitions(
     projectId: string,
     opts: ListDefinitionsOptions = {},
-  ): Promise<{ definitions: DefinitionResult[]; total: number }> {
+  ): Promise<{
+    definitions: DefinitionResult[];
+    total: number;
+    total_exact: boolean;
+  }> {
     const repo = getSymbolRepository();
     const limit = opts.limit ?? 100;
     const [defs, centrality, total] = await Promise.all([
@@ -401,13 +411,25 @@ export class SymbolGraphService {
         opts.file,
       ),
     ]);
-    // The repo's listDefinitions applies its own default LIMIT 100 when opts.limit
-    // is absent; the displayed `definitions` page length is the post-clamp count.
-    // The returned `total` is the pre-LIMIT match count (exact for ≤100k; the
-    // >100k sentinel is a T10 concern, NOT applied here).
+    // T10 (N4 perf): when the match set exceeds the 100k sentinel cap, emit
+    // total=cap (a floor) + total_exact:false so callers can surface
+    // `definitions_total_exact: false` per spec AC 4. The cap avoids
+    // re-fetching the full match set on every query; `COUNT(*)` is itself
+    // cheap, but the sentinel signals to clients that the value is a floor,
+    // not an exact count. The cap is applied AFTER the count so the exact
+    // path stays exact for ≤100k workspaces (the common case).
+    const SENTINEL_CAP = 100_000;
+    if (total > SENTINEL_CAP) {
+      return {
+        definitions: defs.map((def) => this.toDefinitionResult(def, centrality)),
+        total: SENTINEL_CAP,
+        total_exact: false,
+      };
+    }
     return {
       definitions: defs.map((def) => this.toDefinitionResult(def, centrality)),
       total,
+      total_exact: true,
     };
   }
 

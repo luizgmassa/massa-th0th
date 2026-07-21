@@ -508,7 +508,7 @@ import type { DefinitionResult, ReferenceResult } from "../services/symbol/symbo
 let stubListDefinitions: (
   projectId: string,
   opts: { search?: string; kind?: string[]; file?: string; exportedOnly?: boolean; limit?: number },
-) => Promise<{ definitions: DefinitionResult[]; total: number }>;
+) => Promise<{ definitions: DefinitionResult[]; total: number; total_exact: boolean }>;
 let stubGetReferences: (
   projectId: string,
   symbolName: string,
@@ -553,14 +553,14 @@ function makeRef(file: string, line: number): ReferenceResult {
 }
 
 describe("SearchDefinitionsTool — N4 definitions_total/shown/omitted", () => {
-  test("600 matches, limit 20 → definitions_total=600, definitions_shown=20, definitions_omitted=580", async () => {
+  test("600 matches, limit 20 → definitions_total=600, definitions_shown=20, definitions_omitted=580, total_exact=true", async () => {
     // Stub: total=600, but only 20 are returned (the SQL LIMIT path).
     stubListDefinitions = async (_p, opts) => {
       const limit = opts.limit ?? 20;
       const page = Array.from({ length: Math.min(limit, 600) }, (_, i) =>
         makeDef(`src/f${i}.ts#fn${i}`, `fn${i}`, `src/f${i}.ts`),
       );
-      return { definitions: page, total: 600 };
+      return { definitions: page, total: 600, total_exact: true };
     };
 
     const tool = new SearchDefinitionsTool();
@@ -571,6 +571,7 @@ describe("SearchDefinitionsTool — N4 definitions_total/shown/omitted", () => {
         definitions_total: number;
         definitions_shown: number;
         definitions_omitted: number;
+        definitions_total_exact: boolean;
         total: number;
       };
     };
@@ -580,39 +581,91 @@ describe("SearchDefinitionsTool — N4 definitions_total/shown/omitted", () => {
     expect(res.data?.definitions_total).toBe(600);
     expect(res.data?.definitions_shown).toBe(20);
     expect(res.data?.definitions_omitted).toBe(580);
+    // T10: exact path — total_exact is true for ≤100k workspaces.
+    expect(res.data?.definitions_total_exact).toBe(true);
     // Legacy `total` equals the page length (back-compat).
     expect(res.data?.total).toBe(20);
   });
 
-  test("under-LIMIT matches → definitions_omitted=0", async () => {
+  test("under-LIMIT matches → definitions_omitted=0, total_exact=true", async () => {
     stubListDefinitions = async () => ({
       definitions: [makeDef("src/a.ts#a", "a", "src/a.ts")],
       total: 1,
+      total_exact: true,
     });
 
     const tool = new SearchDefinitionsTool();
     const res = (await tool.handle({ projectId: "p", maxResults: 20 })) as {
       success: boolean;
-      data?: { definitions_total: number; definitions_shown: number; definitions_omitted: number };
+      data?: {
+        definitions_total: number;
+        definitions_shown: number;
+        definitions_omitted: number;
+        definitions_total_exact: boolean;
+      };
     };
 
     expect(res.data?.definitions_total).toBe(1);
     expect(res.data?.definitions_shown).toBe(1);
     expect(res.data?.definitions_omitted).toBe(0);
+    expect(res.data?.definitions_total_exact).toBe(true);
   });
 
-  test("zero matches → definitions_total=0, definitions_shown=0, definitions_omitted=0", async () => {
-    stubListDefinitions = async () => ({ definitions: [], total: 0 });
+  test("zero matches → definitions_total=0, definitions_shown=0, definitions_omitted=0, total_exact=true", async () => {
+    stubListDefinitions = async () => ({ definitions: [], total: 0, total_exact: true });
 
     const tool = new SearchDefinitionsTool();
     const res = (await tool.handle({ projectId: "p", maxResults: 20 })) as {
       success: boolean;
-      data?: { definitions_total: number; definitions_shown: number; definitions_omitted: number };
+      data?: {
+        definitions_total: number;
+        definitions_shown: number;
+        definitions_omitted: number;
+        definitions_total_exact: boolean;
+      };
     };
 
     expect(res.data?.definitions_total).toBe(0);
     expect(res.data?.definitions_shown).toBe(0);
     expect(res.data?.definitions_omitted).toBe(0);
+    expect(res.data?.definitions_total_exact).toBe(true);
+  });
+
+  // T10 (WAVE4-N4 perf): when the match set exceeds 100k, the service emits the
+  // sentinel cap (100000) as `total` with `total_exact: false`. The tool
+  // propagates both so callers can surface `definitions_total_exact: false`
+  // per spec AC 4. This avoids O(total match set) scans on every query — the
+  // `COUNT(*)` is cheap, but the sentinel signals the value is a floor.
+  test("T10: 150k matches → definitions_total=100000 (sentinel), definitions_total_exact=false", async () => {
+    stubListDefinitions = async (_p, opts) => {
+      const limit = opts.limit ?? 20;
+      // The service caps total at 100000 when the true count > 100k.
+      const page = Array.from({ length: Math.min(limit, 100000) }, (_, i) =>
+        makeDef(`src/f${i}.ts#fn${i}`, `fn${i}`, `src/f${i}.ts`),
+      );
+      return { definitions: page, total: 100_000, total_exact: false };
+    };
+
+    const tool = new SearchDefinitionsTool();
+    const res = (await tool.handle({ projectId: "p", maxResults: 20 })) as {
+      success: boolean;
+      data?: {
+        definitions: unknown[];
+        definitions_total: number;
+        definitions_shown: number;
+        definitions_omitted: number;
+        definitions_total_exact: boolean;
+      };
+    };
+
+    expect(res.success).toBe(true);
+    expect(res.data?.definitions.length).toBe(20);
+    // Sentinel: total is the 100k cap, NOT the true 150k count.
+    expect(res.data?.definitions_total).toBe(100_000);
+    expect(res.data?.definitions_shown).toBe(20);
+    expect(res.data?.definitions_omitted).toBe(99_980);
+    // T10: the sentinel path — total_exact is false.
+    expect(res.data?.definitions_total_exact).toBe(false);
   });
 });
 

@@ -86,7 +86,7 @@ export class SearchDefinitionsTool implements IToolHandler {
       : undefined;
 
     try {
-      const { definitions, total } = await symbolGraphService.listDefinitions(projectId, {
+      const { definitions, total, total_exact } = await symbolGraphService.listDefinitions(projectId, {
         search: query,
         kind: validatedKind,
         file,
@@ -112,12 +112,13 @@ export class SearchDefinitionsTool implements IToolHandler {
           })),
           // N4 (WAVE4-N4): pre-LIMIT total, post-LIMIT shown, omitted = total - shown.
           // `total` is the exact count of matching definitions BEFORE the SQL LIMIT
-          // (computed via SELECT COUNT(*) on the same WHERE clauses). The >100k
-          // sentinel (definitions_total_exact: false) is a T10 concern; this path
-          // is exact for the default bounded pages.
+          // (computed via SELECT COUNT(*) on the same WHERE clauses) for ≤100k
+          // workspaces. For >100k match sets, T10 emits the sentinel cap (100000)
+          // with `definitions_total_exact: false` — `total` is a floor, not exact.
           definitions_total: total,
           definitions_shown: shown,
           definitions_omitted: omitted,
+          definitions_total_exact: total_exact,
           // Legacy `total` kept for back-compat with callers that read the old shape.
           // Equals `definitions_shown` (the page length) — matches the prior contract.
           total: shown,
