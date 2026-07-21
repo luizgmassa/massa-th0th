@@ -99,8 +99,11 @@ async function resetFixture() {
 
 beforeAll(async () => {
   if (!requested) return;
-  expect(process.platform).toBe("darwin");
-  expect(process.arch).toBe("arm64");
+  const isDarwinArm64 = process.platform === "darwin" && process.arch === "arm64";
+  const isLinuxX64 = process.platform === "linux" && process.arch === "x64";
+  if (!isDarwinArm64 && !isLinuxX64) {
+    throw new Error(`graph-generation symbol repository PG tests require macOS arm64 or Linux glibc x64, got ${process.platform}/${process.arch}`);
+  }
   expect(process.env.GRAPH_GENERATION_TEST_ADMIN_URL).toBe(adminUrl);
   admin = new Client({ connectionString: adminUrl });
   await admin.connect();

@@ -30,8 +30,10 @@ setDefaultTimeout(900_000);
 // Requested runs fail closed unless the owned PostgreSQL/Ollama/API stack is ready.
 let READY = false;
 if (E2E_ENABLED) {
-  if (process.platform !== "darwin" || process.arch !== "arm64") {
-    throw new Error("symbol-graph E2E is frozen to macOS arm64");
+  const isDarwinArm64 = process.platform === "darwin" && process.arch === "arm64";
+  const isLinuxX64 = process.platform === "linux" && process.arch === "x64";
+  if (!isDarwinArm64 && !isLinuxX64) {
+    throw new Error("symbol-graph E2E is frozen to macOS arm64 or Linux glibc x64");
   }
   const availability = await probeAvailability();
   if (!availability.API_UP || !availability.OLLAMA_UP || availability.BACKEND !== "postgres") {

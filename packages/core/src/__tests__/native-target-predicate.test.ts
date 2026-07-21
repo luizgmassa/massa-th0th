@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { isNativeTarget, describeNative } from "./_helpers/native-skip.js";
 
 /**
  * T1 (LNLSR-001): assertRuntimeTarget accepts darwin/arm64 and linux/x64,
@@ -6,6 +7,9 @@ import { describe, expect, test } from "bun:test";
  * reads live `process.platform`/`process.arch`/`process.versions.bun`/
  * `process.versions.modules`, so this test exercises the pure platform
  * predicate by re-implementing the same boolean against mocked combos.
+ *
+ * T3 (LNLSR-003): isNativeTarget (the describeNative skip predicate)
+ * accepts darwin/arm64 and linux/x64, rejects other combos.
  *
  * The production assertion lives in
  * packages/core/src/services/structural/grammar-loaders.ts:assertRuntimeTarget
@@ -55,5 +59,28 @@ describe("assertRuntimeTarget platform predicate (T1, LNLSR-001)", () => {
   test("production assertRuntimeTarget matches the predicate shape", async () => {
     const source = await import("../services/structural/grammar-loaders.ts");
     expect(typeof source.grammarArtifactKey).toBe("function");
+  });
+});
+
+describe("isNativeTarget skip predicate (T3, LNLSR-003)", () => {
+  test("isNativeTarget is a boolean", () => {
+    expect(typeof isNativeTarget).toBe("boolean");
+  });
+
+  test("isNativeTarget matches the acceptsPlatform predicate for the live process", () => {
+    expect(isNativeTarget).toBe(acceptsPlatform(process.platform, process.arch));
+  });
+
+  test("describeNative is a function (describe.skipIf result)", () => {
+    expect(typeof describeNative).toBe("function");
+  });
+
+  test("on darwin/arm64 or linux/x64 isNativeTarget is true; else false", () => {
+    const liveCombo = process.platform === "darwin" && process.arch === "arm64"
+      ? true
+      : process.platform === "linux" && process.arch === "x64"
+        ? true
+        : false;
+    expect(isNativeTarget).toBe(liveCombo);
   });
 });

@@ -66,8 +66,10 @@ describeNative("polyglot fixture contract", () => {
 
 let READY = false;
 if (E2E_ENABLED) {
-  if (process.platform !== "darwin" || process.arch !== "arm64") {
-    throw new Error("polyglot E2E is frozen to macOS arm64");
+  const isDarwinArm64 = process.platform === "darwin" && process.arch === "arm64";
+  const isLinuxX64 = process.platform === "linux" && process.arch === "x64";
+  if (!isDarwinArm64 && !isLinuxX64) {
+    throw new Error("polyglot E2E is frozen to macOS arm64 or Linux glibc x64");
   }
   const availability = await probeAvailability();
   if (!availability.API_UP || !availability.OLLAMA_UP || availability.BACKEND !== "postgres") {

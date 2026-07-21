@@ -101,7 +101,7 @@ describe("serialized Bun marker masking", () => {
 });
 
 describeNative("parser readiness", () => {
-  test("loads and parses every real manifest entry on exact macOS arm64", async () => {
+  test("loads and parses every real manifest entry on exact macOS arm64 or Linux glibc x64", async () => {
     resetParserReadinessForTests(loadNativeGrammarSet);
     const result = await validateAllGrammars();
     expect(result.status).toBe("ready");
