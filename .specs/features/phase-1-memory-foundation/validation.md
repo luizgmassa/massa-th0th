@@ -60,11 +60,11 @@ by dedicated tests forcing LLM off AND forcing a throw).
 | P1-SESSIONS-01 | SessionStore + SqliteSessionStore persist | `session-store.ts` (synapse_sessions + synapse_access_history); `session-store.test.ts:46-62` round-trip. | YES |
 | P1-SESSIONS-02 | registry write-through | `session-registry.ts:create/updateTaskContext/recordAccess/delete` save/recordAccess; `session-store.test.ts:130-147` reload after restart. | YES |
 | P1-SESSIONS-03 | Map hot cache | `session-registry.ts:get` returns cached on hit; lazy-load only on miss. | YES (code; hit-path implicit) |
-| P1-SESSIONS-04 | additive tables both backends | `CREATE TABLE IF NOT EXISTS` (SQLite). PG parity deferred — accepted assumption (runtime state, SQLite-canonical; interface portable). | PARTIAL (SQLite; PG by assumption) |
+| P1-SESSIONS-04 | additive tables both backends | `CREATE TABLE IF NOT EXISTS` (SQLite); PG schema parity delivered via migration `20260710120000_add_synapse_sessions_pg`; runtime `PgSessionStore` delivered (`packages/core/src/services/synapse/session/session-store-pg.ts`). SQLite runtime removed (M29 closed). | YES |
 | P1-JOBS-01 | SqliteJobStore persists index_jobs | `index-job-store.ts`; `index-job-store.test.ts:31-44` round-trip. | YES |
 | P1-JOBS-02 | tracker write-through | `index-job-tracker.ts:createJob/updateStatus/updateProgress/setResult` save; `index-job-store.test.ts:107-117` reload. | YES |
 | P1-JOBS-03 | stale running → failed on init | `index-job-store.ts:getDB` recovery; `index-job-store.test.ts:75-87`. | YES |
-| P1-JOBS-04 | additive both backends | SQLite `CREATE TABLE IF NOT EXISTS`. PG parity deferred (same assumption). | PARTIAL (SQLite) |
+| P1-JOBS-04 | additive both backends | SQLite `CREATE TABLE IF NOT EXISTS`; PG schema parity delivered via migration `20260710120000_add_synapse_sessions_pg`; runtime `PgJobStore` delivered (`packages/core/src/services/jobs/index-job-store-pg.ts`). SQLite runtime removed (M29 closed). | YES |
 
 ## Edge cases
 
@@ -133,12 +133,15 @@ No gaps surfaced in re-derivation beyond the two accepted assumptions below.
 
 ## Accepted assumptions / residual risk
 
-1. **PG parity for sessions/jobs tables deferred.** `synapse_sessions` and
-   `index_jobs` are SQLite-canonical (agent-runtime state, not analytics). The
-   `SessionStore`/`JobStore` interfaces are backend-agnostic so a
-   PostgresSessionStore/JobStore can be added later without touching the
-   registries. Low risk: the canonical deployment is SQLite; PG is opt-in and
-   these tables are not queryable surfaces.
+1. **PG parity for sessions/jobs tables delivered.** `synapse_sessions` and
+   `index_jobs` schema parity landed via migration
+   `20260710120000_add_synapse_sessions_pg`; runtime `PgSessionStore`
+   (`packages/core/src/services/synapse/session/session-store-pg.ts`) and
+   `PgJobStore` (`packages/core/src/services/jobs/index-job-store-pg.ts`) are
+   delivered. SQLite runtime removed (M29 closed;
+   `sqlite-removal` complete; `sqlite-removal-followup` in_progress for
+   non-gating fixture/e2e probes). The `SessionStore`/`JobStore` interfaces
+   remain backend-agnostic.
 2. **Buffer snapshot is best-effort.** The `WorkingMemoryBuffer` is a hot cache;
    on load the session is reconstructed with a fresh buffer that refills
    naturally. The scalar fields + accessHistory (the load-bearing state for

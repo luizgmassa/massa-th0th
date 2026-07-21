@@ -159,10 +159,13 @@ No gaps surfaced beyond the accepted assumptions below.
 
 ## Accepted assumptions / residual risk
 
-1. **PG ProposalStore runtime code deferred.** Prisma `Proposal` model
-   provides schema parity; a `PgProposalStore` is deferred (mirrors
-   synapse_sessions / index_jobs / observations / handoffs precedent —
-   SQLite-canonical runtime state). Low risk: the store interface is portable.
+1. **PG ProposalStore runtime code delivered.** Prisma `Proposal` model
+   provides schema parity via migration
+   `20260713090000_add_handoffs_proposals_pg`; runtime `PgProposalStore`
+   is delivered (`packages/core/src/data/proposal/proposal-repository-pg.ts`).
+   SQLite runtime removed (M29 closed; `sqlite-removal` complete;
+   `sqlite-removal-followup` in_progress for non-gating fixture/e2e probes).
+   The store interface remains portable.
 2. **No OS-level scheduler.** Trigger-driven debounce
    (`maybeRun` from the observation-ingest path) mirrors Phase-3; sufficient
    for the v1 loop. A real cron/tick is out-of-scope.

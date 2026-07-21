@@ -140,11 +140,13 @@ No gaps surfaced beyond the accepted assumptions below.
 
 ## Accepted assumptions / residual risk
 
-1. **PG HandoffStore runtime code deferred.** Prisma `Handoff` model
-   provides schema parity; a `PgHandoffStore` is deferred (mirrors
-   synapse_sessions / index_jobs / observations precedent — SQLite-
-   canonical runtime state). SQLite-canonical is the documented default.
-   Low risk: the store interface is portable.
+1. **PG HandoffStore runtime code delivered.** Prisma `Handoff` model
+   provides schema parity via migration
+   `20260713090000_add_handoffs_proposals_pg`; runtime `PgHandoffStore`
+   is delivered (`packages/core/src/data/handoff/handoff-repository-pg.ts`).
+   SQLite runtime removed (M29 closed; `sqlite-removal` complete;
+   `sqlite-removal-followup` in_progress for non-gating fixture/e2e probes).
+   The store interface remains portable.
 2. **No age-based expiry (TTL).** Only explicit `cancel` transitions
    `open`→`expired`. A future scheduled job could expire stale `open`
    handoffs. Documented out-of-scope.
