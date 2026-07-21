@@ -6,7 +6,7 @@
   "needleTargets": [
     {
       "path": "packages/core/src/data/vector/postgres-vector-store.ts",
-      "sha256": "4f54bbb4a079d91629693ffbf9f440cd70f1ca1aafca7440111fb358bd04e49e"
+      "sha256": "2a8e3d546f3804f7521b6cee8403f8ee8d2a29d3e01b855e3f9a25abb5c580fe"
     },
     {
       "path": "packages/core/src/services/etl/stages/discover.ts",
@@ -26,13 +26,13 @@
     },
     {
       "path": "packages/core/src/services/search/rlm-search.ts",
-      "sha256": "0da02c52a12376def0728e4258a01aca923d4debf1fd2605470b5250f559fa0a"
+      "sha256": "6cb0fd83eaf1116ae1ada22803bf6df3ba711c5596b1d36b957eecf17ee02ee2"
     }
   ],
   "distractors": [
     {
       "path": "packages/core/src/controllers/search-controller.ts",
-      "sha256": "1c5beaada2105c17ddc7a0372550d994cc6e2bda8ab283f269f94da2d937cdb1"
+      "sha256": "d3c0095d3ccab895007ba7e7e6d8e82d55f27e6d2250367b2b8973f5d31901fe"
     },
     {
       "path": "packages/core/src/services/query/prisma-client.ts",
@@ -44,7 +44,7 @@
     },
     {
       "path": "packages/core/src/services/search/index-manager.ts",
-      "sha256": "c88082dc9a9e11d1237408c849120199d6a1618b26797dbd3dddbae080bcdcf5"
+      "sha256": "77b954bea87c8d815be31c1366819e7220e863a05c97a88332a30619ab41b9a3"
     },
     {
       "path": "packages/core/src/services/search/lexical-search.ts",
@@ -52,7 +52,7 @@
     },
     {
       "path": "packages/core/src/services/search/query-understanding.ts",
-      "sha256": "552e560d766ff1e48fecbd08ae944bc2213d64f187bfc91b52d371649e653c92"
+      "sha256": "d54428501ec68376e76ca32cd6477d35f9ccad45cf0359c0fc9a2c04ae1581c4"
     },
     {
       "path": "packages/core/src/services/search/reranker.ts",
@@ -60,11 +60,11 @@
     },
     {
       "path": "packages/core/src/services/search/search-cache-pg.ts",
-      "sha256": "ac75bec67c943d277d1998305d6b2315150f0b838930988d1cd0a7815c2d54bb"
+      "sha256": "98cfa98bebf0009efa47f8b7c6408f3cc05abcd27eda46381f2fde784bd6a848"
     },
     {
       "path": "packages/core/src/services/etl/pipeline.ts",
-      "sha256": "7894fe975fa6049cb4404732c8c5923d6a1c54af598f1bac6453f1d2e22bb34c"
+      "sha256": "bff11ef72af9e18b61487257531e4ddf20ae3ba94d0cd881cb726f75d1cc59f4"
     },
     {
       "path": "packages/core/src/services/etl/stages/parse.ts",
@@ -80,11 +80,11 @@
     },
     {
       "path": "packages/core/src/services/symbol/symbol-graph.service.ts",
-      "sha256": "252bb53ed6a58fb801b50f84c34b1844d0e6f16ee6530612c55ac9172c2d6b2a"
+      "sha256": "4183c8fccd9cca4c00ab673e66097e41d55fe996982d7b198262365ef67450c8"
     },
     {
       "path": "packages/core/src/index.ts",
-      "sha256": "39c6ede98326bdf57f4b01f2a23f855b58d15d770e153582cd0fa00d5f63311e"
+      "sha256": "96640b7ebecfbee86b7e89db0fb26e1af10f4d6421f420e829b153e45735c750"
     },
     {
       "path": "packages/shared/src/index.ts",
@@ -92,11 +92,11 @@
     },
     {
       "path": "apps/tools-api/src/index.ts",
-      "sha256": "9d63d3cfb5c37abd9df06fc9d886da50c4349a7dcf5e4246c39e55606c01ca22"
+      "sha256": "38ac04c1544076a81b52ace8e83cb184d2ad71937d4a1194ecec9db19808283e"
     },
     {
       "path": "packages/core/src/tools/search_project.ts",
-      "sha256": "83f67d05dd30253e202fdb0e58826fbaea77941a6a02b249b7a5b095db36efe4"
+      "sha256": "63d73a950382518757cc666eef2f15c04a0809e3b4d6e739685dc823d5a5e51c"
     },
     {
       "path": "packages/core/src/tools/trace_path.ts",
@@ -114,7 +114,7 @@
   "supportFiles": [
     {
       "path": "README.md",
-      "sha256": "33b524453a73873b94255959b10e5c25a6b575dc1a627efff8d94c63ff58065c"
+      "sha256": "77f914c48369f6d92d354fdbf3ab5599c2813ef3ea7f3199327ba0d7a03cb7ed"
     },
     {
       "path": "package.json",
@@ -122,7 +122,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "b8f5065deaabb015f606a82a27a3ecfd8a746d41f61dbe19d3437b914a15b8d9"
+      "sha256": "e3a054051ab9e890ec5db1c8cb11122a5fb1275e4e2cb2e75f1644f17867b336"
     },
     {
       "path": "tsconfig.json",
@@ -290,7 +290,7 @@
     },
     {
       "path": "packages/core/src/services/search/contextual-search-rlm.ts",
-      "sha256": "e7e48760bd21ba4a33f399a9a33b95940d5a0748b55fbd3c746b6ca35b4ca458"
+      "sha256": "afff73912e661e4f6e17e948cbab903b14d7dc75b54b84462edd1f45ebbae81f"
     }
   ]
 }
