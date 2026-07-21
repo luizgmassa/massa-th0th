@@ -5,12 +5,16 @@
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-wave-5`
 - workflow: spec-driven (Large/Complex)
-- feature: `wave-5-cross-pollination` (Wave 5, P1) — SPECIFY in progress
+- feature: `wave-5-cross-pollination` (Wave 5, P1) — EXECUTE in progress
 - branch: `wave-5` (off `main` post-`92b7fb4`)
 - baseline: `92b7fb4`
-- scope: 19 requirements (FR-01..FR-19), 21 acceptance criteria, 8 features (N2/N3/N5/N41/N11/N12/N13/N14/N26/N27/N15/N16/N45)
+- scope: 26 requirements (FR-01..FR-26), 29 acceptance criteria, 27 atomic tasks across 9 phases
 - gray areas: all 8 resolved (see `.specs/features/wave-5-cross-pollination/context.md`)
-- next step: spec approval → design → tasks → execute
+- plan-critic revisions: FR-20..FR-26 / AD-W5-013..AD-W5-020 incorporated
+- B1 (graph features) COMPLETE: T01-T08, 8 commits (9a73b4b..14744ce)
+- B2 (grouped format + indexing) NEXT
+- B3 (search/scheduler/synapse) PENDING
+- B4 (defense + validation) PENDING
 
 ---
 
