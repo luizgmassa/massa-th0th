@@ -142,6 +142,9 @@ export class ImpactAnalysisTool implements IToolHandler {
             impacted: [],
             truncated: false,
             untrackedFiltered: result.untrackedFiltered,
+            impacted_total: result.impacted_total,
+            impacted_shown: result.impacted_shown,
+            impacted_omitted: result.impacted_omitted,
             note: result.note,
             hint:
               "No indexed source files in the diff. Check scope/base_branch, or index the project first (index_project).",
@@ -162,6 +165,9 @@ export class ImpactAnalysisTool implements IToolHandler {
           impactedCount: result.impacted.length,
           truncated: result.truncated,
           untrackedFiltered: result.untrackedFiltered,
+          impacted_total: result.impacted_total,
+          impacted_shown: result.impacted_shown,
+          impacted_omitted: result.impacted_omitted,
           impacted: result.impacted.map((s) => ({
             symbol: s.name,
             fqn: s.fqn,

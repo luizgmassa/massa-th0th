@@ -126,6 +126,15 @@ export interface ImpactAnalysisResult {
    * matched the secrets denylist (e.g. `.env*`, `*.key`, `*.pem`). Surfaced
    * so agents can see that a secret was deliberately filtered (N7 AC 9a). */
   untrackedFiltered: number;
+  /**
+   * N4: pre-clamp total of unique impacted FQNs (the count we would have
+   * returned if MAX_IMPACTED did not apply). `impacted_shown = impacted.length`
+   * and `impacted_omitted = impacted_total - impacted_shown` are derivable
+   * on the same code path as the displayed list.
+   */
+  impacted_total: number;
+  impacted_shown: number;
+  impacted_omitted: number;
   /** Diagnostic when git produced no output (e.g. clean tree). */
   note?: string;
 }
@@ -211,6 +220,9 @@ export class ImpactAnalysisService {
         impacted: [],
         truncated: false,
         untrackedFiltered,
+        impacted_total: 0,
+        impacted_shown: 0,
+        impacted_omitted: 0,
         note: "No indexed source files in the diff (clean tree, or only non-source changes).",
       };
     }
@@ -256,6 +268,10 @@ export class ImpactAnalysisService {
     // ── 5. Reverse-traverse: find impacted consumers ────────────────────────
     const impacted = new Map<string, ImpactedSymbol>();
     let truncated = false;
+    // N4: pre-clamp total of unique impacted FQNs. Increment on every NEW
+    // FQN encountered (regardless of whether MAX_IMPACTED let us store it)
+    // so impacted_omitted = impacted_total - impacted_shown is derivable.
+    let impactedTotal = 0;
 
     const addImpact = (sym: ImpactedSymbol) => {
       // Keep the strongest (lowest depth / highest risk) entry per impacted FQN.
@@ -266,6 +282,8 @@ export class ImpactAnalysisService {
         }
         return;
       }
+      // New FQN — count it toward the pre-clamp total even if we don't store it.
+      impactedTotal++;
       if (impacted.size >= MAX_IMPACTED) {
         truncated = true;
         return;
@@ -359,12 +377,15 @@ export class ImpactAnalysisService {
     const ranked = Array.from(impacted.values()).sort((a, b) => b.risk - a.risk);
     const out = ranked.slice(0, MAX_IMPACTED);
     truncated = truncated || ranked.length > MAX_IMPACTED;
+    const impactedShown = out.length;
+    const impactedOmitted = Math.max(0, impactedTotal - impactedShown);
 
     logger.info("ImpactAnalysisService: analyze complete", {
       projectId,
       scope,
       changedFiles: changedPaths.length,
       impacted: out.length,
+      impactedTotal,
       truncated,
     });
 
@@ -378,6 +399,9 @@ export class ImpactAnalysisService {
       impacted: out,
       truncated,
       untrackedFiltered,
+      impacted_total: impactedTotal,
+      impacted_shown: impactedShown,
+      impacted_omitted: impactedOmitted,
     };
   }
 

@@ -95,6 +95,15 @@ export interface TracePathResult {
   /** Readable call chains (one per reached leaf), e.g. "a() -> b() -> c()". */
   chains: string[];
   truncated: boolean;
+  /**
+   * N4: pre-clamp total of unique node FQNs (the count we would have returned
+   * if MAX_NODES did not apply). `nodes_shown = nodes.length` and
+   * `nodes_omitted = nodes_total - nodes_shown` are derivable on the same
+   * code path as the displayed list.
+   */
+  nodes_total: number;
+  nodes_shown: number;
+  nodes_omitted: number;
   /** Exact FQN lookup result; ambiguity is explicit and always has zero traversal. */
   identityResolution?: Exclude<DefinitionLookupResult, { status: "bare" }>;
 }
@@ -223,6 +232,9 @@ export class TracePathService {
       edges: [],
       chains: [],
       truncated: false,
+      nodes_total: 0,
+      nodes_shown: 0,
+      nodes_omitted: 0,
       ...(seedResult.identityResolution ? { identityResolution: seedResult.identityResolution } : {}),
     };
 
@@ -237,13 +249,20 @@ export class TracePathService {
     const edges: TraceEdge[] = [];
     const seenEdge = new Set<string>();
     let truncated = false;
+    // N4: pre-clamp total of unique node FQNs. Increment on every NEW FQN
+    // encountered (regardless of whether MAX_NODES let us store it) so
+    // nodes_omitted = nodes_total - nodes_shown is derivable.
+    let nodesTotal = 0;
 
     const addNode = (n: TraceNode) => {
-      if (nodes.size >= MAX_NODES && !nodes.has(n.fqn)) {
+      if (nodes.has(n.fqn)) return true;
+      // New FQN — count it toward the pre-clamp total even if we reject it.
+      nodesTotal++;
+      if (nodes.size >= MAX_NODES) {
         truncated = true;
         return false;
       }
-      if (!nodes.has(n.fqn)) nodes.set(n.fqn, n);
+      nodes.set(n.fqn, n);
       return true;
     };
     const addEdge = (e: TraceEdge) => {
@@ -284,6 +303,9 @@ export class TracePathService {
     // Build readable chains from the edge predecessor relationships.
     const chains = this.buildChains(seeds, edges);
 
+    const nodesShown = finalNodes.length;
+    const nodesOmitted = Math.max(0, nodesTotal - nodesShown);
+
     const result: TracePathResult = {
       projectId,
       symbol: opts.qualifiedName ?? opts.symbol ?? opts.function_name ?? "",
@@ -295,6 +317,9 @@ export class TracePathService {
       edges,
       chains,
       truncated,
+      nodes_total: nodesTotal,
+      nodes_shown: nodesShown,
+      nodes_omitted: nodesOmitted,
       ...(seedResult.identityResolution ? { identityResolution: seedResult.identityResolution } : {}),
     };
 
