@@ -137,9 +137,10 @@ jobs:
   structural-native:
     name: Structural native tests (darwin-arm64)
     # Native Tree-sitter grammars are built/loaded only on macOS arm64
-    # (grammar-loaders.ts assertRuntimeTarget). The structural-* suites are
-    # skipped on Linux via describeNative in the tests; this job runs them for
-    # real. Replaces the former .github/workflows/native-macos-arm64.yml.
+    # and Linux glibc x64 (grammar-loaders.ts assertRuntimeTarget). The
+    # structural-* suites are skipped on other platforms via describeNative
+    # in the tests; this job runs them for real on macOS. Replaces the
+    # former .github/workflows/native-macos-arm64.yml.
     runs-on: macos-14
     timeout-minutes: 20
 
@@ -173,3 +174,49 @@ jobs:
       - name: Run native-structural unit tests
         working-directory: packages/core
         run: bun scripts/run-tests-isolated.ts --unit --filter='structural|parse-long-class'
+
+  structural-native-linux:
+    name: Structural native tests (linux-x64)
+    # M21: Linux glibc x64 native structural runtime. Parallel to the
+    # macOS arm64 job above. Native Tree-sitter grammars build via node-gyp
+    # under Node 25.9.0 (C++20 binding.gyp) or Node 22 LTS fallback if the
+    # Linux toolchain rejects Node 25 headers (same braced-init-list issue
+    # as macos-14). The addon is N-API (ABI-stable), so runtime loading
+    # under Bun 1.3.11 is unaffected by the build-helper Node major.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun 1.3.11
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.11
+
+      - name: Setup Node 25.9.0 (node-gyp build helper)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25.9.0'
+
+      - name: Install dependencies (build native addon from source)
+        run: bun install --frozen-lockfile
+
+      - name: Build workspace
+        run: bun run build
+
+      - name: Run native verifier (source/dist + packed package)
+        run: bun run verify:tree-sitter-native
+
+      - name: Run native-structural unit tests
+        working-directory: packages/core
+        run: bun scripts/run-tests-isolated.ts --unit --filter='structural|parse-long-class'
+
+      - name: Upload verification log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-linux-x64-verification.log
+          path: native-linux-x64-verification.log
+          if-no-files-found: error

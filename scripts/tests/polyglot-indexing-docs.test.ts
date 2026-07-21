@@ -40,10 +40,12 @@ describe("polyglot indexing docs parity", () => {
       expect(readme).toMatch(/33 extensions/);
     });
 
-    test("documents macOS arm64 as the only native target", () => {
+    test("documents macOS arm64 and Linux glibc x64 as the native targets", () => {
       const prose = readmeProse();
-      expect(prose).toMatch(/macOS arm64 only/);
-      expect(prose).toMatch(/no Linux, Docker, container, or non-arm64 native target/);
+      expect(prose).toMatch(/macOS arm64/);
+      expect(prose).toMatch(/Linux glibc x64/);
+      expect(prose).toMatch(/ELF x86-64/);
+      expect(prose).toMatch(/no musl, Alpine, Windows/);
     });
 
     test("documents readiness vs. liveness", () => {
@@ -84,12 +86,13 @@ describe("polyglot indexing docs parity", () => {
       expect(readme).toContain("verify:tree-sitter-source-dist");
       expect(readme).toContain("verify:tree-sitter-package");
       expect(readme).toContain("bench:parser");
-      expect(readme).toContain("native-macos-arm64.yml");
+      expect(readme).toContain("structural-native-linux");
       // Measured evidence numbers from the verifier
       expect(readme).toContain("33+33 parses");
       expect(readme).toContain("27 native modules");
       expect(readme).toContain("16 MiB");
       expect(readme).toContain("Mach-O arm64");
+      expect(readme).toContain("ELF x86-64");
     });
 
     test("documents runtime/build-helper pins", () => {
