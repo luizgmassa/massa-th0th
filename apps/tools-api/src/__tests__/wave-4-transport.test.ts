@@ -39,6 +39,15 @@ mock.module("@massa-th0th/core", () => {
     ...actual,
     getActiveGeneration: async (_projectId: string) => activeScope?.generationId ?? null,
     assertGenerationNotStale: actual.assertGenerationNotStale,
+    // Stub SearchCodeTool so the search/code route does not invoke the real
+    // search engine (embeddings, vector search). The 5th test only asserts
+    // that the route does NOT 412 with a stale-generation error — any
+    // non-stale-generation response (including a stub error) satisfies it.
+    SearchCodeTool: class StubSearchCodeTool {
+      async handle(_body: unknown) {
+        return { success: false, error: "project not indexed (transport-test stub)" };
+      }
+    },
   };
 });
 
