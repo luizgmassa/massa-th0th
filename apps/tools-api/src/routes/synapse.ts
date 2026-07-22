@@ -361,6 +361,24 @@ export const synapseRoutes = new Elysia({ prefix: "/api/v1/synapse" })
     },
   )
   // ────────────────────────────────────────────────────────────────────────
+  // Wave 5 FR-15 / AC-12: synapse_task_end. Computes summary + DELETE session.
+  // Follow-up GET on the session ID returns 404 after this.
+  .post(
+    "/task/:id/end",
+    ({ params }) => {
+      const service = new TaskEnvelopeService();
+      const result = service.end(params.id);
+      if (!result) {
+        return { success: false, error: "Session not found or already ended" };
+      }
+      return { success: true, data: result };
+    },
+    {
+      params: t.Object({ id: t.String() }),
+      detail: { tags: ["synapse"], summary: "End task envelope + summary" },
+    },
+  )
+  // ────────────────────────────────────────────────────────────────────────
   .get(
     "/sessions",
     () => {

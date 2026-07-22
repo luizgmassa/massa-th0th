@@ -1199,6 +1199,21 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
+    name: "synapse_task_end",
+    description:
+      "End a Synapse task: compute summary (accessCount, topFiles) and DELETE the session. " +
+      "Returns { sessionId, durationMs, accessCount, topFiles }. A follow-up GET on the session returns 404.",
+    apiEndpoint: "/api/v1/synapse/task/:id/end",
+    apiMethod: "POST",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "Session ID from synapse_task_begin" },
+      },
+      required: ["id"],
+    },
+  },
+  {
     name: "symbol_snippet",
     description: "Get raw code snippet by file + line range from an indexed project.",
     apiEndpoint: "/api/v1/symbol/snippet",

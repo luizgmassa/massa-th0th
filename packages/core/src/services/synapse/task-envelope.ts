@@ -72,6 +72,21 @@ export interface TaskBeginResult {
 }
 
 /**
+ * Result of `synapse_task_end` (FR-15). Returns a summary + deletes the
+ * session. A follow-up GET on the session ID returns 404 after this.
+ */
+export interface TaskEndResult {
+  /** The session ID that was ended. */
+  sessionId: string;
+  /** Session duration in milliseconds (createdAt → end). */
+  durationMs: number;
+  /** Number of unique files/memories accessed during the session. */
+  accessCount: number;
+  /** Top accessed files (memoryId), sorted by access count descending. */
+  topFiles: string[];
+}
+
+/**
  * Task Envelope Service — orchestrates the 5-move begin sequence.
  */
 export class TaskEnvelopeService {
@@ -209,6 +224,40 @@ export class TaskEnvelopeService {
       primed,
       partial: errors.length > 0,
       errors,
+    };
+  }
+
+  /**
+   * End a task: compute summary (accessCount, topFiles), DELETE the session,
+   * and return the summary. A follow-up GET on the session ID returns 404.
+   *
+   * FR-15 / AC-12: returns { sessionId, durationMs, accessCount, topFiles }.
+   */
+  end(sessionId: string): TaskEndResult | null {
+    const registry = getSessionRegistry();
+    const session = registry.get(sessionId);
+    if (!session) {
+      return null;
+    }
+
+    const durationMs = Date.now() - session.createdAt;
+
+    // Compute accessCount (unique files/memories accessed).
+    const accessCount = session.accessHistory.size;
+
+    // Compute topFiles: sort access history by count descending, take top 10.
+    const entries = Array.from(session.accessHistory.entries());
+    entries.sort((a, b) => b[1] - a[1]);
+    const topFiles = entries.slice(0, 10).map(([id]) => id);
+
+    // Delete the session.
+    registry.delete(sessionId);
+
+    return {
+      sessionId,
+      durationMs,
+      accessCount,
+      topFiles,
     };
   }
 }

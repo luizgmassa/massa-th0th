@@ -122,3 +122,67 @@ describe("TaskEnvelopeService.begin (T21 / FR-14 / FR-25 / AD-W5-019)", () => {
     registry.delete(result.sessionId);
   });
 });
+
+// ── T22: synapse_task_end (FR-15 / AC-12) ─────────────────────────────────────
+
+describe("TaskEnvelopeService.end (T22 / FR-15 / AC-12)", () => {
+  test("end returns summary + deletes session (follow-up get → null)", async () => {
+    resetSessionRegistry();
+    const ctrl = makeMockSearchController({});
+    const service = new TaskEnvelopeService(ctrl);
+
+    const beginResult = await service.begin({
+      agentId: "test-agent",
+      query: "test query",
+      projectId: "test-project",
+    });
+    expect(beginResult.sessionId).toBeTruthy();
+
+    const endResult = service.end(beginResult.sessionId);
+    expect(endResult).toBeTruthy();
+    expect(endResult!.sessionId).toBe(beginResult.sessionId);
+    expect(endResult!.durationMs).toBeGreaterThanOrEqual(0);
+    expect(endResult!.accessCount).toBeGreaterThanOrEqual(0);
+    expect(Array.isArray(endResult!.topFiles)).toBe(true);
+
+    // Follow-up get → session is gone (404 equivalent).
+    const registry = getSessionRegistry();
+    expect(registry.get(beginResult.sessionId)).toBeNull();
+  });
+
+  test("end on non-existent session → null", () => {
+    resetSessionRegistry();
+    const ctrl = makeMockSearchController({});
+    const service = new TaskEnvelopeService(ctrl);
+    const result = service.end("nonexistent-session");
+    expect(result).toBeNull();
+  });
+
+  test("end returns topFiles sorted by access count", async () => {
+    resetSessionRegistry();
+    const ctrl = makeMockSearchController({});
+    const service = new TaskEnvelopeService(ctrl);
+
+    const beginResult = await service.begin({
+      agentId: "test-agent",
+      query: "test query",
+      projectId: "test-project",
+    });
+
+    // Record multiple accesses to different memories.
+    const registry = getSessionRegistry();
+    registry.recordAccess(beginResult.sessionId, "file-a");
+    registry.recordAccess(beginResult.sessionId, "file-b");
+    registry.recordAccess(beginResult.sessionId, "file-b");
+    registry.recordAccess(beginResult.sessionId, "file-c");
+    registry.recordAccess(beginResult.sessionId, "file-c");
+    registry.recordAccess(beginResult.sessionId, "file-c");
+
+    const endResult = service.end(beginResult.sessionId);
+    expect(endResult).toBeTruthy();
+    expect(endResult!.accessCount).toBe(4); // hit-1 + file-a + file-b + file-c
+    // topFiles sorted by count: file-c (3) > file-b (2) > file-a (1) > hit-1 (1)
+    expect(endResult!.topFiles[0]).toBe("file-c");
+    expect(endResult!.topFiles[1]).toBe("file-b");
+  });
+});

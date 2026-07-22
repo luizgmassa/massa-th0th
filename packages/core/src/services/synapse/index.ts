@@ -10,7 +10,7 @@ import { SynapseManager } from "./synapse-manager.js";
 
 export { SynapseManager } from "./synapse-manager.js";
 export { TaskEnvelopeService } from "./task-envelope.js";
-export type { TaskBeginInput, TaskBeginResult } from "./task-envelope.js";
+export type { TaskBeginInput, TaskBeginResult, TaskEndResult } from "./task-envelope.js";
 export * from "./types.js";
 export * from "./inhibition/index.js";
 export * from "./metacognition/index.js";
