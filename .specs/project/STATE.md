@@ -1,22 +1,44 @@
 # massa-th0th Spec State
 
-## Wave 6 — Active
+## Current — Wave 7
 
 - projectId: `massa-th0th`
-- workflowSessionId: `spec-wave-6`
+- workflowSessionId: `spec-wave-7-hygiene-ui-process`
 - workflow: spec-driven (Large/Complex)
-- feature: `wave-6-architecture-features` (Wave 6, P1) — COMPLETE + validated PASS
-- branch: `wave-6` (off `main` post-`389461b`)
-- baseline: `389461b`
-- scope: 14 requirements (W6-01..W6-14), 47 acceptance criteria, 38 atomic tasks across 8 phases
-- plan-critic: full The Fool pre-mortem; 5 findings (2 CRITICAL + 1 HIGH + 2 MEDIUM) incorporated before Execute
-- B1 (P1-2, T01-T10): characterization tests + SymbolRepositoryPg decomposition — COMPLETE (commits `9b40561`..`d684873`)
-- B2 (P3, T11-T17): ToolDefs + AutoImprove + SmartChunker decomposition — COMPLETE (commits `d85f709`..`cef5f9d`)
-- B3 (P4-5, T18-T26): embedded MCP + hook binary + parallel runner + test-seam — COMPLETE (commits `da99ad2`..`8de8c51`)
-- B4 (P6-7, T27-T37): dashboard + scheduler + process + carryovers — COMPLETE (commits `99ed294`..`05c636e`)
-- B5 (P8, T38): independent verifier — PASS (iteration 2, 7/7 gaps closed, 5/5 mutants killed)
-- Fix commits (iteration 1): `174c930`..`72fc2cf` (7 gaps fixed)
-- Residual: 3 low-priority spec-precision gaps (N18, N10, N13 — non-blocking, not in scope)
+- feature: `wave-7-hygiene-ui-process` (Wave 7) — IN PROGRESS
+- branch: `wave-7` (off `main`)
+- scope: 13 requirements (W7-01..W7-13), 15 tasks across 3 phases
+- Phase 1 (T1-T7): COMPLETE — hygiene (AGENTS.md, version pins, LLM defaults, CHANGELOG, D5 ADR, doc cleanup, removed-features)
+- Phase 2 (T8-T12): COMPLETE — features (web UI markdown+write+SSE, json_schema, sandbox)
+- Phase 3 (T13-T15): IN PROGRESS — cleanup (spec archive, wave-2 reconcile, hook breadcrumb)
+- Next: T15 (hook breadcrumb), then independent Verifier + validation.md
+
+## Decisions
+
+| ID | Status | Decision | Evidence |
+| --- | --- | --- | --- |
+| AD-007 | active (T12) | Executor sandbox default is `auto` (not `on`); uses platform tool if available, falls back to best-effort. F1 mitigation. | `sandbox.ts` getSandboxMode, `MASSA_TH0TH_EXECUTOR_SANDBOX=auto\|on\|none` |
+| AD-008 | active (T11) | json_schema constrained decoding for Ollama structured calls; version-gated (>= 0.5.0), graceful fallback to json_object. F3 mitigation. | `llm-client.ts` _checkJsonSchemaSupport, llmObject |
+| AD-009 | active (T5) | D5 Cypher subset deferral formally removed — structural graph traversal covers use cases. | `docs/adr/0001-remove-d5-cypher-subset.md` |
+
+---
+
+## Wave 7 — Active
+
+- projectId: `massa-th0th`
+- workflowSessionId: `spec-wave-7-hygiene-ui-process`
+- workflow: spec-driven (Large/Complex)
+- feature: `wave-7-hygiene-ui-process` (Wave 7) — IN PROGRESS
+- branch: `wave-7` (off `main`)
+- baseline: `56c84d1`
+- scope: 13 requirements (W7-01..W7-13), 15 atomic tasks across 3 phases
+- Phase 1 COMPLETE: T1-T7 committed (32b5ce4..815488f)
+- Phase 2 COMPLETE: T8-T12 committed (f0b92cd..2a2aee9)
+- Phase 3 IN PROGRESS: T13 done, T14-T15 remaining
+- Pre-mortem: 5 findings (F1 sandbox auto, F2 realpathSync, F3 json_schema log, F4 XSS, F5 bot PR skip)
+- Spec: `.specs/features/wave-7-hygiene-ui-process/spec.md`
+- Design: `.specs/features/wave-7-hygiene-ui-process/design.md`
+- Tasks: `.specs/features/wave-7-hygiene-ui-process/tasks.md`
 
 ---
 
@@ -176,11 +198,11 @@ Commit the native runtime re-baseline, then commit TASK-023 (`build(parser): ver
 - Source plans remain machine-local under `/Users/luizmassa/.claude/plans`; each feature design captures commit-backed execution facts and explicit gaps.
 - Historical source range: inclusive `c1d37b8120025a69e2de0e5fd054ca8177e205de^..81d33606fb6826e1759a073006b165419d0e3ba4` contains 133 reachable commits. Historical claims are not current-session runtime verification.
 
-## Wave 2 (Improvement Plan v2)
+## Wave 2 (Improvement Plan v2) — COMPLETE
 
 - Source plan: `~/Downloads/massa-th0th-improvement-plan.md`. Wave 1 merged via PR #3 (`9fb32f3`).
 - workflowSessionId: `spec-driven-wave2`; branch: `wave-2` (off `main`).
-- Verify-first fan-out (10 read-only subagents) done 2026-07-18; per-item matrix persisted to th0th memory (`wave-2-verify-matrix`). User chose execution order: **M36 first**, then plan order (M7 → M8+M9 → M10 → M11 → M12 → M40 → M13 → M14).
+- Status: **COMPLETE** — 10/10 items done (M36, M7, M9, M40, M13, M11, M10, M8, M12, M14). All validated PASS. Local branch `wave-2` now tracks `origin/wave-2`.
 - **M36 (TOON compact output) — DONE + validated PASS** (2026-07-18). Shared `serializeToolResponse` + `fields` projection; `format` added to 3 tools (get_optimized_context, trace_path, impact_analysis), `fields` to all 12, two-layer MCP parity. Commits `33fea92`, `23035ac`, `05d518b`, `1d30061` on `wave-2`. Independent verifier PASS, discrimination sensor 4/4. Artifacts: `.specs/features/toon-compact-output/`. Follow-ups (non-blocking): MCP `search` def lacks `format` (pre-existing, M32 scope); pre-existing PG-fixture failures in `trace-path.test.ts` (test-isolation task).
 - **Small batch — DONE** (2026-07-18): M7 query deadline (`8cf69d2`, injectable clock), M9 schema-ahead (`1ef6d0a`, SchemaAheadError + canonical-signature/checkpoint guards), M40 pinned invariant (`164ed95`, pin guard + fail-closed proposal validation), M13 body-tokens gate (`969ae4f`, empty-region signature skip). Each DB-free tested + tsc clean. Quick specs under `.specs/quick/001..004`.
 - **M11 (grammar load-time integrity) — DONE** (`4731cbd`). Shared `native-lock-identities.ts` + `grammar-integrity.ts` verifier (sha512 over package source, ABI-rebuild-safe), wired into `parser-readiness.ts` default-on/memoized. NOTE: prior partial's 27 `sourceIntegrity` pins were fabricated; re-derived from `bun.lock` + recomputed, round-trip-verified. Quick spec `.specs/quick/005`.
