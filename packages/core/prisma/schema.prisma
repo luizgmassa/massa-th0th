@@ -583,6 +583,16 @@ model ScheduledJob {
   enabled      Int     @default(1)
   payload      String? // JSON
 
+  // Wave 5 FR-13 / M-W5-02: success/failure split + crash-safe catch-up.
+  // last_success_at — ms-epoch of the last SUCCESSFUL run (NULL until first success).
+  // last_failure_at — ms-epoch of the last FAILED run (NULL until first failure).
+  // consecutive_failures — failure streak counter (0 on success, ++ on failure).
+  // last_error — truncated error message from the last failure (NULL on success).
+  lastSuccessAt        BigInt? @map("last_success_at")
+  lastFailureAt        BigInt? @map("last_failure_at")
+  consecutiveFailures  Int     @default(0) @map("consecutive_failures")
+  lastError            String? @map("last_error")
+
   @@index([enabled])
   @@index([nextRunAt])
   @@map("scheduled_jobs")
