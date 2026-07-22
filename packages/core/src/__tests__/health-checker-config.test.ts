@@ -7,6 +7,9 @@ mock.module("@massa-th0th/shared", () => ({
       if (key === "dataDir") return "/tmp/massa-th0th-test";
       return undefined;
     },
+    getAll: () => ({
+      embedding: { model: "qwen3-embedding:8b" },
+    }),
   },
   logger: { info: () => {}, warn: () => {}, error: () => {} },
 }));
@@ -67,6 +70,9 @@ describe("health-checker embedding model config", () => {
           if (key === "dataDir") return "/tmp/massa-th0th-test";
           return undefined;
         },
+        getAll: () => ({
+          embedding: { model: undefined },
+        }),
       },
       logger: { info: () => {}, warn: () => {}, error: () => {} },
     }));
