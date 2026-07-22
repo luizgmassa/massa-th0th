@@ -40,7 +40,7 @@ export class LocalHealthChecker {
       const response = await fetch(`${this.ollamaBaseUrl}/api/tags`, { signal: controller.signal }); clearTimeout(timeout);
       if (!response.ok) return { available: false, latency: Date.now() - start, error: `Ollama responded with HTTP ${response.status}` };
       const models = ((await response.json()) as { models?: OllamaModelInfo[] }).models || [];
-      const embeddingModel = process.env.OLLAMA_EMBEDDING_MODEL || "nomic-embed-text:latest";
+      const embeddingModel = process.env.OLLAMA_EMBEDDING_MODEL || (config.get("embedding") as { model?: string } | undefined)?.model || "nomic-embed-text:latest";
       return { available: true, latency: Date.now() - start, details: { url: this.ollamaBaseUrl, modelsAvailable: models.length, models: models.map((model) => model.name), embeddingModel, hasEmbeddingModel: models.some((model) => model.name === embeddingModel || model.name.startsWith(embeddingModel.split(":")[0])) } };
     } catch (error) { return { available: false, latency: Date.now() - start, error: `Ollama unreachable: ${(error as Error).message}` }; }
   }
