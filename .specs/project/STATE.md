@@ -5,7 +5,7 @@
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-wave-5`
 - workflow: spec-driven (Large/Complex)
-- feature: `wave-5-cross-pollination` (Wave 5, P1) — EXECUTE in progress
+- feature: `wave-5-cross-pollination` (Wave 5, P1) — COMPLETE + validated PASS
 - branch: `wave-5` (off `main` post-`92b7fb4`)
 - baseline: `92b7fb4`
 - scope: 26 requirements (FR-01..FR-26), 29 acceptance criteria, 27 atomic tasks across 9 phases
@@ -14,7 +14,7 @@
 - B1 (graph features) COMPLETE: T01-T08, 8 commits (9a73b4b..14744ce)
 - B2 (grouped format + indexing) COMPLETE: T09-T16, 8 commits (a12f9f6..6740a3e) + 1 test-isolation fixup (a0c67d6)
 - B3 (search/scheduler/synapse) COMPLETE: T17-T24, 8 commits (2c21db6..56e5c10)
-- B4 (defense + validation) NEXT
+- B4 (defense + validation) COMPLETE: T25-T27, 3 commits (1509732..38b04bb) + independent verifier PASS (7/7 ACs, 3/3 mutations killed)
 
 ---
 
