@@ -112,6 +112,35 @@ export class WorkspaceManager {
   }
 
   /**
+   * M25: Resolve a project by its unique name tail (the last segment of the
+   * project path or the projectId itself).
+   *
+   * - Unique match → return the WorkspaceRow
+   * - Ambiguous (2+ matches) → throw with candidate list
+   * - No match → return null (not-found)
+   *
+   * The "name tail" is the last path segment of `projectPath` (e.g.,
+   * `/home/user/my-project` → `my-project`) or the `projectId` itself if the
+   * path has no slashes. Case-sensitive.
+   */
+  async resolveByNameTail(nameTail: string): Promise<WorkspaceRow | null> {
+    if (!nameTail) return null;
+    const all = await getSymbolRepository().listWorkspaces();
+    const matches = all.filter((w) => {
+      const pathTail = w.project_path.split("/").pop() ?? w.project_path;
+      return pathTail === nameTail || w.project_id === nameTail;
+    });
+    if (matches.length === 0) return null;
+    if (matches.length > 1) {
+      const candidates = matches.map((w) => w.project_id).join(", ");
+      throw new Error(
+        `Ambiguous project name tail "${nameTail}": matches ${matches.length} projects [${candidates}]. Use the full projectId instead.`,
+      );
+    }
+    return matches[0]!;
+  }
+
+  /**
    * Remove a project: deletes workspace row + all symbol data (CASCADE).
    * Does NOT clear the vector store — caller is responsible for that.
    */

@@ -34,12 +34,17 @@ Commands:
     --model <name>    Model name
     --base-url <url>  Base URL (for ollama)
 
+  recover           Re-associate a project index with a new filesystem path
+    <projectId>       Project ID to recover
+    --path <newPath>  New filesystem path
+
 Examples:
   massa-th0th-config init
   massa-th0th-config init --mistral your-api-key
   massa-th0th-config use ollama --model qwen3-embedding:8b
   massa-th0th-config use mistral --api-key your-key
   massa-th0th-config set embedding.dimensions 1024
+  massa-th0th-config recover my-project --path /home/user/renamed-dir
 `);
 }
 
@@ -184,6 +189,36 @@ switch (command) {
     saveConfig(config);
     console.log(`✓ Switched to ${provider} embeddings`);
     console.log(`  Model: ${config.embedding.model}`);
+    break;
+  }
+
+  case "recover": {
+    const projectId = args[1];
+    const newPath = options.path as string | undefined;
+
+    if (!projectId) {
+      console.error("Error: projectId required. Usage: massa-th0th-config recover <projectId> --path <newPath>");
+      process.exit(1);
+    }
+    if (!newPath || typeof newPath !== "string") {
+      console.error("Error: --path required. Usage: massa-th0th-config recover <projectId> --path <newPath>");
+      process.exit(1);
+    }
+
+    try {
+      const { recoverProjectPath } = await import("./recover-project.js");
+      const result = await recoverProjectPath(projectId, newPath);
+      if (!result.found) {
+        console.error(`Error: project "${projectId}" not found. Cannot recover — the project must be indexed first.`);
+        process.exit(1);
+      }
+      console.log(`✓ Recovered project "${projectId}" — path updated to ${newPath}`);
+      console.log(`  Previous path: ${result.oldPath ?? "(none)"}`);
+    } catch (e) {
+      const err = e as Error;
+      console.error(`Error: recovery failed — ${err.message}`);
+      process.exit(1);
+    }
     break;
   }
 

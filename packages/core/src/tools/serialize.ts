@@ -107,7 +107,9 @@ export function projectFields(data: unknown, fields?: string[]): unknown {
     if (!(head in src)) continue; // unknown key → silently dropped
     const v = src[head];
     if (rest.length === 0) {
-      out[head] = v;
+      // M26: if the value is an escaped JSON string, unescape and parse it
+      // into a nested structure. Return the parsed value, not the string.
+      out[head] = unescapeJsonField(v);
       continue;
     }
     const projected = projectPath(v, rest);
@@ -117,6 +119,49 @@ export function projectFields(data: unknown, fields?: string[]): unknown {
     out[head] = mergeProjection(out[head], projected);
   }
   return out;
+}
+
+/**
+ * M26: Unescape an escaped JSON string and parse it into a nested structure.
+ *
+ * If the value is a string that looks like escaped JSON (starts with `{` or
+ * `[` after unescaping, or has escaped quotes `\"`), attempt to JSON.parse it.
+ * On success, return the parsed nested structure. On failure, return the
+ * original value with no throw (clear error is handled by the caller).
+ *
+ * If the value is already an object/array, return it as-is (no re-parsing).
+ * If the value is a scalar (number, boolean, null), return it as-is.
+ */
+export function unescapeJsonField(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
+  if (typeof value !== "string") return value;
+
+  // Check for escaped JSON: strings containing `\"` or `{`/`[` patterns
+  const trimmed = value.trim();
+  if (!trimmed) return value;
+
+  // Unescape: replace `\"` with `"` (common escaping pattern)
+  let unescaped = trimmed;
+  if (unescaped.includes('\\"')) {
+    unescaped = unescaped.replace(/\\"/g, '"');
+  }
+
+  // Check if it looks like JSON (starts with { or [)
+  if (
+    (unescaped.startsWith("{") && unescaped.endsWith("}")) ||
+    (unescaped.startsWith("[") && unescaped.endsWith("]"))
+  ) {
+    try {
+      return JSON.parse(unescaped);
+    } catch {
+      // Not valid JSON — return the unescaped string (clearer than the escaped
+      // version). The caller sees the unescaped value and can diagnose.
+      return unescaped;
+    }
+  }
+
+  // Not JSON-like: return the unescaped string if we unescaped it, else original
+  return unescaped === trimmed ? value : unescaped;
 }
 
 /**

@@ -42,6 +42,7 @@ import { webUiRoutes } from "./routes/web-ui.js";
 import { architectureRoutes } from "./routes/architecture.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
 import { authMiddleware } from "./middleware/auth.js";
+import { adminPreservationMiddleware } from "./middleware/admin-preservation.js";
 import { errorHandler } from "./middleware/error.js";
 import { getHealthChecker, searchSessionHook, coRetrievalHook } from "@massa-th0th/core";
 import { installProjectIdentityGuardsFromPool } from "@massa-th0th/core";
@@ -118,6 +119,7 @@ const app = new Elysia({ adapter: node() })
   )
   .use(errorHandler)
   .use(authMiddleware)
+  .use(adminPreservationMiddleware)
   .use(searchRoutes)
   .use(memoryRoutes)
   .use(checkpointRoutes)
