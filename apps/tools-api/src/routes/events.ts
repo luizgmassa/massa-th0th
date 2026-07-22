@@ -3,9 +3,10 @@
  *
  * GET /api/v1/events — Server-Sent Events stream for real-time indexing progress.
  *
- * Optional query param: ?projectId=<id> to filter events for a specific project.
- * Keep-alive heartbeat every 15s.
- * Connection auto-closes after 10 minutes (client should reconnect).
+ * Optional query params:
+ *   ?projectId=<id>  — filter events for a specific project.
+ *   ?jobId=<id>       — filter events whose payload carries that jobId (FR-16).
+ * Both compose with AND (an event must match both to be enqueued).
  */
 
 import { Elysia } from "elysia";
@@ -18,6 +19,8 @@ export const eventsRoutes = new Elysia({ prefix: "/api/v1" }).get(
   "/events",
   async ({ query, set }) => {
     const projectIdFilter = query.projectId as string | undefined;
+    // Wave 5 FR-16: ?jobId= filter on events whose payload carries that jobId.
+    const jobIdFilter = query.jobId as string | undefined;
 
     // Configure SSE headers
     set.headers["Content-Type"] = "text/event-stream";
@@ -51,8 +54,11 @@ export const eventsRoutes = new Elysia({ prefix: "/api/v1" }).get(
 
         const unsubscribers = events.map((event) =>
           eventBus.subscribe(event, (payload: Record<string, unknown>) => {
-            // Filter by projectId if specified
+            // Filter by projectId if specified (FR-16: AND composition).
             if (projectIdFilter && payload.projectId !== projectIdFilter) return;
+            // Wave 5 FR-16: filter by jobId if specified. Events whose payload
+            // carries a jobId that doesn't match are skipped. AND with projectId.
+            if (jobIdFilter && payload.jobId !== jobIdFilter) return;
             enqueue({ event, payload, timestamp: new Date().toISOString() });
           }),
         );
@@ -84,7 +90,14 @@ export const eventsRoutes = new Elysia({ prefix: "/api/v1" }).get(
         }, MAX_DURATION_MS);
 
         // Send initial connected event
-        enqueue({ event: "connected", payload: { projectIdFilter: projectIdFilter ?? null }, timestamp: new Date().toISOString() });
+        enqueue({
+          event: "connected",
+          payload: {
+            projectIdFilter: projectIdFilter ?? null,
+            jobIdFilter: jobIdFilter ?? null,
+          },
+          timestamp: new Date().toISOString(),
+        });
 
         // Cleanup on stream cancel (client disconnected)
         return () => {
