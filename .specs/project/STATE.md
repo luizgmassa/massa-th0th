@@ -13,8 +13,8 @@
 - plan-critic revisions: FR-20..FR-26 / AD-W5-013..AD-W5-020 incorporated
 - B1 (graph features) COMPLETE: T01-T08, 8 commits (9a73b4b..14744ce)
 - B2 (grouped format + indexing) COMPLETE: T09-T16, 8 commits (a12f9f6..6740a3e) + 1 test-isolation fixup (a0c67d6)
-- B3 (search/scheduler/synapse) NEXT
-- B4 (defense + validation) PENDING
+- B3 (search/scheduler/synapse) COMPLETE: T17-T24, 8 commits (2c21db6..56e5c10)
+- B4 (defense + validation) NEXT
 
 ---
 
