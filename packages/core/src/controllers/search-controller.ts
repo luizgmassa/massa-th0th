@@ -12,6 +12,8 @@ import { eventBus } from "../services/events/event-bus.js";
 import { LLMJudgeReranker } from "../services/search/reranker.js";
 import type { SearchDegradation } from "../services/search/search-diagnostics.js";
 import { minimatch } from "minimatch";
+import { validateFilters } from "../services/search/filter-validation.js";
+import type { FilterDowngrade } from "../services/search/filter-validation.js";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -76,6 +78,14 @@ export interface ProjectSearchResult {
   };
   /** Optional subsystems that failed without invalidating mandatory retrieval. */
   degradations?: SearchDegradation[];
+  /**
+   * Wave 5 FR-18 / AD-W5-012: filter downgrade records. Present only when
+   * `validateFilters` reconciled a contradiction (same pattern in both
+   * include and exclude). The exclude entry is dropped (never both) and the
+   * record is emitted here so the caller can correct its hints. Additive —
+   * absent when no downgrades occurred.
+   */
+  filter_downgrades?: FilterDowngrade[];
 }
 
 interface FormattedResult {
@@ -184,15 +194,31 @@ export class SearchController {
       totalLatencyMs: Date.now() - startTime,
     });
 
+    // Wave 5 FR-18 / N16 / AC-15: server-side revalidation of client filter
+    // hints BEFORE filterByPatterns consumes them. Caps include+exclude,
+    // validates glob syntax (teaching error on invalid), and downgrades
+    // contradictions (same pattern in both → drop exclude, emit downgrade).
+    // filterByPatterns uses the cleaned (post-downgrade) patterns. The
+    // downgrade records are attached to the response (additive).
+    const filterValidation = validateFilters(
+      include,
+      exclude,
+      (config.get("filterValidation") as { maxFilterPatterns?: number }).maxFilterPatterns,
+    );
+
     // Apply glob filters
-    const filteredResults = this.filterByPatterns(results, include, exclude);
+    const filteredResults = this.filterByPatterns(
+      results,
+      filterValidation.include,
+      filterValidation.exclude,
+    );
 
     if (filteredResults.length < results.length) {
       logger.info("Results filtered by patterns", {
         before: results.length,
         after: filteredResults.length,
-        include,
-        exclude,
+        include: filterValidation.include,
+        exclude: filterValidation.exclude,
       });
     }
 
@@ -300,11 +326,11 @@ export class SearchController {
       recommendations,
       filters: {
         applied:
-          (include && include.length > 0) ||
-          (exclude && exclude.length > 0) ||
+          filterValidation.include.length > 0 ||
+          filterValidation.exclude.length > 0 ||
           false,
-        include: include || [],
-        exclude: exclude || [],
+        include: filterValidation.include,
+        exclude: filterValidation.exclude,
         totalResults: results.length,
         filteredResults: filteredResults.length,
       },
@@ -314,6 +340,12 @@ export class SearchController {
       results_shown: formattedResults.length,
       results_omitted: Math.max(0, results_total - formattedResults.length),
       ...(degradations.length > 0 ? { degradations: [...degradations] } : {}),
+      // Wave 5 FR-18 / AD-W5-012: observable filter downgrade records.
+      // Additive — present only when validateFilters reconciled a
+      // contradiction (same pattern in both include and exclude).
+      ...(filterValidation.downgrades.length > 0
+        ? { filter_downgrades: filterValidation.downgrades }
+        : {}),
       ...(staleWarning
         ? {
             warning: `Index may be stale (reason: ${staleWarning.reason}). Results reflect the indexed snapshot, not the current files.`,
