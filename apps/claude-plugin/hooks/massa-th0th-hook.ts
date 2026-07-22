@@ -137,6 +137,7 @@ function postObservation(
   url: string,
   body: Record<string, unknown>,
   timeoutMs: number,
+  hookType: string = "unknown",
 ): Promise<void> {
   // Fire-and-forget with bounded timeout; never rejects (silent-degrade).
   // Returned promise lets main() await POSTs before process.exit so the
@@ -152,6 +153,8 @@ function postObservation(
       headers["x-api-key"] = apiKey;
     }
 
+    const startMs = Date.now();
+
     return fetch(url, {
       method: "POST",
       headers,
@@ -159,9 +162,39 @@ function postObservation(
       signal: AbortSignal.timeout(timeoutMs),
     })
       .then(() => {
+        // Breadcrumb-on-fire (W7-13): log to stderr when POST takes >80% of deadline.
+        const elapsedMs = Date.now() - startMs;
+        const pct = (elapsedMs / timeoutMs) * 100;
+        if (pct > 80) {
+          process.stderr.write(
+            JSON.stringify({
+              type: "breadcrumb",
+              hook: hookType,
+              elapsed: elapsedMs,
+              deadline: timeoutMs,
+              pct: Math.round(pct * 100) / 100,
+            }) + "\n",
+          );
+        }
         // response body discarded; fire-and-forget
       })
-      .catch(() => {
+      .catch((err) => {
+        // Breadcrumb-on-fire (W7-13): log deadline-on-fire on timeout.
+        const elapsedMs = Date.now() - startMs;
+        const isTimeout =
+          err instanceof DOMException &&
+          (err.name === "TimeoutError" || err.name === "AbortError");
+        if (isTimeout) {
+          process.stderr.write(
+            JSON.stringify({
+              type: "deadline-on-fire",
+              hook: hookType,
+              elapsed: elapsedMs,
+              deadline: timeoutMs,
+              reason: "timeout",
+            }) + "\n",
+          );
+        }
         // silent-degrade: network failure is non-fatal
       });
   } catch {
@@ -223,7 +256,7 @@ async function main(): Promise<void> {
       cwd,
       payload,
     };
-    const obsP = postObservation(hookUrl, obsBody, 3000);
+    const obsP = postObservation(hookUrl, obsBody, 3000, subcommand);
 
     // 2. Snapshot to /api/v1/hook/compact-snapshot (5s timeout, snapshot body)
     const snapshotUrl = `${baseUrl}/api/v1/hook/compact-snapshot`;
@@ -233,7 +266,7 @@ async function main(): Promise<void> {
       persist: true,
       cwd,
     };
-    const snapP = postObservation(snapshotUrl, snapBody, 5000);
+    const snapP = postObservation(snapshotUrl, snapBody, 5000, "compact-snapshot");
 
     // Await both POSTs (bounded by their timeouts) before exit so the event
     // loop doesn't tear down pending sockets. Silent-degrade: any rejection
@@ -253,7 +286,7 @@ async function main(): Promise<void> {
       cwd,
       payload,
     };
-    await postObservation(hookUrl, obsBody, 2000);
+    await postObservation(hookUrl, obsBody, 2000, subcommand);
   }
 
   // Always exit 0 (silent-degrade: never blocks the agent)
