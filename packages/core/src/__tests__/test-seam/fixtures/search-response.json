@@ -1,0 +1,77 @@
+{
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "id": "chunk-001-deterministic",
+        "content": "export class SearchProjectTool implements IToolHandler {\n  name = \"search_project\";\n  description = \"Search for code in an indexed project using semantic and keyword search\";\n\n  async handle(params: unknown): Promise<ToolResponse> {\n    const { query, projectId } = params as SearchProjectParams;\n    const controller = new SearchController();\n    return await controller.search({ query, projectId });\n  }\n}",
+        "score": 0.85,
+        "source": "vector",
+        "metadata": {
+          "projectId": "test-project-deterministic",
+          "filePath": "src/tools/search_project.ts",
+          "lineStart": 30,
+          "lineEnd": 40,
+          "language": "typescript",
+          "chunkType": "function"
+        },
+        "highlights": ["SearchProjectTool", "search_project", "SearchController"],
+        "explanation": {
+          "finalScore": 0.85,
+          "vectorScore": 0.82,
+          "keywordScore": 0.71,
+          "rrfScore": 0.85,
+          "breakdown": "vector=0.82 + keyword=0.71 → RRF=0.85"
+        }
+      },
+      {
+        "id": "chunk-002-deterministic",
+        "content": "export class SearchController {\n  async search(params: SearchParams): Promise<SearchResponse> {\n    const results = await this.vectorStore.search(params.query, params.projectId);\n    const keywordResults = await this.keywordSearch.search(params.query, params.projectId);\n    return mergeResults(results, keywordResults);\n  }\n}",
+        "score": 0.78,
+        "source": "hybrid",
+        "metadata": {
+          "projectId": "test-project-deterministic",
+          "filePath": "src/controllers/search-controller.ts",
+          "lineStart": 15,
+          "lineEnd": 22,
+          "language": "typescript",
+          "chunkType": "method"
+        },
+        "highlights": ["SearchController", "vectorStore", "keywordSearch"],
+        "explanation": {
+          "finalScore": 0.78,
+          "vectorScore": 0.75,
+          "keywordScore": 0.68,
+          "rrfScore": 0.78,
+          "breakdown": "vector=0.75 + keyword=0.68 → RRF=0.78"
+        }
+      },
+      {
+        "id": "chunk-003-deterministic",
+        "content": "export interface SearchResult {\n  id: string;\n  content: string;\n  score: number;\n  source: SearchSource;\n  metadata: MemoryMetadata;\n  highlights?: string[];\n  explanation?: ScoreExplanation;\n}",
+        "score": 0.72,
+        "source": "keyword",
+        "metadata": {
+          "projectId": "test-project-deterministic",
+          "filePath": "packages/shared/src/types/index.ts",
+          "lineStart": 150,
+          "lineEnd": 158,
+          "language": "typescript",
+          "chunkType": "interface"
+        },
+        "highlights": ["SearchResult", "SearchSource", "MemoryMetadata"],
+        "explanation": {
+          "finalScore": 0.72,
+          "vectorScore": 0.65,
+          "keywordScore": 0.80,
+          "rrfScore": 0.72,
+          "breakdown": "vector=0.65 + keyword=0.80 → RRF=0.72"
+        }
+      }
+    ],
+    "total": 3,
+    "query": "search project tool implementation",
+    "projectId": "test-project-deterministic",
+    "applied": ["vector-search", "keyword-search", "rrf-merge"]
+  }
+}

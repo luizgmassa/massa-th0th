@@ -1,0 +1,47 @@
+{
+  "success": true,
+  "data": {
+    "projectId": "test-project-deterministic",
+    "projectPath": "/test/project-deterministic",
+    "scope": "unstaged",
+    "changedFiles": [
+      "src/tools/search_project.ts",
+      "src/controllers/search-controller.ts"
+    ],
+    "impactedSymbols": [
+      {
+        "name": "SearchProjectTool",
+        "kind": "class",
+        "file": "src/tools/search_project.ts",
+        "lineStart": 11,
+        "lineEnd": 22,
+        "pagerank": 0.045,
+        "importers": 8,
+        "riskLevel": "high"
+      },
+      {
+        "name": "SearchController",
+        "kind": "class",
+        "file": "src/controllers/search-controller.ts",
+        "lineStart": 5,
+        "lineEnd": 30,
+        "pagerank": 0.032,
+        "importers": 5,
+        "riskLevel": "medium"
+      },
+      {
+        "name": "serializeToolResponse",
+        "kind": "function",
+        "file": "src/tools/serialize.ts",
+        "lineStart": 57,
+        "lineEnd": 90,
+        "pagerank": 0.018,
+        "importers": 12,
+        "riskLevel": "low"
+      }
+    ],
+    "totalImpacted": 3,
+    "propagationDepth": 2,
+    "activatedGraphGenerationId": "gen-001-deterministic"
+  }
+}
