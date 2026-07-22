@@ -1,5 +1,9 @@
 # AI Engineering Handoff
 
+## Wave 5 — N45 Hook Attribution Confirmation (FR-19 / AC-16)
+
+- 2026-07-22: N45 hook attribution verified complete at `92b7fb4`; registry entry stays `complete`. No code change.
+
 ## Wave 4 Breaking Changes (feature COMPLETE — validated PASS)
 
 Wave 4 (`wave-4-correctness-hygiene`) introduces three breaking changes that callers and integrators must absorb:
