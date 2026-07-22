@@ -374,10 +374,11 @@ export async function batchInsertImports(imports: SymbolImport[]): Promise<void>
 
 export async function clearProject(projectId: string): Promise<void> {
   const p = getPrismaClient();
-  // Clean up graph_generations before deleting the workspace row to avoid
-  // orphaned generation rows that cause graph_generation_workspace_missing
-  // errors on subsequent re-index runs (Wave 3 shared-DB fixture gap fix).
-  await p.$executeRaw`DELETE FROM graph_generations WHERE project_id = ${projectId}`;
+  // graph_generations has ON DELETE CASCADE on workspaces.project_id (migration
+  // 20260714170000, line 242), so deleting the workspace row cascade-removes all
+  // graph_generations + child symbol tables. An explicit graph_generations DELETE
+  // here is redundant and introduces deadlocks on the shared CI DB when concurrent
+  // test cleanup runs (Wave 6 regression).
   await p.$executeRaw`DELETE FROM workspaces WHERE project_id = ${projectId}`;
 }
 
