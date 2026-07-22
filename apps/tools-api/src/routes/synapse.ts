@@ -20,6 +20,7 @@ import {
   buildPrefetchPlan,
   DEFAULT_PREFETCH_CONFIG,
   type PrefetchEntry,
+  TaskEnvelopeService,
 } from "@massa-th0th/core/services";
 import { SearchSource } from "@massa-th0th/shared";
 import { Elysia, t } from "elysia";
@@ -315,6 +316,48 @@ export const synapseRoutes = new Elysia({ prefix: "/api/v1/synapse" })
         ),
       }),
       detail: { tags: ["synapse"], summary: "Plan + execute prefetch for an opened file" },
+    },
+  )
+  // ────────────────────────────────────────────────────────────────────────
+  // Wave 5 FR-14 / FR-25 / AD-W5-019: synapse_task_begin envelope.
+  // Collapses 5 moves (create → prime → search → prefetch → access) into one
+  // call. Partial-failure contract: session always returned; partial=true +
+  // errors[] on sub-step failure; search may be null.
+  .post(
+    "/task/begin",
+    async ({ body }) => {
+      const service = new TaskEnvelopeService();
+      const result = await service.begin({
+        agentId: body.agentId,
+        taskContext: body.taskContext,
+        workspaceId: body.workspaceId,
+        query: body.query,
+        projectId: body.projectId,
+        entries: body.entries,
+        limit: body.limit,
+      });
+      return { success: true, data: result };
+    },
+    {
+      body: t.Object({
+        agentId: t.String({ description: "Stable identifier of the calling agent" }),
+        taskContext: t.Optional(t.String({ description: "One-sentence task description" })),
+        workspaceId: t.Optional(t.String({ description: "Project ID scope" })),
+        query: t.String({ description: "First search query" }),
+        projectId: t.String({ description: "Project ID for the search" }),
+        entries: t.Optional(
+          t.Array(
+            t.Object({
+              id: t.String(),
+              content: t.String(),
+              score: t.Optional(t.Number()),
+              metadata: t.Optional(t.Record(t.String(), t.Any())),
+            }),
+          ),
+        ),
+        limit: t.Optional(t.Number({ description: "Max results for the first search" })),
+      }),
+      detail: { tags: ["synapse"], summary: "Begin task envelope (5-in-1)" },
     },
   )
   // ────────────────────────────────────────────────────────────────────────

@@ -441,6 +441,7 @@ export {
   DEFAULT_COMPRESS_CONFIG,
   DEFAULT_EMBEDDING_EVOLUTION_CONFIG,
   DEFAULT_PREFETCH_CONFIG,
+  TaskEnvelopeService,
 } from "./synapse/index.js";
 export type {
   AgentSession,

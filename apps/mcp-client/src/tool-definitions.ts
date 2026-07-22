@@ -1164,6 +1164,41 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
   },
   {
+    name: "synapse_task_begin",
+    description:
+      "Begin a task envelope: create session → prime (if entries) → first search → prefetch first hit → record access. " +
+      "Returns { sessionId, search, primed, partial, errors }. Session is always returned; partial=true + errors[] when a sub-step fails; search may be null when search failed. " +
+      "Use synapse_task_end to clean up.",
+    apiEndpoint: "/api/v1/synapse/task/begin",
+    apiMethod: "POST",
+    inputSchema: {
+      type: "object",
+      properties: {
+        agentId: { type: "string", description: "Stable identifier of the calling agent" },
+        taskContext: { type: "string", description: "One-sentence description of the current task" },
+        workspaceId: { type: "string", description: "Project ID this session is scoped to" },
+        query: { type: "string", description: "First search query" },
+        projectId: { type: "string", description: "Project ID for the search" },
+        entries: {
+          type: "array",
+          description: "Optional entries to prime the buffer with (from recall)",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              content: { type: "string" },
+              score: { type: "number" },
+              metadata: { type: "object" },
+            },
+            required: ["id", "content"],
+          },
+        },
+        limit: { type: "number", description: "Max results for the first search (default 10)" },
+      },
+      required: ["agentId", "query", "projectId"],
+    },
+  },
+  {
     name: "symbol_snippet",
     description: "Get raw code snippet by file + line range from an indexed project.",
     apiEndpoint: "/api/v1/symbol/snippet",
