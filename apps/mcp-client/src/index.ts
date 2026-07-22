@@ -14,9 +14,10 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import fs from "fs/promises";
 import { ApiClient } from "./api-client.js";
+import { EmbeddedApiClient } from "./embedded-api-client.js";
 import { collectFiles } from "./file-collector.js";
 import { TOOL_DEFINITIONS } from "./tool-definitions.js";
-import { proxyCallTool } from "./call-tool-proxy.js";
+import { proxyCallTool, type ToolProxyApiClient } from "./call-tool-proxy.js";
 import { pageToolDefinitions } from "./tool-discovery.js";
 import { applyMoonshotFlavor, resolveFlavor } from "./moonshot-flavor.js";
 import {
@@ -90,6 +91,28 @@ function textContent(text: string) {
   return { content: [{ type: "text" as const, text }] };
 }
 
+/**
+ * The apiClient must implement the ToolProxyApiClient interface (for proxyCallTool)
+ * AND expose uploadAndIndex + healthCheck (called directly by McpProxyServer for
+ * the `index` tool and startup health check). Both ApiClient and EmbeddedApiClient
+ * satisfy this union.
+ */
+type ApiClientLike = ToolProxyApiClient & {
+  uploadAndIndex(params: {
+    projectPath: string;
+    projectId?: string;
+    forceReindex?: boolean;
+    warmCache?: boolean;
+    warmupQueries?: string[];
+    files: Array<{ relativePath: string; content: string }>;
+  }): Promise<unknown>;
+  healthCheck(): Promise<boolean>;
+};
+
+function isEmbeddedMode(): boolean {
+  return process.env.MASSA_TH0TH_EMBEDDED === "true";
+}
+
 // Reject unknown CLI flags (usage error, exit code 2).
 const KNOWN_FLAGS = ["--config-show", "--config-path", "--config-dir", "--config-init", "--help", "-h"];
 const unknown = args.filter((a) => a.startsWith("-") && !KNOWN_FLAGS.includes(a));
@@ -112,7 +135,8 @@ if (!configExists()) {
 class McpProxyServer {
   private server: Server;
   private transport: StdioServerTransport;
-  private apiClient: ApiClient;
+  private apiClient: ApiClientLike;
+  private mode: "embedded" | "http";
 
   constructor() {
     this.server = new Server(
@@ -128,7 +152,13 @@ class McpProxyServer {
     );
 
     this.transport = new StdioServerTransport();
-    this.apiClient = new ApiClient();
+    if (isEmbeddedMode()) {
+      this.apiClient = new EmbeddedApiClient() as ApiClientLike;
+      this.mode = "embedded";
+    } else {
+      this.apiClient = new ApiClient() as ApiClientLike;
+      this.mode = "http";
+    }
     this.setupHandlers();
   }
 
@@ -216,8 +246,10 @@ class McpProxyServer {
     const healthy = await this.apiClient.healthCheck();
     if (!healthy) {
       console.log(
-        "[massa-th0th-mcp] Warning: Tools API is not reachable. Requests will fail until API is available.",
+        `[massa-th0th-mcp] Warning: Tools API is not reachable (mode: ${this.mode}). Requests will fail until API is available.`,
       );
+    } else {
+      console.log(`[massa-th0th-mcp] Connected (mode: ${this.mode})`);
     }
 
     await this.server.connect(this.transport);

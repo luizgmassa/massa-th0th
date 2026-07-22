@@ -1,13 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "_description": "massa-th0th plugin settings template. Merge the 'hooks' block into your project (.claude/settings.json) or user (~/.claude/settings.json) settings. The five scripts fire-and-forget POST lifecycle observations to the Tools API; they always exit 0 and never block the agent. Set CLAUDE_PLUGIN_ROOT to the repo root, or replace it with an absolute path to apps/claude-plugin.",
+  "_description": "massa-th0th plugin settings template. Merge the 'hooks' block into your project (.claude/settings.json) or user (~/.claude/settings.json) settings. The single massa-th0th-hook binary replaces the 7 shell scripts; it fire-and-forgets POST lifecycle observations to the Tools API, always exits 0, and never blocks the agent. Set CLAUDE_PLUGIN_ROOT to the repo root, or replace it with an absolute path to apps/claude-plugin. Pass the event type as the first argument (session-start, user-prompt-submit, post-tool-use, pre-compact, stop).",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\""
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts\" session-start"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.sh\""
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts\" user-prompt-submit"
           }
         ]
       }
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-use.sh\""
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts\" post-tool-use"
           }
         ]
       }
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/stop.sh\""
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts\" stop"
           }
         ]
       }
@@ -47,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/pre-compact.sh\""
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts\" pre-compact"
           }
         ]
       }

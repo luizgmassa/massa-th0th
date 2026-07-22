@@ -427,6 +427,7 @@ import os from "os";
 import { EtlPipeline } from "../services/etl/pipeline.js";
 import { symbolGraphService } from "../services/symbol/symbol-graph.service.js";
 import { getSymbolRepository } from "../data/symbol/symbol-repository-factory.js";
+import { WorkspaceManager } from "../services/workspace/workspace-manager.js";
 
 const TEST_PROJECT = "p4d4-arch-map";
 
@@ -493,6 +494,10 @@ describeNative("getProjectMap enriched fields (fixture pipeline)", () => {
   });
 
   async function indexFixture(dir: string, jobId: string): Promise<void> {
+    // Ensure the workspace row exists before the ETL pipeline's graph
+    // generation lifecycle tries to lock it (same pattern as trace-path.test.ts).
+    // The async indexing:started event handler is racy on shared DBs.
+    await WorkspaceManager.getInstance().markIndexing(TEST_PROJECT, dir);
     await EtlPipeline.getInstance().run({
       projectId: TEST_PROJECT,
       projectPath: dir,

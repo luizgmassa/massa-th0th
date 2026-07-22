@@ -68,8 +68,8 @@ jobs:
           filters: |
             grammar:
               - 'packages/core/src/services/structural/**'
-              - 'bun.lock'
-              - 'package.json'
+              - 'packages/core/prisma/migrations/**'
+              - 'scripts/verify-tree-sitter*.ts'
 
       - name: Grammar integrity verifier
         if: steps.filter.outputs.grammar == 'true'

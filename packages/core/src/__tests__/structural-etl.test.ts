@@ -300,9 +300,9 @@ describeNative("TS/JS structural ETL adapter", () => {
     expect(source).not.toContain("extractJsImports");
     expect(source).not.toContain("extractTypedEdges");
     await expect(fs.stat(path.join(REPO_ROOT, "packages/core/src/services/etl/typed-edges.ts"))).rejects.toThrow();
-    const repository = await fs.readFile(path.join(REPO_ROOT, "packages/core/src/data/symbol/symbol-repository-pg.ts"), "utf8");
-    expect(repository).toContain("LIMIT ${SAFETY_CAP + 1}");
-    expect(repository).toContain("symbol_definition_safety_cap_exceeded");
+    const repositoryQueries = await fs.readFile(path.join(REPO_ROOT, "packages/core/src/data/symbol/symbol-repo-queries.ts"), "utf8");
+    expect(repositoryQueries).toContain("LIMIT ${SAFETY_CAP + 1}");
+    expect(repositoryQueries).toContain("symbol_definition_safety_cap_exceeded");
   });
 
   test("fails closed on repository seed errors and malformed persisted identities", async () => {

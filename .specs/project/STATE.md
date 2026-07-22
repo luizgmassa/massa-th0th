@@ -1,5 +1,25 @@
 # massa-th0th Spec State
 
+## Wave 6 — Active
+
+- projectId: `massa-th0th`
+- workflowSessionId: `spec-wave-6`
+- workflow: spec-driven (Large/Complex)
+- feature: `wave-6-architecture-features` (Wave 6, P1) — COMPLETE + validated PASS
+- branch: `wave-6` (off `main` post-`389461b`)
+- baseline: `389461b`
+- scope: 14 requirements (W6-01..W6-14), 47 acceptance criteria, 38 atomic tasks across 8 phases
+- plan-critic: full The Fool pre-mortem; 5 findings (2 CRITICAL + 1 HIGH + 2 MEDIUM) incorporated before Execute
+- B1 (P1-2, T01-T10): characterization tests + SymbolRepositoryPg decomposition — COMPLETE (commits `9b40561`..`d684873`)
+- B2 (P3, T11-T17): ToolDefs + AutoImprove + SmartChunker decomposition — COMPLETE (commits `d85f709`..`cef5f9d`)
+- B3 (P4-5, T18-T26): embedded MCP + hook binary + parallel runner + test-seam — COMPLETE (commits `da99ad2`..`8de8c51`)
+- B4 (P6-7, T27-T37): dashboard + scheduler + process + carryovers — COMPLETE (commits `99ed294`..`05c636e`)
+- B5 (P8, T38): independent verifier — PASS (iteration 2, 7/7 gaps closed, 5/5 mutants killed)
+- Fix commits (iteration 1): `174c930`..`72fc2cf` (7 gaps fixed)
+- Residual: 3 low-priority spec-precision gaps (N18, N10, N13 — non-blocking, not in scope)
+
+---
+
 ## Wave 5 — Active
 
 - projectId: `massa-th0th`
@@ -38,7 +58,7 @@
 - workflow: spec-driven
 - feature: `native-runtime-rebaseline` (Wave 3 follow-up, P1) — T1–T6 COMPLETE + validated PASS. T1 merge `b6aa4a4`; T2 test rewrite `428d462`; spec artifacts `846ff29`; T3 classification `e866ea5` + `17eedfd`; T4 npm reconcile (no code change — Codespace npm 11.12.1 → 11.14.1 install); T5 cross-platform verify (Codespace Bun 1.3.14 install, ABI 137, both platforms `verify:tree-sitter-native` exit 0, 152/152 native-structural); T6 AD amendment + validation.md (this commit). Status: `complete`.
 - prior: `linux-native-structural-runtime` (M21, P0) — COMPLETE + validated PASS.
-- status: M19, M20+M54, M50, M16+M17, M45+M47, M21 complete. **native-runtime-rebaseline COMPLETE** (T1–T6: `b6aa4a4`/`428d462`/`846ff29`/`e866ea5`/`17eedfd` + T4/T5/T6). Phase A (T1–T2) PASS on macOS arm64; Phase B (T3) six-suite classification — 2 FIX (`e866ea5` auto-improve LLM-surface isolation defect, `17eedfd` qwen fixture re-lock after identity-guard drift) + 4 DOCUMENTED-ACCEPT (etl-cache-invalidation, etl-pipeline-queue, scheduler-store-pg, trace-path — shared-DB fixture gaps: `graph_generation_workspace_missing:*`, `scheduled-*` pollution); Phase C (T4–T5) npm reconciled 11.14.1 both platforms, Bun 1.3.14 installed on Codespace (ABI 137), `verify:tree-sitter-native` PASS on macOS arm64 + Ubuntu Codespace (33+33 parses, 27+27 modules, 10 sensors, RSS -188 KB Codespace / +589 KB macOS < 16 MiB, packed package PASS, 152/152 native-structural both platforms). Phase D (T6) AD-004/005/006 amendment + validation.md.
+- status: M19, M20+M54, M50, M16+M17, M45+M47, M21 complete. **native-runtime-rebaseline COMPLETE** (T1–T6: `b6aa4a4`/`428d462`/`846ff29`/`e866ea5`/`17eedfd` + T4/T5/T6). Phase A (T1–T2) PASS on macOS arm64; Phase B (T3) six-suite classification — 2 FIX (`e866ea5` auto-improve LLM-surface isolation defect, `17eedfd` qwen fixture re-lock after identity-guard drift) + 4 DOCUMENTED-ACCEPT (etl-cache-invalidation, etl-pipeline-queue, scheduler-store-pg, trace-path — shared-DB fixture gaps: `graph_generation_workspace_missing:*`, `scheduled-*` pollution) — **RESOLVED in Wave 6**: `clearProject` now deletes `graph_generations` rows (prevents orphaned generations), `architecture-map.test.ts` calls `markIndexing` before `EtlPipeline.run` (prevents workspace-missing race), qwen fixture hashes re-locked after N31 decomposition; Phase C (T4–T5) npm reconciled 11.14.1 both platforms, Bun 1.3.14 installed on Codespace (ABI 137), `verify:tree-sitter-native` PASS on macOS arm64 + Ubuntu Codespace (33+33 parses, 27+27 modules, 10 sensors, RSS -188 KB Codespace / +589 KB macOS < 16 MiB, packed package PASS, 152/152 native-structural both platforms). Phase D (T6) AD-004/005/006 amendment + validation.md.
 - branch/worktree: `wave-3` / `massa-th0th-wt-wave-3`
 - sequence: M19 → M20+M54 → M50 → M16+M17 → M45+M47 ✅ → M21 ✅ → native-runtime-rebaseline ✅
 - invariant: `sqlite-removal` complete; `sqlite-removal-followup` in_progress (M29); `multi-language-tree-sitter-breadth` reconciled to `complete` from its recorded PASS evidence.

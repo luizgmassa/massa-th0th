@@ -13,6 +13,8 @@
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
+import { renderDashboard, fetchDashboardData } from "./dashboard.js";
+
 /** Exhaustive list of mutating API paths the UI must NEVER call. */
 export const FORBIDDEN_MUTATING_PATHS = [
   "/memory/store",
@@ -547,7 +549,7 @@ function startApp(opts) {
   }
   function viewFromHash(h) {
     const name = (h || "").replace(/^#\/?/, "");
-    return ["projects", "memory", "search", "handoffs", "checkpoints"].includes(name)
+    return ["projects", "memory", "search", "handoffs", "checkpoints", "dashboard"].includes(name)
       ? name
       : "projects";
   }
@@ -607,6 +609,9 @@ function startApp(opts) {
         if (state.project) body.projectId = state.project;
         const data = await api.request("/api/v1/checkpoints/list", { method: "POST", body });
         root.innerHTML = renderCheckpoints(data);
+      } else if (state.view === "dashboard") {
+        const data = await fetchDashboardData(api);
+        root.innerHTML = renderDashboard(data);
       }
     } catch (e) {
       root.innerHTML = '<div class="error">Connection error: ' + escapeHtml(String(e.message || e)) + "</div>";
@@ -679,6 +684,7 @@ const MASSA_TH0TH_UI = {
   renderSearch,
   renderHandoffs,
   renderCheckpoints,
+  renderDashboard,
   initTheme,
   toggleTheme,
   createApiClient,

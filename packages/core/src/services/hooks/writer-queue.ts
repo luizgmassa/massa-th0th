@@ -28,6 +28,10 @@ export class WriterQueue {
     return this.pending;
   }
 
+  get maxPendingCount(): number {
+    return this.maxPending;
+  }
+
   get saturated(): boolean {
     return this.pending >= this.maxPending;
   }

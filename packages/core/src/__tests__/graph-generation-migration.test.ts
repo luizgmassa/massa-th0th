@@ -9,7 +9,10 @@ const migrationPath = join(
 );
 const migrationSql = readFileSync(migrationPath, "utf8");
 const repositorySql = readFileSync(
-  join(import.meta.dir, "../data/symbol/symbol-repository-pg.ts"),
+  join(import.meta.dir, "../data/symbol/symbol-repo-generation.ts"),
+  "utf8",
+) + readFileSync(
+  join(import.meta.dir, "../data/symbol/symbol-repo-queries.ts"),
   "utf8",
 );
 

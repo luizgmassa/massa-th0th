@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 5,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "surviving_mutant::union guard missing suite path has no discriminating test no test injects a suite into suite table but not into results add a mock drop test asserting exit 1 union guard fail",
+      "text": "UNION GUARD missing-suite path has no discriminating test. No test injects a suite into SUITE_TABLE but not into results. Add a mock-drop test asserting exit 1 + UNION GUARD FAIL.",
+      "signal": "surviving_mutant",
+      "scope": "test-strength",
+      "status": "candidate",
+      "features": [
+        "wave-6-architecture-features"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "scripts/run-tests-parallel.ts:243-257 + scripts/__tests__/run-tests-parallel.test.ts:69-74 (test-strength)"
+      ],
+      "created": "2026-07-22T21:39:38Z",
+      "last_seen": "2026-07-22T21:39:38Z",
+      "confidence": 0.62
+    },
+    {
+      "id": "L-002",
+      "key": "surviving_mutant::hook binary tests assert exit 0 only never post body endpoint count removing second pre compact post survived add capture server test verifying 2 posts to correct endpoints body shapes",
+      "text": "Hook binary tests assert exit 0 only, never POST body/endpoint/count. Removing second pre-compact POST survived. Add capture-server test verifying 2 POSTs to correct endpoints + body shapes.",
+      "signal": "surviving_mutant",
+      "scope": "test-strength",
+      "status": "candidate",
+      "features": [
+        "wave-6-architecture-features"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "apps/claude-plugin/hooks/massa-th0th-hook.ts:219-227 + apps/claude-plugin/hooks/__tests__/massa-th0th-hook.test.ts (test-strength)"
+      ],
+      "created": "2026-07-22T21:39:38Z",
+      "last_seen": "2026-07-22T21:39:38Z",
+      "confidence": 0.62
+    },
+    {
+      "id": "L-003",
+      "key": "ac_gap::m25 name tail resolution has 0 behavior tests test only checks method exists add tests mocking listworkspaces asserting unique ambiguous not found paths",
+      "text": "M25 name-tail resolution has 0 behavior tests. Test only checks method exists. Add tests mocking listWorkspaces asserting unique/ambiguous/not-found paths.",
+      "signal": "ac_gap",
+      "scope": "test-coverage",
+      "status": "candidate",
+      "features": [
+        "wave-6-architecture-features"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "packages/core/src/__tests__/m25-m26-resolution-serialize.test.ts:101-107 (test-coverage)"
+      ],
+      "created": "2026-07-22T21:39:38Z",
+      "last_seen": "2026-07-22T21:39:38Z",
+      "confidence": 0.62
+    },
+    {
+      "id": "L-004",
+      "key": "gate_fail::n20 crash test assumes architecture map fails with database url empty but it passes via sqlite fallback test gets exit 0 expects non zero rewrite to use genuinely failing suite or wire unused crashtest variable",
+      "text": "N20 crash test assumes architecture-map fails with DATABASE_URL empty but it passes via SQLite fallback. Test gets exit 0, expects non-zero. Rewrite to use genuinely-failing suite or wire unused crashTest variable.",
+      "signal": "gate_fail",
+      "scope": "test-design",
+      "status": "candidate",
+      "features": [
+        "wave-6-architecture-features"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "scripts/__tests__/run-tests-parallel.test.ts:113 (test-design)"
+      ],
+      "created": "2026-07-22T21:39:38Z",
+      "last_seen": "2026-07-22T21:39:38Z",
+      "confidence": 0.62
+    }
+  ]
+}

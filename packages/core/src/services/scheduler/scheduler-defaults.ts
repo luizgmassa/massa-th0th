@@ -103,6 +103,47 @@ function envNum(key: string, fallback: number): number {
 }
 
 /**
+ * Apply the safe-defaults preset to a single job definition. When
+ * `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true`, consolidation + decay jobs get
+ * `defaultEnabled=true` at conservative intervals (≥30 min consolidation,
+ * ≥60 min decay). Auto-improve is NOT enabled by the preset. Individual envs
+ * still override the preset (the envBool loop runs after this).
+ *
+ * CRITICAL (pre-mortem F5): this function is called INSIDE
+ * `registerDefaultJobs` before the `envBool` loop reads `defaultEnabled` —
+ * NOT as a separate export (silent no-op if caller forgets).
+ */
+function applySafeDefaults(job: DefaultJobDef): DefaultJobDef {
+  if (!envBool("MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS", false)) {
+    return job;
+  }
+  if (job.jobKind === "memory-consolidation") {
+    // Conservative: ≥30 min consolidation. Keep the default interval if it is
+    // already ≥30 min; otherwise bump to 30 min.
+    const currentInterval = job.schedule.intervalMs ?? THIRTY_MIN;
+    const safeInterval = Math.max(currentInterval, THIRTY_MIN);
+    return {
+      ...job,
+      defaultEnabled: true,
+      schedule: { type: "interval", intervalMs: safeInterval },
+    };
+  }
+  if (job.jobKind === "decay-sweep") {
+    // Conservative: ≥60 min decay. Keep the default interval if it is already
+    // ≥60 min; otherwise bump to 60 min.
+    const currentInterval = job.schedule.intervalMs ?? ONE_HOUR;
+    const safeInterval = Math.max(currentInterval, ONE_HOUR);
+    return {
+      ...job,
+      defaultEnabled: true,
+      schedule: { type: "interval", intervalMs: safeInterval },
+    };
+  }
+  // auto-improve and observation-bridge are NOT enabled by the preset.
+  return job;
+}
+
+/**
  * Register the existing job implementations as handlers on the scheduler, and
  * upsert default job definitions (default-disabled). Call this ONCE at boot,
  * before scheduler.start().
@@ -154,7 +195,11 @@ export function registerDefaultJobs(scheduler: Scheduler): void {
 
   // ── Default job definitions ───────────────────────────────────────────────
 
-  for (const def of DEFAULT_SCHEDULED_JOBS) {
+  for (const rawDef of DEFAULT_SCHEDULED_JOBS) {
+    // Apply the safe-defaults preset BEFORE the envBool loop reads
+    // `defaultEnabled`. This ensures the preset is wired into the registration
+    // path (pre-mortem F5: not a separate export).
+    const def = applySafeDefaults(rawDef);
     const enabled = envBool(def.enableEnvVar, def.defaultEnabled);
     const intervalMs = envNum(
       def.intervalEnvVar,

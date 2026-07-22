@@ -14,7 +14,7 @@
     },
     {
       "path": "packages/core/src/services/search/smart-chunker.ts",
-      "sha256": "89ff025d601bfa7acc741d1aeaccfa6767367a90a1530800822743a9b95ba81a"
+      "sha256": "de4e8b00949391c4b5955e110d06142e74fdf8c0b7658c6d181ee15b4d3a0423"
     },
     {
       "path": "packages/core/src/services/symbol/centrality.ts",
@@ -92,7 +92,7 @@
     },
     {
       "path": "apps/tools-api/src/index.ts",
-      "sha256": "dc09b4b3a4f86caf1c2b820c85833bba661b43508bb6f3087ad98e1b64a18cf2"
+      "sha256": "b4440f8728fc101ea2d0d53bfdd2edf7872b9ef123402f5f52e73e14bae51252"
     },
     {
       "path": "packages/core/src/tools/search_project.ts",
@@ -118,7 +118,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "e78af83065d27b5304f8de6bd10317e6f5b39a5157174839c8a1c484da04223c"
+      "sha256": "c8854eb808ffc6c2c1d0658645a82ff471034804c46396d17007be242c851f9a"
     },
     {
       "path": "turbo.json",
@@ -142,7 +142,7 @@
     },
     {
       "path": "apps/mcp-client/package.json",
-      "sha256": "ff563f75dfb44add410ad0c7d92700655b08d78ec090f985aaebd007a0ec5088"
+      "sha256": "c6ddc7ffc8211e29b19c635fe57b3fd0c7b468562e5feae131c01291bfe34535"
     },
     {
       "path": "benchmarks/needles/fixtures/massa-th0th.json",

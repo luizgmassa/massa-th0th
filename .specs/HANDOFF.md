@@ -1,5 +1,20 @@
 # AI Engineering Handoff
 
+## Wave 6 — Architecture & Medium Features (COMPLETE + validated PASS)
+
+- 2026-07-22: Wave 6 complete. 27 commits on `wave-6` (T01-T37 + 6 fix commits). Independent verifier PASS (iteration 2, 7/7 gaps closed, 5/5 mutants killed, 47/47 ACs matched). 3 low-priority spec-precision gaps remain (N18, N10, N13 — non-blocking).
+- **N31 god-file decomposition**: 4 god-files split behind byte-identical facades (symbol-repository-pg 2119→116 LOC facade + 6 modules; tool-definitions 1688→28 LOC facade + 5 modules; auto-improve-job 969→119 LOC facade + 4 modules; smart-chunker 945→81 LOC facade + 5 modules). Characterization tests pin behavior before+after every split. No module >600 LOC.
+- **N32 embedded MCP**: `EmbeddedApiClient` implements `ToolProxyApiClient` + `uploadAndIndex` + `healthCheck`; `MASSA_TH0TH_EMBEDDED=true` routes direct to core services (no HTTP); `handleIndexTool` refactored with path-safety parity.
+- **N30 hook binary**: Single `massa-th0th-hook` Bun binary replacing 7 shell scripts; `pre-compact` does dual-POST (observation 3s + snapshot 5s); pin resolution ported from `_pin.sh` to TS.
+- **N20 parallel runner**: `SUITE_TABLE` macro + `--list-suites` + child processes + ZERO-LOSS UNION GUARD.
+- **N21 test-seam**: Frozen JSON fixtures fed to consumer parsers (observation-extractor, WorkingMemoryBuffer); drift detection via fixture mutation.
+- **N28 dashboard**: `/dashboard` route + 2 new API routes (scheduler/status, hooks/queue-status); reads scheduler, hook queue, Synapse sessions, system metrics.
+- **N29 scheduler preset**: `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true` enables consolidation+decay; auto-improve opt-in; `applySafeDefaults` wired inside `registerDefaultJobs` before `envBool` loop.
+- **N17/N18/N19/N42/M25/M26/M62**: CONTRIBUTING.md 7-step protocol; `_DETERMINISTIC_ONLY=1` script; admin-preservation four-rung ladder; `--recover` path recovery; M25 name-tail resolution; M26 escaped JSON extraction; M62 GLR probe (no defect found).
+- Pre-mortem findings incorporated: F1 (N32 index path safety), F3 (N30 pre-compact dual-POST), F4 (N31 line drift + identity module), F2 (N31 SmartChunker extract-functions not delegate-class), F5 (N29 preset wiring inside registerDefaultJobs).
+
+---
+
 ## Wave 5 — N45 Hook Attribution Confirmation (FR-19 / AC-16)
 
 - 2026-07-22: N45 hook attribution verified complete at `92b7fb4`; registry entry stays `complete`. No code change.
