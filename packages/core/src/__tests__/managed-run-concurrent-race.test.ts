@@ -28,10 +28,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // NOTE: Do NOT call disconnectPrisma() or ManagedRunRepositoryPg._resetForTesting()
+  // here. See managed-run-repository.test.ts for the full rationale (pool-after-end
+  // isolation across B2 PG suites). The pool is torn down on process exit.
   if (!DB_AVAILABLE) return;
-  const { disconnectPrisma } = await import("../services/query/prisma-client.js");
-  await disconnectPrisma();
-  ManagedRunRepositoryPg._resetForTesting();
 });
 
 describe.skipIf(!DB_AVAILABLE)("ManagedRunRepository concurrent begin() (AC-22)", () => {

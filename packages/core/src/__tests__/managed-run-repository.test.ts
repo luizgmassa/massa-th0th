@@ -34,10 +34,14 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // NOTE: Do NOT call disconnectPrisma() or ManagedRunRepositoryPg._resetForTesting()
+  // here. When this file runs alongside other B2 PG suites in one `bun test`
+  // invocation, ending the shared pg pool here leaves PgJobStore (and other
+  // singletons holding a cached PrismaClient) with a dead pool → "Cannot use
+  // a pool after calling end on the pool" in later files. The pool is torn
+  // down when the process exits. Per-test managed_runs rows are still cleaned
+  // via cleanupProject() in each test.
   if (!DB_AVAILABLE) return;
-  const { disconnectPrisma } = await import("../services/query/prisma-client.js");
-  await disconnectPrisma();
-  ManagedRunRepositoryPg._resetForTesting();
 });
 
 async function cleanupProject(tx_projectId: string): Promise<void> {

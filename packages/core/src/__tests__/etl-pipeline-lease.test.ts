@@ -53,10 +53,13 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // NOTE: Do NOT call disconnectPrisma() or ManagedRunRepositoryPg._resetForTesting()
+  // here. When this file runs alongside etl-idempotent.test.ts in the same `bun test`
+  // invocation, ending the shared pg pool here causes the second file's tests to fail
+  // with "Cannot use a pool after calling end on the pool". The pool teardown is owned
+  // by the last file in the batch (etl-idempotent.test.ts). Per-test managed_runs rows
+  // are still cleaned via cleanupProject() in each test.
   if (!DB_AVAILABLE) return;
-  const { disconnectPrisma } = await import("../services/query/prisma-client.js");
-  await disconnectPrisma();
-  ManagedRunRepositoryPg._resetForTesting();
 });
 
 async function cleanupProject(p: string): Promise<void> {

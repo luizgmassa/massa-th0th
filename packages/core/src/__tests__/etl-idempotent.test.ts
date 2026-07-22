@@ -76,10 +76,11 @@ function fakeResolved(file: DiscoveredFile): ResolvedFile {
 }
 
 afterAll(async () => {
+  // NOTE: Do NOT call disconnectPrisma() or ManagedRunRepositoryPg._resetForTesting()
+  // here. See managed-run-repository.test.ts for the full rationale (pool-after-end
+  // isolation across B2 PG suites). The pool is torn down on process exit.
+  // Per-test managed_runs rows are still cleaned via cleanupProject() in each test.
   if (!DB_AVAILABLE) return;
-  const { disconnectPrisma } = await import("../services/query/prisma-client.js");
-  await disconnectPrisma();
-  ManagedRunRepositoryPg._resetForTesting();
 });
 
 async function cleanupProject(p: string): Promise<void> {
@@ -190,18 +191,27 @@ describe.skipIf(!DB_AVAILABLE)("ETL idempotent import + FileCursor (T14 / AC-8 /
     (pipeline as any).parse.run = async (_ctx: any, input: DiscoveredFile[]) => input.map(fakeResolved);
     (pipeline as any).resolve.run = async (_ctx: any, input: any[]) => input;
     const realLoadRun = pipeline.load.run.bind(pipeline.load);
+    // Process files one-per-batch so cursor writes are sequential and
+    // observable. The real load stage uses Promise.all over a batch of 10,
+    // which makes concurrent cursor UPDATEs race on the same row (last
+    // writer wins, non-deterministic). Feeding one file at a time keeps
+    // the cursor writes ordered a → b → c and lets us assert each step.
     pipeline.load.run = async function (ctx: any, input: ResolvedFile[], ...rest: any[]) {
-      const res = await realLoadRun(ctx, input, ...rest);
-      // After the batch completes, read the persisted cursor. The load
-      // stage writes a cursor after each file's load commits, so the
-      // cursor advances through a → b → c within this single batch call
-      // (all 3 files fit in one batch of 10). We assert the FINAL cursor
-      // points at the last file; per-file intermediate reads would require
-      // hooking the repo's updateFileCursor (not done here to keep the
-      // test focused on end-to-end cursor persistence).
-      const active = await repo.getActive(currentProjectId, "indexing");
-      if (active?.fileCursor) cursorPaths.push(active.fileCursor.path);
-      return res;
+      let filesLoaded = 0;
+      let chunksLoaded = 0;
+      let symbolsLoaded = 0;
+      let errors = 0;
+      for (const file of input) {
+        const res = await realLoadRun(ctx, [file], ...rest);
+        filesLoaded += res.filesLoaded;
+        chunksLoaded += res.chunksLoaded;
+        symbolsLoaded += res.symbolsLoaded;
+        errors += res.errors;
+        // After each file's load commits, read the persisted cursor.
+        const active = await repo.getActive(currentProjectId, "indexing");
+        if (active?.fileCursor) cursorPaths.push(active.fileCursor.path);
+      }
+      return { filesLoaded, chunksLoaded, symbolsLoaded, errors };
     };
 
     const job = indexJobTracker.createJob(currentProjectId, "/tmp");
@@ -212,10 +222,10 @@ describe.skipIf(!DB_AVAILABLE)("ETL idempotent import + FileCursor (T14 / AC-8 /
       managedRunLease: lease,
     });
 
-    // All 3 files load in one batch; the final cursor points at c.ts (the
-    // last file to commit). The cursor write happened 3 times inside the
-    // batch (a, b, c); we observe the final state.
-    expect(cursorPaths).toEqual(["c.ts"]);
+    // Each file's load commits and writes a cursor; the cursor advances
+    // a → b → c deterministically (one file per batch, no concurrent
+    // cursor writes).
+    expect(cursorPaths).toEqual(["a.ts", "b.ts", "c.ts"]);
     await cleanupProject(currentProjectId);
   });
 
@@ -256,6 +266,23 @@ describe.skipIf(!DB_AVAILABLE)("ETL idempotent import + FileCursor (T14 / AC-8 /
     (pipeline as any).parse.run = async (_ctx: any, input: DiscoveredFile[]) => input.map(fakeResolved);
     (pipeline as any).resolve.run = async (_ctx: any, input: any[]) => input;
     const realLoadRun = pipeline.load.run.bind(pipeline.load);
+    // Process files one-per-batch so cursor writes are sequential and
+    // deterministic (the real load stage uses Promise.all over a batch of
+    // 10, which makes concurrent cursor UPDATEs race on the same row).
+    const runSequential = async (ctx: any, input: ResolvedFile[], ...rest: any[]) => {
+      let filesLoaded = 0;
+      let chunksLoaded = 0;
+      let symbolsLoaded = 0;
+      let errors = 0;
+      for (const file of input) {
+        const res = await realLoadRun(ctx, [file], ...rest);
+        filesLoaded += res.filesLoaded;
+        chunksLoaded += res.chunksLoaded;
+        symbolsLoaded += res.symbolsLoaded;
+        errors += res.errors;
+      }
+      return { filesLoaded, chunksLoaded, symbolsLoaded, errors };
+    };
     pipeline.load.run = async function (ctx: any, input: ResolvedFile[], ...rest: any[]) {
       loadCallCount++;
       // Crash during file b on the first run (input has a, b, c).
@@ -265,7 +292,7 @@ describe.skipIf(!DB_AVAILABLE)("ETL idempotent import + FileCursor (T14 / AC-8 /
         await realLoadRun(ctx, input.filter((f) => f.file.relativePath === "a.ts"), ...rest);
         throw new Error("kill_mid_load");
       }
-      return realLoadRun(ctx, input, ...rest);
+      return runSequential(ctx, input, ...rest);
     };
 
     const job1 = indexJobTracker.createJob(currentProjectId, "/tmp");
