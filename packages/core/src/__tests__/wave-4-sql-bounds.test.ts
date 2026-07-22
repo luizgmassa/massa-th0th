@@ -87,7 +87,7 @@ describe("N10: findEdges ref_kind enum bounded + parameterized", () => {
   test("9 valid RefKind values, all parameterized in SQL (no string interpolation)", async () => {
     // Source-level: assert the RefKind type union has exactly 9 values
     const source = fs.readFileSync(
-      path.resolve(import.meta.dir, "../data/symbol/symbol-repository-pg.ts"),
+      path.resolve(import.meta.dir, "../data/symbol/symbol-repo-types.ts"),
       "utf-8",
     );
     const refKindMatch = source.match(/export type RefKind =\s*([\s\S]*?);/);
