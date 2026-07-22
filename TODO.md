@@ -68,13 +68,11 @@ remains from that iteration.
 
 ## Deferred / out of scope
 
-- **D5 Cypher subset** — declarative graph query engine. Revisit only if D1–D4 graph usage
-  justifies the additional language and execution surface.
+- **D5 Cypher subset** — CLOSED 2026-07-22 by ADR 0001 (see `docs/adr/0001-remove-d5-cypher-subset.md`).
+  Structural graph traversal (trace_path, impact_analysis, architecture) covers use cases; D1–D4
+  equivalent (native tree-sitter) complete. No longer deferred.
 - **Multi-language tree-sitter breadth** — indexing remains TS/JS-centric; broad parser support
   is a separate feature.
-- **OS-level sandbox for `execute`/`execute_file`/`batch_execute`** — current timeout,
-  environment denylist, path-boundary, and symlink controls are best-effort containment. Use
-  container/VM isolation before exposing execution to untrusted clients.
 - **Native `format: json_schema` constrained decoding** — optional hardening for Ollama-backed
   structured LLM calls.
 

@@ -39,6 +39,7 @@ import {
   llmObject,
   _setLlmEnabledForTesting,
   _setJsonSchemaSupportedForTesting,
+  _checkJsonSchemaSupport,
 } from "../services/memory/llm-client.js";
 import { z } from "zod";
 
@@ -122,6 +123,82 @@ describe("json_schema constrained decoding (W7-07)", () => {
     } finally {
       globalThis.fetch = origFetch;
       _setJsonSchemaSupportedForTesting(null);
+    }
+  });
+});
+
+describe("json_schema version parser (discrimination)", () => {
+  // These tests call _checkJsonSchemaSupport directly, exercising the
+  // version parser (not the _setJsonSchemaSupportedForTesting bypass).
+  // This kills the mutant where `minor >= 5` is changed to `minor >= 99`.
+
+  afterEach(() => {
+    globalThis.fetch = globalThis.fetch; // restore handled by individual tests
+    _setJsonSchemaSupportedForTesting(false); // prevent outer beforeEach from triggering real fetch
+  });
+
+  test("Ollama 0.5.0 → json_schema supported (boundary: exactly 0.5)", async () => {
+    const origFetch = globalThis.fetch;
+    (globalThis as any).fetch = async () =>
+      new Response(JSON.stringify({ version: "0.5.0" }), { status: 200 });
+    _setJsonSchemaSupportedForTesting(null);
+    try {
+      const supported = await _checkJsonSchemaSupport();
+      expect(supported).toBe(true);
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+
+  test("Ollama 0.4.9 → json_schema NOT supported (just below 0.5)", async () => {
+    const origFetch = globalThis.fetch;
+    (globalThis as any).fetch = async () =>
+      new Response(JSON.stringify({ version: "0.4.9" }), { status: 200 });
+    _setJsonSchemaSupportedForTesting(null);
+    try {
+      const supported = await _checkJsonSchemaSupport();
+      expect(supported).toBe(false);
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+
+  test("Ollama 1.0.0 → json_schema supported (major >= 1)", async () => {
+    const origFetch = globalThis.fetch;
+    (globalThis as any).fetch = async () =>
+      new Response(JSON.stringify({ version: "1.0.0" }), { status: 200 });
+    _setJsonSchemaSupportedForTesting(null);
+    try {
+      const supported = await _checkJsonSchemaSupport();
+      expect(supported).toBe(true);
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+
+  test("Ollama 0.3.0 → json_schema NOT supported (old version)", async () => {
+    const origFetch = globalThis.fetch;
+    (globalThis as any).fetch = async () =>
+      new Response(JSON.stringify({ version: "0.3.0" }), { status: 200 });
+    _setJsonSchemaSupportedForTesting(null);
+    try {
+      const supported = await _checkJsonSchemaSupport();
+      expect(supported).toBe(false);
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+
+  test("unparseable version → NOT supported (safe fallback)", async () => {
+    const origFetch = globalThis.fetch;
+    (globalThis as any).fetch = async () =>
+      new Response(JSON.stringify({ version: "unknown" }), { status: 200 });
+    _setJsonSchemaSupportedForTesting(null);
+    try {
+      const supported = await _checkJsonSchemaSupport();
+      expect(supported).toBe(false);
+    } finally {
+      globalThis.fetch = origFetch;
     }
   });
 });
