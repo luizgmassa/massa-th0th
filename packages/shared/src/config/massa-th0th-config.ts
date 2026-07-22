@@ -30,6 +30,16 @@ export interface MassaTh0thConfig {
   impact?: {
     bfsCteEnabled: boolean;
   };
+  // Wave 5 FR-11 / N13: capture policy (bounded pure module). When absent,
+  // the default policy (migrated from DEFAULT_IGNORES) is used. Loaded +
+  // validated at config load (denyUnknownFields, maxIgnorePatterns,
+  // maxMatchWork). The `.gitignore` merge runs BEFORE applyPolicy per
+  // AD-W5-015.
+  capturePolicy?: {
+    rules: Array<{ pattern: string; disposition: "Keep" | "Drop" | "MetadataOnly" }>;
+    maxMatchWork?: number;
+    maxIgnorePatterns?: number;
+  };
   cache: {
     enabled: boolean;
     l1MaxSizeMB: number;
@@ -199,6 +209,10 @@ export const defaultMassaTh0thConfig: MassaTh0thConfig = {
   impact: {
     bfsCteEnabled: false,
   },
+  // Wave 5 FR-11: capture policy absent by default → the pure module's
+  // DEFAULT_POLICY (migrated from DEFAULT_IGNORES) is used. When present,
+  // the config loader validates bounds + denyUnknownFields.
+  capturePolicy: undefined,
   cache: {
     enabled: true,
     l1MaxSizeMB: 100,

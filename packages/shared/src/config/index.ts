@@ -178,6 +178,16 @@ export interface ServerConfig {
     bfsCteEnabled: boolean;
   };
 
+  // Wave 5 FR-11 / N13: capture policy (bounded pure module). Optional —
+  // when absent, the core pure module's DEFAULT_POLICY is used. Loaded +
+  // validated at config load (denyUnknownFields, maxIgnorePatterns,
+  // maxMatchWork).
+  capturePolicy?: {
+    rules: Array<{ pattern: string; disposition: "Keep" | "Drop" | "MetadataOnly" }>;
+    maxMatchWork?: number;
+    maxIgnorePatterns?: number;
+  };
+
   // Rate Limiting
   rateLimit: {
     requestsPerMinute: number;
@@ -281,6 +291,73 @@ function envBool(key: string, fallback: boolean): boolean {
 function envString(key: string, fallback: string): string {
   const s = process.env[key];
   return s === undefined || s === "" ? fallback : s;
+}
+
+// ── Wave 5 FR-11 / AD-W5-005: capture-policy config validation ──────────────
+
+/** Maximum files to scan before refusing (FR-11 `MAX_MATCH_WORK`). */
+export const MAX_MATCH_WORK = 100_000;
+/** Maximum number of Drop patterns allowed (FR-11 `MAX_IGNORE_PATTERNS`). */
+export const MAX_IGNORE_PATTERNS = 1_024;
+
+/**
+ * Validate a `capturePolicy` config block at load time. Throws TypeError on:
+ *  - unknown fields (denyUnknownFields=true — the schema is closed)
+ *  - `maxIgnorePatterns` exceeded by the number of `Drop` rules
+ *  - `maxMatchWork` missing or negative
+ *  - any rule with an invalid disposition
+ *
+ * This mirrors `validatePolicy` in the core pure module but is duplicated here
+ * so the shared config loader does not depend on `@massa-th0th/core`. The
+ * pure module's `validatePolicy` remains the authoritative validator for
+ * direct callers; this is the config-load-time gate.
+ */
+function validateCapturePolicyConfig(
+  raw: unknown,
+): {
+  rules: Array<{ pattern: string; disposition: "Keep" | "Drop" | "MetadataOnly" }>;
+  maxMatchWork?: number;
+  maxIgnorePatterns?: number;
+} {
+  if (!raw || typeof raw !== "object") throw new TypeError("capturePolicy must be an object");
+  const p = raw as Record<string, unknown>;
+  const allowedKeys = new Set(["rules", "maxMatchWork", "maxIgnorePatterns"]);
+  for (const key of Object.keys(p)) {
+    if (!allowedKeys.has(key)) {
+      throw new TypeError(`capturePolicy: unknown field "${key}" (denyUnknownFields=true)`);
+    }
+  }
+  if (!Array.isArray(p.rules)) throw new TypeError("capturePolicy.rules must be an array");
+  const validDispositions = new Set(["Keep", "Drop", "MetadataOnly"]);
+  let dropCount = 0;
+  for (const rule of p.rules as Array<Record<string, unknown>>) {
+    if (!rule || typeof rule !== "object") throw new TypeError("capturePolicy.rules[] must be objects");
+    if (typeof rule.pattern !== "string" || !rule.pattern) {
+      throw new TypeError("capturePolicy.rules[].pattern must be a non-empty string");
+    }
+    if (typeof rule.disposition !== "string" || !validDispositions.has(rule.disposition)) {
+      throw new TypeError(
+        `capturePolicy.rules[].disposition must be Keep|Drop|MetadataOnly (got ${String(rule.disposition)})`,
+      );
+    }
+    if (rule.disposition === "Drop") dropCount++;
+  }
+  const maxIgnore = typeof p.maxIgnorePatterns === "number" ? p.maxIgnorePatterns : MAX_IGNORE_PATTERNS;
+  if (dropCount > maxIgnore) {
+    throw new TypeError(
+      `capturePolicy: ${dropCount} Drop rules exceed maxIgnorePatterns=${maxIgnore}`,
+    );
+  }
+  if (p.maxMatchWork !== undefined) {
+    if (typeof p.maxMatchWork !== "number" || p.maxMatchWork < 0) {
+      throw new TypeError("capturePolicy.maxMatchWork must be a non-negative number");
+    }
+  }
+  return {
+    rules: p.rules as Array<{ pattern: string; disposition: "Keep" | "Drop" | "MetadataOnly" }>,
+    ...(p.maxMatchWork !== undefined && { maxMatchWork: p.maxMatchWork as number }),
+    ...(p.maxIgnorePatterns !== undefined && { maxIgnorePatterns: p.maxIgnorePatterns as number }),
+  };
 }
 
 /**
@@ -639,6 +716,17 @@ export const defaultConfig: ServerConfig = {
       fileConfig.impact?.bfsCteEnabled ?? false,
     ),
   },
+
+  // Wave 5 FR-11 / FR-21 / AD-W5-005 / AD-W5-015: capture policy. The pure
+  // module (packages/core/src/services/search/capture-policy.ts) owns
+  // applyPolicy + DEFAULT_POLICY; the wrapper (ignore-patterns.ts) merges
+  // .gitignore with DEFAULT_IGNORES via the Ignore library BEFORE delegating
+  // to applyPolicy. Here we surface the config block + validate bounds +
+  // denyUnknownFields at load time. When the block is absent, the pure
+  // module's DEFAULT_POLICY is used (no validation needed).
+  capturePolicy: fileConfig.capturePolicy
+    ? validateCapturePolicyConfig(fileConfig.capturePolicy)
+    : undefined,
 
   rateLimit: {
     requestsPerMinute: envNum("REQUESTS_PER_MINUTE", 60),
