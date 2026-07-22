@@ -32,7 +32,8 @@
     "version:sync": "bun scripts/version-sync.ts",
     "verify:tree-sitter-source-dist": "bun scripts/verify-tree-sitter-grammars.ts",
     "verify:tree-sitter-package": "bun scripts/verify-tree-sitter-package-artifact.ts",
-    "verify:tree-sitter-native": "bun scripts/verify-tree-sitter-grammars.ts && bun scripts/verify-tree-sitter-package-artifact.ts"
+    "verify:tree-sitter-native": "bun scripts/verify-tree-sitter-grammars.ts && bun scripts/verify-tree-sitter-package-artifact.ts",
+    "update-qwen-hashes": "python3 scripts/update-qwen-fixture-hashes.py"
   },
   "keywords": [
     "mcp",
