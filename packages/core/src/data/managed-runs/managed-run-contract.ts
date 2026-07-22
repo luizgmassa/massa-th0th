@@ -169,6 +169,18 @@ export interface ManagedRunRepository {
   complete(lease: ManagedRunLease, fileCursor?: FileCursor): Promise<CompleteManagedRunOutcome>;
 
   /**
+   * Persist an intermediate FileCursor mid-run (FR-10 resume). Called by the
+   * ETL load stage after each file-batch lands so a crash/restart resumes
+   * from the last committed file. Best-effort: a `lease_lost` outcome is
+   * logged but not thrown (the pipeline's heartbeat loop will abort the run
+   * separately). The cursor write happens AFTER the vector load commits
+   * (AD-W5-016) so kill-mid-load leaves the cursor at the previous file —
+   * restart re-processes the killed file (vectors upsert idempotently via
+   * deterministic doc ids).
+   */
+  updateFileCursor(lease: ManagedRunLease, fileCursor: FileCursor): Promise<HeartbeatManagedRunOutcome>;
+
+  /**
    * Mark the run `failed` (status='aborted'). Used by the ETL pipeline's
    * catch path on lease_lost or terminal error.
    */

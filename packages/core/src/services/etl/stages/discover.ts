@@ -94,6 +94,24 @@ export class DiscoverStage {
         .filter((p) => !ig.ignores(p));
     }
 
+    // ── Wave 5 FR-10: FileCursor resume. If a cursor from a previous run
+    // is present, skip files at-or-before the cursor path (already-applied).
+    // The cursor's `path` is the LAST file successfully applied before the
+    // cursor was written; everything at-or-before it has been applied.
+    // `offset` is reserved for byte-level resume within a file (future
+    // work); at file-level granularity the cursor file is treated as fully
+    // applied (vectors upsert idempotently via deterministic doc ids, so a
+    // re-apply is safe, but we skip it to avoid redundant work). The filter
+    // applies to both glob-discovered and explicitly-passed `filesToProcess`
+    // so callers that pass an incremental hint still resume correctly.
+    // AC-24: kill mid-load leaves the cursor at the PREVIOUS file (the
+    // killed file's cursor write never commits), so restart re-processes
+    // the killed file (vectors upsert idempotently — partial re-apply safe).
+    if (ctx.resumeCursor?.path) {
+      const cursorPath = ctx.resumeCursor.path;
+      relPaths = relPaths.filter((rel) => rel.localeCompare(cursorPath) > 0);
+    }
+
     // Load stored centrality scores for priority ordering
     const centralityMap = await getSymbolRepository().getCentrality(ctx.projectId);
 

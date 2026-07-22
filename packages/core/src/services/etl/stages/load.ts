@@ -14,6 +14,7 @@ import { logger } from "@massa-th0th/shared";
 import { getVectorStore } from "../../../data/vector/vector-store-factory.js";
 import { getKeywordSearch } from "../../../data/keyword/keyword-search-factory.js";
 import { getSymbolRepository } from "../../../data/symbol/symbol-repository-factory.js";
+import { ManagedRunRepositoryPg } from "../../../data/managed-runs/managed-run-repository-pg.js";
 import type {
   SymbolDefinition,
   SymbolReference,
@@ -110,6 +111,9 @@ export function buildSymbolPersistenceBatch(
 export class LoadStage {
   private vectorStore: Awaited<ReturnType<typeof getVectorStore>> | null = null;
   private keywordSearch: ReturnType<typeof getKeywordSearch> | null = null;
+  // ── Wave 5 FR-10: lazily-instantiated repository for FileCursor writes.
+  // Only constructed when ctx carries a managedRunLease (else no-op).
+  private managedRunRepo: ManagedRunRepositoryPg | null = null;
 
   private async ensureVectorStore() {
     if (!this.vectorStore) {
@@ -123,6 +127,11 @@ export class LoadStage {
       this.keywordSearch = getKeywordSearch();
     }
     return this.keywordSearch;
+  }
+
+  private ensureManagedRunRepo(): ManagedRunRepositoryPg {
+    if (!this.managedRunRepo) this.managedRunRepo = ManagedRunRepositoryPg.getInstance();
+    return this.managedRunRepo;
   }
 
   async run(ctx: EtlStageContext, files: ResolvedFile[], mode: LoadMode = "all", emitLifecycle = true): Promise<LoadResult> {
@@ -179,6 +188,40 @@ export class LoadStage {
                 symbol_count: symCount,
                 chunk_count: chunkCount,
               });
+            }
+
+            // ── Wave 5 FR-10 / AD-W5-016: persist a FileCursor after the
+            // vector load + symbol write commit so a kill/restart resumes
+            // from the NEXT file. The cursor's `path` is the file just
+            // applied; `offset` is the file size (fully applied). Discover
+            // skips files at-or-before the cursor when it resumes, so this
+            // file's vectors are not re-applied on a clean restart. On a
+            // kill mid-load, this UPDATE never runs → the cursor stays at
+            // the PREVIOUS file → restart re-processes this file (vectors
+            // upsert idempotently via deterministic doc ids, so a partial
+            // re-apply is safe — AC-24).
+            if (ctx.managedRunLease) {
+              try {
+                const repo = this.ensureManagedRunRepo();
+                const cursorOutcome = await repo.updateFileCursor(ctx.managedRunLease, {
+                  path: file.file.relativePath,
+                  offset: file.file.size,
+                });
+                if (cursorOutcome.status === "lease_lost") {
+                  // The managed run lease is gone (reaped or stolen). Let the
+                  // pipeline's heartbeat loop discover this and abort; the
+                  // cursor write is best-effort here.
+                  logger.warn("LoadStage: managed_run cursor write saw lease_lost", {
+                    projectId: ctx.projectId,
+                    filePath: file.file.relativePath,
+                  });
+                }
+              } catch (cursorError) {
+                logger.error("LoadStage: managed_run cursor write failed", cursorError as Error, {
+                  projectId: ctx.projectId,
+                  filePath: file.file.relativePath,
+                });
+              }
             }
 
             filesLoaded++;

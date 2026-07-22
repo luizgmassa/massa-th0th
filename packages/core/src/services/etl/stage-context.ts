@@ -18,6 +18,7 @@ import type {
 } from "../structural/types.js";
 import type { GraphGenerationLease } from "../../data/graph-generation/graph-generation-contract.js";
 import type { HeaderLanguageEvidence } from "../structural/language-manifest.js";
+import type { FileCursor, ManagedRunLease } from "../../data/managed-runs/managed-run-contract.js";
 import type {
   ActiveGraphDiagnostics,
   ParserDiagnosticsSummary,
@@ -46,8 +47,22 @@ export interface EtlStageContext {
   projectPath: string;
   jobId: string;
   graphGenerationLease?: GraphGenerationLease;
+  /**
+   * Wave 5 FR-09 / FR-10: managed_runs lease for this run. Present when the
+   * caller (IndexProjectTool or auto-reindex) acquired the lease; the Load
+   * stage uses it to persist a FileCursor after each file-batch commits so
+   * a kill/restart resumes from the next file.
+   */
+  managedRunLease?: ManagedRunLease;
   abortSignal?: AbortSignal;
   structuralHeaderEvidenceByFile?: Readonly<Record<string, HeaderLanguageEvidence>>;
+  /**
+   * Wave 5 FR-10: persisted FileCursor from the previous run. When present,
+   * the Discover stage skips files at-or-before the cursor (already-applied)
+   * so a kill/restart resumes from the next file. Set by the pipeline from
+   * {@link ManagedRunRepository.getActive} → file_cursor before stage 1.
+   */
+  resumeCursor?: FileCursor;
   /** Hook for emitting progress events to the EventBus. */
   emit: (event: EtlEvent) => void;
 }

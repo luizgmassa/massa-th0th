@@ -227,11 +227,26 @@ export class EtlPipeline {
       ]);
     }
 
+    // ── Wave 5: resolve the managed_runs repository early so the ctx can
+    // read the persisted FileCursor (FR-10) before stage 1 runs. Only
+    // constructed when the caller passed a managedRunLease; the heartbeat
+    // loop below reuses this instance.
+    const managedRunRepository = managedRunLease ? ManagedRunRepositoryPg.getInstance() : undefined;
+
     // Build stage context with event emission
     const ctx: EtlStageContext = {
       projectId,
       projectPath,
       jobId,
+      // ── Wave 5 FR-10: read the persisted FileCursor from the live managed
+      // run so a kill/restart resumes from the next file. Only meaningful
+      // when the caller passed a managedRunLease acquired against an
+      // existing run (reindex/maintenance). For a fresh indexing run the
+      // cursor is null → discover scans everything.
+      resumeCursor: managedRunLease
+        ? (await managedRunRepository?.getActive(projectId, "indexing"))?.fileCursor ?? undefined
+        : undefined,
+      managedRunLease,
       emit: (event: EtlEvent) => {
         // Forward ETL events to the global EventBus for SSE + job tracker
         if (event.type === "progress") {
@@ -288,7 +303,6 @@ export class EtlPipeline {
     let managedRunLeaseLost: Error | undefined;
     let stopManagedRunHeartbeat = false;
     const managedRunTimerController = new AbortController();
-    const managedRunRepository = managedRunLease ? ManagedRunRepositoryPg.getInstance() : undefined;
     if (managedRunLease && managedRunRepository) {
       managedRunHeartbeat = (async () => {
         while (!stopManagedRunHeartbeat) {
@@ -511,10 +525,10 @@ export class EtlPipeline {
       if (managedRunHeartbeat) await managedRunHeartbeat;
 
       // ── Wave 5 FR-09: release the managed_runs lease on success. We do
-      // NOT persist a final file_cursor here (T14 will add file_cursor
-      // persistence during the load stage); for T13 the lease just
-      // transitions to `completed` so the partial UNIQUE frees for the
-      // next indexer.
+      // NOT persist a final file_cursor here (T14's Load stage already
+      // persisted a cursor after each file's load committed); complete()
+      // is called WITHOUT a fileCursor argument so it preserves whatever
+      // the load stage wrote (passing null would erase it — FR-10 contract).
       if (managedRunLease && managedRunRepository) {
         try {
           await managedRunRepository.complete(managedRunLease);

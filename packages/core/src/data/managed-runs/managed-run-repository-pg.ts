@@ -265,7 +265,28 @@ export class ManagedRunRepositoryPg implements ManagedRunRepository {
 
   async complete(lease: ManagedRunLease, fileCursor?: FileCursor): Promise<CompleteManagedRunOutcome> {
     const leaseToken = boundedText(lease.leaseToken, "leaseToken", MAX_LEASE_TOKEN);
-    const cursorJson = fileCursor ?? null;
+    // When fileCursor is undefined (caller has no new cursor to persist),
+    // preserve the existing cursor (the load stage already wrote it via
+    // updateFileCursor). When fileCursor is explicitly null, erase it.
+    // When fileCursor is a FileCursor, overwrite with the new value.
+    if (fileCursor === undefined) {
+      const updated = await getPrismaClient().$queryRaw<Array<{ id: bigint }>>`
+        UPDATE managed_runs
+        SET status = 'completed',
+            completed_at = ${Date.now()},
+            lease_token = NULL,
+            lease_expires_at = NULL
+        WHERE id = ${BigInt(lease.runId)}
+          AND project_id = ${lease.projectId}
+          AND run_kind = ${lease.runKind}
+          AND lease_token = ${leaseToken}
+          AND status = 'active'
+        RETURNING id
+      `;
+      if (!updated[0]) return { status: "lease_lost" };
+      return { status: "completed", runId: updated[0].id.toString() };
+    }
+    const cursorJson: FileCursor | null = fileCursor;
     const updated = await getPrismaClient().$queryRaw<Array<{ id: bigint }>>`
       UPDATE managed_runs
       SET status = 'completed',
@@ -282,6 +303,29 @@ export class ManagedRunRepositoryPg implements ManagedRunRepository {
     `;
     if (!updated[0]) return { status: "lease_lost" };
     return { status: "completed", runId: updated[0].id.toString() };
+  }
+
+  async updateFileCursor(lease: ManagedRunLease, fileCursor: FileCursor): Promise<HeartbeatManagedRunOutcome> {
+    const leaseToken = boundedText(lease.leaseToken, "leaseToken", MAX_LEASE_TOKEN);
+    // Heartbeat-renew-and-write-cursor in a single UPDATE: keeps the lease
+    // warm and persists the cursor atomically. WHERE status='active' AND
+    // lease_expires_at > clock_timestamp() so a lost/reaped lease returns
+    // lease_lost (the pipeline's heartbeat loop will abort separately).
+    const renewed = await getPrismaClient().$queryRaw<Array<{ lease_expires_at: Date }>>`
+      UPDATE managed_runs
+      SET lease_expires_at = clock_timestamp() + (${HEARTBEAT_TTL_MS} * interval '1 millisecond'),
+          heartbeat_at = clock_timestamp(),
+          file_cursor = ${fileCursor}::jsonb
+      WHERE id = ${BigInt(lease.runId)}
+        AND project_id = ${lease.projectId}
+        AND run_kind = ${lease.runKind}
+        AND lease_token = ${leaseToken}
+        AND status = 'active'
+        AND lease_expires_at > clock_timestamp()
+      RETURNING lease_expires_at
+    `;
+    if (!renewed[0]) return { status: "lease_lost" };
+    return { status: "renewed", leaseExpiresAt: renewed[0].lease_expires_at.getTime() };
   }
 
   async abort(lease: ManagedRunLease): Promise<AbortManagedRunOutcome> {
