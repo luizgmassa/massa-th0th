@@ -137,7 +137,12 @@ function postObservation(
   url: string,
   body: Record<string, unknown>,
   timeoutMs: number,
-): void {
+): Promise<void> {
+  // Fire-and-forget with bounded timeout; never rejects (silent-degrade).
+  // Returned promise lets main() await POSTs before process.exit so the
+  // event loop doesn't tear down pending sockets mid-flight. The caller's
+  // exit is still bounded by timeoutMs — never blocks the agent longer than
+  // the configured POST timeout.
   try {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -147,17 +152,21 @@ function postObservation(
       headers["x-api-key"] = apiKey;
     }
 
-    // Fire-and-forget with AbortSignal timeout; never throws to caller
-    fetch(url, {
+    return fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(timeoutMs),
-    }).catch(() => {
-      // silent-degrade: network failure is non-fatal
-    });
+    })
+      .then(() => {
+        // response body discarded; fire-and-forget
+      })
+      .catch(() => {
+        // silent-degrade: network failure is non-fatal
+      });
   } catch {
     // silent-degrade: fetch unavailable or immediate error is non-fatal
+    return Promise.resolve();
   }
 }
 
@@ -214,7 +223,7 @@ async function main(): Promise<void> {
       cwd,
       payload,
     };
-    postObservation(hookUrl, obsBody, 3000);
+    const obsP = postObservation(hookUrl, obsBody, 3000);
 
     // 2. Snapshot to /api/v1/hook/compact-snapshot (5s timeout, snapshot body)
     const snapshotUrl = `${baseUrl}/api/v1/hook/compact-snapshot`;
@@ -224,17 +233,27 @@ async function main(): Promise<void> {
       persist: true,
       cwd,
     };
-    postObservation(snapshotUrl, snapBody, 5000);
+    const snapP = postObservation(snapshotUrl, snapBody, 5000);
+
+    // Await both POSTs (bounded by their timeouts) before exit so the event
+    // loop doesn't tear down pending sockets. Silent-degrade: any rejection
+    // is swallowed inside postObservation; exit is still 0.
+    await Promise.all([obsP, snapP]);
   } else {
     // All other subcommands: single POST to /api/v1/hook (2s timeout, observation body)
+    // The body carries projectId (caller), sessionId, and cwd so the server-
+    // side AttributionResolver can run its explicit→sticky→containment→
+    // verbatim chain (AC6). The binary does NOT replicate that logic; it
+    // sends the raw inputs for server-side resolution.
     const sessionField = sessionId && sessionId !== "unknown" ? { sessionId } : {};
     const obsBody = {
       event,
       projectId,
       ...sessionField,
+      cwd,
       payload,
     };
-    postObservation(hookUrl, obsBody, 2000);
+    await postObservation(hookUrl, obsBody, 2000);
   }
 
   // Always exit 0 (silent-degrade: never blocks the agent)
