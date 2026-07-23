@@ -5,13 +5,14 @@
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-wave-7-hygiene-ui-process`
 - workflow: spec-driven (Large/Complex)
-- feature: `wave-7-hygiene-ui-process` (Wave 7) — IN PROGRESS
+- feature: `wave-7-hygiene-ui-process` (Wave 7) — COMPLETE + validated PASS
 - branch: `wave-7` (off `main`)
 - scope: 13 requirements (W7-01..W7-13), 15 tasks across 3 phases
 - Phase 1 (T1-T7): COMPLETE — hygiene (AGENTS.md, version pins, LLM defaults, CHANGELOG, D5 ADR, doc cleanup, removed-features)
 - Phase 2 (T8-T12): COMPLETE — features (web UI markdown+write+SSE, json_schema, sandbox)
-- Phase 3 (T13-T15): IN PROGRESS — cleanup (spec archive, wave-2 reconcile, hook breadcrumb)
-- Next: T15 (hook breadcrumb), then independent Verifier + validation.md
+- Phase 3 (T13-T15): COMPLETE — cleanup (spec archive, wave-2 reconcile, hook breadcrumb)
+- Validation: PASS — 13/13 ACs verified, 3/3 mutations killed, gates green
+- Report: `.specs/features/wave-7-hygiene-ui-process/validation.md`
 
 ## Decisions
 

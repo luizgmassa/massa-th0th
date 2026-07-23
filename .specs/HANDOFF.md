@@ -24,10 +24,15 @@
 - T11: json_schema constrained decoding for Ollama (9c0434f)
 - T12: OS-level sandbox wrapper — macOS seatbelt + Linux Docker (2a2aee9)
 
-### Phase 3: P3 Cleanup (IN PROGRESS)
-- T13: Spec archive — .specs/HANDOFF.md + PHASE-INTEGRATION.md archived
-- T14: Wave-2 branch push + STATE.md reconciliation
-- T15: Hook deadline breadcrumb-on-fire
+### Phase 3: P3 Cleanup (COMPLETE)
+- T13: Spec archive — .specs/HANDOFF.md + PHASE-INTEGRATION.md archived (cbb7591)
+- T14: Wave-2 branch push + STATE.md reconciliation (a775534)
+- T15: Hook deadline breadcrumb-on-fire (3a6a9a6)
+
+### Verification (COMPLETE)
+- Independent Verifier: PASS — 13/13 ACs verified, 3/3 mutations killed
+- Fix commits: health-checker test fixup (055b897), 3 gap fixes (b01b0f0), mutant kill (d618ecc)
+- Validation report: `.specs/features/wave-7-hygiene-ui-process/validation.md`
 
 ## Pre-Mortem Mitigations Honored
 - F1 (T12): sandbox default `auto`, not `on` — uses if available, falls back to best-effort
@@ -43,4 +48,5 @@
 ## Gate Status
 - Type-check: 6/6 passing
 - Build: 5/5 passing
-- Focused tests: passing (llm-client, sandbox, web-ui, executor)
+- Focused tests: 108 pass / 3 skip / 0 fail (8 test files)
+- Validation: PASS — all 13 requirements verified, all gates green
