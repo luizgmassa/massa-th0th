@@ -42,9 +42,27 @@ Do not use this workflow for findings-only requirements review; route that to `w
    - Do not reinterpret requirements beyond the report and cited source.
    - Preserve non-goals and explicit constraints.
    - If a finding exposes a product decision gap, stop and ask rather than inventing policy.
-10. Use subagents only when useful:
-   - `implementer` may execute one isolated requirement finding with a disjoint write set.
-   - `verifier` may independently compare implementation, tests, and docs against the requirement source.
+10. Use agent orchestration only when it improves signal. Dispatch per `references/agent-orchestration.md`:
+
+> **Dispatch: builder** — see `skills/agents/builder/SKILL.md`
+> - trigger: large/high-risk finding, disjoint implementation slice, or explicit subagent request
+> - scope: one isolated requirements finding with a disjoint write set
+> - permissions: write (disjoint write set)
+> - inputs: the finding ID, requirement source, gap/contradiction/ambiguity, and simplest fix direction
+> - sensors: report's verification suggestion or equivalent deterministic command; requirements-trace check
+> - output: implementation summary, commands run, test counts, deviations
+> - firewall: raw diffs/logs summarized
+> - memory: suggest-only; main agent persists reusable requirements patterns
+
+> **Dispatch: verification-agent** — see `skills/agents/verification-agent/SKILL.md`
+> - trigger: independent verification of a high-risk requirements fix
+> - scope: the fixed finding's requirement alignment, test coverage, and report claim closure
+> - permissions: read-only
+> - inputs: the finding, the applied fix, the verification suggestion, and validation assets
+> - sensors: deterministic command (requirements-trace check, test coverage, doc/spec alignment) and report claim closure
+> - output: confirmed/disproven closure verdict with evidence
+> - firewall: raw test output/logs summarized
+> - memory: suggest-only; main agent persists reusable verification recipes
    - Main agent owns report parsing, traceability matrix, memory writes, final synthesis, and Evidence Gate.
 11. Verify each completed finding:
    - If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:

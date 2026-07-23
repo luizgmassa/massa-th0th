@@ -40,9 +40,27 @@ Do not use this workflow for findings-only bug discovery; route that to `workflo
    - Prefer the smallest behavior-preserving fix: guard, validation, state update, ordering, await/async correction, persistence constraint, config default, or call-site contract alignment.
    - Add or update regression tests for the trigger path when feasible; include positive coverage so the fix does not over-block valid behavior.
    - Do not weaken tests, fixtures, snapshots, types, or public contracts to make the fix pass.
-9. Use subagents only when useful:
-   - `implementer` may execute one isolated bug finding with a disjoint write set.
-   - `verifier` may independently attempt to disprove the fix, run the repro path, inspect tests, or confirm report closure.
+9. Use agent orchestration only when it improves signal. Dispatch per `references/agent-orchestration.md`:
+
+> **Dispatch: builder** — see `skills/agents/builder/SKILL.md`
+> - trigger: large/high-risk finding, disjoint implementation slice, or explicit subagent request
+> - scope: one isolated bug finding with a disjoint write set
+> - permissions: write (disjoint write set)
+> - inputs: the finding ID, repro path, root cause, and simplest fix direction
+> - sensors: report's verification suggestion or equivalent deterministic command; repro path must fail before fix and pass after
+> - output: implementation summary, commands run, test counts, deviations
+> - firewall: raw diffs/logs summarized
+> - memory: suggest-only; main agent persists reusable bug patterns
+
+> **Dispatch: verification-agent** — see `skills/agents/verification-agent/SKILL.md`
+> - trigger: independent verification of a high-risk bug fix
+> - scope: the fixed finding's repro path, tests, and report claim closure
+> - permissions: read-only
+> - inputs: the finding, the applied fix, the verification suggestion, and validation assets
+> - sensors: deterministic command (repro path, focused tests, inspection) and report claim closure
+> - output: confirmed/disproven closure verdict with evidence
+> - firewall: raw test output/logs summarized
+> - memory: suggest-only; main agent persists reusable verification recipes
    - Main agent owns report parsing, prioritization, memory writes, final synthesis, and Evidence Gate.
 10. Verify each completed finding:
    - If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:

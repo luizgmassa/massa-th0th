@@ -54,9 +54,27 @@ Do not use this workflow for findings-only test coverage, assertion quality, fix
    - Continue only when the execution harness returns a clean exit code, or report the exact skipped-check reason.
    - A finding cannot be marked `fixed` when a target-relevant command or artifact check exists but was not attempted; if verification cannot run, mark it `blocked`, `deferred`, or `skipped` with an allowed skipped-check reason.
    - Record command/artifact, result, skipped reason or `none`, highest Verification Ladder level reached, validation assets protected, and residual risk.
-11. Use subagents only when useful:
-   - `implementer` may execute one isolated test finding with a disjoint write set.
-   - `verifier` may independently run focused test commands, inspect assertions, or confirm fixtures are not weakened.
+11. Use agent orchestration only when it improves signal. Dispatch per `references/agent-orchestration.md`:
+
+> **Dispatch: builder** — see `skills/agents/builder/SKILL.md`
+> - trigger: large/high-risk finding, disjoint implementation slice, or explicit subagent request
+> - scope: one isolated test finding with a disjoint write set
+> - permissions: write (disjoint write set)
+> - inputs: the finding ID, missing/weak coverage type, fixture/mock boundary, deterministic harness, and verification command
+> - sensors: focused test command (`bun test`, `pytest`, `cargo test`) with clean exit code; no weakened assertions
+> - output: implementation summary, test counts, commands run, deviations
+> - firewall: raw test output/logs summarized
+> - memory: suggest-only; main agent persists reusable testing patterns
+
+> **Dispatch: verification-agent** — see `skills/agents/verification-agent/SKILL.md`
+> - trigger: independent verification of a high-risk test fix
+> - scope: the fixed finding's assertions, fixtures, and report claim closure
+> - permissions: read-only
+> - inputs: the finding, the applied fix, the verification suggestion, and validation assets
+> - sensors: deterministic command (focused test suite, assertion inspection, fixture-not-weakened check) and report claim closure
+> - output: confirmed/disproven closure verdict with evidence
+> - firewall: raw test output/logs summarized
+> - memory: suggest-only; main agent persists reusable verification recipes
    - Main agent owns report parsing, prioritization, memory writes, final synthesis, and Evidence Gate.
 12. At completion, persist only durable knowledge after scoring with the Importance Calibration System:
    - Testing conventions, deterministic harness recipes, flaky-test root causes, accepted exceptions, or reusable edge-case coverage patterns.

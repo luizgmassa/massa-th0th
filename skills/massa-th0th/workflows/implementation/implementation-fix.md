@@ -41,11 +41,29 @@ Do not execute from chat summaries, inline review comments, remembered findings,
    - Architecture/`ARCH-`: apply `architecture-fix` methods; route broad redesign to `spec-driven`.
    - Code Quality/`CQ-`: apply `code-quality-fix` methods using small reversible simplification.
 9. Size each finding with `references/verification-ladder.md`. Quick findings may proceed locally; Standard findings require characterization and an explicit recipe; ambiguous, cross-boundary, migration-heavy, or broad redesign findings pause and route to `spec-driven`.
-10. Orchestrate conservatively:
-   - The main agent owns report parsing, scope/freshness, prioritization, questions, memory, and final evidence.
-   - Use an `implementer` only for isolated findings with disjoint write sets and concrete verification.
-   - Use an independent `verifier` for high-risk, security, public-contract, or multi-file fixes.
-   - Never run parallel writers against shared files or contracts.
+10. Orchestrate conservatively. The main agent owns report parsing, scope/freshness, prioritization, questions, memory, and final evidence. Dispatch per `references/agent-orchestration.md`:
+
+> **Dispatch: builder** — see `skills/agents/builder/SKILL.md`
+> - trigger: isolated finding with disjoint write set and concrete verification
+> - scope: one isolated implementation finding with a disjoint write set
+> - permissions: write (disjoint write set)
+> - inputs: the source-qualified finding ID (`Area/PREFIX-N`), target files, validation assets, and verification command
+> - sensors: report's verification suggestion or equivalent deterministic command per lens
+> - output: implementation summary, commands run, test counts, deviations
+> - firewall: raw diffs/logs summarized
+> - memory: suggest-only; main agent persists reusable patterns
+
+> **Dispatch: verification-agent** — see `skills/agents/verification-agent/SKILL.md`
+> - trigger: high-risk, security, public-contract, or multi-file fix
+> - scope: the fixed finding's behavior, contracts, tests, and report claim closure
+> - permissions: read-only
+> - inputs: the finding, the applied fix, the verification suggestion, and validation assets
+> - sensors: deterministic command per lens (tests, import checks, security checks) and report claim closure
+> - output: confirmed/disproven closure verdict with evidence
+> - firewall: raw test output/logs summarized
+> - memory: suggest-only; main agent persists reusable verification recipes
+
+    Never run parallel writers against shared files or contracts.
 11. Verify each completed finding with the Mandatory Verification Fix Gate from `references/verification-ladder.md`: run the report's Verification Suggestion or an equivalent deterministic command/artifact check, then run focused tests, build, lint, type, static, or runtime checks relevant to the source lens. Reinspect tests, fixtures, snapshots, types, specs, public contracts, and touched identifiers so validation assets were not weakened and names follow `references/naming-standards.md`. A finding cannot be marked `fixed` when a target-relevant command or artifact check exists but was not attempted; if verification cannot run, mark it `blocked`, `deferred`, or `skipped` with an allowed skipped-check reason.
 12. Produce a closure matrix with finding ID, source lens, status (`fixed`, `deferred`, `blocked`, `skipped`), changed files, command/artifact, result, skipped reason or `none`, highest Verification Ladder level reached, validation assets protected, residual risk, and exact next step for deferred or blocked findings.
 13. If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:

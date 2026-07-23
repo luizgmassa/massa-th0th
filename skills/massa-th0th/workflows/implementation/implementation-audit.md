@@ -28,11 +28,19 @@ Do not use this parent workflow when the user wants only one audit lens; route d
    - For a broad/full audit, run Correctness, Architecture, Code Quality, Security, and Tests. Run Requirements only when a requirements source is available.
    - Supported lenses: Correctness -> `workflows/bugs/bugs-audit.md`; Architecture -> `workflows/architecture/architecture-audit.md`; Code Quality -> `workflows/code-quality/code-quality-audit.md`; Security -> `workflows/security/security-audit.md`; Requirements -> `workflows/requirements/requirements-audit.md`; Tests -> `workflows/tests/tests-audit.md`.
    - When a broad audit lacks requirements, ask for a source when interactive and not forbidden; otherwise mark Requirements `not evaluated: missing source`. Never report a requirements all-clear without a source.
-7. Establish child contracts through `references/agent-orchestration.md`:
-   - Each child is read-only and receives exact `projectId`, parent `workflowSessionId`, child workflow, lens name, shared scope packet, resolved files/diff summary, relevant recalled facts, allowed surrounding-code depth, deterministic sensors, context-firewall limits, and output contract.
-   - Repeated-search children receive isolated Synapse sessions. Durable child tags retain the parent session and workflow-specific session.
-   - Require `Status`, `Scope checked`, `Evidence`, `Findings`, `Verification/Test Fidelity Checklist`, `Risks and skipped checks`, and `Exact next step`.
-   - Children may suggest durable memory but must not persist broad project memory unless assigned.
+7. Establish child contracts and dispatch `audit-specialist` per lens through `references/agent-orchestration.md`:
+
+> **Dispatch: audit-specialist** — see `skills/agents/audit-specialist/SKILL.md`
+> - trigger: broad/full audit requiring multiple lenses, or explicit multi-lens request
+> - scope: one lens per dispatch against the shared implementation scope packet (Correctness/Architecture/Code Quality/Security/Requirements/Tests)
+> - permissions: read-only
+> - inputs: exact `projectId`, parent `workflowSessionId`, child workflow, lens name, shared scope packet, resolved files/diff summary, relevant recalled facts, allowed surrounding-code depth, deterministic sensors, context-firewall limits, and output contract
+> - sensors: target-relevant deterministic commands (tests, builds, lint, type checks, static checks, import checks) per lens
+> - output: `Status`, `Scope checked`, `Evidence`, `Findings`, `Verification/Test Fidelity Checklist`, `Risks and skipped checks`, and `Exact next step`
+> - firewall: raw diffs/logs/search output summarized, not returned raw
+> - memory: suggest-only; children must not persist broad project memory unless assigned
+
+    - Repeated-search children receive isolated Synapse sessions. Durable child tags retain the parent session and workflow-specific session.
 8. Use deterministic sensors when target-relevant commands are expected to finish in <=5 minutes and need no network, destructive action, production credential, or unapproved external service: tests, builds, lint, type checks, static checks, import checks, or focused runtime commands. Record skipped commands with one reason enum: `too-expensive`, `needs-network`, `needs-credentials`, `destructive-risk`, `outside-scope`, `tool-missing`, or `not-applicable`. Model judgment alone is not completion evidence.
 9. Check whether SonarQube MCP is available and useful for the implementation scope:
    - Detect callable SonarQube MCP tools at runtime, such as project discovery, issue search, file/snippet analysis, advanced code analysis, duplicated-file search, component measures, security hotspots, guidelines, or quality gate status.

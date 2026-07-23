@@ -75,11 +75,27 @@ This workflow is findings-only. Do not edit code unless the user separately asks
    - Do not recommend ports/adapters, service extraction, VSA migration, or new seams unless evidence shows real variation, volatility, external dependency pressure, or boundary friction.
    - Drop candidates disproven by evidence, downgrade candidates with partial mitigation, and mark judgment-heavy conclusions as `suspect`.
    - When you reject a refactor candidate, record its load-bearing reason in ruled-out candidates; if it is likely to be re-proposed, offer an ADR via `workflows/adr.md` so the rejection is not re-litigated next audit.
-12. Use agent orchestration only when it improves signal:
-   - `domain-mapper` for domain/language mapping.
-   - `coupling-auditor` for dependency graph and strength/distance/volatility assessment.
-   - `deepening-architect` for module-depth opportunities.
-   - `verifier` for independent source checks or command sensors.
+12. Use agent orchestration only when it improves signal. Dispatch per `references/agent-orchestration.md`:
+
+> **Dispatch: architecture-specialist** — see `skills/agents/architecture-specialist/SKILL.md`
+> - trigger: large scope, explicit parallel/subagent request, PR subagent invocation, isolated audit slice, or independent verification of high-impact finding
+> - scope: exact files/modules/boundaries in the audit target
+> - permissions: read-only
+> - inputs: shared scope packet; lens sub-mode (`domain` for bounded-context mapping, `coupling` for dependency-graph/strength/distance/volatility, `deepening` for module-depth opportunities); recalled ADRs and rejected refactors
+> - sensors: `th0th_search_definitions` / `th0th_get_references` for exported surfaces and dependency direction; source inspection against current files
+> - output: findings with lens-specific evidence, provisional severity, tradeoff, and what would disprove it
+> - firewall: raw dependency graphs, generated reports, and broad search output summarized, not returned raw
+> - memory: suggest-only; main agent persists accepted constraints/rejected refactors
+
+> **Dispatch: verification-agent** — see `skills/agents/verification-agent/SKILL.md`
+> - trigger: independent verification of a high-impact architecture finding
+> - scope: the specific finding's claimed evidence and affected boundary/module
+> - permissions: read-only
+> - inputs: the candidate finding, its source evidence, ADRs, accepted exceptions, and the verification suggestion
+> - sensors: deterministic command or artifact check that would falsify the finding
+> - output: confirmed/disproven verdict with evidence; skipped-check reason if the sensor cannot run
+> - firewall: raw logs/snapshots summarized
+> - memory: suggest-only; main agent persists reusable verification recipes
 13. Severity rules (apply the countable threshold first, then the qualitative clause):
    - `critical`: architecture issue likely causes data loss, auth/privacy break, production outage, irreversible corruption, OR affects >10 files; otherwise use the qualitative clause below.
    - `high`: strong coupling with high volatility, boundary violation, dependency inversion break, or shallow module design likely to cause major change friction or regression.

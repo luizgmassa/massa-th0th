@@ -51,10 +51,27 @@ Do not use this workflow for findings-only architecture review; route that to `w
    - Characterize current behavior before moving code with tests, static checks, import graphs, source inspection, or artifact snapshots.
    - Keep public contracts stable unless the audit finding explicitly requires contract change.
    - Update tests, docs, and imports only where required by the architecture fix.
-10. Use subagents only when useful:
-   - `implementer` may execute one isolated finding with a disjoint write set.
-   - `verifier` may independently check dependency direction, tests, imports, or report claim closure.
-   - Main agent owns report parsing, prioritization, memory writes, final synthesis, and Evidence Gate.
+10. Use agent orchestration only when it improves signal. Dispatch per `references/agent-orchestration.md`:
+
+> **Dispatch: builder** — see `skills/agents/builder/SKILL.md`
+> - trigger: large/high-risk finding, disjoint implementation slice, or explicit subagent request
+> - scope: one isolated architecture finding with a disjoint write set
+> - permissions: write (disjoint write set)
+> - inputs: the finding ID, target modules, affected bounded context or seam, current/desired dependency direction, behavior that must stay unchanged, validation assets, rollback path
+> - sensors: report's verification suggestion or equivalent deterministic command; static dependency-direction/import-cycle checks
+> - output: implementation summary, commands run, test counts, deviations
+> - firewall: raw diffs/logs summarized
+> - memory: suggest-only; main agent persists reusable architecture patterns
+
+> **Dispatch: verification-agent** — see `skills/agents/verification-agent/SKILL.md`
+> - trigger: independent verification of a high-risk or multi-file architecture fix
+> - scope: the fixed finding's dependency direction, tests, imports, and report claim closure
+> - permissions: read-only
+> - inputs: the finding, the applied fix, the verification suggestion, and validation assets
+> - sensors: deterministic command (targeted tests, import-cycle check, dependency-direction check) and report claim closure check
+> - output: confirmed/disproven closure verdict with evidence
+> - firewall: raw test output/logs summarized
+> - memory: suggest-only; main agent persists reusable verification recipes
 11. Verify each completed finding:
    - If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:
      `python3 skills/massa-th0th/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`

@@ -93,9 +93,19 @@ Quick artifacts live under `.specs/quick/NNN-slug/` with a `TASK.md` (one-line i
    - Use per-task commits when the environment and user permissions allow commits; otherwise record the skipped reason.
    - Keep validation assets protected.
    - Update logical feature artifacts in `.specs/features/<slug>/` and `.specs/project/STATE.md` after meaningful progress.
-   - Finish Execute by running `references/spec-driven/validate.md`; the verifier always runs automatically and writes `.specs/features/<slug>/validation.md`.
-   - The verifier must be independent from the implementation author when tooling allows. Without subagents, run the standalone fresh-eyes fallback in `validate.md`.
-   - The verifier: (1) performs a spec-anchored outcome check — confirms each test's asserted value matches the spec-defined expected outcome and flags spec-precision gaps; (2) runs a discrimination sensor — injects behavior-level faults in scratch state, confirms tests kill them, discards mutations, surviving mutants become fix tasks; (3) writes `.specs/features/<slug>/validation.md` (PASS/FAIL, per-AC evidence, sensor result, diff range); (4) returns a compact verdict plus a ranked gap list; gaps become fix tasks. Author ≠ verifier — it re-derives coverage independently using evidence-or-zero and does not inherit the author's mental model.
+    - Finish Execute by running `references/spec-driven/validate.md`. Dispatch `verification-agent` (author ≠ verifier) per `references/agent-orchestration.md`; the verifier always runs automatically and writes `.specs/features/<slug>/validation.md`. Without subagents, run the standalone fresh-eyes fallback in `validate.md`.
+
+> **Dispatch: verification-agent** — see `skills/agents/verification-agent/SKILL.md`
+> - trigger: spec-driven Execute final gate; author ≠ verifier independence required
+> - scope: the feature's git diff surface, test files, and spec ACs
+> - permissions: read-only
+> - inputs: `spec.md` (ACs = source of truth), `references/spec-driven/validate.md` as operating checklist, commit range, test files in scope
+> - sensors: (1) spec-anchored outcome check — each test's asserted value matches the spec-defined expected outcome; (2) discrimination sensor — injects behavior-level faults in scratch state, confirms tests kill them, discards mutations; surviving mutants become fix tasks
+> - output: `.specs/features/<slug>/validation.md` (PASS/FAIL, per-AC evidence, sensor result, diff range); compact verdict + ranked gap list; gaps become fix tasks
+> - firewall: raw diffs/logs/test output summarized; mutations run in scratch state only
+> - memory: suggest-only; main agent persists validation outcomes
+
+    - The verifier re-derives coverage independently using evidence-or-zero and does not inherit the author's mental model.
    - The fix → re-verify loop is capped at 3 iterations before escalating to `Blocked`.
    - Distill lesson signals through `references/lessons.md` when validation produces grounded reusable failures.
 7. Update `.specs/project/STATE.md`, `.specs/HANDOFF.md`, and `references/spec-driven/memory.md` records for decisions, blockers, handoff, and completion evidence.

@@ -46,9 +46,27 @@ Do not use this workflow for findings-only security review; route that to `workf
    - Add or update negative tests for the exploit path when feasible.
    - Include positive tests for allowed behavior so the fix does not over-block legitimate use.
    - Do not weaken existing security assertions to make tests pass.
-10. Use subagents only when useful:
-   - `implementer` may execute one isolated finding with a disjoint write set.
-   - `verifier` may independently attempt to disprove the fix, run negative tests, inspect middleware order, or confirm redaction.
+10. Use agent orchestration only when it improves signal. Dispatch per `references/agent-orchestration.md`:
+
+> **Dispatch: builder** — see `skills/agents/builder/SKILL.md`
+> - trigger: large/high-risk finding, disjoint implementation slice, or explicit subagent request
+> - scope: one isolated security finding with a disjoint write set
+> - permissions: write (disjoint write set)
+> - inputs: the finding ID, impacted asset/boundary, exploit path, current guards, and simplest fix direction
+> - sensors: report's verification suggestion or equivalent deterministic command; negative tests that attempt to disprove the fix
+> - output: implementation summary, commands run, test counts, deviations
+> - firewall: raw diffs/logs summarized
+> - memory: suggest-only; main agent persists reusable security patterns
+
+> **Dispatch: verification-agent** — see `skills/agents/verification-agent/SKILL.md`
+> - trigger: independent verification of a high-risk security fix
+> - scope: the fixed finding's guard restoration, middleware order, redaction, and report claim closure
+> - permissions: read-only
+> - inputs: the finding, the applied fix, the verification suggestion, and validation assets
+> - sensors: deterministic command (negative tests, middleware-order inspection, redaction check) and report claim closure
+> - output: confirmed/disproven closure verdict with evidence
+> - firewall: raw test output/logs summarized
+> - memory: suggest-only; main agent persists reusable verification recipes
    - Main agent owns report parsing, prioritization, memory writes, final synthesis, and Evidence Gate.
 11. Verify each completed finding:
    - If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:

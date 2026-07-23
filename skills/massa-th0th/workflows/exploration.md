@@ -53,10 +53,21 @@ Step 5: Flag as uncertain → "I'm not certain about X — here's my reasoning, 
    - per step, state a `verify:` criterion — what concrete evidence confirms that step succeeded (a read signature, a matched call graph, a resolved data path) before moving on
    - define what evidence would be enough to answer the user
    - ask only if the objective or scope cannot be inferred from local context
-6. Recon with progressive disclosure:
-   - Follow the shared retrieval order: project map, summary search, targeted
-     enriched search, symbol/file tools, optimized context, then focused shell
-     fallback.
+6. Recon with progressive disclosure. Dispatch `investigator` per `references/agent-orchestration.md` when the investigation justifies an isolated read-only subagent:
+
+> **Dispatch: investigator** — see `skills/agents/investigator/SKILL.md`
+> - trigger: isolated read-only investigation justified; large scope, repeated searches, or context-firewall threshold exceeded
+> - scope: the exploration target — symbols, files, routes, commands, docs, or runtime artifacts to inspect
+> - permissions: read-only
+> - inputs: objective, scope, explicit out-of-scope areas, constraints, recalled facts, and the closest entry point
+> - sensors: progressive disclosure (project map → summary search → enriched search → symbol/file tools → optimized context → focused shell); per-step `verify:` criterion
+> - output: entry points, core flow, dependencies, data ownership, relevant contracts, exact evidence pointers (path, symbol, line), confirmed facts vs inferences
+> - firewall: raw logs, snapshots, generated reports, and broad search output summarized, not returned raw
+> - memory: suggest-only; main agent persists durable discoveries
+
+    - Follow the shared retrieval order: project map, summary search, targeted
+      enriched search, symbol/file tools, optimized context, then focused shell
+      fallback.
    - Follow imports, calls, ownership boundaries, and data paths from entry point outward.
    - For behavior questions, trace input -> transformation -> output.
    - Read signatures and high-value logic first; avoid whole-project sweeps and large raw file reads.

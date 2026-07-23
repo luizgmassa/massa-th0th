@@ -47,9 +47,27 @@ Do not use this workflow for findings-only SOLID, Clean Code, KISS, YAGNI, DRY, 
    - Run or identify characterization tests before changing behavior-adjacent code.
    - Do not weaken tests, fixtures, snapshots, types, or public contracts to make cleanup pass.
    - Prefer small reversible edits; verify after each finding or coherent group.
-10. Use subagents only when useful:
-   - `implementer` may execute one isolated finding or disjoint file group.
-   - `verifier` may independently check behavior preservation, imports, tests, and report closure.
+10. Use agent orchestration only when it improves signal. Dispatch per `references/agent-orchestration.md`:
+
+> **Dispatch: builder** — see `skills/agents/builder/SKILL.md`
+> - trigger: large/high-risk finding, disjoint implementation slice, or explicit subagent request
+> - scope: one isolated code-quality finding or disjoint file group
+> - permissions: write (disjoint write set)
+> - inputs: the finding ID, smell category (SOLID/Clean Code/KISS/YAGNI/DRY), location, and simplest fix direction
+> - sensors: report's verification suggestion or equivalent deterministic command; behavior-preservation check
+> - output: implementation summary, commands run, test counts, deviations
+> - firewall: raw diffs/logs summarized
+> - memory: suggest-only; main agent persists reusable code-quality patterns
+
+> **Dispatch: verification-agent** — see `skills/agents/verification-agent/SKILL.md`
+> - trigger: independent verification of a high-risk code-quality fix
+> - scope: the fixed finding's behavior preservation, imports, tests, and report claim closure
+> - permissions: read-only
+> - inputs: the finding, the applied fix, the verification suggestion, and validation assets
+> - sensors: deterministic command (behavior-preservation check, import graph, tests) and report claim closure
+> - output: confirmed/disproven closure verdict with evidence
+> - firewall: raw test output/logs summarized
+> - memory: suggest-only; main agent persists reusable verification recipes
    - Main agent owns report parsing, prioritization, memory writes, final synthesis, and Evidence Gate.
 11. Verify each completed finding:
    - If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:

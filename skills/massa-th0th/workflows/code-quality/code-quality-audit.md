@@ -67,9 +67,20 @@ This workflow is findings-only. Do not edit code unless the user separately asks
    - Load it only for large PRs, codebase-wide audits, explicit parallel/subagent requests, or independent verification of judgment-heavy findings.
    - Keep the audit local for small scopes, unresolved user intent, tightly coupled code without clear owners, or platforms that do not permit subagents.
    - The main agent still owns scope, memory recall, static leads, synthesis, final report, persistence, and Evidence Gate.
-   - If delegating, use bounded read-only slices with exact scope and output contracts. Quality-lens slices may include `solid-auditor` for non-test source, `clean-code-auditor` for test and non-test source, and `simplicity-auditor` for KISS/YAGNI.
-   - Do not delegate every check by default; avoid duplicate source reading when one main-agent pass is cheaper.
-   - Subagents may suggest memory content, but the main agent decides what durable knowledge to persist.
+    - If delegating, dispatch `audit-specialist` with `lens: code-quality` per `references/agent-orchestration.md`:
+
+> **Dispatch: audit-specialist** — see `skills/agents/audit-specialist/SKILL.md`
+> - trigger: large PR, codebase-wide audit, explicit parallel/subagent request, or independent verification of judgment-heavy finding
+> - scope: bounded read-only slice of the audit target
+> - permissions: read-only
+> - inputs: shared scope packet; `lens: code-quality`; quality dimensions (SOLID, Clean Code, KISS/YAGNI, DRY, maintainability)
+> - sensors: static scans for type-tag branches, concrete construction, half-finished surfaces; source inspection
+> - output: findings with smell category, location, evidence, severity, confidence, and simplest fix direction
+> - firewall: raw diffs/logs/search output summarized, not returned raw
+> - memory: suggest-only; main agent persists reusable code-quality patterns
+
+    - Do not delegate every check by default; avoid duplicate source reading when one main-agent pass is cheaper.
+    - Subagents may suggest memory content, but the main agent decides what durable knowledge to persist.
 12. Gather deterministic leads with static scans where useful:
    - Type-tag branches: `switch`, `case`, `if/else if`, discriminant fields such as `type`, `kind`, `variant`, `mode`.
    - Concrete construction: `new [A-Z]` inside class or service bodies.
