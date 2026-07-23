@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Root `install.sh` plugin menu extended to all four tools (Claude, Codex, Cursor, OpenCode)
 - `FEATURES.md` — complete feature reference (23 features, 52-tool roster, config tables, structural indexing detail)
 - Deconfliction hints in `install-agents.ts` for Claude, Codex, Cursor, and OpenCode
+- 12 subagent specialists (investigator, planner, builder, reviewer, context-curator, verification-agent, requirements-analyst, architecture-specialist, test-engineer, documentation-agent, audit-specialist, mobile-specialist) emitted across all four host plugins (Claude `.md`, Codex `.toml`, Cursor bundled, OpenCode `agents install`), with parity tests (drift, pinning, collision, exact-12) and a `generate-subagent-artifacts.ts` drift gate
 
 ### Changed
 
