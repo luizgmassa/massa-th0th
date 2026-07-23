@@ -192,4 +192,93 @@ describe("codex-plugin install.sh (T5 / CPX-01,02,07 + F5)", () => {
     expect(res.stdout).toContain("install-agents.ts");
     expect(res.stdout.toLowerCase()).toContain("mcp");
   });
+
+  // ── T5: 12 subagent TOML agents (CDX-01,02,05,06,07 + DOC-01) ──────────────
+  const SPECIALIST_NAMES = [
+    "investigator",
+    "planner",
+    "builder",
+    "reviewer",
+    "context-curator",
+    "verification-agent",
+    "requirements-analyst",
+    "architecture-specialist",
+    "test-engineer",
+    "documentation-agent",
+    "audit-specialist",
+    "mobile-specialist",
+  ];
+
+  test("CDX-01/DOC-01: user-scope install writes 12 TOML agents to ~/.codex/agents/ + prints summary", async () => {
+    const res = runInstall(["--user"], { HOME: tmp });
+    expect(res.exitCode).toBe(0);
+
+    // 12 TOML files at ~/.codex/agents/massa-th0th-<name>.toml (OUTSIDE plugin dir)
+    const agentsDir = path.join(tmp, ".codex/agents");
+    for (const name of SPECIALIST_NAMES) {
+      expect(
+        await pathExists(path.join(agentsDir, `massa-th0th-${name}.toml`)),
+      ).toBe(true);
+    }
+    // Agents dir is OUTSIDE the plugin dir
+    expect(agentsDir).not.toContain("plugins");
+
+    // Install output mentions 12 subagent specialists (DOC-01)
+    expect(res.stdout).toContain("12 subagent specialists");
+  });
+
+  test("CDX-07: each TOML has # massa-th0th-owned top comment", async () => {
+    runInstall(["--user"], { HOME: tmp });
+    for (const name of SPECIALIST_NAMES) {
+      const content = await fs.readFile(
+        path.join(tmp, `.codex/agents/massa-th0th-${name}.toml`),
+        "utf8",
+      );
+      const firstLine = content.split(/\r?\n/)[0] ?? "";
+      expect(firstLine).toBe("# massa-th0th-owned");
+    }
+  });
+
+  test("CDX-05/CDX-06: uninstall removes only owned TOML; user agents preserved (R3)", async () => {
+    runInstall(["--user"], { HOME: tmp });
+    const agentsDir = path.join(tmp, ".codex/agents");
+
+    // Pre-seed a user agent (no ownership marker)
+    await fs.writeFile(
+      path.join(agentsDir, "user-custom.toml"),
+      'name = "user-custom"\ndescription = "user agent"\n',
+    );
+
+    const res = runInstall(["--uninstall"], { HOME: tmp });
+    expect(res.exitCode).toBe(0);
+
+    // 12 massa-th0th-owned TOML files removed
+    for (const name of SPECIALIST_NAMES) {
+      expect(
+        await pathExists(path.join(agentsDir, `massa-th0th-${name}.toml`)),
+      ).toBe(false);
+    }
+    // User agent survives (R3: no ownership marker)
+    expect(await pathExists(path.join(agentsDir, "user-custom.toml"))).toBe(true);
+  });
+
+  test("CDX-06: idempotent re-run overwrites TOML with identical content", async () => {
+    runInstall(["--user"], { HOME: tmp });
+    const readAll = async () => {
+      const out: Record<string, string> = {};
+      for (const name of SPECIALIST_NAMES) {
+        out[name] = await fs.readFile(
+          path.join(tmp, `.codex/agents/massa-th0th-${name}.toml`),
+          "utf8",
+        );
+      }
+      return out;
+    };
+    const afterFirst = await readAll();
+    runInstall(["--user"], { HOME: tmp });
+    const afterSecond = await readAll();
+    for (const name of SPECIALIST_NAMES) {
+      expect(afterSecond[name]).toBe(afterFirst[name]);
+    }
+  });
 });

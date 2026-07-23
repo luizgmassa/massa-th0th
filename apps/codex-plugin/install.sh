@@ -51,6 +51,7 @@ else
 fi
 PLUGIN_DIR="$CODEX_DIR/plugins/massa-th0th"
 HOOKS_JSON="$CODEX_DIR/hooks.json"
+AGENTS_DIR="$CODEX_DIR/agents"
 
 # The 6 Codex events → binary subcommands. The command path uses the
 # INSTALLED plugin dir (not the placeholder), so Codex invokes the copy.
@@ -162,8 +163,23 @@ if [[ "$UNINSTALL" -eq 1 ]]; then
     rm -rf "$PLUGIN_DIR"
     echo "  - removed $PLUGIN_DIR"
   fi
+  # Remove only ownership-marked agent TOML files (R3: shared agents dir, user
+  # agents preserved). Marker = "# massa-th0th-owned" top comment.
+  if [[ -d "$AGENTS_DIR" ]]; then
+    removed=0
+    for f in "$AGENTS_DIR/"*.toml; do
+      [[ -f "$f" ]] || continue
+      if head -n1 "$f" | grep -q "^# massa-th0th-owned$"; then
+        rm -f "$f"
+        removed=$((removed + 1))
+      fi
+    done
+    if [[ "$removed" -gt 0 ]]; then
+      echo "  - removed ${removed} massa-th0th-owned agent TOML files from $AGENTS_DIR/"
+    fi
+  fi
   echo ""
-  echo "Done. User hooks preserved."
+  echo "Done. User hooks and user agents preserved."
   exit 0
 fi
 
@@ -205,6 +221,20 @@ echo ""
 echo "Merging hooks into $HOOKS_JSON..."
 merge_hooks_json "$HOOKS_JSON" "install"
 echo "  + 6 massa-th0th hook events wired (array-append, user hooks preserved)"
+
+# Write 12 subagent specialist TOML files to ~/.codex/agents/ (OUTSIDE the
+# plugin dir — Codex custom agents load from the config-root agents/ dir, not
+# the plugin dir). Each file carries a "# massa-th0th-owned" top comment for
+# scoped uninstall (R3: shared agents dir, user agents preserved).
+mkdir -p "$AGENTS_DIR"
+specialist_count=0
+for src in "$SCRIPT_DIR/agents/"massa-th0th-*.toml; do
+  [[ -f "$src" ]] || continue
+  name="$(basename "$src")"
+  cp "$src" "$AGENTS_DIR/$name"
+  specialist_count=$((specialist_count + 1))
+done
+echo "  + ${specialist_count} subagent specialists: investigator, planner, builder, reviewer, context-curator, verification-agent, requirements-analyst, architecture-specialist, test-engineer, documentation-agent, audit-specialist, mobile-specialist"
 
 echo ""
 echo "Done. Restart Codex to pick up the plugin."
