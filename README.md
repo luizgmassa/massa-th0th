@@ -151,6 +151,71 @@ captured as an Observation and later consolidated into memories. See
 [§Passive Capture (Claude Code hooks)](#passive-capture-claude-code-hooks) for
 the install block and env vars.
 
+### Codex (plugin bundle)
+
+A self-contained Codex plugin that bundles 6 skills, 6 hook events, and the MCP
+server config. Installs the whole bundle in one command — no manual hooks.json
+editing.
+
+**Install:**
+
+```bash
+# User scope (~/.codex)
+bash apps/codex-plugin/install.sh --user
+# Project scope (./.codex)
+bash apps/codex-plugin/install.sh --project
+# Uninstall (removes only massa-th0th-owned entries + plugin dir)
+bash apps/codex-plugin/install.sh --uninstall
+```
+
+**What it bundles:**
+
+- `skills/*.md` — 6 skills adapted from the Claude Code commands (map, index, find, def, graph, status)
+- `hooks/hooks.json` — 6 Codex events auto-merged into `~/.codex/hooks.json` (or project) with array-append + backup + `_massaTh0thOwned` marker
+- `.mcp.json` — declares `npx @massa-th0th/mcp-client` with `MASSA_TH0TH_API_URL`
+- `hooks/massa-th0th-hook` — symlink to the shared binary `apps/claude-plugin/hooks/massa-th0th-hook.ts`
+
+**Trust step (required):** after install, run `/hooks` in Codex to review and
+trust each massa-th0th hook — Codex skips non-managed plugin hooks until
+trusted.
+
+**Prerequisite:** the Tools API must be running (`bun run dev:api`, default
+`http://localhost:3333`).
+
+### Cursor (plugin bundle)
+
+A self-contained Cursor plugin that bundles 6 skills, 7 hook events, the MCP
+server config, and a navigator agent. Installs the whole bundle in one command
+and closes the historical `sessionStart`/`preCompact` gap.
+
+**Install:**
+
+```bash
+# User scope (~/.cursor)
+bash apps/cursor-plugin/install.sh --user
+# Project scope (./.cursor)
+bash apps/cursor-plugin/install.sh --project
+# Uninstall (removes only massa-th0th-owned entries + plugin dir)
+bash apps/cursor-plugin/install.sh --uninstall
+```
+
+**What it bundles:**
+
+- `skills/<name>/SKILL.md` — 6 skills adapted from the Claude Code commands
+- `hooks/hooks.json` — 7 Cursor events auto-merged into `~/.cursor/hooks.json` (or project) with array-append + backup + `_massaTh0thOwned` marker
+- `mcp.json` — declares the MCP server
+- `agents/massa-th0th-navigator.md` — navigator agent
+- `hooks/massa-th0th-hook` — symlink to the shared binary `apps/claude-plugin/hooks/massa-th0th-hook.ts`
+
+**Advanced path (extension authors):** Cursor auto-discovers a plugin
+directory containing `skills/`, `hooks/hooks.json`, `mcp.json`, and `agents/`
+when registered via `vscode.cursor.plugins.registerPath(path)`. Use this
+instead of copying into `~/.cursor` when shipping a Cursor extension that
+depends on massa-th0th.
+
+**Prerequisite:** the Tools API must be running (`bun run dev:api`, default
+`http://localhost:3333`).
+
 ### Docker
 
 ```json
@@ -492,13 +557,43 @@ so the agent's behaviour is recorded without any change to how you prompt.
 
 ### Other CLIs (Codex, Cursor)
 
-Run `bash install.sh` and read the printed **Passive-capture hooks** guide — it
-emits per-CLI config blocks (Codex `~/.codex/hooks.json`, Cursor
-`~/.cursor/hooks.json`) with the same absolute script paths. Codex supports the
-same 5 events as Claude Code (nested form). **Cursor limitations:** Cursor's
-beta hooks schema only maps 3 events — `beforeSubmitPrompt`→`user-prompt-submit`,
-`afterFileEdit`→`post-tool-use`, `stop`→`stop`; there is **no SessionStart and no
-PreCompact equivalent** in Cursor.
+Codex and Cursor now have full plugin bundles that auto-write the hooks
+config (not just print it). The historical gap is closed: Cursor now supports
+7 events including `sessionStart` and `preCompact`. Run:
+
+```bash
+bash apps/codex-plugin/install.sh --user    # 6 events
+bash apps/cursor-plugin/install.sh --user   # 7 events
+```
+
+Or pick the `p` option from the root `bash install.sh` post-install menu.
+
+**Codex events (6):**
+
+| Codex event | Binary subcommand | Observation `source` |
+|-------------|--------------------|----------------------|
+| `SessionStart` | `session-start` | `session-start` |
+| `UserPromptSubmit` | `user-prompt-submit` | `user-prompt` |
+| `PreToolUse` | `pre-tool-use` | `pre-tool-use` |
+| `PostToolUse` | `post-tool-use` | `post-tool-use` |
+| `PreCompact` | `pre-compact` | `pre-compact` |
+| `Stop` | `stop` | `session-end` |
+
+**Cursor events (7):**
+
+| Cursor event | Binary subcommand | Observation `source` |
+|--------------|-------------------|----------------------|
+| `sessionStart` | `session-start` | `session-start` |
+| `sessionEnd` | `stop` | `session-end` |
+| `beforeSubmitPrompt` | `user-prompt-submit` | `user-prompt` |
+| `preToolUse` | `pre-tool-use` | `pre-tool-use` |
+| `postToolUse` | `post-tool-use` | `post-tool-use` |
+| `preCompact` | `pre-compact` | `pre-compact` |
+| `stop` | `stop` | `session-end` |
+
+See [§Codex (plugin bundle)](#codex-plugin-bundle) and
+[§Cursor (plugin bundle)](#cursor-plugin-bundle) for bundle contents and
+the trust step (Codex) / `vscode.cursor.plugins.registerPath` (Cursor).
 
 ### Env
 
