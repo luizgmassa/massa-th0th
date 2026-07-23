@@ -25,9 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pre-tool-use` event added to shared hook binary `EVENT_MAP` for Codex/Cursor parity
 - Claude Code `install.sh` hooks auto-write (array-append, idempotent)
 - Root `install.sh` plugin menu extended to all four tools (Claude, Codex, Cursor, OpenCode)
+- `FEATURES.md` — complete feature reference (23 features, 52-tool roster, config tables, structural indexing detail)
 - Deconfliction hints in `install-agents.ts` for Claude, Codex, Cursor, and OpenCode
 
 ### Changed
+
+- README consolidated: removed VSCode section, merged 4 plugin sections into one table, replaced duplicated tables with links to FEATURES.md
+- TODO.md updated: multi-language tree-sitter marked COMPLETE, json_schema marked shipped, Codex+Cursor plugin parity added
+- Architecture tree tool count corrected 47 → 52
 
 - `local-health-checker.ts` now reads `config.get("embedding").model` instead of hardcoding `nomic-embed-text:latest`
 - Executor sandbox defaults to `auto` (uses sandbox if available, falls back to best-effort)
