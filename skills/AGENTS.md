@@ -53,18 +53,18 @@ Agents summarize verbose output. They never return raw logs, diffs, snapshots, o
 
 | Name | Purpose | Permission | Model hint | Trigger | Charter |
 |---|---|---|---|---|---|
-| investigator | Read and understand the codebase | read-only | DeepSeek V4 Pro | Locate implementations, trace flow, estimate impact | `investigator/SKILL.md` |
-| planner | Transform requests into implementation plans | read-only | GLM-5.2 | Break work into steps, identify risks, order execution | `planner/SKILL.md` |
-| builder | Implement approved plans | write | GLM-5.2 | Modify source code with a disjoint write set | `builder/SKILL.md` |
-| reviewer | Review implementation quality | read-only | GLM-5.2 | Analyze diffs for bugs, regressions, smells | `reviewer/SKILL.md` |
-| context-curator | Prepare the minimum high-quality Context Packet | read-only | DeepSeek V4 Pro | Decide files to open, retrieve memories, apply firewall | `context-curator/SKILL.md` |
-| verification-agent | Centralize Verification Ladder logic | read-only | GLM-5.2 | Validate outputs, choose verification level | `verification-agent/SKILL.md` |
-| requirements-analyst | Analyze requirements before implementation | read-only | DeepSeek V4 Pro | Detect ambiguity, gaps, contradictions, implicit needs | `requirements-analyst/SKILL.md` |
-| architecture-specialist | Provide architectural guidance | read-only | MiniMax M3 | Evaluate architecture, suggest boundaries, trade-offs | `architecture-specialist/SKILL.md` |
-| test-engineer | Generate testing strategy | read-only (test-write when scoped) | GLM-5.2 | Unit, integration, edge cases, acceptance coverage | `test-engineer/SKILL.md` |
-| documentation-agent | Generate engineering documentation | read-only (doc-write when scoped) | DeepSeek V4 Pro | README, ADR, RFC, changelog, KDoc | `documentation-agent/SKILL.md` |
-| audit-specialist | Execute specialized audits through configurable lenses | read-only | GLM-5.2 | One of: bugs, architecture, security, requirements, code-quality, performance | `audit-specialist/SKILL.md` |
-| mobile-specialist | Provide mobile-specific expertise (conditional) | read-only | GLM-5.2 | Mobile-related project detected (Android/iOS/KMP) | `mobile-specialist/SKILL.md` |
+| investigator | Read and understand the codebase | read-only | DeepSeek V4 Pro | Locate implementations, trace flow, estimate impact | `agents/investigator/SKILL.md` |
+| planner | Transform requests into implementation plans | read-only | GLM-5.2 | Break work into steps, identify risks, order execution | `agents/planner/SKILL.md` |
+| builder | Implement approved plans | write | GLM-5.2 | Modify source code with a disjoint write set | `agents/builder/SKILL.md` |
+| reviewer | Review implementation quality | read-only | GLM-5.2 | Analyze diffs for bugs, regressions, smells | `agents/reviewer/SKILL.md` |
+| context-curator | Prepare the minimum high-quality Context Packet | read-only | DeepSeek V4 Pro | Decide files to open, retrieve memories, apply firewall | `agents/context-curator/SKILL.md` |
+| verification-agent | Centralize Verification Ladder logic | read-only | GLM-5.2 | Validate outputs, choose verification level | `agents/verification-agent/SKILL.md` |
+| requirements-analyst | Analyze requirements before implementation | read-only | DeepSeek V4 Pro | Detect ambiguity, gaps, contradictions, implicit needs | `agents/requirements-analyst/SKILL.md` |
+| architecture-specialist | Provide architectural guidance | read-only | MiniMax M3 | Evaluate architecture, suggest boundaries, trade-offs | `agents/architecture-specialist/SKILL.md` |
+| test-engineer | Generate testing strategy | read-only (test-write when scoped) | GLM-5.2 | Unit, integration, edge cases, acceptance coverage | `agents/test-engineer/SKILL.md` |
+| documentation-agent | Generate engineering documentation | read-only (doc-write when scoped) | DeepSeek V4 Pro | README, ADR, RFC, changelog, KDoc | `agents/documentation-agent/SKILL.md` |
+| audit-specialist | Execute specialized audits through configurable lenses | read-only | GLM-5.2 | One of: bugs, architecture, security, requirements, code-quality, performance | `agents/audit-specialist/SKILL.md` |
+| mobile-specialist | Provide mobile-specific expertise (conditional) | read-only | GLM-5.2 | Mobile-related project detected (Android/iOS/KMP) | `agents/mobile-specialist/SKILL.md` |
 
 ## Mapping — New Agents ↔ Existing Roles
 

@@ -202,7 +202,7 @@ function unquoteScalar(s: string): string {
 
 // ── Charter loader ──────────────────────────────────────────────────────────
 async function loadCharter(name: SpecialistName): Promise<Charter> {
-  const file = path.join(SKILLS_DIR, name, "SKILL.md");
+  const file = path.join(SKILLS_DIR, "agents", name, "SKILL.md");
   const raw = await fs.readFile(file, "utf8");
   const { frontmatter, body } = parseFrontmatter(raw);
   const metadata = (frontmatter.metadata ?? {}) as Record<string, unknown>;
