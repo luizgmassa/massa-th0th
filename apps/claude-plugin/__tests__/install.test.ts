@@ -203,10 +203,10 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
       const files = await fs.readdir(commandsDir);
       expect(files.filter((f) => f.startsWith("massa-th0th-"))).toHaveLength(0);
     }
-    // Navigator agent removed
+    // Navigator agent preserved on uninstall (CLA-05/R1: excluded by name)
     expect(
       await pathExists(path.join(tmp, ".claude/agents/massa-th0th-navigator.md")),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   test("idempotent: running --user twice produces no diff in settings.json", async () => {
@@ -221,5 +221,114 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
       "utf8",
     );
     expect(afterSecond).toBe(afterFirst);
+  });
+
+  // ── T3: 12 subagent specialists (CLA-01, CLA-02, CLA-05, CLA-06, DOC-01) ──
+  const SPECIALIST_NAMES = [
+    "investigator",
+    "planner",
+    "builder",
+    "reviewer",
+    "context-curator",
+    "verification-agent",
+    "requirements-analyst",
+    "architecture-specialist",
+    "test-engineer",
+    "documentation-agent",
+    "audit-specialist",
+    "mobile-specialist",
+  ];
+
+  test("CLA-01/DOC-01: user-scope install copies 12 subagent specialists + prints summary line", async () => {
+    const res = runInstall(["--user"], { HOME: tmp });
+    expect(res.exitCode).toBe(0);
+
+    // 12 specialist agent files at ~/.claude/agents/massa-th0th-<name>.md
+    for (const name of SPECIALIST_NAMES) {
+      expect(
+        await pathExists(path.join(tmp, `.claude/agents/massa-th0th-${name}.md`)),
+      ).toBe(true);
+    }
+    // Navigator also present (preserved, additive)
+    expect(
+      await pathExists(path.join(tmp, ".claude/agents/massa-th0th-navigator.md")),
+    ).toBe(true);
+
+    // Install output mentions the 12 subagent specialists (DOC-01)
+    expect(res.stdout).toContain("12 subagent specialists");
+  });
+
+  test("CLA-02: read-only agents lack Write/Edit; write agents include them", async () => {
+    runInstall(["--user"], { HOME: tmp });
+    const readOnlyAgents = SPECIALIST_NAMES.filter(
+      (n) => n !== "builder" && n !== "test-engineer" && n !== "documentation-agent",
+    );
+    const writeAgents = ["builder", "test-engineer", "documentation-agent"];
+
+    for (const name of readOnlyAgents) {
+      const content = await fs.readFile(
+        path.join(tmp, `.claude/agents/massa-th0th-${name}.md`),
+        "utf8",
+      );
+      const toolsLine = content.split("\n").find((l) => l.startsWith("tools:")) ?? "";
+      expect(toolsLine).not.toContain("Write");
+      expect(toolsLine).not.toContain("Edit");
+    }
+    for (const name of writeAgents) {
+      const content = await fs.readFile(
+        path.join(tmp, `.claude/agents/massa-th0th-${name}.md`),
+        "utf8",
+      );
+      const toolsLine = content.split("\n").find((l) => l.startsWith("tools:")) ?? "";
+      expect(toolsLine).toContain("Write");
+      expect(toolsLine).toContain("Edit");
+    }
+  });
+
+  test("CLA-05: uninstall removes 12 specialists AND preserves navigator (R1 exclusion)", async () => {
+    runInstall(["--user"], { HOME: tmp });
+    // Sanity: 12 specialists + navigator present before uninstall
+    for (const name of SPECIALIST_NAMES) {
+      expect(
+        await pathExists(path.join(tmp, `.claude/agents/massa-th0th-${name}.md`)),
+      ).toBe(true);
+    }
+    expect(
+      await pathExists(path.join(tmp, ".claude/agents/massa-th0th-navigator.md")),
+    ).toBe(true);
+
+    const res = runInstall(["--uninstall"], { HOME: tmp });
+    expect(res.exitCode).toBe(0);
+
+    // 12 specialists removed
+    for (const name of SPECIALIST_NAMES) {
+      expect(
+        await pathExists(path.join(tmp, `.claude/agents/massa-th0th-${name}.md`)),
+      ).toBe(false);
+    }
+    // Navigator survives (R1: excluded by name in the uninstall loop)
+    expect(
+      await pathExists(path.join(tmp, ".claude/agents/massa-th0th-navigator.md")),
+    ).toBe(true);
+  });
+
+  test("CLA-06: idempotent re-run overwrites specialists with identical content", async () => {
+    runInstall(["--user"], { HOME: tmp });
+    const readAll = async () => {
+      const out: Record<string, string> = {};
+      for (const name of SPECIALIST_NAMES) {
+        out[name] = await fs.readFile(
+          path.join(tmp, `.claude/agents/massa-th0th-${name}.md`),
+          "utf8",
+        );
+      }
+      return out;
+    };
+    const afterFirst = await readAll();
+    runInstall(["--user"], { HOME: tmp });
+    const afterSecond = await readAll();
+    for (const name of SPECIALIST_NAMES) {
+      expect(afterSecond[name]).toBe(afterFirst[name]);
+    }
   });
 });

@@ -168,11 +168,19 @@ if [[ "$UNINSTALL" -eq 1 ]]; then
     done
     echo "  - removed massa-th0th-* commands from $TARGET/commands/"
   fi
-  # Remove navigator agent
-  rm -f "$TARGET/agents/massa-th0th-navigator.md"
-  echo "  - removed agent: massa-th0th-navigator"
+  # Remove the 12 subagent specialists (exclude navigator — R1: name-prefix glob
+  # would catch massa-th0th-navigator.md; preserve it per CLA-05).
+  if [[ -d "$TARGET/agents" ]]; then
+    for src in "$TARGET/agents/"massa-th0th-*.md; do
+      [[ -f "$src" ]] || continue
+      name="$(basename "$src")"
+      [[ "$name" == *navigator* ]] && continue
+      rm -f "$src"
+    done
+    echo "  - removed 12 subagent specialists from $TARGET/agents/ (navigator preserved)"
+  fi
   echo ""
-  echo "Done. User hooks and keys preserved."
+  echo "Done. User hooks, keys, and navigator agent preserved."
   exit 0
 fi
 
@@ -191,6 +199,18 @@ done
 # Subagent — keep original name
 cp "$SCRIPT_DIR/agents/massa-th0th-navigator.md" "$TARGET/agents/massa-th0th-navigator.md"
 echo "  + agent: massa-th0th-navigator"
+
+# 12 subagent specialists (generated from skills/*/SKILL.md). Exclude navigator
+# from the loop (it is copied above and preserved on uninstall per CLA-05/R1).
+specialist_count=0
+for src in "$SCRIPT_DIR/agents/"massa-th0th-*.md; do
+  [[ -f "$src" ]] || continue
+  name="$(basename "$src")"
+  [[ "$name" == *navigator* ]] && continue
+  cp "$src" "$TARGET/agents/$name"
+  specialist_count=$((specialist_count + 1))
+done
+echo "  + ${specialist_count} subagent specialists: investigator, planner, builder, reviewer, context-curator, verification-agent, requirements-analyst, architecture-specialist, test-engineer, documentation-agent, audit-specialist, mobile-specialist"
 
 # Merge hooks into settings.json (array-append, backup, idempotent)
 echo ""
