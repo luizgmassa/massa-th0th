@@ -86,6 +86,8 @@ jobs:
 
       - name: Test
         run: bun run test
+        env:
+          MASSA_TH0TH_EXECUTOR_SANDBOX: none
 
   mcp:
     runs-on: ubuntu-latest
