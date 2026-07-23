@@ -298,6 +298,16 @@ class ClaudeCodeWriter extends JsonMcpWriter {
   configPath(root: string): string {
     return path.join(root, ".claude", "settings.json");
   }
+
+  async apply(plan: Plan, entry: McpEntry, opts: Pick<InstallerOptions, "dryRun">): Promise<ApplyResult> {
+    const res = await super.apply(plan, entry, opts);
+    if (res.written) {
+      console.log(
+        "💡 If you installed the massa-th0th Claude plugin (apps/claude-plugin/install.sh), hooks are already wired — skip this install-agents step for Claude Code.",
+      );
+    }
+    return res;
+  }
 }
 
 class ClaudeDesktopWriter extends JsonMcpWriter {
@@ -330,6 +340,16 @@ class OpenCodeWriter extends JsonMcpWriter {
   agent: AgentName = "opencode";
   configPath(root: string): string {
     return path.join(root, ".config", "opencode", "opencode.json");
+  }
+
+  async apply(plan: Plan, entry: McpEntry, opts: Pick<InstallerOptions, "dryRun">): Promise<ApplyResult> {
+    const res = await super.apply(plan, entry, opts);
+    if (res.written) {
+      console.log(
+        "💡 If you installed the massa-th0th OpenCode plugin (@massa-th0th/opencode-plugin), hooks are already wired — skip this install-agents step for OpenCode.",
+      );
+    }
+    return res;
   }
 }
 
