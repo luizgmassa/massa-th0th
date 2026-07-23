@@ -90,6 +90,8 @@ Quick artifacts live under `.specs/quick/NNN-slug/` with a `TASK.md` (one-line i
    - Ask the MCP and skill question in Tasks or inline Execute when tool choice can change correctness or verification.
    - If a formal `tasks.md` packs into more than one task-budgeted batch (> ~8 tasks), present the sub-agent offer from `references/spec-driven/sub-agents.md` before starting Execute. Offer-then-confirm — never auto-spawn; the user must accept before any sub-agent is dispatched. One worker per batch (~7 tasks, whole phases): each batch worker executes all its tasks in order (implement → gate → atomic commit), then reports a compact summary (tasks done, commit hashes, test counts, deviations). Workers never spawn further sub-agents.
    - Implement one atomic step or approved task at a time.
+   - For long-running task sequences, create a checkpoint via `create_checkpoint` at task boundaries with `taskId`, `description`, `progressPercent`, `currentStep`, `nextAction`, `fileChanges`, and `checkpointType: "manual"` so progress is resumable after interruption.
+   - If resuming after interruption, call `list_checkpoints` with the `taskId` and `restore_checkpoint` to recover task state before continuing. If `create_checkpoint` is unavailable (e.g. `task_checkpoints` table missing), continue with `.specs/` artifact state as the fallback.
    - Use per-task commits when the environment and user permissions allow commits; otherwise record the skipped reason.
    - Keep validation assets protected.
    - Update logical feature artifacts in `.specs/features/<slug>/` and `.specs/project/STATE.md` after meaningful progress.

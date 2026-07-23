@@ -19,8 +19,9 @@ Use `workflows/restart-save.md` instead when the primary goal is preserving cano
    - Exact `workflowSessionId` and `projectId`
    - Instruction to open and optionally prime a fresh Synapse session after resume when repeated searches are expected
 6. If handing off to another agent or new chat, expand the Session Guide into the full package from `references/handoff-package.md`
-7. Persist the Session Guide or handoff package via `remember` as `type=critical` for incomplete work or `type=conversation` for routine compaction, with `memory:working` and `handoff` tags
-8. Complete the Evidence Gate from `references/evidence-gate.md`
+7. Before compaction or stopping, call `create_checkpoint` with `checkpointType: "manual"`, `taskId` (or `workflowSessionId` as `taskId`), `description` summarizing the Session Guide, `currentStep`, `nextAction`, and `fileChanges` so the progress state is checkpoint-backed and resumable. If `create_checkpoint` is unavailable, continue with `.specs/` artifact state as the fallback.
+8. Persist the Session Guide or handoff package via `remember` as `type=critical` for incomplete work or `type=conversation` for routine compaction, with `memory:working` and `handoff` tags
+9. Complete the Evidence Gate from `references/evidence-gate.md`
 
 ## Example
 
