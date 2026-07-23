@@ -5,7 +5,7 @@
   "features": [
     {
       "slug": "phase-0-quick-wins",
-      "title": "Phase 0 — Quick wins (0a upload gate, 0b reindex cap, 0c memory CRUD, 0d checkpoint MCP)",
+      "title": "Phase 0 \u2014 Quick wins (0a upload gate, 0b reindex cap, 0c memory CRUD, 0d checkpoint MCP)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -17,7 +17,7 @@
     },
     {
       "slug": "phase-1-memory-foundation",
-      "title": "Phase 1 — Memory-quality foundation (decay fn, LLM consolidation, durable sessions/jobs)",
+      "title": "Phase 1 \u2014 Memory-quality foundation (decay fn, LLM consolidation, durable sessions/jobs)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -29,7 +29,7 @@
     },
     {
       "slug": "phase-2-query-understanding",
-      "title": "Phase 2 — Query understanding (LLM rewrite + HyDE, config-gated, silent-degrade)",
+      "title": "Phase 2 \u2014 Query understanding (LLM rewrite + HyDE, config-gated, silent-degrade)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -41,7 +41,7 @@
     },
     {
       "slug": "phase-3-hook-capture",
-      "title": "Phase 3 — Passive memory capture (hook ingestion, Observation store, single-writer queue + 429, consolidation bridge, hook scripts)",
+      "title": "Phase 3 \u2014 Passive memory capture (hook ingestion, Observation store, single-writer queue + 429, consolidation bridge, hook scripts)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -53,7 +53,7 @@
     },
     {
       "slug": "phase-4-bootstrap",
-      "title": "Phase 4 — Bootstrap from repo (scan git/README/docs/manifests/centrality → LLM/rule-based seed memories, idempotent, bootstrap:completed event)",
+      "title": "Phase 4 \u2014 Bootstrap from repo (scan git/README/docs/manifests/centrality \u2192 LLM/rule-based seed memories, idempotent, bootstrap:completed event)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -65,7 +65,7 @@
     },
     {
       "slug": "phase-6-handoffs",
-      "title": "Phase 6 — Cross-session handoffs (HandoffStore + HandoffService begin/accept/cancel/listPending + dual-write memory + handoff:accepted event + auto-injector + MCP tools + route)",
+      "title": "Phase 6 \u2014 Cross-session handoffs (HandoffStore + HandoffService begin/accept/cancel/listPending + dual-write memory + handoff:accepted event + auto-injector + MCP tools + route)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -77,7 +77,7 @@
     },
     {
       "slug": "phase-5-auto-improve",
-      "title": "Phase 5 — Auto-improvement loop (ProposalStore + AutoImproveJob rule-based pattern detection + LLM-optional enrichment + review-gate/auto-approve + apply/reject state machine + memory:auto-improved event + MCP tools + route)",
+      "title": "Phase 5 \u2014 Auto-improvement loop (ProposalStore + AutoImproveJob rule-based pattern detection + LLM-optional enrichment + review-gate/auto-approve + apply/reject state machine + memory:auto-improved event + MCP tools + route)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -89,7 +89,7 @@
     },
     {
       "slug": "phase-7-retrieval-polish",
-      "title": "Phase 7 — Retrieval + compression polish (reranker, salience-judge, graph BFS stream, LLM compression, chromadb dead-code removal)",
+      "title": "Phase 7 \u2014 Retrieval + compression polish (reranker, salience-judge, graph BFS stream, LLM compression, chromadb dead-code removal)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -101,7 +101,7 @@
     },
     {
       "slug": "phase-8-web-ui",
-      "title": "Phase 8 — Web UI [G5] (read-only HTML browser over SQLite memories + FTS5 search + handoffs + checkpoints + indexed projects, served via Tools API, vanilla HTML/CSS/JS, markdown + dark mode, no new core logic)",
+      "title": "Phase 8 \u2014 Web UI [G5] (read-only HTML browser over SQLite memories + FTS5 search + handoffs + checkpoints + indexed projects, served via Tools API, vanilla HTML/CSS/JS, markdown + dark mode, no new core logic)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -125,7 +125,7 @@
     },
     {
       "slug": "installer-environment-hooks-and-web-ui",
-      "title": "Pure Hedgehog — installer, environment, hooks, and UI scripts",
+      "title": "Pure Hedgehog \u2014 installer, environment, hooks, and UI scripts",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -137,7 +137,7 @@
     },
     {
       "slug": "installer-llm-search-quality-toggles",
-      "title": "Woolly Giggling Beaver — installer LLM search-quality toggles",
+      "title": "Woolly Giggling Beaver \u2014 installer LLM search-quality toggles",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -233,7 +233,7 @@
     },
     {
       "slug": "e2e-coverage-side-findings",
-      "title": "E2E coverage side findings A–E",
+      "title": "E2E coverage side findings A\u2013E",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -341,7 +341,7 @@
     },
     {
       "slug": "installer-race-safety",
-      "title": "M19 — installer race safety",
+      "title": "M19 \u2014 installer race safety",
       "status": "complete",
       "priority": "P0",
       "phases": {
@@ -353,7 +353,7 @@
     },
     {
       "slug": "synapse-mcp-parity-discovery-pagination",
-      "title": "M20 + M54 — Synapse MCP parity and discovery pagination",
+      "title": "M20 + M54 \u2014 Synapse MCP parity and discovery pagination",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -365,7 +365,7 @@
     },
     {
       "slug": "tiered-fail-loud-search",
-      "title": "M50 — corruption surfacing and tiered fail-loud search",
+      "title": "M50 \u2014 corruption surfacing and tiered fail-loud search",
       "status": "complete",
       "priority": "P0",
       "phases": {
@@ -377,7 +377,7 @@
     },
     {
       "slug": "transactional-project-identity",
-      "title": "M16 + M17 — project rename, merge, and cache invalidation",
+      "title": "M16 + M17 \u2014 project rename, merge, and cache invalidation",
       "status": "complete",
       "priority": "P0",
       "phases": {
@@ -389,7 +389,7 @@
     },
     {
       "slug": "hook-attribution-repair",
-      "title": "M45 + M47 — sticky hook attribution and repair",
+      "title": "M45 + M47 \u2014 sticky hook attribution and repair",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -401,7 +401,7 @@
     },
     {
       "slug": "linux-native-structural-runtime",
-      "title": "M21 — native Linux glibc x64 support",
+      "title": "M21 \u2014 native Linux glibc x64 support",
       "status": "complete",
       "priority": "P0",
       "phases": {
@@ -413,7 +413,7 @@
     },
     {
       "slug": "native-runtime-rebaseline",
-      "title": "Wave 3 follow-up — native runtime re-baseline to Bun 1.3.14 + six-suite classification + cross-platform re-verification",
+      "title": "Wave 3 follow-up \u2014 native runtime re-baseline to Bun 1.3.14 + six-suite classification + cross-platform re-verification",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -425,7 +425,7 @@
     },
     {
       "slug": "wave-4-correctness-hygiene",
-      "title": "Wave 4 — Correctness, hygiene, and spec reconciliation (N1 generation staleness, N4 clamped-list totals, N6 enum teaching errors, N7 untracked merge + secrets denylist, N8 git-ref guard, N9 read_file cap, N10 SQL bounds, N25 spec reconciliation, M29 sqlite-removal close, N33 dead code sweep, N34 CI grammar gate, N36 xdg extraction, M35 scheduler seam)",
+      "title": "Wave 4 \u2014 Correctness, hygiene, and spec reconciliation (N1 generation staleness, N4 clamped-list totals, N6 enum teaching errors, N7 untracked merge + secrets denylist, N8 git-ref guard, N9 read_file cap, N10 SQL bounds, N25 spec reconciliation, M29 sqlite-removal close, N33 dead code sweep, N34 CI grammar gate, N36 xdg extraction, M35 scheduler seam)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -437,7 +437,7 @@
     },
     {
       "slug": "wave-5-cross-pollination",
-      "title": "Wave 5 — Cross-pollination features (N2 cycle detection, N3 BFS CTE, N5 grouped tree, N41 cbm drift, N11 lease single-writer, N12 idempotent import, N13 capture policy, N14 persisted scheduler, N26 synapse_task_begin/end, N27 SSE push, N15 Moonshot transport, N16 server-side filter revalidation, N45 hook-attribution confirmation)",
+      "title": "Wave 5 \u2014 Cross-pollination features (N2 cycle detection, N3 BFS CTE, N5 grouped tree, N41 cbm drift, N11 lease single-writer, N12 idempotent import, N13 capture policy, N14 persisted scheduler, N26 synapse_task_begin/end, N27 SSE push, N15 Moonshot transport, N16 server-side filter revalidation, N45 hook-attribution confirmation)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -449,7 +449,7 @@
     },
     {
       "slug": "wave-6-architecture-features",
-      "title": "Wave 6 — Architecture and medium features (N31 god-files, N32 embedded MCP, N30 hook binary, N20 parallel tests, N21 test-seam, N28 dashboard, N29 scheduler preset, N17 harness protocol, N18 deterministic script, N19 auth, N42 path recovery, M25 name resolution, M26 JSON extraction, M62 tree-sitter GLR)",
+      "title": "Wave 6 \u2014 Architecture and medium features (N31 god-files, N32 embedded MCP, N30 hook binary, N20 parallel tests, N21 test-seam, N28 dashboard, N29 scheduler preset, N17 harness protocol, N18 deterministic script, N19 auth, N42 path recovery, M25 name resolution, M26 JSON extraction, M62 tree-sitter GLR)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -461,7 +461,7 @@
     },
     {
       "slug": "codex-cursor-plugin-parity",
-      "title": "Codex + Cursor Plugin Parity — Native plugin bundles for Codex and Cursor + four-plugin installer parity (Claude, Codex, Cursor, OpenCode)",
+      "title": "Codex + Cursor Plugin Parity \u2014 Native plugin bundles for Codex and Cursor + four-plugin installer parity (Claude, Codex, Cursor, OpenCode)",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -473,7 +473,7 @@
     },
     {
       "slug": "subagent-skills-plugin-parity",
-      "title": "Subagent Skills Plugin Parity — Ship the 12 sub-agent specialists as host-native subagent definitions across Claude Code, Codex, Cursor, and OpenCode plugins",
+      "title": "Subagent Skills Plugin Parity \u2014 Ship the 12 sub-agent specialists as host-native subagent definitions across Claude Code, Codex, Cursor, and OpenCode plugins",
       "status": "in_progress",
       "priority": "P1",
       "phases": {
@@ -482,7 +482,19 @@
         "tasks": "pending",
         "execute": "pending"
       }
+    },
+    {
+      "slug": "workflow-tools-adaptation",
+      "title": "Workflow Tools Adaptation \u2014 Adapt massa-th0th workflows to use the full 52-tool surface (checkpoints, handoffs, bootstrap, compact_snapshot, trace_path, impact_analysis, code execution, full Synapse, read_file, symbol_snippet, memory ops, analytics) with canonical un-prefixed naming",
+      "status": "complete",
+      "priority": "P1",
+      "phases": {
+        "specify": true,
+        "design": true,
+        "tasks": true,
+        "execute": true
+      }
     }
   ],
-  "active_feature": "subagent-skills-plugin-parity"
+  "active_feature": "workflow-tools-adaptation"
 }
