@@ -933,6 +933,13 @@ Each row lists **Req:** required and **Opt:** optional params.
 | `list_checkpoints` | List saved checkpoints. **Opt:** `taskId`, `projectId`, `checkpointType`∈{auto,manual,milestone}, `includeExpired`(default false), `limit`(default 10), `format` |
 | `restore_checkpoint` | Restore a checkpoint and return its state + integrity checks. **Opt:** `checkpointId`, `taskId`(restore latest for task), `format` |
 
+#### Project Lifecycle (Admin)
+
+| Tool | Purpose |
+|------|---------|
+| `rename_project` | Rename a project identity transactionally. **Req:** `sourceProjectId`, `targetProjectId`. **Opt:** `dryRun`(default true), `operationId`, `expectedPlanHash` (apply with `dryRun=false` + `operationId` + `expectedPlanHash`). Administrative, not workflow-recurring. |
+| `merge_projects` | Merge one project identity into another. **Req:** `sourceProjectId`, `targetProjectId`. Same dryRun/planHash contract as `rename_project`. Administrative, not workflow-recurring. |
+
 **Config CLI:**
 
 ```bash
@@ -1201,10 +1208,12 @@ Ported from the old repo's Python test suite to TypeScript/bun test:
 
 | Test file | Scenarios | Covers |
 |-----------|-----------|--------|
-| `scripts/__tests__/validate-repository.test.ts` | 72 | Skill structure, workflow/reference existence, bootstrap contract, persona catalog, no old-repo references, harness state paths, gitignore |
+| `scripts/__tests__/validate-repository.test.ts` | 185 | Skill structure, workflow/reference existence, bootstrap contract, persona catalog (deep: schema/fields/duplicates/path-escape/mirror-drift), hooks enforcement contract, lessons dual-write contract, harness state path migration, gitignore, context slices, agents harness routing, RFC/TDD/ticket/commit workflow contracts, deterministic router precedence, verification ladder, spec-driven phase gates, audit-report-IO, evidence gate, context firewall, synapse policy, th0th-tools matrix, canonical tool naming (no `th0th_*` prefixes), docs guides |
 | `scripts/__tests__/install-skills.test.ts` | 39 | Apply/uninstall idempotency, dry-run, conflict abort, state v1→v2 migration, drift detection, partial uninstall, hook gating scenarios (bad stdin, malformed state) |
+| `scripts/__tests__/install-agents.test.ts` | 56 | JSON writer plan/apply/idempotent/uninstall (claude-code, claude-desktop, cursor), OpenCode writer (`mcp` key + `bunx` + `environment` shape), Codex TOML writer, Claude settings.json plugin-hooks coordination, orchestration, consent gate, deconfliction hints |
+| `scripts/__tests__/subagent-parity.test.ts` | 16 | Drift gate, exact-12-per-host, name-collision, model+effort pinning (Claude/Codex/Cursor/OpenCode), permission boundary, Codex TOML round-trip+marker, OpenCode permission+marker, FEATURES.md table parity |
 
-Run: `bun test scripts/__tests__/validate-repository.test.ts scripts/__tests__/install-skills.test.ts`
+Run: `bun test scripts/__tests__/validate-repository.test.ts scripts/__tests__/install-skills.test.ts scripts/__tests__/install-agents.test.ts scripts/__tests__/subagent-parity.test.ts`
 
 ---
 

@@ -11,7 +11,7 @@
  *   - claude-desktop ~/Library/Application Support/Claude/claude_desktop_config.json
  *   - codex         ~/.codex/config.toml                 ([mcp_servers.<id>])
  *   - cursor        ~/.cursor/mcp.json                   (mcpServers merge)
- *   - opencode      ~/.config/opencode/opencode.json     (mcpServers merge)
+ *   - opencode      ~/.config/opencode/opencode.json     (mcp merge, OpenCode shape)
  *
  * Usage:
  *   bun scripts/install-agents.ts                       # interactive (prompts on real home)
@@ -188,12 +188,19 @@ async function ensureDirFor(file: string): Promise<void> {
 }
 
 // ── JSON writers (claude-code, claude-desktop, cursor, opencode) ───────────
-// All four use the same nested-merge shape: { mcpServers: { "massa-th0th": {...} } }
-// Their only differences are the config path and the env field name.
+// All four share the same nested-merge shape: a top-level key (default
+// "mcpServers") holds a map of server entries, one of which is ours. OpenCode
+// uses "mcp" instead of "mcpServers" and a different entry shape
+// ("environment" not "env", "bunx" not "npx") — both are parameterizable here
+// so the shared merge/backup/idempotent logic stays in one place.
 
 abstract class JsonMcpWriter implements AgentWriter {
   abstract agent: AgentName;
   abstract configPath(root: string): string | null;
+  /** Top-level key under which MCP servers are nested. Default "mcpServers". */
+  protected serversKey(): string {
+    return "mcpServers";
+  }
   /** Env key this agent expects inside the mcp server entry. */
   protected envKey(): string {
     return "MASSA_TH0TH_API_URL";
@@ -226,14 +233,14 @@ abstract class JsonMcpWriter implements AgentWriter {
         throw new Error(`${this.agent}: existing config at ${cp} is not valid JSON; refusing to overwrite — fix or back up manually first.`);
       }
     }
-    const servers = (current.mcpServers as Json | undefined) ?? {};
+    const servers = (current[this.serversKey()] as Json | undefined) ?? {};
     const existing = servers[MASSA_TH0TH_OWNED_KEY];
     const after = this.buildOwnedEntry(entry);
     const changes: PlanChange[] = [];
     if (existing === undefined) {
-      changes.push({ path: "/mcpServers/massa-th0th", kind: "add", after });
+      changes.push({ path: `/${this.serversKey()}/massa-th0th`, kind: "add", after });
     } else if (!deepEqual(existing, after)) {
-      changes.push({ path: "/mcpServers/massa-th0th", kind: "replace", before: existing, after });
+      changes.push({ path: `/${this.serversKey()}/massa-th0th`, kind: "replace", before: existing, after });
     }
     return { agent: this.agent, configPath: cp, exists, changes };
   }
@@ -250,7 +257,7 @@ abstract class JsonMcpWriter implements AgentWriter {
     }
     const owned = this.buildOwnedEntry(entry);
     const merged: Json = deepMerge(current, {
-      mcpServers: { [MASSA_TH0TH_OWNED_KEY]: owned },
+      [this.serversKey()]: { [MASSA_TH0TH_OWNED_KEY]: owned },
     });
     await ensureDirFor(plan.configPath);
     const backupPath = await backupFile(plan.configPath);
@@ -270,13 +277,14 @@ abstract class JsonMcpWriter implements AgentWriter {
     } catch {
       throw new Error(`${this.agent}: cannot uninstall — config at ${cp} is not valid JSON.`);
     }
-    const servers = (current.mcpServers as Json | undefined) ?? {};
+    const key = this.serversKey();
+    const servers = (current[key] as Json | undefined) ?? {};
     const existing = servers[MASSA_TH0TH_OWNED_KEY] as Json | undefined;
     // Only remove if we own it (marker present) OR it's missing the marker but
     // the user explicitly asks — we still only touch the massa-th0th key.
     const changes: PlanChange[] = [];
     if (existing !== undefined) {
-      changes.push({ path: "/mcpServers/massa-th0th", kind: "remove", before: existing });
+      changes.push({ path: `/${key}/massa-th0th`, kind: "remove", before: existing });
     }
     if (changes.length === 0) {
       return { agent: this.agent, configPath: cp, backupPath: null, written: false, changes, dryRun: false };
@@ -284,8 +292,8 @@ abstract class JsonMcpWriter implements AgentWriter {
     const newServers: Json = { ...servers };
     delete newServers[MASSA_TH0TH_OWNED_KEY];
     const merged: Json = { ...current };
-    if (Object.keys(newServers).length) merged.mcpServers = newServers;
-    else delete merged.mcpServers;
+    if (Object.keys(newServers).length) (merged as Json)[key] = newServers;
+    else delete (merged as Json)[key];
     await ensureDirFor(cp);
     const backupPath = await backupFile(cp);
     await fs.writeFile(cp, JSON.stringify(merged, null, 2) + "\n", "utf8");
@@ -299,15 +307,47 @@ class ClaudeCodeWriter extends JsonMcpWriter {
     return path.join(root, ".claude", "settings.json");
   }
 
+  // Claude Code's settings.json is shared with the massa-th0th Claude plugin,
+  // which writes a top-level "hooks" block (each owned entry carries
+  // _massaTh0thOwned: true). JsonMcpWriter.apply uses deepMerge starting from
+  // {...current}, so the "hooks" sibling key survives an MCP write — but we
+  // detect the plugin's hooks here so we can (a) confirm coordination to the
+  // user and (b) guard against any future writer that might rewrite the whole
+  // file. This makes the safety property explicit and testable rather than
+  // implicit via deepMerge's object-spread.
+  private hasPluginHooks(current: Json | undefined): boolean {
+    if (!current) return false;
+    const hooks = (current as Json).hooks;
+    if (!hooks || typeof hooks !== "object" || Array.isArray(hooks)) return false;
+    const evtBlocks = Object.values(hooks as Json);
+    return evtBlocks.some((arr) => {
+      if (!Array.isArray(arr)) return false;
+      return arr.some((e) => e && typeof e === "object" && (e as Json)[OWNED_MARKER] === true);
+    });
+  }
+
   async apply(plan: Plan, entry: McpEntry, opts: Pick<InstallerOptions, "dryRun">): Promise<ApplyResult> {
     const res = await super.apply(plan, entry, opts);
     if (res.written) {
+      // Re-read to detect plugin hooks that were present before/after the
+      // merge — confirms the plugin's hooks block survived the MCP write.
+      let pluginHooksPresent = false;
+      try {
+        const raw = await fs.readFile(plan.configPath, "utf8");
+        const cfg = raw.trim() ? (JSON.parse(raw) as Json) : {};
+        pluginHooksPresent = this.hasPluginHooks(cfg);
+      } catch { /* best-effort detection */ }
       console.log(
         "💡 If you installed the massa-th0th Claude plugin (apps/claude-plugin/install.sh), hooks are already wired — skip this install-agents step for Claude Code.",
       );
       console.log(
         "💡 For the 12 subagent specialists, run: apps/claude-plugin/install.sh --user (installs massa-th0th-*.md agents to ~/.claude/agents/).",
       );
+      if (pluginHooksPresent) {
+        console.log(
+          "💡 massa-th0th plugin hooks detected in settings.json — MCP entry merged alongside; plugin hooks preserved.",
+        );
+      }
     }
     return res;
   }
@@ -348,6 +388,30 @@ class OpenCodeWriter extends JsonMcpWriter {
     return path.join(root, ".config", "opencode", "opencode.json");
   }
 
+  // OpenCode uses "mcp" (not "mcpServers") as the top-level key, per
+  // FEATURES.md:265-277 and the OpenCode plugin config shape.
+  protected serversKey(): string {
+    return "mcp";
+  }
+
+  // OpenCode entry shape (FEATURES.md:268-274): "type":"local",
+  // "command":["bunx","@massa-th0th/mcp-client"], "environment":{...},
+  // "enabled":true. Note "environment" (not "env") and "bunx" (not "npx").
+  protected buildOwnedEntry(entry: McpEntry): Json {
+    const e: Json = {
+      type: entry.type ?? "local",
+      // OpenCode runs the MCP client via bunx (the project's pinned runtime);
+      // rewrite the default npx-based command to bunx for OpenCode.
+      command: rewriteToBunx(entry.command),
+    };
+    if (entry.env && Object.keys(entry.env).length) {
+      e.environment = { ...entry.env };
+    }
+    e.enabled = entry.enabled !== undefined ? entry.enabled : true;
+    e[OWNED_MARKER] = true;
+    return e;
+  }
+
   async apply(plan: Plan, entry: McpEntry, opts: Pick<InstallerOptions, "dryRun">): Promise<ApplyResult> {
     const res = await super.apply(plan, entry, opts);
     if (res.written) {
@@ -360,6 +424,18 @@ class OpenCodeWriter extends JsonMcpWriter {
     }
     return res;
   }
+}
+
+/**
+ * Rewrite a ["npx", pkg] command to ["bunx", pkg] for hosts that run the MCP
+ * client via Bun (OpenCode). Preserves the package name and any extra args.
+ * Non-npx commands are returned unchanged so callers can override the entry.
+ */
+function rewriteToBunx(command: string[]): string[] {
+  if (command.length > 0 && command[0] === "npx") {
+    return ["bunx", ...command.slice(1)];
+  }
+  return command;
 }
 
 // ── Codex TOML writer ──────────────────────────────────────────────────────

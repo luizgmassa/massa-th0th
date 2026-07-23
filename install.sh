@@ -494,8 +494,9 @@ print_hooks_guide() {
   echo ""
   echo -e "${BOLD}Passive-capture hooks (Claude Code · Codex · Cursor)${NC}"
   echo -e "${DIM}Fire-and-forget scripts POST observations to the API with a 2s timeout${NC}"
-  echo -e "${DIM}and always exit 0 — they never block the agent. The same 5 shell scripts${NC}"
-  echo -e "${DIM}serve all 3 platforms; only the config wrapper differs.${NC}"
+  echo -e "${DIM}and always exit 0 — they never block the agent. The shared massa-th0th-hook${NC}"
+  echo -e "${DIM}Bun binary (apps/claude-plugin/hooks/massa-th0th-hook.ts) serves all 3 platforms;${NC}"
+  echo -e "${DIM}Codex and Cursor symlink to it. Only the host config wrapper differs.${NC}"
   echo ""
 
   if [ "$mode" = "docker" ]; then
@@ -598,7 +599,7 @@ post_install() {
     mkdir -p "${scripts_dir}" "${install_dir}/apps/tools-api"
     local need_fetch=false
     for s in banner.sh setup-vscode.sh validate-vscode-integration.sh; do
-      [ -f "${scripts_dir}/${s}" ] || need_fetch=true && break
+      [ -f "${scripts_dir}/${s}" ] || { need_fetch=true; break; }
     done
     if [ "$need_fetch" = true ]; then
       info "Fetching setup scripts from GitHub..."

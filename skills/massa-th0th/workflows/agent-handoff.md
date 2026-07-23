@@ -3,14 +3,14 @@
 Use this workflow when the user asks to hand work to another agent, create an agent-to-agent continuation package, reset context safely, or package work for a new chat.
 
 Use `workflows/long-session.md` instead when the immediate trigger is context compaction during the same session; long-session still uses `references/handoff-package.md`.
-Use `workflows/restart-save.md` instead when the primary goal is preserving canonical th0th restart state for a clean/new chat. Agent handoff may summarize state, but restart-save owns exact `project/FEATURES.json`, `project/STATE.md`, `HANDOFF.md`, and `features/<slug>/` artifact writes.
+Use `workflows/restart-save.md` instead when the primary goal is preserving canonical th0th restart state for a clean/new chat. Agent handoff may summarize state, but restart-save owns exact `.specs/project/FEATURES.json`, `.specs/project/STATE.md`, `.specs/HANDOFF.md`, and `.specs/features/<slug>/` artifact writes.
 
 1. Resolve/reuse `projectId` and set `workflowSessionId`: `handoff-[entity]` by default. Preserve the exact existing `workflowSessionId` only when `.specs/project/STATE.md` lists that workflow as non-`complete` (active or blocked); otherwise use `handoff-[entity]`. Exclude ephemeral Synapse IDs from the durable handoff.
 2. Load shared references:
    - `references/handoff-package.md`
    - `references/codebase-investigation.md` if current state needs source verification
    - `references/agent-orchestration.md` if assigning follow-up roles
-   - `skills/ai-context-handoff/SKILL.md` when available, as an output lens only
+   - the `ai-context-handoff` skill (host-installed, not repo-local), when available, as an output lens only
    - Do not let `ai-context-handoff` replace this workflow's memory recall, state inspection, persistence, conditional reset instruction, or Evidence Gate.
 3. Recall state:
    - `recall` -> current session, prior handoffs, decisions, blockers, rejected approaches, and verification recipes.

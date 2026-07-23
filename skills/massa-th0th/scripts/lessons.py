@@ -137,7 +137,7 @@ def _obs_append(root, item):
         f.write("\n")
 
 
-def _th0th_remember_best_effort(root, content, tags, project_id="", session_id=""):
+def _remember_best_effort(root, content, tags, project_id="", session_id=""):
     """Best-effort th0th memory write via REST (urllib, stdlib only).
 
     th0th MCP is agent-side only; a CLI subprocess cannot call MCP. th0th exposes
@@ -345,7 +345,7 @@ def cmd_add(root, args):
             existing["status"] = "confirmed"
             promoted = True
         _save(root, data)
-        _th0th_remember_best_effort(root, "%s [%s] %s" % (existing["id"], signal, text),
+        _remember_best_effort(root, "%s [%s] %s" % (existing["id"], signal, text),
                                     _lesson_tags(existing), project, session)
         msg = f"UPDATED {existing['id']} (recurrence={existing['recurrence']}, status={existing['status']}, confidence={existing['confidence']})"
         if promoted:
@@ -372,7 +372,7 @@ def cmd_add(root, args):
         lesson["confidence"] = _confidence(lesson, data)
         data["lessons"].append(lesson)
         _save(root, data)
-        _th0th_remember_best_effort(root, "%s [%s] %s" % (lid, signal, text),
+        _remember_best_effort(root, "%s [%s] %s" % (lid, signal, text),
                                     _lesson_tags(lesson), project, session)
         print(f"ADDED {lid} (status=candidate, recurrence=1, confidence={lesson['confidence']})")
     return 0
@@ -507,7 +507,7 @@ def cmd_import(root, args):
             data["lessons"].append(l)
             added += 1
         target = existing or l
-        _th0th_remember_best_effort(root, "%s [%s] %s" % (target.get("id"), target.get("signal", ""), target.get("text", "")),
+        _remember_best_effort(root, "%s [%s] %s" % (target.get("id"), target.get("signal", ""), target.get("text", "")),
                                     _lesson_tags(target), target.get("project", ""), target.get("session", ""))
     _save(root, data)
     print(f"IMPORTED added={added} merged={merged} th0th=best-effort")

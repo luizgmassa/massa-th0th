@@ -47,7 +47,7 @@ OLLAMA_URL="${OLLAMA_HOST:-http://localhost:11434}"
 
 if curl -s --max-time 2 "${OLLAMA_URL}/api/tags" > /dev/null 2>&1; then
     OLLAMA_VERSION=$(curl -s "${OLLAMA_URL}/api/version" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('version','unknown'))" 2>/dev/null || echo "unknown")
-    echo -e "  ${GREEN}✓${NC} Ollama: healthy (v${OLAMA_VERSION})"
+    echo -e "  ${GREEN}✓${NC} Ollama: healthy (v${OLLAMA_VERSION})"
     
     # Check embedding model
     MODEL="${OLLAMA_EMBEDDING_MODEL:-qwen3-embedding:8b}"
@@ -109,6 +109,21 @@ if command -v bunx &> /dev/null; then
     # Test MCP server startup
     TEST_OUTPUT=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
         MASSA_TH0TH_API_URL="${API_URL}" timeout 10 bunx @massa-th0th/mcp-client 2>&1 || echo "TIMEOUT")
+    
+    if echo "$TEST_OUTPUT" | grep -q "search"; then
+        TOOL_COUNT=$(echo "$TEST_OUTPUT" | grep -o '"name":"massa_th0th_[^"]*"' | wc -l)
+        echo -e "  ${GREEN}✓${NC} MCP server: starts successfully (${TOOL_COUNT} tools)"
+        
+        # List tools
+        echo -e "      Tools discovered:"
+        echo "$TEST_OUTPUT" | grep -o '"name":"massa_th0th_[^"]*"' | sed 's/"name":"//g' | sed 's/"//g' | while read tool; do
+            echo -e "        ${BLUE}•${NC} ${tool}"
+        done
+    else
+        echo -e "  ${RED}✗${NC} MCP server: failed to start"
+        echo -e "      Output: ${TEST_OUTPUT:0:200}"
+        ERRORS=$((ERRORS + 1))
+    fi
 elif command -v npx &> /dev/null; then
     echo -e "  ${GREEN}✓${NC} MCP client: @massa-th0th/mcp-client (npx)"
     

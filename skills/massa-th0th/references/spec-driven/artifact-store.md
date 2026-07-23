@@ -77,12 +77,12 @@ Write artifacts directly to `.specs/` files. Use a here-doc or `printf` for Mark
 - **Write feature artifact:** `printf '...' > .specs/features/<slug>/design.md`
 - **Update feature registry:** use `python3 -c` to read-modify-write `FEATURES.json`
 
-Feature activate/complete flows update `project/FEATURES.json`, `project/STATE.md`, and `HANDOFF.md` through file writes.
+Feature activate/complete flows update `.specs/project/FEATURES.json`, `.specs/project/STATE.md`, and `.specs/HANDOFF.md` through file writes.
 
 ## Versioning
 
-- Feature artifacts under `features/<slug>/` are versioned by design (one file per slug).
-- `project/FEATURES.json` and `project/STATE.md` are append-only versioned by their git history.
+- Feature artifacts under `.specs/features/<slug>/` are versioned by design (one file per slug).
+- `.specs/project/FEATURES.json` and `.specs/project/STATE.md` are append-only versioned by their git history.
 - `lessons.json` versioning is managed automatically by `lessons.py`.
 - When content must be superseded (e.g., a decision), update the existing file and rely on git history for the prior version.
 

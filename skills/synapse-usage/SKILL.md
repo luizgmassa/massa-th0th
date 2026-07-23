@@ -25,7 +25,7 @@ Skip Synapse for one-shot lookups; the overhead does not pay back.
 
 ## Interface
 
-Synapse is exposed via the tools-API at `http://localhost:3333/api/v1/synapse/...` (no MCP tools yet). All interaction is `curl` against six endpoints:
+Synapse is exposed via the massa-th0th MCP server (10 Synapse tools: `synapse_session`, `synapse_get`, `synapse_update`, `synapse_end`, `synapse_prime`, `synapse_access`, `synapse_prefetch`, `synapse_list`, `synapse_task_begin`, `synapse_task_end`) and, as a fallback when the MCP adapter is unavailable, via the tools-API REST endpoints at `http://localhost:3333/api/v1/synapse/...`. Prefer MCP; fall back to REST only after a documented MCP schema or adapter failure. The eight REST endpoints are:
 
 | Endpoint | Purpose |
 |----------|---------|

@@ -73,7 +73,7 @@ async function run(
 // ─── Ollama URL auto-detection ───────────────────────────────────────
 
 /** Candidate URLs to probe, in priority order */
-function ollamaCandidates(envUrl: string): string[] {
+async function ollamaCandidates(envUrl: string): Promise<string[]> {
   const candidates: string[] = [envUrl];
 
   // When the env URL uses "localhost", also try the explicit IPv4 address.
@@ -85,7 +85,7 @@ function ollamaCandidates(envUrl: string): string[] {
 
   // Try the WSL2 Windows-host nameserver IP as a last resort
   try {
-    const resolv = Bun.file("/etc/resolv.conf").toString();
+    const resolv = await Bun.file("/etc/resolv.conf").text();
     const match = resolv.match(/^nameserver\s+([\d.]+)/m);
     if (match) candidates.push(`http://${match[1]}:11434`);
   } catch { /* ignore */ }
@@ -136,7 +136,7 @@ async function checkOllama(): Promise<boolean> {
 
   // 2. Check API connectivity — probe multiple candidates to handle WSL2 quirks
   console.log(`\n${BOLD}[2/7] Checking Ollama API connectivity...${NC}`);
-  const candidates = ollamaCandidates(envUrl);
+  const candidates = await ollamaCandidates(envUrl);
   let modelsData: { models?: Array<{ name: string }> } | null = null;
 
   const start = Date.now();

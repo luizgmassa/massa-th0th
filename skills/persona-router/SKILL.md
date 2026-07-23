@@ -58,7 +58,7 @@ Match user wording against catalog `id`, `display_name`, and `aliases` case-inse
 
 For coding sessions, reuse persona-specific evidence already returned by massa-th0th's required initial recall. Do not repeat broad recall.
 
-If the existing result contains no useful persona evidence and the choice remains unresolved, run at most one targeted `th0th_recall` for prior persona preferences, successful routes, specialist roles, and project-specific ownership. Do not load massa-th0th solely for a non-coding conversation.
+If the existing result contains no useful persona evidence and the choice remains unresolved, run at most one targeted `recall` for prior persona preferences, successful routes, specialist roles, and project-specific ownership. Do not load massa-th0th solely for a non-coding conversation.
 
 Memory is evidence, not authority:
 
