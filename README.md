@@ -80,6 +80,22 @@ Linux/WSL: install `postgresql` + `postgresql-*-pgvector` from your distro, crea
 
 ### OpenCode (recommended)
 
+The OpenCode plugin is an npm package (`@massa-th0th/opencode-plugin`). Its
+hooks are in-process (no `hooks.json` to merge): the plugin registers
+lifecycle handlers (`session.created`, `tool.execute.after`,
+`experimental.session.compacting`, `shell.env`, `event`, `dispose`) directly,
+so observations are captured the moment the plugin loads.
+
+**Install the package:**
+
+```bash
+npm install @massa-th0th/opencode-plugin
+# or from source:
+bun add @massa-th0th/opencode-plugin
+```
+
+**Configure** `~/.config/opencode/opencode.json`:
+
 File: `~/.config/opencode/opencode.json`
 
 **Via MCP package:**
@@ -124,6 +140,10 @@ File: `~/.config/opencode/opencode.json`
 }
 ```
 
+**Events wired (in-process, 6 lifecycle handlers):** `session.created`,
+`tool.execute.after`, `experimental.session.compacting`, `shell.env`, `event`,
+`dispose` — all registered in-process by the plugin (no external hooks file).
+
 ### VSCode / Antigravity
 
 Create `.vscode/mcp.json` in your workspace:
@@ -144,12 +164,36 @@ Create `.vscode/mcp.json` in your workspace:
 
 Or run `./scripts/setup-vscode.sh` for automatic configuration.
 
-### Claude Code (passive-capture hooks)
+### Claude Code (plugin bundle)
 
-Wire Claude Code lifecycle hooks into massa-th0th so every session/prompt/tool-use is
-captured as an Observation and later consolidated into memories. See
-[§Passive Capture (Claude Code hooks)](#passive-capture-claude-code-hooks) for
-the install block and env vars.
+A self-contained Claude Code plugin that bundles slash commands, the
+massa-th0th-navigator subagent, and auto-writes the 5 lifecycle hooks into
+`~/.claude/settings.json` (or `.claude/settings.json`) with array-append +
+backup + `_massaTh0thOwned` marker — no manual `settings.json` merge required.
+
+**Install:**
+
+```bash
+# User scope (~/.claude)
+bash apps/claude-plugin/install.sh --user
+# Project scope (./.claude)
+bash apps/claude-plugin/install.sh --project
+# Uninstall (removes only massa-th0th-owned hooks + commands/agents)
+bash apps/claude-plugin/install.sh --uninstall
+```
+
+**What it bundles:**
+
+- `commands/massa-th0th-*.md` — 6 slash commands (map, index, find, def, graph, status)
+- `agents/massa-th0th-navigator.md` — navigator subagent
+- `hooks/massa-th0th-hook.ts` — shared binary; 5 events auto-merged into `settings.json` using the nested matcher-group + `hooks[]` form with `_massaTh0thOwned` marker
+
+**Events wired (5):** `SessionStart`, `UserPromptSubmit`, `PostToolUse`,
+`PreCompact`, `Stop`. See [§Passive Capture (Claude Code hooks)](#passive-capture-claude-code-hooks)
+for what each hook captures and the env vars.
+
+**Prerequisite:** the Tools API must be running (`bun run dev:api`, default
+`http://localhost:3333`).
 
 ### Codex (plugin bundle)
 
@@ -555,18 +599,37 @@ so the agent's behaviour is recorded without any change to how you prompt.
    `RLM_LLM_ENABLED=true`; otherwise they're stored raw and the bridge silently
    skips.
 
-### Other CLIs (Codex, Cursor)
+### Other plugins (Codex, Cursor, OpenCode)
 
-Codex and Cursor now have full plugin bundles that auto-write the hooks
-config (not just print it). The historical gap is closed: Cursor now supports
-7 events including `sessionStart` and `preCompact`. Run:
+All four tools (Claude Code, Codex, Cursor, OpenCode) now have full plugin +
+hooks parity. The per-plugin installers auto-write the hooks config (not just
+print it) using array-append merge with backup + `_massaTh0thOwned` marker, so
+user hooks are always preserved. The historical gap is closed: Cursor now
+supports 7 events including `sessionStart` and `preCompact`. Run:
 
 ```bash
+bash apps/claude-plugin/install.sh --user   # 5 events (hooks auto-write + commands)
 bash apps/codex-plugin/install.sh --user    # 6 events
 bash apps/cursor-plugin/install.sh --user   # 7 events
 ```
 
-Or pick the `p` option from the root `bash install.sh` post-install menu.
+OpenCode is an npm plugin (`npm install @massa-th0th/opencode-plugin`) with
+in-process hooks — no installer script needed. See
+[§OpenCode (recommended)](#opencode-recommended).
+
+Or pick the `p` option from the root `bash install.sh` post-install menu, which
+offers all four plugin choices plus an "All four" shortcut.
+
+**Claude Code events (5)** — wired by `apps/claude-plugin/install.sh` into
+`settings.json` (nested matcher-group + `hooks[]` form):
+
+| Claude event | Binary subcommand | Observation `source` |
+|--------------|--------------------|----------------------|
+| `SessionStart` | `session-start` | `session-start` |
+| `UserPromptSubmit` | `user-prompt-submit` | `user-prompt` |
+| `PostToolUse` | `post-tool-use` | `post-tool-use` |
+| `PreCompact` | `pre-compact` | `pre-compact` |
+| `Stop` | `stop` | `session-end` |
 
 **Codex events (6):**
 
@@ -590,6 +653,11 @@ Or pick the `p` option from the root `bash install.sh` post-install menu.
 | `postToolUse` | `post-tool-use` | `post-tool-use` |
 | `preCompact` | `pre-compact` | `pre-compact` |
 | `stop` | `stop` | `session-end` |
+
+**OpenCode events (in-process, 6 lifecycle handlers)** — registered by the
+`@massa-th0th/opencode-plugin` npm package, no external hooks file:
+`session.created`, `tool.execute.after`, `experimental.session.compacting`,
+`shell.env`, `event`, `dispose`.
 
 See [§Codex (plugin bundle)](#codex-plugin-bundle) and
 [§Cursor (plugin bundle)](#cursor-plugin-bundle) for bundle contents and
