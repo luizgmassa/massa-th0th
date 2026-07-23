@@ -1,6 +1,22 @@
 # massa-th0th Spec State
 
-## Current — Wave 7
+## Current — Codex + Cursor Plugin Parity
+
+- projectId: `massa-th0th`
+- workflowSessionId: `spec-codex-cursor-plugin-parity`
+- workflow: spec-driven (Large/Complex)
+- feature: `codex-cursor-plugin-parity` — COMPLETE + validated PASS
+- branch: `spec-codex-cursor-plugin-parity` (off `main`)
+- scope: 28 requirements (CPX-01..08, CRS-01..08, INS-01..12), 20 tasks across 4 phases
+- Phase 1 (T1-T6): COMPLETE — binary `pre-tool-use` + Codex plugin (manifest, skills, hooks.json, .mcp.json, install.sh, README, tests)
+- Phase 2 (T7-T11): COMPLETE — Cursor plugin (manifest, skills, hooks.json with 7 events incl. sessionStart + preCompact, mcp.json, agents, install.sh, README, tests)
+- Phase 3 (T12-T15): COMPLETE — root install.sh plugin menu (Codex/Cursor), install-agents.ts deconfliction hints, README, stale Cursor note removed
+- Phase 4 (T16-T20): COMPLETE — Claude Code hooks auto-write into settings.json, root menu extended to 4 tools (Claude/Codex/Cursor/OpenCode), install-agents.ts Claude/OpenCode hints, README 4-plugin parity
+- Validation: PASS — 28/28 ACs verified, 5/5 discrimination mutants killed, 112 tests pass, type-check 6/6, build 5/5
+- Report: `.specs/features/codex-cursor-plugin-parity/validation.md`
+- Commits: 17 commits on `spec-codex-cursor-plugin-parity` (1a59854..fcda808)
+
+## Previous — Wave 7
 
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-wave-7-hygiene-ui-process`
