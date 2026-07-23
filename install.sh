@@ -553,17 +553,25 @@ print_hooks_guide() {
   # ── Cursor (flat, camelCase; beta) ──
   echo -e "  ${BOLD}Cursor — save as ~/.cursor/hooks.json (or project .cursor/hooks.json):${NC}"
   echo ""
+  echo -e "  ${DIM}Cursor now supports 7 events (sessionStart, sessionEnd, beforeSubmitPrompt,${NC}"
+  echo -e "  ${DIM}preToolUse, postToolUse, preCompact, stop). The canonical path is the plugin${NC}"
+  echo -e "  ${DIM}installer, which auto-wires all 7:${NC}"
+  echo -e "    ${CYAN}bash ${install_dir}/apps/cursor-plugin/install.sh --user${NC}  (or --project)"
+  echo ""
+  echo -e "  ${DIM}Manual hooks.json shape (commands point at the shared binary; the plugin${NC}"
+  echo -e "  ${DIM}installer generates this for you with absolute paths):${NC}"
   echo -e '  {'
   echo -e '    "version": 1,'
   echo -e '    "hooks": {'
-  echo -e "      \"beforeSubmitPrompt\": [{ \"command\": \"\\\"${hooks_dir}/user-prompt-submit.sh\\\"\" }],"
-  echo -e "      \"afterFileEdit\":      [{ \"command\": \"\\\"${hooks_dir}/post-tool-use.sh\\\"\" }],"
-  echo -e "      \"stop\":               [{ \"command\": \"\\\"${hooks_dir}/stop.sh\\\"\" }]"
+  echo -e "      \"sessionStart\":         [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook session-start\\\"\" }],"
+  echo -e "      \"sessionEnd\":           [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook stop\\\"\" }],"
+  echo -e "      \"beforeSubmitPrompt\":   [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook user-prompt-submit\\\"\" }],"
+  echo -e "      \"preToolUse\":           [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook pre-tool-use\\\"\" }],"
+  echo -e "      \"postToolUse\":          [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook post-tool-use\\\"\" }],"
+  echo -e "      \"preCompact\":           [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook pre-compact\\\"\" }],"
+  echo -e "      \"stop\":                 [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook stop\\\"\" }]"
   echo -e '    }'
   echo -e '  }'
-  echo -e "  ${DIM}Cursor hooks are beta. Cursor has NO SessionStart and NO PreCompact${NC}"
-  echo -e "  ${DIM}equivalent — only the 3 events above are mappable. afterFileEdit fires${NC}"
-  echo -e "  ${DIM}on file edits only (not every tool call).${NC}"
   echo ""
 
   echo -e "  ${BOLD}Env vars (set in your shell or .env; all platforms):${NC}"
@@ -621,6 +629,7 @@ post_install() {
       echo -e "  ${CYAN}t)${NC} Run integration tests"
     fi
     echo -e "  ${CYAN}c)${NC} Configure passive-capture hooks (Claude Code, Codex, Cursor)"
+    echo -e "  ${CYAN}p)${NC} Install massa-th0th plugins (Claude, Codex, Cursor, OpenCode)"
     echo -e "  ${CYAN}s)${NC} Skip (finish)"
     echo ""
 
@@ -638,10 +647,113 @@ post_install() {
           || warn "Validation script not found" ;;
       c|C)
         print_hooks_guide "$mode" "$install_dir" ;;
+      p|P)
+        install_plugins_menu "$install_dir" ;;
       s|S|"") return ;;
-      *) warn "Unknown choice. Enter w, v, t, c, or s." ;;
+      *) warn "Unknown choice. Enter w, v, t, c, p, or s." ;;
+      # NOTE: prompt text kept stable for existing root-install-menu test.
     esac
   done
+}
+
+# ── massa-th0th plugin installer sub-menu (four-plugin parity) ───────────────
+# The per-plugin installers source scripts/banner.sh relative to their own
+# location, so invoke them as bash <path> --user. Default to --user because the
+# root install.sh doesn't track whether the user installed at project scope.
+# OpenCode is an npm plugin (no install.sh) — its option prints install + config
+# instructions instead of invoking a script.
+install_plugins_menu() {
+  local install_dir="$1"
+  local claude_installer="${install_dir}/apps/claude-plugin/install.sh"
+  local codex_installer="${install_dir}/apps/codex-plugin/install.sh"
+  local cursor_installer="${install_dir}/apps/cursor-plugin/install.sh"
+
+  while true; do
+    echo ""
+    echo -e "${BOLD}Install massa-th0th plugins (skills + hooks + MCP bundles):${NC}"
+    echo -e "  ${CYAN}1)${NC} Claude Code plugin (skills + commands + hooks auto-write)"
+    echo -e "  ${CYAN}2)${NC} Codex plugin (6 skills, 6 hook events, MCP)"
+    echo -e "  ${CYAN}3)${NC} Cursor plugin (6 skills, 7 hook events, MCP, agents)"
+    echo -e "  ${CYAN}4)${NC} OpenCode plugin (npm install + config snippet)"
+    echo -e "  ${CYAN}5)${NC} All four (Claude, Codex, Cursor, OpenCode)"
+    echo -e "  ${CYAN}s)${NC} Back"
+    echo ""
+    read -rp "  Choice [s]: " _plugin_choice <>/dev/tty
+    case "${_plugin_choice:-s}" in
+      1)
+        if [ -f "$claude_installer" ]; then
+          bash "$claude_installer" --user
+        else
+          warn "Claude Code plugin installer not found at $claude_installer"
+        fi
+        ;;
+      2)
+        if [ -f "$codex_installer" ]; then
+          bash "$codex_installer" --user
+        else
+          warn "Codex plugin installer not found at $codex_installer"
+        fi
+        ;;
+      3)
+        if [ -f "$cursor_installer" ]; then
+          bash "$cursor_installer" --user
+        else
+          warn "Cursor plugin installer not found at $cursor_installer"
+        fi
+        ;;
+      4)
+        print_opencode_plugin_instructions
+        ;;
+      5)
+        if [ -f "$claude_installer" ]; then
+          bash "$claude_installer" --user
+        else
+          warn "Claude Code plugin installer not found at $claude_installer"
+        fi
+        if [ -f "$codex_installer" ]; then
+          bash "$codex_installer" --user
+        else
+          warn "Codex plugin installer not found at $codex_installer"
+        fi
+        if [ -f "$cursor_installer" ]; then
+          bash "$cursor_installer" --user
+        else
+          warn "Cursor plugin installer not found at $cursor_installer"
+        fi
+        print_opencode_plugin_instructions
+        ;;
+      s|S|"") return ;;
+      *) warn "Unknown choice. Enter 1, 2, 3, 4, 5, or s." ;;
+    esac
+  done
+}
+
+# OpenCode plugin is an npm package (@massa-th0th/opencode-plugin), not a
+# script-copy bundle. Print the install command + opencode.json config snippet.
+print_opencode_plugin_instructions() {
+  echo ""
+  echo -e "${BOLD}OpenCode plugin install (npm package):${NC}"
+  echo ""
+  echo -e "  1. Install the package:"
+  echo -e "     ${CYAN}npm install @massa-th0th/opencode-plugin${NC}"
+  echo -e "     (or from source: ${CYAN}bun add @massa-th0th/opencode-plugin${NC})"
+  echo ""
+  echo -e "  2. Add to ~/.config/opencode/opencode.json:"
+  echo ""
+  echo -e "  {"
+  echo -e '    "plugin": ["@massa-th0th/opencode-plugin"],'
+  echo -e '    "mcp": {'
+  echo -e '      "massa-th0th": {'
+  echo -e '        "type": "local",'
+  echo -e '        "command": ["bunx", "@massa-th0th/mcp-client"],'
+  echo -e '        "environment": { "MASSA_TH0TH_API_URL": "http://localhost:3333" },'
+  echo -e '        "enabled": true'
+  echo -e '      }'
+  echo -e '    }'
+  echo -e "  }"
+  echo ""
+  echo -e "  OpenCode hooks are in-process (no hooks.json to merge)."
+  echo -e "  Prerequisite: the Tools API must be running (bun run dev:api)."
 }
 
 # ── Show MCP integration instructions ────────────────────────

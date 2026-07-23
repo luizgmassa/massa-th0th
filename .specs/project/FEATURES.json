@@ -458,7 +458,19 @@
         "tasks": true,
         "execute": true
       }
+    },
+    {
+      "slug": "codex-cursor-plugin-parity",
+      "title": "Codex + Cursor Plugin Parity — Native plugin bundles for Codex and Cursor + four-plugin installer parity (Claude, Codex, Cursor, OpenCode)",
+      "status": "complete",
+      "priority": "P1",
+      "phases": {
+        "specify": true,
+        "design": true,
+        "tasks": true,
+        "execute": true
+      }
     }
   ],
-  "active_feature": "wave-6-architecture-features"
+  "active_feature": "codex-cursor-plugin-parity"
 }

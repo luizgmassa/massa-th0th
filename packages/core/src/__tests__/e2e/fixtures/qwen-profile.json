@@ -114,7 +114,7 @@
   "supportFiles": [
     {
       "path": "README.md",
-      "sha256": "f3095c7393aed94cb10adeaf9564aec68da0e2e8106b5c5caeeb5b3e9b89e69f"
+      "sha256": "0b709fee96ad753f50114abe24e5414bbaf20e27502cb3b6dad1ccd7b5fd331f"
     },
     {
       "path": "package.json",

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "massa-th0th": {
+      "type": "local",
+      "command": ["npx", "@massa-th0th/mcp-client"],
+      "env": { "MASSA_TH0TH_API_URL": "http://localhost:3333" },
+      "enabled": true
+    }
+  }
+}

@@ -298,6 +298,16 @@ class ClaudeCodeWriter extends JsonMcpWriter {
   configPath(root: string): string {
     return path.join(root, ".claude", "settings.json");
   }
+
+  async apply(plan: Plan, entry: McpEntry, opts: Pick<InstallerOptions, "dryRun">): Promise<ApplyResult> {
+    const res = await super.apply(plan, entry, opts);
+    if (res.written) {
+      console.log(
+        "💡 If you installed the massa-th0th Claude plugin (apps/claude-plugin/install.sh), hooks are already wired — skip this install-agents step for Claude Code.",
+      );
+    }
+    return res;
+  }
 }
 
 class ClaudeDesktopWriter extends JsonMcpWriter {
@@ -314,12 +324,32 @@ class CursorWriter extends JsonMcpWriter {
   configPath(root: string): string {
     return path.join(root, ".cursor", "mcp.json");
   }
+
+  async apply(plan: Plan, entry: McpEntry, opts: Pick<InstallerOptions, "dryRun">): Promise<ApplyResult> {
+    const res = await super.apply(plan, entry, opts);
+    if (res.written) {
+      console.log(
+        "💡 If you installed the massa-th0th Cursor plugin (apps/cursor-plugin/install.sh), MCP is already registered — skip this install-agents step for Cursor.",
+      );
+    }
+    return res;
+  }
 }
 
 class OpenCodeWriter extends JsonMcpWriter {
   agent: AgentName = "opencode";
   configPath(root: string): string {
     return path.join(root, ".config", "opencode", "opencode.json");
+  }
+
+  async apply(plan: Plan, entry: McpEntry, opts: Pick<InstallerOptions, "dryRun">): Promise<ApplyResult> {
+    const res = await super.apply(plan, entry, opts);
+    if (res.written) {
+      console.log(
+        "💡 If you installed the massa-th0th OpenCode plugin (@massa-th0th/opencode-plugin), hooks are already wired — skip this install-agents step for OpenCode.",
+      );
+    }
+    return res;
   }
 }
 
@@ -440,6 +470,9 @@ class CodexWriter implements AgentWriter {
     await ensureDirFor(plan.configPath);
     const backupPath = await backupFile(plan.configPath);
     await fs.writeFile(plan.configPath, stringifyToml(doc), "utf8");
+    console.log(
+      "💡 If you installed the massa-th0th Codex plugin (apps/codex-plugin/install.sh), MCP is already registered — skip this install-agents step for Codex.",
+    );
     return { agent: this.agent, configPath: plan.configPath, backupPath, written: true, changes: plan.changes, dryRun: false };
   }
 

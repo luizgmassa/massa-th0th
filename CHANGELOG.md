@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Web UI markdown rendering (`marked` + `DOMPurify` with XSS prevention)
 - Web UI SSE real-time updates for dashboard + memory list
 - Hook deadline breadcrumb-on-fire observability in `massa-th0th-hook`
+- Native Codex plugin bundle (`apps/codex-plugin/`) with manifest, skills, hooks, MCP, and idempotent installer
+- Native Cursor plugin bundle (`apps/cursor-plugin/`) with manifest, skills, hooks, MCP, agents, and idempotent installer
+- `pre-tool-use` event added to shared hook binary `EVENT_MAP` for Codex/Cursor parity
+- Claude Code `install.sh` hooks auto-write (array-append, idempotent)
+- Root `install.sh` plugin menu extended to all four tools (Claude, Codex, Cursor, OpenCode)
+- Deconfliction hints in `install-agents.ts` for Claude, Codex, Cursor, and OpenCode
 
 ### Changed
 

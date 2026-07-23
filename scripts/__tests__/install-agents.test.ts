@@ -313,6 +313,118 @@ describe("home-write consent gate", () => {
   });
 });
 
+// ── Deconfliction hint (T12) ───────────────────────────────────────────────
+// When install-agents writes the Codex/Cursor MCP entry, it prints a hint
+// reminding the user that the massa-th0th plugin bundle already registers
+// MCP, so the install-agents step can be skipped for that agent.
+describe("plugin deconfliction hint", () => {
+  test("codex apply prints plugin/skip hint when written", async () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => { logs.push(args.join(" ")); };
+    try {
+      await runInstall({ target: tmp, agent: "codex", mcpEntry: ENTRY });
+    } finally {
+      console.log = originalLog;
+    }
+    expect(logs.some((l) => l.includes("plugin") && l.includes("skip"))).toBe(true);
+    expect(logs.some((l) => l.toLowerCase().includes("codex"))).toBe(true);
+  });
+
+  test("cursor apply prints plugin/skip hint when written", async () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => { logs.push(args.join(" ")); };
+    try {
+      await runInstall({ target: tmp, agent: "cursor", mcpEntry: ENTRY });
+    } finally {
+      console.log = originalLog;
+    }
+    expect(logs.some((l) => l.includes("plugin") && l.includes("skip"))).toBe(true);
+    expect(logs.some((l) => l.toLowerCase().includes("cursor"))).toBe(true);
+  });
+
+  test("codex dry-run does NOT print the hint (nothing written)", async () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => { logs.push(args.join(" ")); };
+    try {
+      await runInstall({ target: tmp, agent: "codex", dryRun: true, mcpEntry: ENTRY });
+    } finally {
+      console.log = originalLog;
+    }
+    expect(logs.some((l) => l.includes("skip this install-agents"))).toBe(false);
+  });
+
+  test("cursor dry-run does NOT print the hint (nothing written)", async () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => { logs.push(args.join(" ")); };
+    try {
+      await runInstall({ target: tmp, agent: "cursor", dryRun: true, mcpEntry: ENTRY });
+    } finally {
+      console.log = originalLog;
+    }
+    expect(logs.some((l) => l.includes("skip this install-agents"))).toBe(false);
+  });
+});
+
+// ── Deconfliction hint (T18) — Claude + OpenCode ────────────────────────────
+// When install-agents writes the Claude/OpenCode MCP entry, it prints a hint
+// reminding the user that the massa-th0th plugin bundle already wires hooks,
+// so the install-agents step can be skipped for that agent.
+describe("plugin deconfliction hint (T18 — Claude/OpenCode)", () => {
+  test("claude-code apply prints plugin/skip hint when written", async () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => { logs.push(args.join(" ")); };
+    try {
+      await runInstall({ target: tmp, agent: "claude-code", mcpEntry: ENTRY });
+    } finally {
+      console.log = originalLog;
+    }
+    expect(logs.some((l) => l.includes("plugin") && l.includes("skip"))).toBe(true);
+    expect(logs.some((l) => l.toLowerCase().includes("claude"))).toBe(true);
+  });
+
+  test("opencode apply prints plugin/skip hint when written", async () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => { logs.push(args.join(" ")); };
+    try {
+      await runInstall({ target: tmp, agent: "opencode", mcpEntry: ENTRY });
+    } finally {
+      console.log = originalLog;
+    }
+    expect(logs.some((l) => l.includes("plugin") && l.includes("skip"))).toBe(true);
+    expect(logs.some((l) => l.toLowerCase().includes("opencode"))).toBe(true);
+  });
+
+  test("claude-code dry-run does NOT print the hint (nothing written)", async () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => { logs.push(args.join(" ")); };
+    try {
+      await runInstall({ target: tmp, agent: "claude-code", dryRun: true, mcpEntry: ENTRY });
+    } finally {
+      console.log = originalLog;
+    }
+    expect(logs.some((l) => l.includes("skip this install-agents"))).toBe(false);
+  });
+
+  test("opencode dry-run does NOT print the hint (nothing written)", async () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => { logs.push(args.join(" ")); };
+    try {
+      await runInstall({ target: tmp, agent: "opencode", dryRun: true, mcpEntry: ENTRY });
+    } finally {
+      console.log = originalLog;
+    }
+    expect(logs.some((l) => l.includes("skip this install-agents"))).toBe(false);
+  });
+});
+
 // ── helpers ────────────────────────────────────────────────────────────────
 async function fileExists(p: string): Promise<boolean> {
   try {

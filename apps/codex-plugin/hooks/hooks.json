@@ -1,0 +1,20 @@
+{
+  "SessionStart": [
+    { "type": "command", "command": "<PLUGIN_DIR>/hooks/massa-th0th-hook session-start", "_massaTh0thOwned": true }
+  ],
+  "UserPromptSubmit": [
+    { "type": "command", "command": "<PLUGIN_DIR>/hooks/massa-th0th-hook user-prompt-submit", "_massaTh0thOwned": true }
+  ],
+  "PreToolUse": [
+    { "type": "command", "command": "<PLUGIN_DIR>/hooks/massa-th0th-hook pre-tool-use", "_massaTh0thOwned": true }
+  ],
+  "PostToolUse": [
+    { "type": "command", "command": "<PLUGIN_DIR>/hooks/massa-th0th-hook post-tool-use", "_massaTh0thOwned": true }
+  ],
+  "PreCompact": [
+    { "type": "command", "command": "<PLUGIN_DIR>/hooks/massa-th0th-hook pre-compact", "_massaTh0thOwned": true }
+  ],
+  "Stop": [
+    { "type": "command", "command": "<PLUGIN_DIR>/hooks/massa-th0th-hook stop", "_massaTh0thOwned": true }
+  ]
+}
