@@ -16,7 +16,7 @@ This workflow is findings-only. Do not edit code unless the user separately asks
    - `references/naming-standards.md` when evaluating generic names, domain vocabulary, public contract names, or rename recommendations
    - `references/synapse-policy.md` when repeated th0th searches are expected
    - `references/agent-orchestration.md` only for large scopes, explicit parallel/subagent requests, PR subagent invocation, or independent verification of high-impact findings
-3. `th0th_recall` -> load project style rules, ADRs, prior quality decisions, accepted extension points, repeated anti-patterns, and accepted exceptions for the target area.
+3. `recall` -> load project style rules, ADRs, prior quality decisions, accepted extension points, repeated anti-patterns, and accepted exceptions for the target area.
    - Apply the Memory Freshness Gate from `references/audit-scope.md`; recalled exceptions are leads, not proof.
 4. Establish the investigation scope before proceeding:
    - Modified files scope: use when the user says modified files, changed files, current changes, uncommitted changes, staged changes, or unstaged changes.
@@ -147,6 +147,6 @@ This workflow is findings-only. Do not edit code unless the user separately asks
    - For implementation audit child invocation, return compact findings to the parent unless the parent explicitly requests saved audit artifacts.
 17. Persist only durable knowledge:
    - Do not persist one-off findings.
-   - Persist repeated anti-patterns, project-specific quality rules, accepted exceptions, or repeated overengineering patterns via `th0th_remember` after scoring with the Importance Calibration System.
+   - Persist repeated anti-patterns, project-specific quality rules, accepted exceptions, or repeated overengineering patterns via `remember` after scoring with the Importance Calibration System.
    - Use required tags: `project:<projectId>`, `session:<workflowSessionId>`, `workflow:code-quality-audit`, `entity:<entity>`, and one `memory:<tier>` tag.
 18. Complete the Evidence Gate from `references/evidence-gate.md`.

@@ -12,7 +12,7 @@ Use this precedence order:
 4. Durable th0th memories for decisions, rejected approaches, reusable verification recipes, and repeated lessons.
 5. `.specs-exports/` only as optional debug output for human review.
 
-Never reconstruct canonical restart state from `th0th_recall`, `th0th_search`, chat history, handoff prose, current source files, or `.specs-exports/`. If `.specs/` is unavailable or not writable, block restart state mutation and report the missing operation.
+Never reconstruct canonical restart state from `recall`, `search`, chat history, handoff prose, current source files, or `.specs-exports/`. If `.specs/` is unavailable or not writable, block restart state mutation and report the missing operation.
 
 Chat-only plans are not resumable restart state. A plan, task list, or implementation intent that exists only in conversation history must be promoted into `.specs/` artifacts before restart-save may claim it is resumable. Otherwise restart-save may only create a shell checkpoint that warns the plan must be supplied again in the clean chat.
 
@@ -71,7 +71,7 @@ Write the packet into `.specs/` files, not durable memory alone. `.specs/HANDOFF
 
 Allowed metadata fields in a save/load report are `path`, `status`, `active_feature`, and timestamps. Allowed content fields are compact derived summaries such as active feature, current objective, blockers, changed files, verification results, exact next step, owning workflow, and restart-load instruction.
 
-Forbidden payloads: raw command transcripts, full artifact content dumps, raw memory dumps, raw `th0th_search` output, and raw chat history. Use summaries plus exact paths instead. Completion output must include no-op evidence when no artifact changed, memory outcome, residual risk, and the exact restart-load instruction.
+Forbidden payloads: raw command transcripts, full artifact content dumps, raw memory dumps, raw `search` output, and raw chat history. Use summaries plus exact paths instead. Completion output must include no-op evidence when no artifact changed, memory outcome, residual risk, and the exact restart-load instruction.
 
 ## Load Packet
 
@@ -96,7 +96,7 @@ After loading, route to the implementation workflow that owns the next action. D
 
 ## Memory Policy
 
-Use `th0th_remember` only for durable cross-session knowledge worth reusing beyond the restart: decisions, rejected approaches, repeated lessons, and reusable verification recipes. Do not persist raw chat logs, full artifacts, command transcripts, or the restart packet as ordinary memory.
+Use `remember` only for durable cross-session knowledge worth reusing beyond the restart: decisions, rejected approaches, repeated lessons, and reusable verification recipes. Do not persist raw chat logs, full artifacts, command transcripts, or the restart packet as ordinary memory.
 
 Required memory tags:
 

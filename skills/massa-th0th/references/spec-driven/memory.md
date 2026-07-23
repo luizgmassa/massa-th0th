@@ -198,7 +198,7 @@ Both are silent data loss. The section-scoped write rule is the single correctne
 
 ## Durable Memory
 
-Use `th0th_remember` for durable cross-session decisions, rejected approaches, reusable verification recipes, repeated lessons, and high-signal gotchas after recall and importance scoring. Do not persist one-off command output, chat summaries, raw transcripts, raw logs, copied source, raw search output, raw subagent output, customer data, secrets, or already-captured facts.
+Use `remember` for durable cross-session decisions, rejected approaches, reusable verification recipes, repeated lessons, and high-signal gotchas after recall and importance scoring. Do not persist one-off command output, chat summaries, raw transcripts, raw logs, copied source, raw search output, raw subagent output, customer data, secrets, or already-captured facts.
 
 Required th0th tags for durable memory:
 

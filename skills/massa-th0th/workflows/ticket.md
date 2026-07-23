@@ -5,7 +5,7 @@ Use this workflow when the user wants to draft, review, create, or resume creati
 ## Workflow
 
 1. Resolve or reuse `projectId` and `workflowSessionId=ticket-<entity>`.
-2. Recall durable project conventions, prior Jira constraints, and ticket-writing decisions through `th0th_recall`. Treat recalled facts as leads until confirmed by the user or current Jira metadata.
+2. Recall durable project conventions, prior Jira constraints, and ticket-writing decisions through `recall`. Treat recalled facts as leads until confirmed by the user or current Jira metadata.
 3. Load the focused contracts:
    - `references/ticket/intake-and-sources.md` for ordered questions, reference-ticket isolation, DoR/DoD inputs, and bounded code exploration.
    - `references/ticket/templates-and-quality.md` for title prefixes, built-in templates, decomposition, and draft validation.

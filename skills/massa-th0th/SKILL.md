@@ -28,19 +28,31 @@ Before reading any massa-th0th file:
 
 - Every coding/planning task uses one stable `projectId` and
   `workflowSessionId`.
-- Start with `th0th_recall` for relevant prior decisions/patterns.
+- Start with `recall` for relevant prior decisions/patterns.
 - Default startup/context recall is budgeted: use `limit <= 3`,
   `minImportance >= 0.7`, and `types=["critical","decision","pattern"]`
   unless the selected workflow explicitly needs a broader memory query.
-- Never use `th0th_recall` as an artifact loader. Exact project, restart,
+- Never use `recall` as an artifact loader. Exact project, restart,
   handoff, feature, and validation state must come from .specs/ files.
 - For multi-search tasks, use a separate ephemeral `synapseSessionId` according
-  to `references/synapse-policy.md`; pass it only to `th0th_search.sessionId`.
-  Never pass `workflowSessionId` in that field.
-- Prefer the shared v2 retrieval order; fall back gracefully if th0th or
-  Synapse is unavailable.
+  to `references/synapse-policy.md`; pass it only to `search.sessionId`.
+  Never pass `workflowSessionId` in that field. Use `synapse_task_begin`/`synapse_task_end`
+  for task envelopes and `synapse_prefetch` to warm the buffer on file open.
+- Prefer the shared v2 retrieval order; fall back gracefully if the massa-th0th
+  server or Synapse is unavailable. The full tool surface includes 52 tools
+  (see `references/th0th-tools.md`): indexing, search, symbol graph
+  (`trace_path`, `impact_analysis`, `get_architecture`), memory CRUD
+  (`remember`, `recall`, `memory_update`, `memory_delete`), checkpoints
+  (`create_checkpoint`/`list_checkpoints`/`restore_checkpoint`), handoffs
+  (`handoff_begin`/`accept`/`cancel`/`list_pending`), `bootstrap`,
+  `compact_snapshot`, code execution (`execute`/`execute_file`/`batch_execute`),
+  `fetch_and_index`, full Synapse lifecycle, `read_file`, `symbol_snippet`,
+  and `analytics`. Graph tools (`trace_path`, `impact_analysis`,
+  `get_architecture`) only count as evidence when the index is fresh for the
+  current repository path and commit/worktree state.
 - Persist only durable, useful knowledge. Do not fabricate memories to satisfy
-  process.
+  process. Use `memory_update` to correct stale memories and `memory_delete`
+  to remove obsolete ones.
 - Emit concise user-facing status updates at meaningful workflow boundaries
   when the Conversation Feedback Policy is active.
 - Complete Evidence Gate before claiming done.
@@ -78,7 +90,7 @@ Examples:
 
 Resolve `projectId`:
 
-1. Call `th0th_recall` with query `"projectId for this workspace"`,
+1. Call `recall` with query `"projectId for this workspace"`,
    `limit <= 3`, `minImportance >= 0.7`, and
    `types=["critical","decision","pattern"]`.
 2. If found, reuse exactly.
@@ -193,22 +205,27 @@ reason. Reuse The Fool context when it is already loaded.
 
 Use this default retrieval sequence when it matches the task:
 
-1. `th0th_list_projects` or equivalent freshness evidence before relying on indexed project state.
-2. `th0th_project_map` for one-shot architecture orientation when the index is fresh for the current repository path and worktree state.
-3. `th0th_search(responseMode="summary", maxResults=10)` for broad discovery.
-4. `th0th_search(responseMode="enriched", maxResults=3)` for targeted deep reads; use `maxResults=5` only when the user named 4-5 concrete files, symbols, or findings.
-5. Symbol navigation and `th0th_read_file` for exact definitions, usages, and
-   line ranges.
-6. `th0th_optimized_context` for compact synthesized context when available.
-7. Focused shell/file fallback when th0th is unavailable, stale, incomplete, or misses
-   obvious local truth.
+1. `list_projects` or equivalent freshness evidence before relying on indexed project state.
+2. `project_map` for general architecture orientation (PageRank backbone, symbol counts) when the index is fresh for the current repository path and worktree state.
+3. `get_architecture` for architecture-specific deep maps (packages, routes, hotspots, communities, cycles) when the index is fresh.
+4. `search(responseMode="summary", maxResults=10)` for broad discovery.
+5. `search(responseMode="enriched", maxResults=3)` for targeted deep reads; use `maxResults=5` only when the user named 4-5 concrete files, symbols, or findings.
+6. Symbol navigation (`search_definitions`, `get_references`, `go_to_definition`) and `read_file` for exact definitions, usages, and line ranges.
+7. `symbol_snippet` for raw code snippets by file + line range.
+8. `trace_path` for typed-edge BFS call/data-flow path tracing (fresh index only).
+9. `impact_analysis` for git-diff centrality-ranked impact (fresh index only).
+10. `optimized_context` for compact synthesized context when available.
+11. Focused shell/file fallback when the massa-th0th server is unavailable, stale, incomplete, or misses obvious local truth.
 
-`th0th_project_map`, `th0th_search`, and `th0th_optimized_context` are leads
+`project_map`, `get_architecture`, `search`, and `optimized_context` are leads
 until their results are confirmed against current source files read in this session or returned with current freshness evidence. Current repository source
-and approved `.specs/` artifacts remain authoritative.
+and approved `.specs/` artifacts remain authoritative. Graph tools (`trace_path`,
+`impact_analysis`, `get_architecture`) only count as evidence when the index is
+fresh for the current repository path and commit/worktree state; fall back to
+`search`/`get_references` and record reduced retrieval confidence when stale.
 
 Load `references/synapse-policy.md` when the planned investigation includes
-two or more related `th0th_search` calls. MCP is primary; authenticated REST may
+two or more related `search` calls. MCP is primary; authenticated REST may
 fill missing or broken Synapse lifecycle operations once after a documented MCP
 schema or adapter failure. Keep REST-only fields out of MCP calls.
 
@@ -268,13 +285,19 @@ Load only when a selected workflow asks for them:
 
 | Failure | Behavior |
 |---|---|
-| `th0th_recall` empty | Continue as cold start; do not invent memory. |
-| th0th unavailable | Fall back to focused shell/file reads; keep session concept. |
-| Synapse unavailable | Continue with stateless th0th search. |
+| `recall` empty | Continue as cold start; do not invent memory. |
+| massa-th0th server unavailable | Fall back to focused shell/file reads; keep session concept. |
+| Synapse unavailable | Continue with stateless search. |
 | Synapse prime/access mismatch | Use verified REST fallback or skip that optional step. |
-| index incomplete | Use recall; skip search-dependent steps until ready. |
+| index incomplete or stale | Use recall; skip search-dependent steps until ready. Graph tools (`trace_path`, `impact_analysis`, `get_architecture`) fall back to `search`/`get_references`; record reduced retrieval confidence. |
 | no meaningful memory | Say memory was intentionally skipped. |
 | memory write fails | Continue and report the unpersisted insight. |
+| `create_checkpoint` unavailable | Continue with `.specs/` artifact state as fallback. |
+| `handoff_begin` unavailable (`HANDOFFS_ENABLED=false`) | Fall back to `remember` + `.specs/` writes; record skipped handoff-table write. |
+| `bootstrap` unavailable | Proceed with manual `remember` calls. |
+| `compact_snapshot` unavailable | Continue with `compress` + `remember`; record skipped snapshot. |
+| code execution (`execute`/`execute_file`/`batch_execute`) unavailable | Load file into context instead; note the local-dev-only trust model still applies. |
+| `fetch_and_index` unavailable | Use native web fetch + manual indexing or skip external content. |
 | feedback reference unavailable | Continue without feedback lines; do not block the workflow. |
 
 ## Completion

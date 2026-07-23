@@ -14,7 +14,7 @@ Do not execute from chat summaries, inline review comments, remembered findings,
    - `references/naming-standards.md` before introducing, renaming, or preserving identifiers as part of a finding fix.
    - `references/context-firewall.md` before large diffs, logs, snapshots, reports, or broad searches.
    - `references/agent-orchestration.md` only for high-risk findings, disjoint implementation slices, or independent verification.
-3. `th0th_recall` -> load prior implementation audit decisions, known regressions, architecture/security boundaries, accepted exceptions, testing conventions, and reusable verification recipes for the target.
+3. `recall` -> load prior implementation audit decisions, known regressions, architecture/security boundaries, accepted exceptions, testing conventions, and reusable verification recipes for the target.
 4. Select the report with an explicit execution focus:
    - Establish report selector, target focus, and optional source-qualified finding IDs before selecting a report.
    - If the user provides a path, read that exact markdown file.

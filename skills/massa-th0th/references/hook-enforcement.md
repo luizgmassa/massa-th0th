@@ -33,8 +33,8 @@ nudge, exit 0).
 
 | Flag | Values | Effect |
 |---|---|---|
-| `UAS_HOOK_PROFILE` | `minimal` \| `standard` \| `strict` | `minimal`: only blocking safety hooks (gateguard, config_protection). `standard` (default): blocking + nudges + observation + stop gate as nudge. `strict`: stop gate blocks once per session to force acknowledgment. |
-| `UAS_DISABLED_HOOKS` | comma-separated hook names | Skip named hooks entirely. |
+| `MASSA_TH0TH_HOOK_PROFILE` | `minimal` \| `standard` \| `strict` | `minimal`: only blocking safety hooks (gateguard, config_protection). `standard` (default): blocking + nudges + observation + stop gate as nudge. `strict`: stop gate blocks once per session to force acknowledgment. |
+| `MASSA_TH0TH_DISABLED_HOOKS` | comma-separated hook names | Skip named hooks entirely. |
 
 Every hook exits 0 on bad stdin or non-critical error. Blocking hooks are
 <200 ms and make no network calls. Observation hooks are non-blocking.
@@ -105,7 +105,7 @@ The continuous-learning loop writes two stores, not one:
 
 - `lessons.py add` / `import` — deterministic grounded file store
   (`.specs/lessons.json`); refuses ungrounded lessons; promotion/quarantine.
-- `th0th_remember` — durable memory, best-effort via REST (`TH0TH_API_URL`),
+- `remember` — durable memory, best-effort via REST (`TH0TH_API_URL`),
   file-only fallback when REST is unavailable.
 
 **Type:** always `pattern` (lessons are procedural knowledge) or `decision`
@@ -117,7 +117,7 @@ type — th0th supports only `critical | conversation | code | decision | patter
 contract: `project:<projectId>`, `session:<workflowSessionId>`,
 `workflow:<type>`, `entity:<name>`, `memory:procedural`. This puts lessons in
 the same recall namespace as massa-th0th decisions/patterns, so future
-`th0th_recall` surfaces them at Specify/Design.
+`recall` surfaces them at Specify/Design.
 
 `PreCompact` (`precompact_save_state.py`) writes a th0th `critical` memory
 tagged `memory:working` for the active objective + exact next step before the
@@ -125,7 +125,7 @@ window compacts; file-only fallback when REST is unavailable.
 
 ## No SessionStart Recall Duplication
 
-massa-th0th's router already runs budgeted `th0th_recall` on startup. The hook
+massa-th0th's router already runs budgeted `recall` on startup. The hook
 layer adds **no** competing SessionStart recall. The installer keeps the
 existing SessionStart bootstrap (which transports `AGENTS.md` policy); memory
 recall stays owned by the router.

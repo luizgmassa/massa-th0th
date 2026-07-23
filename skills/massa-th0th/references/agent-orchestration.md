@@ -180,7 +180,7 @@ The main agent owns final synthesis and applies the configured Plan Challenge Po
 For delegated tasks that expect repeated searches:
 
 - create one ephemeral Synapse session per subagent
-- pass only that agent's `synapseSessionId` to its `th0th_search` calls
+- pass only that agent's `synapseSessionId` to its `search` calls
 - keep parent/child `workflowSessionId` values in memory tags and output packets
 - never share one Synapse session across concurrent agents
 - allow stateless fallback when session creation or adapter translation fails

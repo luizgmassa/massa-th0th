@@ -29,7 +29,7 @@ Use this workflow in a new or clean chat when the user asks to load saved restar
    - build an agreement matrix with one row each for active feature, objective, blockers, and exact next step, with per-artifact value and pass/fail result.
    - ignore `.specs-exports/` for runtime state; it may only help humans inspect a projection.
    - do not expose raw command transcripts, full artifact JSON, or raw chat history as working context.
-6. Recall durable memory with `th0th_recall` for the resolved `projectId`, `workflowSessionId`, and active entity only after `.specs/` artifacts load and agree. Treat memories as summarized context only; discard stale or superseded facts that conflict with `.specs/` artifacts or current source.
+6. Recall durable memory with `recall` for the resolved `projectId`, `workflowSessionId`, and active entity only after `.specs/` artifacts load and agree. Treat memories as summarized context only; discard stale or superseded facts that conflict with `.specs/` artifacts or current source. Call `handoff_list_pending` with `projectId` to discover open handoffs from prior sessions; if a matching handoff exists, call `handoff_accept` to transition it to `accepted` and incorporate its `summary`/`nextSteps`/`files` into the loaded state. If `handoff_list_pending` is unavailable, continue with `.specs/` + `recall` state.
 7. Inspect current source only for implementation evidence needed by the next step. Do not treat source files as canonical project state.
 8. Run baseline verification before mutation when the repo harness or loaded state names a baseline command, commonly `rtk ./init.sh`; if it fails, report the failure as current baseline state before adding scope.
 9. Present the loaded restart state:

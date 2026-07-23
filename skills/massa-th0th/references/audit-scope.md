@@ -58,7 +58,7 @@ Use the smallest scope type that matches the user's target:
 - Branch comparison: user-provided base/head branch or ref comparison. Resolve base/head with the branch diff rules below and record changed files.
 - Codebase area: module, package, directory, service, bounded context, or feature area. Resolve entry points, exported surfaces, tests, config, and adjacent docs only as needed.
 - Symbol/class/function: locate definitions and references with th0th symbol
-  tools, targeted enriched search, or focused fallback; use `th0th_read_file`
+  tools, targeted enriched search, or focused fallback; use `read_file`
   for exact ranges and include defining files, callers, tests, and configs
   needed to verify claims.
 - Feature/flow: map entry points through main transformations and side effects; ask for a narrower flow when the feature spans too many unrelated surfaces.

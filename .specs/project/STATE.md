@@ -1,6 +1,29 @@
 # massa-th0th Spec State
 
-## Current — Subagent Skills Plugin Parity
+## Current — Workflow Tools Adaptation
+
+- projectId: `massa-th0th`
+- workflowSessionId: `spec-workflow-tools-adaptation`
+- workflow: spec-driven (Large/Complex)
+- feature: `workflow-tools-adaptation` — COMPLETE + validated PASS
+- scope: 29 requirements (WTA-01..29), 9 user stories (4 P1, 4 P2, 1 P3)
+- Validation: PASS — 29/29 ACs verified with grep-sensor evidence, 1/1 discrimination mutation killed, type-check 6/6, build 5/5. All 4 pre-mortem mitigations verified.
+- Report: `.specs/features/workflow-tools-adaptation/validation.md`
+- Commits: 12 commits (`e318fe9`..`5a1894d`)
+- Spec: `.specs/features/workflow-tools-adaptation/spec.md`
+- Design: `.specs/features/workflow-tools-adaptation/design.md` (Approach A: single-pass rename + selective adoption)
+- Tasks: `.specs/features/workflow-tools-adaptation/tasks.md` (12 tasks across 4 phases)
+- Plan Challenge: full The Fool pre-mortem mode; 5 failure narratives; 3 critical/high findings (F1 references not renamed, F2 graph tools lack freshness gate, F3 compact_snapshot session-id confusion) incorporated as plan revisions.
+- Key decisions:
+  - Canonical tool naming = un-prefixed (matching `tool-definitions.ts` CANONICAL_ORDER); all `th0th_*` references removed across 60 files.
+  - `references/th0th-tools.md` expanded from ~20 to 52 tools (full MCP Capability Matrix).
+  - Selective tool adoption: each workflow adopts only tools that materially benefit its flow.
+  - Graph tools (`trace_path`, `impact_analysis`, `get_architecture`) include explicit freshness gates.
+  - `compact_snapshot` uses lifecycle `sessionId`, NOT `workflowSessionId` (two-session-id rule).
+  - `get_architecture` (architecture-specific) distinguished from `project_map` (general overview).
+- Next step: none — feature complete.
+
+## Previous — Subagent Skills Plugin Parity
 
 - projectId: `massa-th0th`
 - workflowSessionId: `spec-subagent-skills-plugins-parity`

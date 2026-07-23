@@ -1,3 +1,280 @@
+<!-- massa-th0th:bootstrap:start -->
+# Coding Session Startup Contract
+
+## Required Coding Bootstrap
+
+For every new conversation involving coding, planning before coding, debugging,
+code review, refactoring, or implementation, activate this stack in order:
+
+1. `caveman full`
+2. `coding-guidelines`
+3. `massa-th0th`
+4. `persona-router`
+
+Activation means loading and using each available behavior. Load the installed
+`massa-th0th` skill's `SKILL.md` once before substantive work begins. Let it
+select the most specific workflow; use `workflows/general.md` only when no
+specialized workflow applies. Recall relevant durable context before work,
+retrieve only source context needed for the goal, remember only verified
+outcomes worth reusing, and compact context only when size reduces execution
+quality. After massa-th0th finishes its initial memory setup, load and run
+`persona-router` against the first user prompt before substantive work.
+
+For generic non-coding conversations, preserve massa-th0th's exclusion: do not
+load `massa-th0th` solely for persona selection. Run `persona-router` directly
+against the configured policy, persona catalog, workspace documentation, and
+the first user prompt.
+
+### Dedupe And Lazy-Load Guardrails
+
+Before reading any massa-th0th workflow or reference:
+
+- First ensure `massa-th0th` has been loaded in the current conversation. If it
+  has not, load it before applying any dedupe rule.
+- After the initial load, reuse already-loaded `massa-th0th`, The Fool, or the
+  selected workflow/reference context.
+- Do not re-read a massa-th0th skill or reference only because `AGENTS.md` names
+  it after initial activation is complete.
+- Treat `massa-th0th` as a router, not permission to bulk-load all workflows or
+  references.
+- Load only the missing minimum context required for the current request.
+- Never load all workflows or all references "just in case."
+
+Load `persona-router` once per conversation after the coding bootstrap, or
+directly for non-coding conversations. Reuse its selected route across turns;
+do not reload the router or persona prompt unless its rerouting rules apply.
+
+The first load is mandatory in each new coding conversation and must load
+`massa-th0th`. Dedupe applies only after that load and must never skip initial
+activation.
+
+### Skill Summary
+
+- `caveman full`: keep communication compressed while preserving technical
+  accuracy; relax compression when clarity or safety requires it.
+- `coding-guidelines`: think before coding, prefer the simplest complete
+  solution, and keep edits surgical and goal-driven.
+- `massa-th0th`: use it as the public workflow router and load internal
+  workflows or references only on demand.
+- `persona-router`: select one cataloged specialist perspective after
+  massa-th0th context is available, using progressive disclosure and at most
+  one secondary review lens.
+
+### Conditional RTK Rules
+
+RTK is a token-optimized CLI proxy. When the `rtk` command is available in the
+current environment, prefix shell commands with `rtk`:
+
+```bash
+rtk git status
+rtk cargo test
+rtk npm run build
+rtk pytest -q
+```
+
+Useful RTK commands:
+
+```bash
+rtk gain
+rtk gain --history
+rtk proxy <cmd>
+rtk --version
+which rtk
+```
+
+If `rtk` is unavailable, run commands normally. Its absence must not block or
+fail the task. An availability check may run without the prefix.
+
+## Contract Ownership
+
+This file is canonical only for session startup, lazy-loading guardrails,
+user-editable policies, and global indexing/context exclusions.
+
+Runtime workflow routing, project/session handling, retrieval, persistence,
+graceful degradation, and completion behavior are canonical in
+`skills/massa-th0th/SKILL.md`. Do not copy those contracts into this file.
+Persona selection, evidence gathering, route persistence, and persona failure
+handling are canonical in `skills/persona-router/SKILL.md`.
+
+## Persona Router Policy
+
+This user-editable policy controls automatic persona selection. SessionStart
+transports this policy before the first user prompt; the agent performs the
+actual selection only after that prompt is available.
+
+```yaml
+persona_router:
+  enabled: auto
+  ambiguity: ask
+  no_match: no_persona
+  mid_conversation: task_change
+```
+
+Supported values:
+
+- `enabled`: `auto` runs automatic inference for every conversation; `off`
+  disables inference but still honors explicit persona or no-persona requests.
+- `ambiguity`: `ask` asks the user to choose among plausible personas or no
+  persona; `best_match` applies the strongest supported route; `no_persona`
+  continues without a persona.
+- `no_match`: `no_persona` continues silently when no catalog entry fits;
+  `ask` asks whether to use a weakly supported candidate or no persona.
+- `mid_conversation`: `task_change` re-evaluates when the primary deliverable
+  changes ownership or a new task begins; `explicit_only` changes the route
+  only when the user requests it.
+
+Prompt-level explicit persona or no-persona instructions override this policy
+for the current task. Applicable system, developer, and project instructions
+remain higher priority than persona behavior.
+
+Automatic routing must use progressive disclosure: inspect catalog metadata
+first, reuse relevant massa-th0th evidence when available, read only targeted
+workspace documentation when needed, and load only the selected persona prompt.
+Ask the user only when the configured edge-case policy requires it.
+
+## Plan Challenge Policy
+
+This user-editable policy controls whether massa-th0th runs The Fool after
+constructing a plan. It is a second-pass gate, not the initial workflow router.
+
+```yaml
+plan_challenge:
+  enabled: auto
+  depth: lite
+  mode: auto
+  full_gate: high_risk_or_explicit
+  serious_findings: revise_plan
+```
+
+Supported values:
+
+- `enabled`: `auto` runs the configured gate; `off` disables it;
+  `explicit_only` runs only when the user asks for a challenge, pre-mortem,
+  red-team, or evidence audit.
+- `depth`: `lite` uses an inline checklist for low-risk plans; `full` loads
+  `workflows/the-fool.md` when needed.
+- `full_gate`: `high_risk_or_explicit` loads full The Fool for high-risk plans
+  or direct requests; `always` loads it for every plan; `explicit_only` loads it
+  only on direct request.
+- `mode`: `auto` chooses from The Fool mode-selection guide; `ask` asks when
+  interactive input is available; concrete modes are `pre_mortem`, `red_team`,
+  `evidence_audit`, `socratic`, or `dialectic`.
+- `serious_findings`: `revise_plan` incorporates valid high-risk findings
+  before finalizing; `append_critique` keeps the plan and attaches critique;
+  `warn_only` briefly reports risks.
+
+Prompt-level user instructions override this policy for the current turn.
+
+Load full `workflows/the-fool.md` when the workflow is `spec-driven`,
+`feature`, `adr`, `rfc`, `tdd`, or `refactor`; when the plan touches security,
+data loss, migrations, irreversible actions, auth/privacy, cross-service
+contracts; or when the plan touches more than 5 files, classes, or modules. If
+The Fool or the selected Fool reference is already loaded, reuse it.
+
+For low-risk plans, run this inline auto-lite checklist without loading The Fool
+references:
+
+- What assumption would most likely make this plan fail?
+- What evidence or deterministic check would falsify success?
+- Does the plan touch more than 5 files/classes/modules or a high-risk domain?
+- If a serious risk is found, revise the plan or load full The Fool.
+
+## Conversation Feedback Policy
+
+This user-editable policy controls chat-visible status updates for
+`massa-th0th` workflows. It is a progress and observability layer, not a
+persistence system.
+
+```yaml
+conversation_feedback:
+  enabled: auto
+  density: transition_updates
+  style: emoji_capitalized_ascii
+  max_lines_per_update: 2
+  include: [workflow, loads, memory, notebooklm, subagents, divergences, verification]
+  suppress: [chain_of_thought, raw_tool_output, repeated_micro_events]
+```
+
+Supported labels are `Start`, `Routing`, `Loading`, `Context`, `Decision`,
+`Agent Started`, `Agent Running`, `Agent Done`, `Agent Blocked`, `Divergence`,
+`Warning`, `Error`, `Verified`, and `Finished`.
+
+Use this shape:
+
+```md
+🔵 [Start] Planning visual feedback for massa-th0th. Workflow: Spec Driven. Session: Visual Feedback.
+🔄 [Loading] Reading AGENTS.md and massa-th0th router guidance before planning.
+🧠 [Context] Found 8 relevant th0th memories and queried the requested NotebookLM source.
+🤖 [Agent Running] Plan Critic is checking failure modes for the proposed design.
+⚠️ [Divergence] Expected the legacy router path, but this checkout uses skills/massa-th0th/SKILL.md.
+✅ [Verified] Stale-reference checks and skill validation passed.
+🏁 [Finished] Plan complete. Changed files: none. Remaining risk: none found.
+```
+
+Rules:
+
+- Keep each status update to 1-2 lines.
+- Use capitalized labels and human-readable sentences.
+- Avoid `=` syntax, tiny abbreviations, and ultra-compressed words.
+- Never expose chain-of-thought, raw tool output, raw logs, secrets, or raw
+  subagent prompts.
+- Load `skills/massa-th0th/references/conversation-feedback.md` only when
+  detailed feedback guidance is needed.
+
+## Runtime Contract Pointer
+
+After activation, follow `skills/massa-th0th/SKILL.md` for all runtime behavior.
+Its selected workflows and references define exact tool contracts, memory tags,
+failure handling, and completion evidence.
+
+## Indexing / Context Hygiene
+
+Always ignore these paths during indexing and context loading:
+
+```text
+node_modules/
+vendor/
+.venv/
+env/
+__pycache__/
+*.pyc
+dist/
+build/
+.next/
+.nuxt/
+out/
+bin/
+obj/
+target/
+ios/Pods/
+ios/build/
+android/app/build/
+android/.gradle/
+android/.idea/
+.expo/
+.dart_tool/
+*.ipa
+*.apk
+*.app
+*.log
+logs/
+.npm/
+.eslintcache
+.stylelintcache
+.cache/
+tmp/
+.env*
+*.pem
+*.key
+.ssh/
+secrets.json
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+```
+<!-- massa-th0th:bootstrap:end -->
+
 # Sub-Agent Registry
 
 Single registry for the 12 reusable sub-agent skills in this repo. Workflows remain the orchestrators; these agents are single-purpose specialists any workflow can invoke via the opencode task tool.

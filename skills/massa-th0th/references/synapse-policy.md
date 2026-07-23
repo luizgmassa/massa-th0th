@@ -1,15 +1,15 @@
 # Synapse Policy
 
 Load this reference when a task is expected to issue more than one
-`th0th_search`, when parallel agents need isolated retrieval context, or when
+`search`, when parallel agents need isolated retrieval context, or when
 Synapse compatibility/fallback behavior matters.
 
 ## Two Session IDs
 
 - `workflowSessionId`: stable, durable task identity used by recall, remember,
   tags, reports, handoffs, and continuation packages.
-- `synapseSessionId`: ephemeral ID returned by `th0th_synapse_session`; pass it
-  only as `th0th_search.sessionId`.
+- `synapseSessionId`: ephemeral ID returned by `synapse_session`; pass it
+  only as `search.sessionId`.
 
 Never persist `synapseSessionId` as the task's durable session identity. A
 resumed handoff reuses `workflowSessionId` and opens a fresh Synapse session.
@@ -17,7 +17,7 @@ resumed handoff reuses `workflowSessionId` and opens a fresh Synapse session.
 ## Activation
 
 - One-shot lookup: skip Synapse.
-- Planned related `th0th_search` calls >= 2: create a Synapse session before the first search.
+- Planned related `search` calls >= 2: create a Synapse session before the first search.
 - Parallel subagents: each agent gets its own Synapse session while retaining
   the parent/child `workflowSessionId` tags.
 - Major focus shift: update task context through REST when available; otherwise
@@ -32,13 +32,13 @@ Default search budget inside a Synapse session:
 
 ## MCP-First Lifecycle
 
-1. Call `th0th_synapse_session` with explicit `agentId`, `workspaceId`,
+1. Call `synapse_session` with explicit `agentId`, `workspaceId`,
    one-sentence `taskContext`, and `ttlMs`. Omit `sessionId` so the server
    generates a collision-free ID.
-2. Call `th0th_recall` using `workflowSessionId` and project/entity context.
+2. Call `recall` using `workflowSessionId` and project/entity context.
 3. Prime the buffer when the adapter supports it.
 4. Pass the returned `synapseSessionId` as `sessionId` on every related
-   `th0th_search` call.
+   `search` call.
 5. After consuming a result, record its `memoryId` through the verified access
    route when available.
 

@@ -183,7 +183,7 @@ For mobile or UI features, follow the [references/mobile-context.md](../mobile-c
 
 For each issue found during UAT or from the Verifier:
 
-1. **Diagnose** — Analyze the codebase to find root cause. Prefer th0th code-analysis tools first (th0th_search, th0th_optimized_context) for symbol and dependency location; fall back to ast-grep/rg/grep when the index is stale or unavailable. Current source overrides stale index/memory.
+1. **Diagnose** — Analyze the codebase to find root cause. Prefer th0th code-analysis tools first (search, optimized_context) for symbol and dependency location; fall back to ast-grep/rg/grep when the index is stale or unavailable. Current source overrides stale index/memory.
 2. **Create fix task** — Write a task definition with:
    - What: The specific fix
    - Where: File paths
@@ -212,7 +212,7 @@ python3 skills/massa-th0th/scripts/lessons.py --root . add --feature <slug> --si
 
 The script enforces grounding (mandatory `--source`) and owns all bookkeeping. A clean PASS with no signal → record nothing. Run the self-check: if there was signal but no lesson was recorded, say so in chat. See [references/lessons.md](../lessons.md) for the exact commands, phrasing rules, scope discipline, and the no-script fallback.
 
-Persist durable memory for verified outcomes worth reusing via `th0th_remember` with tags `workflow:spec-driven`, `entity:<slug>`, and `memory:episodic|procedural` as appropriate.
+Persist durable memory for verified outcomes worth reusing via `remember` with tags `workflow:spec-driven`, `entity:<slug>`, and `memory:episodic|procedural` as appropriate.
 
 ---
 

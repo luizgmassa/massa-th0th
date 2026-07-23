@@ -120,7 +120,7 @@ Follow [coding-principles.md](coding-principles.md):
 - Touch ONLY listed files.
 - No scope creep.
 
-**Code analysis priority:** Use th0th tooling FIRST (th0th_list_projects, th0th_project_map, th0th_search, th0th_optimized_context) to locate existing patterns and reuse before falling back to ast-grep/rg/grep. Apply freshness and source-precedence: current repository source overrides a stale index or memory; never let an outdated index reconstruct canonical artifact or code state.
+**Code analysis priority:** Use th0th tooling FIRST (list_projects, project_map, search, optimized_context) to locate existing patterns and reuse before falling back to ast-grep/rg/grep. Apply freshness and source-precedence: current repository source overrides a stale index or memory; never let an outdated index reconstruct canonical artifact or code state.
 
 **SPEC_DEVIATION markers:** If implementation diverges from spec/design, mark it inline:
 

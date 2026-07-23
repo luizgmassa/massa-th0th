@@ -19,7 +19,7 @@ User prompt overrides take precedence for the current turn only, such as "skip t
    - Direct challenge request: use `workflowSessionId=fool-[entity]`.
    - Post-plan gate: inherit the parent workflow's exact `projectId`,
      `workflowSessionId`, workflow name, entity, and memory context.
-2. `th0th_recall` -> load prior decisions, rejected approaches, constraints, accepted risks, and relevant evidence for the target entity.
+2. `recall` -> load prior decisions, rejected approaches, constraints, accepted risks, and relevant evidence for the target entity.
 3. Require a concrete proposed plan before critique. If there is no plan, return to the parent workflow and construct the plan first. After a concrete plan exists, always attempt a read-only `plan-critic` subagent when subagent tooling is available.
 4. Resolve gate depth:
    - Post-plan lite gate: keep parent identifiers and dispatch a bounded lite checklist packet without loading The Fool mode references.

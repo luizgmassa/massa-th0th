@@ -6,7 +6,7 @@ Use this workflow when the readiness checklist is true: one product direction is
 
 1. Resolve or reuse `projectId` and `workflowSessionId=tdd-[entity]`.
 2. Establish evidence before asking questions:
-   - `th0th_recall` approved RFCs, ADRs, prior TDD decisions, constraints, rejected approaches, and verification patterns.
+   - `recall` approved RFCs, ADRs, prior TDD decisions, constraints, rejected approaches, and verification patterns.
    - Load `references/tdd/discovery-and-sizing.md`.
    - Inspect current source, tests, source sets, project instructions, architecture documents, and existing design artifacts. Current source and approved project artifacts override stale memory.
    - For testing plans, find whether each planned test file already exists and which source set owns it before choosing a location such as `commonTest`, `androidUnitTest`, `unitTest`, or the repository's actual equivalent.
@@ -46,7 +46,7 @@ Use this workflow when the readiness checklist is true: one product direction is
    - If the user accepts, invoke `workflows/ticket.md`; Jira creation remains owned solely by the ticket workflow. Create one standard Jira issue per PR group. Create row-level sub-tasks only when the selected ticket hierarchy requires them.
    - Update `Jira Key` only with confirmed Jira keys returned by the ticket workflow. Use `Pending` for approved-but-uncreated PR groups and never fabricate keys.
 10. Save the document as `Draft` or `In Review`. Never mark it `Approved`, invent sign-off, or begin downstream implementation without the required human decision.
-11. Persist only durable architecture constraints, accepted trade-offs, rejected approaches, compatibility requirements, and verification recipes through `th0th_remember` after recall, deduplication, and scoring. Use `decision` with `memory:semantic` for the architectural blueprint.
+11. Persist only durable architecture constraints, accepted trade-offs, rejected approaches, compatibility requirements, and verification recipes through `remember` after recall, deduplication, and scoring. Use `decision` with `memory:semantic` for the architectural blueprint.
 12. Complete `references/evidence-gate.md` and report the artifact path, included conditional sections, unresolved questions, Jira creation outcome, memory outcome, and residual risk.
 
 ## Failure Handling

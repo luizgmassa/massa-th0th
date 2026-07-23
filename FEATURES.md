@@ -16,6 +16,7 @@ Every feature in massa-th0th, what it does, why it exists, and how to use it.
 - [Persistent Memory](#persistent-memory)
 - [Passive Capture (Hooks)](#passive-capture-hooks)
 - [Plugins (4-Tool Parity)](#plugins-4-tool-parity)
+- [Workflow Tools (52-Tool Adoption)](#workflow-tools-52-tool-adoption)
 - [Bootstrap](#bootstrap)
 - [Cross-session Handoffs](#cross-session-handoffs)
 - [Auto-improvement (Proposals)](#auto-improvement-proposals)
@@ -34,6 +35,7 @@ Every feature in massa-th0th, what it does, why it exists, and how to use it.
 - [MCP Server (52 Tools)](#mcp-server-52-tools)
 - [REST API](#rest-api)
 - [Configuration](#configuration)
+- [Skills & Install System](#skills--install-system)
 
 ---
 
@@ -420,6 +422,44 @@ Write-permitted agents: `builder`, `test-engineer`, `documentation-agent`. All o
 - **Parity test:** `scripts/__tests__/subagent-parity.test.ts` runs the drift gate + asserts model/effort/permission pinning, name-collision-free, exact 12 per host, Codex TOML round-trip + owned marker, and FEATURES.md ↔ spec table byte-parity (DOC-06).
 
 **Spec:** `.specs/features/subagent-skills-plugin-parity/`
+
+---
+
+## Workflow Tools (52-Tool Adoption)
+
+**What:** The massa-th0th workflow skill (`skills/massa-th0th/`) references the full 52-tool surface from `apps/mcp-client/src/tool-definitions.ts` CANONICAL_ORDER. Every tool name uses the canonical un-prefixed form (e.g. `recall`, not `th0th_recall`), matching what the MCP server and OpenCode plugin actually expose. The tool-contract reference (`references/th0th-tools.md`) contains a complete MCP Capability Matrix for all 52 tools grouped by category, and each workflow adopts the tools that materially benefit its flow.
+
+**Why:** The workflows previously referenced only ~11 of 52+ shipped tools and used stale `th0th_*`-prefixed names that diverged from the actual MCP tool declarations. Powerful shipped features — checkpoints, cross-session handoffs, bootstrap, compact_snapshot, trace_path, impact_analysis, code execution, the full Synapse lifecycle, read_file, symbol_snippet, memory_update/delete, analytics, fetch_and_index — were unguided by the workflow router. Agents following massa-th0th workflows missed deterministic, first-class tool support for long-running task save/resume, cross-session continuity, code-path tracing, impact analysis, and code execution for analysis.
+
+**How to use:** Workflows reference tools inline in their ordered steps. No separate invocation is needed — when you follow a massa-th0th workflow, the tool calls are part of the flow. Key adoption map:
+
+| Tool(s) | Workflow | Where in the flow |
+| --- | --- | --- |
+| `bootstrap` | `onboarding` | After indexing, before manual `remember` |
+| `create_checkpoint` / `list_checkpoints` / `restore_checkpoint` | `spec-driven`, `long-session`, `restart-save` | Task boundaries; resume after interruption; milestone before restart |
+| `handoff_begin` / `handoff_accept` / `handoff_list_pending` / `handoff_cancel` | `agent-handoff`, `restart-load` | Persist + resume cross-session handoffs |
+| `compact_snapshot` | `long-session` | Before compaction fires (zero-loss /compact recovery) |
+| `trace_path` | `debug` | Root-cause call/data-flow path tracing |
+| `impact_analysis` | `architecture-audit`, `refactor` | Git-diff centrality-ranked blast radius |
+| `get_architecture` | `architecture-audit` | Architecture-specific deep map (packages, routes, hotspots, communities, cycles) |
+| `execute_file` / `execute` / `batch_execute` | `debug`, `general` | Run analysis code over files instead of loading into context |
+| `synapse_task_begin` / `synapse_task_end` / `synapse_prefetch` | `spec-driven`, `feature`, `debug` | Task envelopes + buffer warming for multi-search investigations |
+| `read_file` / `symbol_snippet` | `general` (and all workflows that read files) | File reads with symbol metadata; raw code snippets by line range |
+| `memory_update` / `memory_delete` | `general`, `debug`, `long-session` | Correct stale memories; remove obsolete ones |
+| `analytics` | `general`, `long-session` | Usage/cache insights |
+| `fetch_and_index` | `exploration` | Pull web docs/API refs into searchable index |
+
+**Graph-tool freshness gate:** `trace_path`, `impact_analysis`, and `get_architecture` only count as evidence when the index is fresh for the current repository path and commit/worktree state. When the index is stale, incomplete, or missing, workflows fall back to `search`/`get_references` and record reduced retrieval confidence.
+
+**`get_architecture` vs `project_map`:** `project_map` is the general overview (PageRank backbone, symbol counts, extension distribution, recent files). `get_architecture` is the architecture-specific deep map (packages, entry points, routes, hotspots, Louvain communities, layers, and opt-in Tarjan SCC call cycles via `aspects:["cycles"]`).
+
+**`compact_snapshot` session-id:** `compact_snapshot` takes the lifecycle `sessionId` (from hooks/sessions), NOT the `workflowSessionId`. The two-session-id rule from `references/synapse-policy.md` applies.
+
+**Graceful degradation:** Every new tool reference keeps the existing "if unavailable, continue with fallback" pattern. `create_checkpoint` unavailable → `.specs/` state. `handoff_begin` unavailable (`HANDOFFS_ENABLED=false`) → `remember` + `.specs/`. `bootstrap` unavailable → manual `remember`. `compact_snapshot` unavailable → `compress` + `remember`. Code execution unavailable → load file into context. Graph tools on stale index → `search`/`get_references`.
+
+**Canonical naming:** All tool references in `skills/massa-th0th/` (workflows, references, SKILL.md) use un-prefixed canonical names matching `tool-definitions.ts` CANONICAL_ORDER. No `th0th_*`-prefixed tool names remain.
+
+**Spec:** `.specs/features/workflow-tools-adaptation/`
 
 ---
 
@@ -1040,6 +1080,131 @@ npx @massa-th0th/mcp-client --config-init --ollama-model qwen3-embedding
 # Set specific configuration values
 npx @massa-th0th/mcp-client --config-set embedding.dimensions 4096
 ```
+
+---
+
+## Skills & Install System
+
+The repo ships repo-local skills plus a unified TypeScript installer that symlinks them into each supported coding agent's config directory. This is separate from the per-plugin installers (`apps/*/install.sh`) which handle hooks, MCP config, and subagent specialists.
+
+### Bootstrap Contract
+
+`skills/AGENTS.md` contains two sections:
+
+1. **Bootstrap contract** (top, between `<!-- massa-th0th:bootstrap:start -->` and `<!-- massa-th0th:bootstrap:end -->` markers): the coding session startup contract that activates the skill stack — `caveman full` → `coding-guidelines` → `massa-th0th` → `persona-router`. Includes the persona router policy, plan challenge policy, conversation feedback policy, RTK rules, indexing/context hygiene, and dedupe/lazy-load guardrails.
+
+2. **Sub-agent registry** (bottom): the 12 reusable sub-agent specialist registry (investigator, planner, builder, reviewer, context-curator, verification-agent, requirements-analyst, architecture-specialist, test-engineer, documentation-agent, audit-specialist, mobile-specialist) with capability packet and output contract definitions.
+
+The installer writes the bootstrap block into each tool's `AGENTS.md` using the same markers, replacing any existing block. The sub-agent registry is not written — it is consumed by workflows that dispatch agents.
+
+### Included Skills
+
+| Skill | Location | Description |
+|-------|----------|-------------|
+| `massa-th0th` | `skills/massa-th0th/` | Default memory-backed workflow router for every coding session. 30+ workflows (spec-driven, debug, feature, refactor, audits, ADR/RFC/TDD, commit, ticket, etc.) and 30+ references (evidence gate, context firewall, verification ladder, agent orchestration, etc.). |
+| `massa-th0th-memory` | `skills/massa-th0th-memory/` | Mandatory rules for using massa-th0th semantic search, compression, memory, and symbol graph tools. Prioritizes th0th tools over native Glob/Grep/Read. |
+| `synapse-usage` | `skills/synapse-usage/` | Synapse cognitive modulation layer for focused, low-noise retrieval during multi-step coding tasks. Open sessions, prime buffers, pass session IDs. |
+| `persona-router` | `skills/persona-router/` | Automatic persona selection from catalog. Reads `skills/massa-th0th/personas/catalog.json`, routes based on primary deliverable ownership, supports explicit selection, ambiguity policy, and mid-conversation rerouting. |
+
+### Unified Skills Installer (`scripts/install-skills.ts`)
+
+A TypeScript port of the old repo's Python `agent_integrations.py`, adapted for the Bun/TS stack. Symlink-based — skills are symlinked from the repo into each tool's config directory so updates are immediately reflected.
+
+**Commands:**
+
+```bash
+bun scripts/install-skills.ts --apply --platform all --yes      # install
+bun scripts/install-skills.ts --uninstall --platform all --yes   # remove
+bun scripts/install-skills.ts --dry-run --platform all          # preview
+bun scripts/install-skills.ts --check --platform all            # drift check (exit 1 if drift)
+```
+
+**Flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--apply` | Install skills (symlinks + bootstrap block) — default action |
+| `--uninstall` | Remove massa-th0th-owned symlinks + bootstrap block |
+| `--dry-run` | Preview changes, write nothing |
+| `--check` | Report drift (missing/wrong symlinks), exit 1 if found |
+| `--platform <name>` | `claude`, `codex`, `cursor`, `opencode`, or `all` (default: all) |
+| `--target <dir>` | Override home directory (for tests) |
+| `--repo-root <dir>` | Override repo root detection |
+| `--yes, -y` | Consent to writing real `$HOME` |
+| `--json` | Machine-readable JSON output |
+
+**Platform targets:**
+
+| Platform | Skills dir | Bootstrap target |
+|----------|-----------|-----------------|
+| Claude Code | `~/.claude/skills/<name>` | `~/.claude/AGENTS.md` |
+| Codex | `~/.codex/skills/<name>` | `~/.codex/AGENTS.md` |
+| Cursor | `~/.cursor/skills/<name>` | `~/.cursor/AGENTS.md` |
+| OpenCode | `~/.config/opencode/skills/<name>` | `~/.config/opencode/AGENTS.md` |
+
+**State management:** `~/.config/massa-th0th/install-state.json` (v2 format). Records installed platforms, roots, and skill names. v1 state (legacy) auto-migrates to v2. State is used by `--uninstall` to know what to remove and by `--check` to detect stale symlinks.
+
+**Safety:**
+- Aborts on non-symlink conflict at a target path (won't overwrite user files).
+- `--dry-run` writes nothing.
+- Requires `--yes` for real `$HOME` (not test target).
+- Idempotent: re-running `--apply` is a no-op when symlinks already point to the correct targets.
+- Uninstall removes only symlinks pointing into the massa-th0th repo root.
+
+**Repo root resolution:** uses `import.meta.url` (script file location), not CWD — so it works regardless of where the command is invoked from. Override with `--repo-root`.
+
+**npm scripts:**
+
+```json
+{
+  "install:skills": "bun scripts/install-skills.ts",
+  "uninstall:skills": "bun scripts/install-skills.ts --uninstall"
+}
+```
+
+### Persona Router & Catalog
+
+Personas are cataloged prompt artifacts for shaping conversation perspective. The router selects one persona based on the primary deliverable, with optional secondary review lens.
+
+**Catalog:** `skills/massa-th0th/personas/catalog.json` (schema_version 1, 5 personas). Each entry has `id`, `display_name`, `prompt_path` (filename-only, relative to the catalog directory), `summary`, `aliases`, `primary_signals`, `negative_signals`, and `secondary_lens_signals`.
+
+**Persona prompt files:** `skills/massa-th0th/personas/`
+
+| Persona | File | Use |
+|---------|------|-----|
+| AI Engineer | `context-skill-harness-engineer-architect.md` | Agent context architecture, skill/persona design, harness startup contracts |
+| Node CLI Engineer | `ai-native-nodejs-cli-architect.md` | Node.js/TypeScript CLI architecture, command UX, MCP/LLM boundaries |
+| Product Manager | `product-manager.md` | PRDs, product briefs, user stories, MVP scope |
+| Senior Mobile Engineer | `senior-mobile-engineer.md` | Cross-platform mobile architecture, delivery, testing, release |
+| Senior Mobile QA Automation Engineer | `senior-mobile-qa-automation-engineer.md` | Mobile QA automation, E2E reliability, flake reduction, CI signal |
+
+**Router policy** (in `skills/AGENTS.md`): `enabled: auto`, `ambiguity: ask`, `no_match: no_persona`, `mid_conversation: task_change`. Explicit persona or no-persona requests override automatic inference.
+
+### Workflow Guides
+
+Documentation for massa-th0th workflows lives in `docs/`:
+
+| Guide | File | Covers |
+|-------|------|--------|
+| Spec-Driven | `docs/massa-th0th-spec-driven.md` | TLC v3 Specify → (Design) → (Tasks) → Execute flow |
+| TDD | `docs/massa-th0th-tdd.md` | Technical design / implementation plan workflow |
+| RFC | `docs/massa-th0th-rfc.md` | Propose a significant change |
+| Commit | `docs/massa-th0th-commit.md` | Safe Conventional Commits with Jira branch prefixes |
+| Ticket | `docs/massa-th0th-ticket.md` | Draft and create Jira Epics/issues through Atlassian MCP |
+| Maestro | `docs/massa-th0th-maestro.md` | Mobile E2E flow implementation |
+| Mobile Figma | `docs/massa-th0th-mobile-figma.md` | Compare mobile UI implementation with Figma design |
+| Context Slices | `docs/context-slices.md` | Context slicing patterns |
+
+### Tests
+
+Ported from the old repo's Python test suite to TypeScript/bun test:
+
+| Test file | Scenarios | Covers |
+|-----------|-----------|--------|
+| `scripts/__tests__/validate-repository.test.ts` | 72 | Skill structure, workflow/reference existence, bootstrap contract, persona catalog, no old-repo references, harness state paths, gitignore |
+| `scripts/__tests__/install-skills.test.ts` | 39 | Apply/uninstall idempotency, dry-run, conflict abort, state v1→v2 migration, drift detection, partial uninstall, hook gating scenarios (bad stdin, malformed state) |
+
+Run: `bun test scripts/__tests__/validate-repository.test.ts scripts/__tests__/install-skills.test.ts`
 
 ---
 

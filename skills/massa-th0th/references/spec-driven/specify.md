@@ -67,7 +67,7 @@ The table is canonical; the prose is the applied sweep. **Large/Complex** work m
 
 **Load confirmed lessons first:** Before clarifying, load the project's confirmed lessons so past verification failures shape this spec instead of repeating. Run `python3 skills/massa-th0th/scripts/lessons.py --root . list --status confirmed` (optionally `--scope [area]` or `--query [term]` for the area this feature touches) and apply what comes back as guidance. Load only `confirmed` — never `candidate` or `quarantined`. If no store exists yet or no code tool is available, skip silently. See [lessons.md](../lessons.md).
 
-**Lightweight context scan first (Knowledge Verification Chain Step 1):** Before asking questions, briefly scan existing code, patterns, and neighboring features relevant to this feature. Prefer th0th tooling first (`th0th_list_projects`, `th0th_search`, `th0th_project_map`, `th0th_optimized_context`) before `ast-grep`/`rg`/`grep`, honoring freshness and source-precedence (current source overrides stale index/memory). Use what you find to ground your clarifying questions in reality — not to constrain the spec to current implementation. Keep it lightweight (stay within the <40k token budget; reuse the chain, no new machinery). The spec captures WHAT is needed, not only what exists.
+**Lightweight context scan first (Knowledge Verification Chain Step 1):** Before asking questions, briefly scan existing code, patterns, and neighboring features relevant to this feature. Prefer th0th tooling first (`list_projects`, `search`, `project_map`, `optimized_context`) before `ast-grep`/`rg`/`grep`, honoring freshness and source-precedence (current source overrides stale index/memory). Use what you find to ground your clarifying questions in reality — not to constrain the spec to current implementation. Keep it lightweight (stay within the <40k token budget; reuse the chain, no new machinery). The spec captures WHAT is needed, not only what exists.
 
 You are a thinking partner, not an interviewer. Start open — let the user dump their mental model. Follow the energy: whatever they emphasize, dig into that.
 
@@ -278,6 +278,6 @@ Specify is done when every requirement has an ID, acceptance criteria are testab
 
 ## TH0TH Integration
 
-- **Code analysis:** Use th0th tools first (`th0th_list_projects`, `th0th_search`, `th0th_project_map`, `th0th_optimized_context`) before `ast-grep`/`rg`/`grep` for the lightweight context scan. Current source overrides a stale index or memory (source-precedence rule).
-- **Memory:** Persist verified outcomes worth reusing with `th0th_remember`, tagging `project:<id>`, `session:<id>`, `workflow:spec-driven`, `entity:<slug>`, `memory:working|episodic|semantic|procedural`.
+- **Code analysis:** Use th0th tools first (`list_projects`, `search`, `project_map`, `optimized_context`) before `ast-grep`/`rg`/`grep` for the lightweight context scan. Current source overrides a stale index or memory (source-precedence rule).
+- **Memory:** Persist verified outcomes worth reusing with `remember`, tagging `project:<id>`, `session:<id>`, `workflow:spec-driven`, `entity:<slug>`, `memory:working|episodic|semantic|procedural`.
 - **Validation:** Evidence-or-zero. Every confirmed lesson applied, requirement resolved, and assumption logged is checked against current source.

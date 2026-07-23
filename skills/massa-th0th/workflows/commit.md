@@ -7,7 +7,7 @@ Do not use this workflow for Jira ticket creation, release notes, changelogs, PR
 ## Workflow
 
 1. Resolve or reuse `projectId` and `workflowSessionId=commit-<entity>`.
-2. Run `th0th_recall` for durable project commit conventions, branch naming patterns, and attribution requirements. Treat recalled conventions as leads until current repository evidence confirms them.
+2. Run `recall` for durable project commit conventions, branch naming patterns, and attribution requirements. Treat recalled conventions as leads until current repository evidence confirms them.
 3. Inspect current Git state before writing a message:
    - current branch from `git rev-parse --abbrev-ref HEAD`
    - staged paths from `git diff --cached --name-only`

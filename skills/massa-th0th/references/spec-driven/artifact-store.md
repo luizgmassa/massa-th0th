@@ -6,7 +6,7 @@ Use this reference before any spec-driven workflow reads or writes feature regis
 
 - Canonical state lives in `.specs/` files tracked in the repository, not th0th records, semantic memories, or root aliases.
 - Current repository source remains authoritative for implementation/code evidence.
-- `th0th_search`, `th0th_recall`, and durable memories may discover context, decisions, or reusable patterns, but must never reconstruct canonical artifact state.
+- `search`, `recall`, and durable memories may discover context, decisions, or reusable patterns, but must never reconstruct canonical artifact state.
 - If `.specs/` is unavailable or not writable, block spec-driven state mutation and record the blocker.
 
 ## STATE Precedence Chain

@@ -96,7 +96,7 @@ and durable memory stay consistent:
 - **tags** carry the full massa-th0th persistence contract: `project:<id>`,
   `session:<workflowSessionId>`, `workflow:<type>`, `entity:<name>`,
   `memory:procedural`. This puts lessons in the same recall namespace as
-  massa-th0th decisions/patterns, so future `th0th_recall` surfaces them at
+  massa-th0th decisions/patterns, so future `recall` surfaces them at
   Specify/Design.
 - th0th MCP is agent-side only; the hook/CLI subprocess writes via REST
   (`TH0TH_API_URL`). When REST is unavailable, the lesson still lands in

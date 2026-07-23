@@ -13,7 +13,7 @@ Do not use this workflow for findings-only test coverage, assertion quality, fix
    - `references/verification-ladder.md` before non-trivial edits
    - `references/context-firewall.md` before inspecting large logs, snapshots, generated reports, or broad search output
    - `references/agent-orchestration.md` only for large/high-risk findings, disjoint implementation slices, or independent verification
-3. `th0th_recall` -> load testing conventions, mock boundaries, test frameworks, prior flaky tests, known regressions, accepted exceptions, and reusable verification recipes for the report target.
+3. `recall` -> load testing conventions, mock boundaries, test frameworks, prior flaky tests, known regressions, accepted exceptions, and reusable verification recipes for the report target.
 4. Select the tests audit report with execution focus:
    - Establish the report selector, target focus, and optional finding selector before selecting a report. Target focus can be a behavior, flow, module, test suite, files/globs, branch comparison, commit range, symbol/class/function, or explicit whole-repo target.
    - If the user gives a path, read that exact markdown file.

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Bootstrap contract merged into `skills/AGENTS.md` (`massa-th0th:bootstrap` markers) with 12-agent sub-agent registry; `UAS_` env vars adapted to `MASSA_TH0TH_`
+- Unified TypeScript symlink skills installer (`scripts/install-skills.ts`) for all 4 tools (Claude/Codex/Cursor/OpenCode) with `--apply/--uninstall/--dry-run/--check`, state v1→v2 migration, conflict abort, idempotent
+- 8 workflow guide docs migrated to `docs/` (spec-driven, tdd, rfc, commit, ticket, maestro, mobile-figma, context-slices)
+- Persona-router skill and 5-persona catalog migrated to `skills/persona-router/` + `skills/massa-th0th/personas/` (filename-only `prompt_path`)
+- 111 tests ported to bun test (72 `validate-repository.test.ts` + 39 `install-skills.test.ts`)
+- `install:skills` / `uninstall:skills` npm scripts
 - AGENTS.md at repo root for agent startup contract routing
 - `.tool-versions` and `mise.toml` pinning Bun 1.3.14 + Node 25.9.0
 - `CHANGELOG.md` with `[Unreleased]` section and CI merge gate

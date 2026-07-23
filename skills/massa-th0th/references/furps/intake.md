@@ -62,7 +62,7 @@ The main agent builds one packet reused across sub-agents:
 - `projectId`, parent `workflowSessionId`
 - document sections (or summaries) with stable section IDs for citations
 - DoR criteria (resolved source)
-- recalled facts (budgeted `th0th_recall`): prior ADRs, accepted decisions, patterns
+- recalled facts (budgeted `recall`): prior ADRs, accepted decisions, patterns
 - input source plus evidence timestamp
 - exclusions: out-of-scope dimensions and sibling-workflow targets
 

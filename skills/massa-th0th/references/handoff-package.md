@@ -64,7 +64,7 @@ Keep each section short and dense.
 - Persist routine compaction as `conversation` with `memory:working` and `handoff`.
 - Include exact `projectId`, `workflowSessionId`, workflow, entity, and next
   step. Do not persist an ephemeral `synapseSessionId` as continuation state.
-- Receiving agent must call `th0th_recall` for the provided
+- Receiving agent must call `recall` for the provided
   `workflowSessionId`, then open and optionally prime a fresh Synapse session
   when repeated searches are expected.
 

@@ -6,7 +6,7 @@ Use this workflow when a significant technical, process, product, vendor, tool, 
 
 1. Resolve or reuse `projectId` and `workflowSessionId=rfc-[entity]`.
 2. Establish evidence before asking questions:
-   - `th0th_recall` relevant constraints, existing architecture or process, related proposals, prior attempts, rejected options, stakeholder expectations, and verification patterns.
+   - `recall` relevant constraints, existing architecture or process, related proposals, prior attempts, rejected options, stakeholder expectations, and verification patterns.
    - Load `references/rfc/discovery-and-sizing.md`.
    - Inspect current source, project instructions, existing RFC conventions, decision records, tickets, and supplied research. Current source and approved project artifacts override stale memory.
    - When supplied Figma links, nodes, desktop selections, or screenshots materially affect mobile UI options, use `workflows/design.md` as optional child context for visual feasibility only; the RFC still owns option comparison and recommendation. Screenshots are context-only unless paired with structured Figma evidence.

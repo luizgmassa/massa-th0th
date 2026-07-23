@@ -145,10 +145,10 @@ def _th0th_remember_best_effort(root, content, tags, project_id="", session_id="
     knowledge); `procedural` is a tag, not a type. Returns True on success,
     False (silent) when unavailable — the file store remains source of truth.
     """
-    api_url = os.environ.get("UAS_TH0TH_API_URL") or os.environ.get("TH0TH_API_URL")
+    api_url = os.environ.get("MASSA_TH0TH_API_URL") or os.environ.get("TH0TH_API_URL")
     if not api_url:
         return False
-    path = os.environ.get("UAS_TH0TH_MEMORY_PATH", "/api/v1/memory")
+    path = os.environ.get("MASSA_TH0TH_MEMORY_PATH", "/api/v1/memory")
     url = api_url.rstrip("/") + path
     body = json.dumps({
         "content": content, "type": TH0TH_LESSON_TYPE, "importance": 0.6,
@@ -156,7 +156,7 @@ def _th0th_remember_best_effort(root, content, tags, project_id="", session_id="
     }).encode("utf-8")
     req = urllib.request.Request(url, data=body, method="POST",
                                  headers={"Content-Type": "application/json"})
-    key = os.environ.get("UAS_TH0TH_API_KEY") or os.environ.get("TH0TH_API_KEY")
+    key = os.environ.get("MASSA_TH0TH_API_KEY") or os.environ.get("TH0TH_API_KEY")
     if key:
         req.add_header("x-api-key", key)
     try:

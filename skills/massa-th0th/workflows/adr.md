@@ -7,7 +7,7 @@ Use this workflow to record a finalized or being-finalized architecture decision
    - `references/adr-authoring.md` always.
    - `references/context-firewall.md` before reading large Markdown files, Atlassian pages, NotebookLM outputs, Figma exports, broad research, or verbose source output.
    - `references/mobile-context.md` only when ADR context touches KMP, iOS, Android, native bridges, mobile lifecycle, offline sync, permissions, push/background behavior, local persistence, or backend-mobile contracts.
-3. `th0th_recall` -> load previous decisions, related RFCs, PRDs, discussions, superseded ADRs, accepted constraints, rejected options, and project-specific ADR conventions for the entity.
+3. `recall` -> load previous decisions, related RFCs, PRDs, discussions, superseded ADRs, accepted constraints, rejected options, and project-specific ADR conventions for the entity.
 4. Gather source context using `references/adr-authoring.md`:
    - Use explicitly provided Markdown files and prompt context first.
    - Use ADR templates, PRDs, and RFCs from Markdown or Atlassian MCP when provided.
@@ -27,5 +27,5 @@ Use this workflow to record a finalized or being-finalized architecture decision
    - Confluence: when requested and a parent page link is provided, write a child page through Atlassian MCP and report the resulting page link.
    - Fallback: if Confluence was requested without a parent link or Atlassian MCP is unavailable, ask for the parent link or permission to write local Markdown under `.adr/`.
    - Use sequential numbering from the selected local ADR directory when writing Markdown.
-8. At completion, persist the decision via `th0th_remember` as a scored `decision` memory with `memory:semantic`, explicitly linking the ADR file path and source context used.
+8. At completion, persist the decision via `remember` as a scored `decision` memory with `memory:semantic`, explicitly linking the ADR file path and source context used.
 9. Complete the Evidence Gate from `references/evidence-gate.md`.

@@ -6,7 +6,7 @@ Do not use this workflow to author a new PRD (use `to-prd` or `spec-driven` Spec
 
 This workflow is findings-only. Do not edit the PRD/ADR unless the user separately asks.
 
-1. Resolve/reuse `workflowSessionId`: `furps-refinement-[entity]`. Resolve `projectId` per the router. Budget `th0th_recall` (`limit <= 3`, `minImportance >= 0.7`, `types=["critical","decision","pattern"]`) for prior ADRs, accepted decisions, DoR, and refinement patterns.
+1. Resolve/reuse `workflowSessionId`: `furps-refinement-[entity]`. Resolve `projectId` per the router. Budget `recall` (`limit <= 3`, `minImportance >= 0.7`, `types=["critical","decision","pattern"]`) for prior ADRs, accepted decisions, DoR, and refinement patterns.
 2. Load shared references:
    - `references/furps/intake.md` before intake and sub-agent dispatch
    - `references/furps/checklist.md` for the per-dimension check items

@@ -11,7 +11,7 @@ Do not use this parent workflow when the user wants only one audit lens; route d
    - `references/audit-report-io.md` before producing the report.
    - `references/context-firewall.md` before large diffs, logs, snapshots, generated reports, or broad searches.
    - `references/synapse-policy.md` when repeated th0th searches are expected.
-3. `th0th_recall` -> load current architectural decisions, known regressions, security boundaries, requirements decisions, testing conventions, accepted exceptions, and project constraints. Apply the Memory Freshness Gate from `references/audit-scope.md`; memory is a lead, not proof.
+3. `recall` -> load current architectural decisions, known regressions, security boundaries, requirements decisions, testing conventions, accepted exceptions, and project constraints. Apply the Memory Freshness Gate from `references/audit-scope.md`; memory is a lead, not proof.
 4. Establish one concrete implementation target before analysis:
    - Accept modified files, explicit files/globs, commits/ranges, branch or PR comparisons, modules/packages, symbols/classes/functions, features/flows, or explicit whole-repository scope.
    - If the target is absent or ambiguous, ask for it. Never default to the whole repository.

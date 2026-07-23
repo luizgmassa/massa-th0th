@@ -34,7 +34,9 @@
     "verify:tree-sitter-package": "bun scripts/verify-tree-sitter-package-artifact.ts",
     "verify:tree-sitter-native": "bun scripts/verify-tree-sitter-grammars.ts && bun scripts/verify-tree-sitter-package-artifact.ts",
     "update-qwen-hashes": "python3 scripts/update-fixture-hashes.py --manifest qwen",
-    "update-fixture-hashes": "python3 scripts/update-fixture-hashes.py"
+    "update-fixture-hashes": "python3 scripts/update-fixture-hashes.py",
+    "install:skills": "bun scripts/install-skills.ts",
+    "uninstall:skills": "bun scripts/install-skills.ts --uninstall"
   },
   "keywords": [
     "mcp",

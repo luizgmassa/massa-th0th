@@ -6,7 +6,7 @@ Do not use this workflow for Flutter, React Native, web UI, generic Figma explor
 
 1. Resolve/reuse `workflowSessionId`: `design-[entity]`.
 2. Load `references/mobile-figma-matcher/repository-detection.md`, `references/mobile-figma-matcher/core.md`, `references/mobile-context.md`, `references/codebase-investigation.md`, and `references/verification-ladder.md`. Load `references/context-firewall.md` before large design/runtime artifacts and `references/synapse-policy.md` when repeated th0th searches are expected.
-3. `th0th_recall` -> load current component conventions, design-system rules, approved platform/accessibility deviations, prior Figma mappings, asset pipelines, and reusable render recipes. Memory is context, not proof.
+3. `recall` -> load current component conventions, design-system rules, approved platform/accessibility deviations, prior Figma mappings, asset pipelines, and reusable render recipes. Memory is context, not proof.
 4. Require a concrete feature/module target plus at least one design source: readable Figma node/selection or supplied screenshots. Resolve required visual and interactive states plus a requirements source for behavior not represented in the design source. Ask only when target ownership, runtime platforms, platform-frame mappings, or screenshot authority remain ambiguous after source inspection.
 5. Build the immutable Target Surface Packet before loading stack guidance. Classify each selected surface and load only its contracts:
    - Android Views XML -> `references/mobile-figma-matcher/android-views.md`.

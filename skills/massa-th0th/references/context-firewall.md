@@ -17,7 +17,7 @@ For high-volume analysis:
   decision.
 - Keep temporary analysis outside repo-tracked files unless the task explicitly needs a reusable script.
 - Use project map, summary search, targeted enriched search, symbol/file tools,
-  `th0th_optimized_context`, and compression before broad shell reads when
+  `optimized_context`, and compression before broad shell reads when
   useful.
 - Prefer `responseMode: "enriched"` only for a small targeted result set; it
   includes full content and should not become a broad dump.
@@ -36,7 +36,7 @@ Apply the firewall before bringing any of these raw artifacts into the main cont
 - Do not paste raw logs, snapshots, huge diffs, CSVs, or long command output into the main conversation.
 - Summarize the result and include exact source pointers, commands, line numbers, or artifact paths.
 - Artifact, memory, and search output is metadata-and-summary by default: include keys, paths, versions, checksums, statuses, counts, short summaries, and exact next steps only.
-- Do not bring raw full artifact JSON, all-version artifact dumps, raw memory dumps, raw `th0th_search` result bodies, or long command transcripts into working context unless diagnosing corruption and no smaller proof can answer the question.
+- Do not bring raw full artifact JSON, all-version artifact dumps, raw memory dumps, raw `search` result bodies, or long command transcripts into working context unless diagnosing corruption and no smaller proof can answer the question.
 - Summarize raw subagent output, raw diffs, raw search output, raw logs, raw transcripts, and external research before they reach the main context.
 - If conversation feedback is active, status lines may say what is being loaded, checked, blocked, or verified, but must not include raw tool output or private reasoning.
 - Re-open only the smallest raw segment needed to verify a claim.

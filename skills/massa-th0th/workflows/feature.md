@@ -3,7 +3,7 @@
 Use this workflow when the user wants to add a new capability, screen, command, integration, behavior, or user-facing improvement with clear intent or acceptance criteria. Do not use it for broken behavior; route that to `workflows/debug.md`. Do not use it for broad, ambiguous, migration-heavy, or cross-boundary work; route that to `workflows/spec-driven.md`.
 
 1. Resolve/reuse `projectId` and `workflowSessionId` (`feature-[entity]`)
-2. `th0th_recall` → load prior decisions and patterns for this area
+2. `recall` → load prior decisions and patterns for this area
    - Use the default recall budget: `limit <= 3`, `minImportance >= 0.7`, and `types=["critical","decision","pattern"]` unless the feature needs broader memory discovery.
    - Recall is context only and must not load or reconstruct canonical artifact state.
 3. Load shared references as needed:
@@ -28,7 +28,7 @@ Use this workflow when the user wants to add a new capability, screen, command, 
    - For Standard work or Quick work over 3 files/200 LOC, load `references/pr-task-fix.md`, run its ADR/TDD input gate, decompose work into Small-first independently buildable PR groups, and keep Medium groups only when splitting would break build, tests, UI, or review coherence.
 6. Follow the shared retrieval order from `references/codebase-investigation.md`
    to find related code; pass only `synapseSessionId` to
-   `th0th_search.sessionId`.
+   `search.sessionId`. When the investigation involves multi-search, call `synapse_task_begin` with `id` (the `synapseSessionId`) and `taskContext` before the first search to open a task envelope; call `synapse_prefetch` with `id` and `filePath` after opening a file for deep investigation to warm the buffer; call `synapse_task_end` with `id` when the investigation completes. `synapse_task_begin`/`synapse_task_end` require an existing `synapse_session` id.
 7. Follow existing patterns discovered from recall
 8. Establish the verification recipe before Standard edits and before Quick edits that touch validation assets, including file-integrity checks for tests, specs, benchmarks, fixtures, and snapshots used as validation assets
    - Include a focused naming review when the feature introduces or renames identifiers. New names should use domain or precise role vocabulary, and public/persisted names should not change without explicit compatibility handling.
@@ -42,7 +42,7 @@ Use this workflow when the user wants to add a new capability, screen, command, 
 12. Run the verification recipe and report skipped checks explicitly. If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:
      `python3 skills/massa-th0th/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
 13. At completion, persist (run the scoring rubric from `references/decision-engine.md` for each):
-   - Design decisions made via `th0th_remember` as scored `decision` memories
-   - New patterns introduced via `th0th_remember` as scored `pattern` memories
-   - Trade-offs accepted via `th0th_remember` as scored `conversation` memories
+   - Design decisions made via `remember` as scored `decision` memories
+   - New patterns introduced via `remember` as scored `pattern` memories
+   - Trade-offs accepted via `remember` as scored `conversation` memories
 14. Complete the Evidence Gate from `references/evidence-gate.md`

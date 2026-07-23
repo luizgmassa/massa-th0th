@@ -3,7 +3,7 @@
 Use this workflow for behavior-preserving structural cleanup, simplification, decoupling, testability improvements, and code organization changes where the intended external behavior stays the same. Do not use it for broken behavior; route that to `workflows/debug.md`. Do not use it for broad boundary redesign, migration, or unclear architecture direction; route that to `workflows/architecture/architecture-audit.md` or `workflows/spec-driven.md`.
 
 1. Resolve/reuse `workflowSessionId`: `refactor-[entity]`
-2. `th0th_recall` → load architectural decisions and coupling patterns for the area
+2. `recall` → load architectural decisions and coupling patterns for the area
 3. Load shared references as needed:
    - `references/codebase-investigation.md` before changing unfamiliar code
    - `references/architecture-lenses.md` when the refactor is driven by coupling, seams, adapters, depth, leverage, or locality
@@ -18,7 +18,7 @@ Use this workflow for behavior-preserving structural cleanup, simplification, de
    - Route boundary redesign to `workflows/architecture/architecture-audit.md`; route Spec-driven threshold work to `workflows/spec-driven.md` or split into atomic tasks.
    - For Standard refactors or Quick refactors over 3 files/200 LOC, load `references/pr-task-fix.md`, run its ADR/TDD input gate, decompose work into Small-first independently buildable PR groups, and keep Medium groups only when splitting would break build, tests, UI, or review coherence.
 5. Follow the shared retrieval order from `references/codebase-investigation.md`
-   to find related code and usages.
+   to find related code and usages. Call `impact_analysis` with `project`, `projectPath`, and `scope` to assess the centrality-ranked blast radius of the structural change before editing. `impact_analysis` only counts as evidence when the index is fresh for the current repository path and commit/worktree state; fall back to `search`/`get_references` and record reduced retrieval confidence when the index is stale or unavailable. An empty diff returns an empty impact set (not an error).
 6. Establish current behavior before moving code: tests, exact manual command transcripts, static checks, or artifact inspection
 7. For mobile refactors, characterize current bridge/API/platform behavior before moving code:
    - shared vs platform-specific boundary
@@ -38,6 +38,6 @@ Use this workflow for behavior-preserving structural cleanup, simplification, de
      `python3 skills/massa-th0th/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
 11. Use `references/agent-orchestration.md` only for isolated implementation slices or independent verification
 12. At completion, persist (run the scoring rubric from `references/decision-engine.md`):
-   - Refactored architectural decisions via `th0th_remember` as scored `decision` memories
-   - Identified and decoupled anti-patterns via `th0th_remember` as scored `pattern` memories
+   - Refactored architectural decisions via `remember` as scored `decision` memories
+   - Identified and decoupled anti-patterns via `remember` as scored `pattern` memories
 13. Complete the Evidence Gate from `references/evidence-gate.md`

@@ -22,7 +22,7 @@ Load these references when the trigger condition is met:
 | `references/pr-task-fix.md` | Standard+ feature/refactor work, any work split into PR groups, or any task with >3 files or >200 LOC. |
 | `references/agent-orchestration.md` | Explicit user delegation request, >=2 independent slices, >10 files, high/critical audit findings, or independent verification. Do not load for overlapping write sets or tasks needing full conversation history. |
 | `references/naming-standards.md` | New, renamed, audited, or preserved implementation-facing identifiers, public contract fields, fixtures, tests, schemas, docs, or examples. |
-| `references/synapse-policy.md` | Planned related `th0th_search` calls >=2, parallel delegated retrieval, or Synapse fallback diagnosis. |
+| `references/synapse-policy.md` | Planned related `search` calls >=2, parallel delegated retrieval, or Synapse fallback diagnosis. |
 | `references/mobile-context.md` | Non-debug Android, iOS, KMP, native bridge, lifecycle, offline/sync, permissions, push/background, local persistence, or backend-mobile contract work. |
 | `references/mobile-diagnosis.md` | Debug target involves Android, iOS, KMP, devices, simulators/emulators, native bridges, lifecycle, or mobile-only regressions. |
 

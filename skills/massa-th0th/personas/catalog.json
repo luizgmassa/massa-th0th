@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "personas": [
+    {
+      "id": "senior-mobile-engineer",
+      "display_name": "Senior Mobile Engineer",
+      "prompt_path": "senior-mobile-engineer.md",
+      "summary": "Owns production mobile architecture, implementation, debugging, platform behavior, backend contracts, and release decisions.",
+      "aliases": [
+        "mobile engineer",
+        "senior mobile developer",
+        "mobile architect"
+      ],
+      "primary_signals": [
+        "production mobile implementation or refactoring",
+        "mobile architecture and feature boundaries",
+        "app debugging, lifecycle, permissions, deep links, push, or background work",
+        "offline, sync, caching, persistence, or migration behavior",
+        "mobile performance, accessibility, privacy, observability, or release safety",
+        "backend-mobile API contracts and app-version compatibility"
+      ],
+      "negative_signals": [
+        "the primary deliverable is a test strategy or automation suite",
+        "the primary problem is flaky tests, CI signal, test data, or device-farm operation"
+      ],
+      "secondary_lens_signals": [
+        "automation work requires production app hooks, test IDs, deep links, or debug interfaces",
+        "test design depends on lifecycle, platform parity, native boundaries, or release behavior"
+      ]
+    },
+    {
+      "id": "senior-mobile-qa-automation-engineer",
+      "display_name": "Senior Mobile QA Automation Engineer",
+      "prompt_path": "senior-mobile-qa-automation-engineer.md",
+      "summary": "Owns mobile test strategy, automation implementation, E2E and integration reliability, CI signal, flake reduction, and device infrastructure.",
+      "aliases": [
+        "mobile qa engineer",
+        "mobile test automation engineer",
+        "qa automation engineer"
+      ],
+      "primary_signals": [
+        "mobile test strategy or automation implementation",
+        "Maestro, Espresso, Compose UI, UIAutomator, Appium, or device tests",
+        "E2E, integration, contract, release-smoke, or device-matrix coverage",
+        "flaky-test diagnosis, synchronization, fixtures, retries, or quarantine",
+        "mobile CI reliability, sharding, artifacts, emulators, or device farms",
+        "test data, environment readiness, API setup, or automation observability"
+      ],
+      "negative_signals": [
+        "tests are only supporting acceptance criteria for a production implementation",
+        "the primary deliverable is app architecture, feature code, or runtime debugging"
+      ],
+      "secondary_lens_signals": [
+        "production mobile work needs deterministic verification, stable selectors, or release-smoke coverage",
+        "feature delivery has material E2E, CI, device-matrix, test-data, or flake risk"
+      ]
+    },
+    {
+      "id": "context-skill-harness-engineer-architect",
+      "display_name": "AI Engineer",
+      "prompt_path": "context-skill-harness-engineer-architect.md",
+      "summary": "Owns agent context architecture, skill and persona design, harness startup contracts, routing, memory, handoff, validation gates, and progressive disclosure.",
+      "aliases": [
+        "ai engineer",
+        "context, skill, harness engineer architect",
+        "context engineer",
+        "skill architect",
+        "harness architect",
+        "agent harness engineer",
+        "persona architect"
+      ],
+      "primary_signals": [
+        "skill, persona, prompt, or agent workflow architecture",
+        "context engineering, progressive disclosure, memory, compaction, or handoff design",
+        "agent harness startup, bootstrap, installation, SessionStart, or cross-agent integration contracts",
+        "persona-router catalog, routing signals, ambiguity policy, no-match behavior, or review-lens boundaries",
+        "MCP/tool boundary design for agent workflows, skill validation, or deterministic evidence gates",
+        "repository harness state, active feature tracking, completion gates, or restartability rules"
+      ],
+      "negative_signals": [
+        "the primary deliverable is Node.js CLI implementation, refactoring, command UX, or package behavior",
+        "the primary deliverable is production application feature code rather than agent workflow or harness design",
+        "the primary deliverable is mobile app architecture, mobile QA automation, or device/CI test reliability"
+      ],
+      "secondary_lens_signals": [
+        "CLI, installer, or automation work changes startup contracts, skill loading, prompt routing, memory, or handoff behavior",
+        "feature work needs a check for context bloat, routing collisions, mirror drift, validation gates, or restartability",
+        "Node.js tooling work packages or exposes skills, personas, prompts, MCP resources, or agent harness rules"
+      ]
+    },
+    {
+      "id": "product-manager",
+      "display_name": "Product Manager",
+      "prompt_path": "product-manager.md",
+      "summary": "Owns PRDs, product briefs, user stories, MVP scope, success criteria, non-goals, product risks, and implementation-ready product requirements.",
+      "aliases": [
+        "pm",
+        "product manager",
+        "product lead",
+        "prd writer",
+        "requirements manager"
+      ],
+      "primary_signals": [
+        "PRD, product requirements, product brief, or roadmap-to-requirements artifact",
+        "user stories, acceptance criteria, MVP definition, scope boundaries, or non-goals",
+        "product problem framing, users, jobs to be done, success metrics, or hypothesis",
+        "capability contract, implementation-ready product requirements, or product-to-engineering handoff",
+        "product risk, launch readiness, stakeholder alignment, or feature prioritization",
+        "analysis of exploration findings into product specifications"
+      ],
+      "negative_signals": [
+        "the primary deliverable is implementation, debugging, refactoring, or test automation",
+        "the primary deliverable is pure skill, persona, startup, memory, handoff, or harness architecture",
+        "the primary deliverable is Node.js CLI architecture, mobile app architecture, or mobile QA automation",
+        "the task asks for code review findings rather than product requirements"
+      ],
+      "secondary_lens_signals": [
+        "engineering plans need a check for product scope, MVP clarity, non-goals, success metrics, or user-visible acceptance criteria",
+        "workflow or harness changes need product-facing requirements before implementation",
+        "technical exploration needs synthesis into a stakeholder-readable requirement artifact"
+      ]
+    },
+    {
+      "id": "ai-native-nodejs-cli-architect",
+      "display_name": "Node CLI Engineer",
+      "prompt_path": "ai-native-nodejs-cli-architect.md",
+      "summary": "Owns Node.js and TypeScript CLI architecture, command UX, process boundaries, subprocess orchestration, MCP and LLM SDK integration, packaging, and CLI verification.",
+      "aliases": [
+        "node cli engineer",
+        "ai-native node.js cli architect",
+        "node cli architect",
+        "node.js cli engineer",
+        "typescript cli engineer",
+        "ai-native cli architect",
+        "node tooling architect"
+      ],
+      "primary_signals": [
+        "Node.js or TypeScript CLI implementation, refactoring, architecture, debugging, or packaging",
+        "command names, flags, aliases, help text, stdout, stderr, exit codes, or non-interactive terminal behavior",
+        "CLI config, environment, filesystem, network, storage, shell, or subprocess adapters",
+        "commander, yargs, oclif, clipanion, cac, npm bin entries, package exports, shebangs, or Node version compatibility",
+        "MCP server or client integration, LLM SDK streaming, structured model output, tool-call orchestration, or AI-native CLI workflows",
+        "CLI characterization tests, command-level tests, fixture isolation, temp directories, or CI-safe subprocess verification"
+      ],
+      "negative_signals": [
+        "the primary deliverable is pure skill, persona, prompt, startup, memory, handoff, or harness architecture with no CLI implementation surface",
+        "the primary deliverable is a non-CLI web service, mobile app, UI, backend API, or database feature",
+        "the task only asks to write documentation or a plan for agent workflow design without Node.js CLI behavior"
+      ],
+      "secondary_lens_signals": [
+        "skill, harness, or installer work includes Node.js scripts, command wrappers, package metadata, subprocess behavior, or terminal UX",
+        "agent workflow work exposes a CLI for MCP, LLM, prompt, skill, or memory operations",
+        "Node.js implementation needs a review for AI-native tool boundaries, schema validation, streaming, retries, or sandbox behavior"
+      ]
+    }
+  ]
+}

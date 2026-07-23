@@ -31,7 +31,7 @@ Prefer sources in this order:
 6. Same-Stack Example ADR from Markdown or Atlassian MCP when provided. Use it only for format, structure, tone, naming, metadata, and placement conventions; do not use its decision context, rationale, constraints, consequences, or claims as facts for the new ADR.
 7. UI/UX context from Figma MCP when provided and relevant. If Figma is absent, use PRD, RFC, or NotebookLM context. If none exists, ignore UI/UX.
 8. NotebookLM when the user provides one or more notebook IDs. Query each relevant notebook separately, preserve source attribution by notebook ID, dedupe overlapping facts, and never assume or hard-code a default notebook ID.
-9. `th0th_recall`, `th0th_search`, current repo docs, existing ADRs, and source code for corroboration.
+9. `recall`, `search`, current repo docs, existing ADRs, and source code for corroboration.
 
 Load `references/context-firewall.md` before bringing large Markdown, Atlassian, NotebookLM, Figma, broad research, or verbose source output into the main context. Bring back source pointers and compact facts, not raw dumps.
 

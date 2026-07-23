@@ -29,14 +29,14 @@ For exploration-only work, Recon and Debrief are the main deliverables.
 
 Prefer sources in this order:
 
-1. `th0th_recall` for prior decisions, patterns, failed attempts, and handoffs.
-2. `th0th_list_projects` or equivalent index metadata to verify project ID,
+1. `recall` for prior decisions, patterns, failed attempts, and handoffs.
+2. `list_projects` or equivalent index metadata to verify project ID,
    path, status, and freshness.
-3. `th0th_project_map` for indexed-project architecture orientation when the
+3. `project_map` for indexed-project architecture orientation when the
    index is fresh for the current repository path and worktree state.
 4. Summary search, then targeted enriched search.
-5. Symbol tools and `th0th_read_file` for exact definitions, usages, and ranges.
-6. `th0th_optimized_context` when synthesized compact context is available and more useful
+5. Symbol tools and `read_file` for exact definitions, usages, and ranges.
+6. `optimized_context` when synthesized compact context is available and more useful
    than exact source.
 7. Local `.notebook/INDEX.md` only if the project already uses `.notebook/`.
 8. Focused shell search/read fallback when th0th is unavailable, stale, incomplete, or unindexed.

@@ -14,7 +14,7 @@ This workflow is findings-only. Do not edit code unless the user separately asks
    - `references/context-firewall.md` before inspecting large diffs, logs, snapshots, generated reports, or broad search output
    - `references/synapse-policy.md` when repeated th0th searches are expected
    - `references/agent-orchestration.md` only for large scopes, explicit parallel/subagent requests, PR subagent invocation, or independent verification of high-impact findings
-3. `th0th_recall` -> load prior bug patterns, known regressions, project constraints, ADRs, fragile flows, and accepted exceptions for the target area.
+3. `recall` -> load prior bug patterns, known regressions, project constraints, ADRs, fragile flows, and accepted exceptions for the target area.
    - Apply the Memory Freshness Gate from `references/audit-scope.md`; recalled exceptions are leads, not proof.
 4. Establish the investigation scope before proceeding:
    - Modified files scope: use when the user says modified files, changed files, current changes, uncommitted changes, staged changes, or unstaged changes.

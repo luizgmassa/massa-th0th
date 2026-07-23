@@ -14,7 +14,7 @@ Do not edit code. Route direct design implementation to `design`. Do not use thi
    - `references/codebase-investigation.md` for unfamiliar source.
    - `references/context-firewall.md` before large Figma payloads, screenshots, hierarchy dumps, logs, or reports.
    - `references/synapse-policy.md` when repeated th0th searches are expected.
-3. `th0th_recall` -> load current component/design-system conventions, accepted Figma deviations, prior mappings, source-set boundaries, accessibility constraints, asset pipelines, and project render recipes. Apply the audit Memory Freshness Gate; memory is not proof.
+3. `recall` -> load current component/design-system conventions, accepted Figma deviations, prior mappings, source-set boundaries, accessibility constraints, asset pipelines, and project render recipes. Apply the audit Memory Freshness Gate; memory is not proof.
 4. Require both inputs before analysis:
    - Figma source: URL/node ID or an explicit desktop selection accessible through Figma MCP.
    - Concrete implementation target: feature/flow, files/globs, screen name, classes/composables, commits/range, branch comparison, or modified files.

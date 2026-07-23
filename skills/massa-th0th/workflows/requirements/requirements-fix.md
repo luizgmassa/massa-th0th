@@ -12,7 +12,7 @@ Do not use this workflow for findings-only requirements review; route that to `w
    - `references/verification-ladder.md` before non-trivial edits
    - `references/context-firewall.md` before inspecting large specs, diffs, generated reports, or broad search output
    - `references/agent-orchestration.md` only for large/high-risk findings, disjoint implementation slices, or independent verification
-3. `th0th_recall` -> load product decisions, accepted scope constraints, public contracts, compatibility rules, requirement interpretations, and verification recipes for the report target.
+3. `recall` -> load product decisions, accepted scope constraints, public contracts, compatibility rules, requirement interpretations, and verification recipes for the report target.
 4. Select the requirements audit report with execution focus:
    - Establish the report selector, target focus, requirements source, and optional finding selector before selecting a report. Target focus can be a flow, feature, public contract, module, files/globs, branch comparison, commit range, symbol/class/function, or explicit whole-repo target.
    - If the user gives a path, read that exact markdown file.

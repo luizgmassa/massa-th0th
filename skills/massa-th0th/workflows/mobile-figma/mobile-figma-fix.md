@@ -14,7 +14,7 @@ Do not execute from chat summaries, screenshots alone, remembered findings, or a
    - `references/audit-scope.md` and `references/codebase-investigation.md` for freshness and current source.
    - `references/verification-ladder.md` before edits.
    - `references/context-firewall.md` before large design/runtime artifacts.
-3. `th0th_recall` -> load current design-system rules, accepted deviations, prior component mappings, source-set boundaries, accessibility constraints, asset-pipeline rules, and render recipes for the target.
+3. `recall` -> load current design-system rules, accepted deviations, prior component mappings, source-set boundaries, accessibility constraints, asset-pipeline rules, and render recipes for the target.
 4. Select a report and target focus:
    - Prefer an exact report path plus optional `MFM-*` IDs.
    - For `latest` or omitted path, require a concrete target focus, then select only from `audits/mobile-figma/`.

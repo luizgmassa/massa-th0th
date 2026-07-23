@@ -8,8 +8,8 @@ Use this reference when Specify, Design, Tasks, Execute, or Validate needs sourc
 
 Use graceful degradation, starting from th0th indexed tooling and falling back to structural, then text, search:
 
-1. `th0th_list_projects` (or equivalent index metadata) before indexed reads, to verify project ID, path, status, and freshness.
-2. `th0th_search` (or indexed symbol reads) when available and fresh for the current repository path and worktree state. Prefer `th0th_search_definitions`, `th0th_get_references`, or `th0th_optimized_context` for symbol- and reference-shaped queries.
+1. `list_projects` (or equivalent index metadata) before indexed reads, to verify project ID, path, status, and freshness.
+2. `search` (or indexed symbol reads) when available and fresh for the current repository path and worktree state. Prefer `search_definitions`, `get_references`, or `optimized_context` for symbol- and reference-shaped queries.
 3. `sg` / ast-grep for structural pattern-based search when installed.
 4. `rg` (ripgrep) for fast context-aware text and file search.
 5. `grep` or direct file reads as the final, always-available fallback.
@@ -17,7 +17,7 @@ Use graceful degradation, starting from th0th indexed tooling and falling back t
 ## Freshness And Source Precedence
 
 - Current repository source and approved `.specs/` artifacts override stale memory, old search results, external summaries, debug exports, and generated plans.
-- `th0th_project_map`, `th0th_search`, and `th0th_optimized_context` are discovery evidence, not proof, until confirmed against source files read in this session or returned with current freshness evidence.
+- `project_map`, `search`, and `optimized_context` are discovery evidence, not proof, until confirmed against source files read in this session or returned with current freshness evidence.
 - If indexed results conflict with current files, or the index is stale, incomplete, missing the target path, or older than relevant local changes, trust current files and record the stale-index observation when it affects decisions.
 - Use th0th durable memory for prior decisions, rejected approaches, reusable patterns, and verification recipes; do not use it as codebase evidence without current-source confirmation.
 

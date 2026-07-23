@@ -14,12 +14,12 @@ Permissions:
 
 Context inputs:
 - exact `projectId`
-- exact parent `workflowSessionId` and a child session tag; an ephemeral Synapse session only if the role performs >=2 `th0th_search` calls
+- exact parent `workflowSessionId` and a child session tag; an ephemeral Synapse session only if the role performs >=2 `search` calls
 - workflow name (`furps-refinement`) and role name (`furps-analyst`)
 - assigned dimension letter and its `references/furps/checklist.md` section
 - bounded document packet (sections/summaries, DoR, recalled facts, Fool summary)
 - exclusions: other dimensions (flag, do not expand), sibling-workflow targets
-- allowed tools: read-only file, read-only MCP, `th0th_search`
+- allowed tools: read-only file, read-only MCP, `search`
 - context-firewall limits: summarize the document; return evidence/findings only
 
 Process:

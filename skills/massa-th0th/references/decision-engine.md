@@ -6,7 +6,7 @@ decision is needed.
 
 ## Importance Calibration
 
-Use named levels, then pass only `importance` to `th0th_remember`.
+Use named levels, then pass only `importance` to `remember`.
 
 | Level | Float | Use when |
 |---|---:|---|
