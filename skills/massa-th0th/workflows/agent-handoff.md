@@ -34,8 +34,9 @@ Use `workflows/restart-save.md` instead when the primary goal is preserving cano
    - follow-up role charters or capability packets only when assigning specific follow-up agents; otherwise list next tasks without subagent instructions
    - Apply `ai-context-handoff` constraints when loaded: assume zero prior context, keep only high-signal continuation facts, avoid chat history and generic advice, and keep the reset instruction conditional per `references/handoff-package.md`.
 6. Persist the handoff:
+   - Call `handoff_begin` with `projectId`, `summary` (max 1024 chars), `nextSteps`[], `files`[], and `targetAgent` (when known) to store the handoff in the structured handoff table. This dual-writes a searchable `conversation`-type memory so the handoff is discoverable by `recall`/`search` independently of the handoff table. If `handoff_begin` is unavailable (e.g. `HANDOFFS_ENABLED=false`), fall back to `remember` + `.specs/` writes and record the skipped handoff-table write.
    - Incomplete or risky work: `type=critical`, `importance=0.95`, `memory:working`, and `handoff`.
    - Routine transfer: scored `conversation`, `memory:working`, and `handoff`.
    - Use required tags: `project:<projectId>`, `session:<workflowSessionId>`, `workflow:agent-handoff`, `entity:<entity>`, and one `memory:<tier>` tag.
-7. If the handoff is intended for a new chat or different agent, include the exact reset instruction from `references/handoff-package.md`.
+7. If the handoff is intended for a new chat or different agent, include the exact reset instruction from `references/handoff-package.md`. The receiving session should call `handoff_list_pending` with `projectId` to discover open handoffs and `handoff_accept` to transition the handoff to `accepted`. If a handoff is no longer needed, call `handoff_cancel` to expire it.
 8. Complete the Evidence Gate from `references/evidence-gate.md`
