@@ -621,6 +621,7 @@ post_install() {
       echo -e "  ${CYAN}t)${NC} Run integration tests"
     fi
     echo -e "  ${CYAN}c)${NC} Configure passive-capture hooks (Claude Code, Codex, Cursor)"
+    echo -e "  ${CYAN}p)${NC} Install Codex/Cursor plugins (skills + hooks + MCP bundles)"
     echo -e "  ${CYAN}s)${NC} Skip (finish)"
     echo ""
 
@@ -638,8 +639,61 @@ post_install() {
           || warn "Validation script not found" ;;
       c|C)
         print_hooks_guide "$mode" "$install_dir" ;;
+      p|P)
+        install_plugins_menu "$install_dir" ;;
       s|S|"") return ;;
-      *) warn "Unknown choice. Enter w, v, t, c, or s." ;;
+      *) warn "Unknown choice. Enter w, v, t, c, p, or s." ;;
+    esac
+  done
+}
+
+# ── Codex/Cursor plugin installer sub-menu ──────────────────────────────────
+# The per-plugin installers source scripts/banner.sh relative to their own
+# location, so invoke them as bash <path> --user. Default to --user because the
+# root install.sh doesn't track whether the user installed at project scope.
+install_plugins_menu() {
+  local install_dir="$1"
+  local codex_installer="${install_dir}/apps/codex-plugin/install.sh"
+  local cursor_installer="${install_dir}/apps/cursor-plugin/install.sh"
+
+  while true; do
+    echo ""
+    echo -e "${BOLD}Install massa-th0th plugins (skills + hooks + MCP bundles):${NC}"
+    echo -e "  ${CYAN}1)${NC} Codex plugin (6 skills, 6 hook events, MCP)"
+    echo -e "  ${CYAN}2)${NC} Cursor plugin (6 skills, 7 hook events, MCP, agents)"
+    echo -e "  ${CYAN}3)${NC} Both Codex and Cursor plugins"
+    echo -e "  ${CYAN}s)${NC} Back"
+    echo ""
+    read -rp "  Choice [s]: " _plugin_choice <>/dev/tty
+    case "${_plugin_choice:-s}" in
+      1)
+        if [ -f "$codex_installer" ]; then
+          bash "$codex_installer" --user
+        else
+          warn "Codex plugin installer not found at $codex_installer"
+        fi
+        ;;
+      2)
+        if [ -f "$cursor_installer" ]; then
+          bash "$cursor_installer" --user
+        else
+          warn "Cursor plugin installer not found at $cursor_installer"
+        fi
+        ;;
+      3)
+        if [ -f "$codex_installer" ]; then
+          bash "$codex_installer" --user
+        else
+          warn "Codex plugin installer not found at $codex_installer"
+        fi
+        if [ -f "$cursor_installer" ]; then
+          bash "$cursor_installer" --user
+        else
+          warn "Cursor plugin installer not found at $cursor_installer"
+        fi
+        ;;
+      s|S|"") return ;;
+      *) warn "Unknown choice. Enter 1, 2, 3, or s." ;;
     esac
   done
 }
