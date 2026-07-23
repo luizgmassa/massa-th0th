@@ -36,6 +36,7 @@ import path from "path";
 const EVENT_MAP: Record<string, string> = {
   "session-start": "session-start",
   "user-prompt-submit": "user-prompt",
+  "pre-tool-use": "pre-tool-use",
   "post-tool-use": "post-tool-use",
   "pre-compact": "pre-compact",
   stop: "session-end",

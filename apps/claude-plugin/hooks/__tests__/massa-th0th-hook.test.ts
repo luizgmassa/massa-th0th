@@ -179,6 +179,19 @@ describe("massa-th0th-hook (T21)", () => {
     expect(result.exitCode).toBe(0);
   });
 
+  test("pre-tool-use subcommand produces exactly ONE POST with event=pre-tool-use", async () => {
+    // CPX-05/CRS-03 (partial): the new EVENT_MAP entry must route the
+    // pre-tool-use subcommand to a single observation POST (not silent exit-0).
+    const { posts, exitCode } = await runHookCaptured(
+      "pre-tool-use",
+      JSON.stringify({ session_id: "pre-tool-test-session", tool: "Edit" }),
+    );
+    expect(exitCode).toBe(0);
+    expect(posts.length).toBe(1);
+    expect(posts[0]!.url).toBe("/api/v1/hook");
+    expect(posts[0]!.body.event).toBe("pre-tool-use");
+  }, 10000);
+
   test("valid JSON with session_id → exit 0 (pin resolution works)", () => {
     const result = runHook(
       "user-prompt-submit",
