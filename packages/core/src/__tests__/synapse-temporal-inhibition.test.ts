@@ -3,8 +3,8 @@ import {
   applyTemporalInhibition,
   hasTemporalIndicator,
 } from "../services/synapse/inhibition/temporal-inhibition.js";
-import type { SearchResult } from "@massa-th0th/shared";
-import { SearchSource } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-ai/shared";
+import { SearchSource } from "@massa-ai/shared";
 
 function r(id: string, score: number, createdAt: number | null): SearchResult {
   return {

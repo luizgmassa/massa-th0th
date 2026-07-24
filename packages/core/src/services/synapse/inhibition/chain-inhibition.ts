@@ -13,7 +13,7 @@
  * code-search results pass through, only memory-search results are modulated.
  */
 
-import type { SearchResult } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-ai/shared";
 import type { ChainBoostMap, QueryIntent } from "../types.js";
 import { inferTypeFromPath } from "./type-inference.js";
 

@@ -5,8 +5,8 @@ import {
   resetSessionRegistry,
 } from "../services/synapse/session/session-registry.js";
 import { DEFAULT_BUFFER_CONFIG } from "../services/synapse/buffer/working-memory-buffer.js";
-import type { SynapseRuntimeConfig, SearchResult } from "@massa-th0th/shared";
-import { SearchSource } from "@massa-th0th/shared";
+import type { SynapseRuntimeConfig, SearchResult } from "@massa-ai/shared";
+import { SearchSource } from "@massa-ai/shared";
 
 // Patch the global session registry singleton for these tests by injecting
 // our own instance through the module's getSessionRegistry pathway.

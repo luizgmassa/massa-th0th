@@ -26,7 +26,7 @@ afterEach(async () => {
 });
 
 async function fixture(relativePath: string, content: string, needsReparse = true) {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-structural-etl-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-structural-etl-"));
   tempDirs.push(dir);
   const absolutePath = path.join(dir, relativePath);
   await fs.mkdir(path.dirname(absolutePath), { recursive: true });
@@ -43,7 +43,7 @@ function context(projectPath: string): EtlStageContext {
 
 describeNative("TS/JS structural ETL adapter", () => {
   test("routes every manifest extension through the structural runtime", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-manifest-etl-"));
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-manifest-etl-"));
     tempDirs.push(dir);
     const seen: string[] = [];
     const files = await Promise.all(LANGUAGE_MANIFEST.map(async ({ extension }) => {
@@ -77,7 +77,7 @@ describeNative("TS/JS structural ETL adapter", () => {
   });
 
   test("derives AST importer and directory-aware build evidence through the real ParseStage seam", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-header-evidence-"));
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-header-evidence-"));
     tempDirs.push(dir);
     const discovered = (relativePath: string, snapshotContent: string, needsReparse = true) => ({
       absolutePath: path.join(dir, relativePath), relativePath, snapshotContent,

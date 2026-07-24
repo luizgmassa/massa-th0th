@@ -1,7 +1,7 @@
 # Validation Report
 
 - Status: TECHNICAL PASS WITH USER-WAIVED DOWNSTREAM RERUN; PROCESS EXCEPTION — independent remote push drift
-- Acceptance backend: PostgreSQL 17 + pgvector on `127.0.0.1:5433/massa_th0th_test`
+- Acceptance backend: PostgreSQL 17 + pgvector on `127.0.0.1:5433/massa_ai_test`
 - Shared service boundary: `:3333` PID/health probe only
 
 ## Acceptance Evidence
@@ -79,7 +79,7 @@ Non-shallow check: the initial dimension sensors failed before implementation; t
 | Canonical production roots | `index-project-identity.test.ts` plus live non-force API case | Symlink aliases converge; different root fails before job creation unless force is explicit | Covered |
 | Profile-derived shared ID | `_helpers.ts` identity sensitivity test | Commit, manifest, provider, model, and dimensions each alter the 16-hex identity | Covered |
 | Warm wrong-root rejection | `22.path-identity.test.ts` seeds a fully searchable duplicate clone under the target ID | Warm probes cannot bypass identity; guarded dedicated reset rebuilds expected canonical path | Covered |
-| Mutation boundary | pure decision matrix plus live project-prefix path | Non-dedicated mismatch throws; only dedicated `e2e-th0th-*` target can rebuild | Covered |
+| Mutation boundary | pure decision matrix plus live project-prefix path | Non-dedicated mismatch throws; only dedicated `e2e-ai-*` target can rebuild | Covered |
 | PostgreSQL path containment | direct vector metadata and `symbol_files.relative_path` queries | 34+34 distinct path sets are relative, traversal/`adsads`-free, and manifest-contained | Covered |
 | Existing shared consumers | live search 36/36 and symbol/workspace 23/23 | Hashed ID remains transparent to E2E transports and shared-index consumers | Covered |
 

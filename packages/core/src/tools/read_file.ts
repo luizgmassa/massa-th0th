@@ -1,5 +1,5 @@
 /**
- * @massa-th0th/core - Read File Tool
+ * @massa-ai/core - Read File Tool
  * 
  * Optimized file reading with:
  * - Automatic compression for large files
@@ -9,8 +9,8 @@
  * - Language detection
  */
 
-import { IToolHandler, ToolResponse, estimateTokens, sanitizeFilePath } from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse, estimateTokens, sanitizeFilePath } from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
 import { CodeCompressor } from "../services/compression/code-compressor.js";
 import { serializeToolResponse } from "./serialize.js";
 import { eventBus } from "../services/events/event-bus.js";
@@ -21,7 +21,7 @@ import path from "path";
 
 /**
  * N9: per-read line ceiling on user-facing read_file output. Default 500;
- * override via `MASSA_TH0TH_READ_FILE_MAX_LINES`. Invalid/negative/zero
+ * override via `MASSA_AI_READ_FILE_MAX_LINES`. Invalid/negative/zero
  * values fall back to 500 (treat invalid as unset). When the requested
  * range exceeds the cap, `selectedContent` is sliced and `source_clipped:
  * true` is emitted in the same response. The true total line count is
@@ -30,8 +30,8 @@ import path from "path";
  * /readContext used by go_to_definition) are NOT capped — see
  * symbol-graph.service.ts for the exclusion comment.
  */
-const MASSA_TH0TH_READ_FILE_MAX_LINES = (() => {
-  const v = Number(process.env.MASSA_TH0TH_READ_FILE_MAX_LINES);
+const MASSA_AI_READ_FILE_MAX_LINES = (() => {
+  const v = Number(process.env.MASSA_AI_READ_FILE_MAX_LINES);
   return Number.isFinite(v) && v > 0 ? Math.floor(v) : 500;
 })();
 
@@ -198,7 +198,7 @@ export class ReadFileTool implements IToolHandler {
       // ── Wave 5 FR-12 / AD-W5-006: filesystem-side path containment. Absolute
       // paths must resolve under one of: the project root (projectPath arg /
       // workspace lookup), cwd, or an explicit allowlist env
-      // MASSA_TH0TH_READ_FILE_ROOTS (colon-separated). Outside → teaching
+      // MASSA_AI_READ_FILE_ROOTS (colon-separated). Outside → teaching
       // error listing valid roots only (no host path enumeration). Project
       // root + cwd are ALWAYS allowed. sanitizeFilePath strips ../ traversal
       // tokens before the containment check so a crafted relative path can't
@@ -232,16 +232,16 @@ export class ReadFileTool implements IToolHandler {
       let selectedContent = this.extractLines(lines, adjustedRange);
       let selectedLineCount = selectedContent.split("\n").length;
 
-      // N9: cap user-facing read_file output at MASSA_TH0TH_READ_FILE_MAX_LINES
+      // N9: cap user-facing read_file output at MASSA_AI_READ_FILE_MAX_LINES
       // (default 500). When the adjusted range exceeds the cap, slice the
       // content and emit `source_clipped: true` in the same response so the
       // caller knows lines were omitted. `lineRange.actual.total` keeps the
       // true total line count so `omitted = total - shown` is derivable.
       let source_clipped = false;
-      if (selectedLineCount > MASSA_TH0TH_READ_FILE_MAX_LINES) {
+      if (selectedLineCount > MASSA_AI_READ_FILE_MAX_LINES) {
         const cappedLines = lines.slice(
           adjustedRange.start - 1,
-          adjustedRange.start - 1 + MASSA_TH0TH_READ_FILE_MAX_LINES,
+          adjustedRange.start - 1 + MASSA_AI_READ_FILE_MAX_LINES,
         );
         selectedContent = cappedLines.join("\n");
         selectedLineCount = selectedContent.split("\n").length;
@@ -390,7 +390,7 @@ export class ReadFileTool implements IToolHandler {
    * An absolute path is allowed iff it resolves under one of:
    *   1. the project root (workspace lookup for projectId, when provided)
    *   2. process.cwd()
-   *   3. an entry in MASSA_TH0TH_READ_FILE_ROOTS (colon-separated env)
+   *   3. an entry in MASSA_AI_READ_FILE_ROOTS (colon-separated env)
    *
    * Project root + cwd are ALWAYS allowed. Outside → teaching error listing
    * valid roots only (no host path enumeration). The check uses path.relative
@@ -418,7 +418,7 @@ export class ReadFileTool implements IToolHandler {
     roots.push(path.resolve(process.cwd()));
     // Read the env allowlist at call time so tests/operators can set it
     // without restarting the process. Colon-separated (POSIX-style).
-    const envRoots = (process.env.MASSA_TH0TH_READ_FILE_ROOTS ?? "")
+    const envRoots = (process.env.MASSA_AI_READ_FILE_ROOTS ?? "")
       .split(":")
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
@@ -442,7 +442,7 @@ export class ReadFileTool implements IToolHandler {
       allowed: false,
       error:
         `read_file path containment: "${target}" is outside the allowed roots.\n` +
-        `Valid roots (project root + cwd + MASSA_TH0TH_READ_FILE_ROOTS):\n${validRootsList}\n` +
+        `Valid roots (project root + cwd + MASSA_AI_READ_FILE_ROOTS):\n${validRootsList}\n` +
         `Provide a filePath that resolves under one of these roots.`,
     };
   }

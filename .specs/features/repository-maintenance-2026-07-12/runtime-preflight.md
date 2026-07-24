@@ -3,9 +3,9 @@
 **Status:** PASS — 2026-07-12
 
 Docker was unavailable, so the approved `:5433` contract was implemented with an isolated
-native PostgreSQL 17 cluster under `/tmp/massa-th0th-maintenance-20260712/postgres`.
+native PostgreSQL 17 cluster under `/tmp/massa-ai-maintenance-20260712/postgres`.
 
-- PostgreSQL: `massa_th0th_test` on `127.0.0.1:5433`; pgvector `0.8.4`.
+- PostgreSQL: `massa_ai_test` on `127.0.0.1:5433`; pgvector `0.8.4`.
 - Migrations: all 13 committed Prisma migrations applied successfully.
 - Dedicated Ollama: `127.0.0.1:11435`; required embedding/instruct/coder models present.
 - Dedicated API: `localhost:3334`; health `ok`; data directory isolated under the task root.

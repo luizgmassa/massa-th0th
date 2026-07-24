@@ -10,7 +10,7 @@
  */
 
 import { Elysia, t } from "elysia";
-import { ExecutorController } from "@massa-th0th/core";
+import { ExecutorController } from "@massa-ai/core";
 
 let controller: ExecutorController | null = null;
 function getController(): ExecutorController {

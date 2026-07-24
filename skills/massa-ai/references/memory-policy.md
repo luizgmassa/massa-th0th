@@ -70,16 +70,16 @@ Persist only after recall and scoring. Add `stale-replaces:<memoryId>` only when
 
 ```js
 remember({
-  projectId: "massa-th0th",
+  projectId: "massa-ai",
   sessionId: "spec-memory-routing",
   type: "decision",
   importance: 0.8,
   content: "2026-06-27 workflows/spec-driven.md owns the TLC v3 Specify, optional Design, optional Tasks, and Execute flow with mandatory independent validation as Execute's final gate. Approved feature artifacts own phase contracts, .specs/project/STATE.md owns restart state, and th0th owns durable cross-session decisions and patterns.",
   tags: [
-    "project:massa-th0th",
+    "project:massa-ai",
     "session:spec-memory-routing",
     "workflow:spec-driven",
-    "entity:massa-th0th",
+    "entity:massa-ai",
     "memory:semantic",
     "stale-replaces:dec_old123" // omit unless this supersedes that memory
   ]

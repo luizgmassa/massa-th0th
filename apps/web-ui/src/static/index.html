@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>massa-th0th — Memory Browser (read-only)</title>
+    <title>massa-ai — Memory Browser (read-only)</title>
     <link rel="stylesheet" href="/ui/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
@@ -11,7 +11,7 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("massa-th0th-ui-theme");
+          var t = localStorage.getItem("massa-ai-ui-theme");
           if (t === "dark" || t === "light") {
             document.documentElement.setAttribute("data-theme", t);
           }
@@ -21,7 +21,7 @@
   </head>
   <body>
     <header class="topbar">
-      <div class="brand">massa-th0th <span class="muted">memory browser</span></div>
+      <div class="brand">massa-ai <span class="muted">memory browser</span></div>
       <nav class="nav">
         <a href="#/projects">Projects</a>
         <a href="#/memory">Memory</a>
@@ -53,7 +53,7 @@
       <div class="loading">Loading…</div>
     </main>
     <footer class="footer muted">
-      Read-only · refresh to see new data · served by the massa-th0th Tools API
+      Read-only · refresh to see new data · served by the massa-ai Tools API
     </footer>
     <script type="module" src="/ui/app.js" defer></script>
   </body>

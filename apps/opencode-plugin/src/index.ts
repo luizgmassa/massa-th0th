@@ -1,6 +1,6 @@
 import type { Plugin, PluginInput } from "@opencode-ai/plugin"
 import { tool, type ToolContext } from "@opencode-ai/plugin"
-import { configExists, initConfig, loadConfig } from "@massa-th0th/shared/config"
+import { configExists, initConfig, loadConfig } from "@massa-ai/shared/config"
 import {
   ObservationEmitter,
   makeDefaultDeps,
@@ -19,7 +19,7 @@ import {
 // Config
 // ---------------------------------------------------------------------------
 
-const MASSA_TH0TH_API_URL = process.env.MASSA_TH0TH_API_URL || "http://localhost:3333"
+const MASSA_AI_API_URL = process.env.MASSA_AI_API_URL || "http://localhost:3333"
 const FETCH_TIMEOUT_MS = 5_000
 const REINDEX_DEBOUNCE_MS = 60_000
 const REINDEX_FILE_THRESHOLD = 15
@@ -34,14 +34,14 @@ function ensureConfig(): void {
     initConfig()
     console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  massa-th0th initialized with default configuration                  ║
+║  massa-ai initialized with default configuration                  ║
 ║                                                                ║
-║  Config: ~/.config/massa-th0th/config.json                           ║
+║  Config: ~/.config/massa-ai/config.json                           ║
 ║  Provider: Ollama (local, free)                                ║
 ║                                                                ║
 ║  To change provider:                                           ║
-║    npx massa-th0th-config use mistral --api-key YOUR_KEY             ║
-║    npx massa-th0th-config use openai --api-key YOUR_KEY              ║
+║    npx massa-ai-config use mistral --api-key YOUR_KEY             ║
+║    npx massa-ai-config use openai --api-key YOUR_KEY              ║
 ╚═══════════════════════════════════════════════════════════════╝
 `)
   }
@@ -60,7 +60,7 @@ async function th0thFetch<T = unknown>(
   const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const res = await fetch(`${MASSA_TH0TH_API_URL}${endpoint}`, {
+    const res = await fetch(`${MASSA_AI_API_URL}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -68,7 +68,7 @@ async function th0thFetch<T = unknown>(
     })
     if (!res.ok) {
       const text = await res.text().catch(() => "")
-      throw new Error(`massa-th0th ${res.status}: ${text.slice(0, 200)}`)
+      throw new Error(`massa-ai ${res.status}: ${text.slice(0, 200)}`)
     }
     return res.json()
   } finally {
@@ -84,13 +84,13 @@ async function th0thGet<T = unknown>(
   const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const res = await fetch(`${MASSA_TH0TH_API_URL}${endpoint}`, {
+    const res = await fetch(`${MASSA_AI_API_URL}${endpoint}`, {
       method: "GET",
       signal: controller.signal,
     })
     if (!res.ok) {
       const text = await res.text().catch(() => "")
-      throw new Error(`massa-th0th ${res.status}: ${text.slice(0, 200)}`)
+      throw new Error(`massa-ai ${res.status}: ${text.slice(0, 200)}`)
     }
     return res.json()
   } finally {
@@ -115,7 +115,7 @@ async function th0thGetWithQuery<T = unknown>(
 // Plugin
 // ---------------------------------------------------------------------------
 
-export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, client }: PluginInput) => {
+export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, client }: PluginInput) => {
   // Auto-configure on first run
   ensureConfig()
   
@@ -149,7 +149,7 @@ export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, c
   // POST /api/v1/hook/batch; the server classifies into the 33-category taxonomy.
   const observations = new ObservationEmitter({
     deps: makeDefaultDeps({
-      apiUrl: MASSA_TH0TH_API_URL,
+      apiUrl: MASSA_AI_API_URL,
       log,
       enabled: () => apiAvailable,
     }),
@@ -161,13 +161,13 @@ export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, c
 
   function log(level: "debug" | "info" | "warn" | "error", message: string, extra?: Record<string, unknown>) {
     client.app.log({
-      body: { service: "massa-th0th", level, message, extra },
+      body: { service: "massa-ai", level, message, extra },
     }).catch(() => {})
   }
 
   function toast(message: string, variant: "success" | "error" | "info" = "info") {
     client.tui.showToast({
-      body: { message: `[massa-th0th] ${message}`, variant },
+      body: { message: `[massa-ai] ${message}`, variant },
     }).catch(() => {})
   }
 
@@ -249,7 +249,7 @@ export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, c
 
       "remember": tool({
         description:
-          "Store important information in massa-th0th memory. Persists across sessions. Use for: user criticals, architectural decisions, discovered patterns.",
+          "Store important information in massa-ai memory. Persists across sessions. Use for: user criticals, architectural decisions, discovered patterns.",
         args: {
           content: tool.schema.string().describe("Content to store"),
           type: tool.schema.enum(["critical", "conversation", "code", "decision", "pattern"]).describe("Memory type"),
@@ -402,7 +402,7 @@ export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, c
       }),
 
       "analytics": tool({
-        description: "Get massa-th0th usage analytics and performance metrics.",
+        description: "Get massa-ai usage analytics and performance metrics.",
         args: {
           type: tool.schema.enum(["summary", "project", "cache", "recent"]).optional().default("summary"),
           limit: tool.schema.number().optional().default(10),
@@ -541,17 +541,17 @@ export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, c
       try {
         const controller = new AbortController()
         const timer = setTimeout(() => controller.abort(), 3_000)
-        const res = await fetch(`${MASSA_TH0TH_API_URL}/health`, { signal: controller.signal })
+        const res = await fetch(`${MASSA_AI_API_URL}/health`, { signal: controller.signal })
         clearTimeout(timer)
         apiAvailable = res.ok
         if (apiAvailable) {
-          log("info", `Connected to massa-th0th API at ${MASSA_TH0TH_API_URL}`)
+          log("info", `Connected to massa-ai API at ${MASSA_AI_API_URL}`)
         } else {
-          toast("massa-th0th API unhealthy", "error")
+          toast("massa-ai API unhealthy", "error")
         }
       } catch {
         apiAvailable = false
-        log("warn", `massa-th0th API unreachable at ${MASSA_TH0TH_API_URL}`)
+        log("warn", `massa-ai API unreachable at ${MASSA_AI_API_URL}`)
       }
       // Emit session-start observation (best-effort, non-blocking).
       observations.emit({
@@ -624,7 +624,7 @@ export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, c
           const memoryText = memories.data.memories
             .map((m, i) => `${i + 1}. ${m.content}`)
             .join("\n")
-          output.context.push(`## massa-th0th - Persistent Memories\n${memoryText}`)
+          output.context.push(`## massa-ai - Persistent Memories\n${memoryText}`)
         }
       } catch (err) {
         log("debug", "Failed to fetch memories for compaction", {
@@ -652,12 +652,12 @@ export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, c
       }
     },
 
-    // Inject massa-th0th env vars into shell
+    // Inject massa-ai env vars into shell
     // Hooks interface: shell.env(input: { cwd, sessionID?, callID? }, output: { env })
     "shell.env": async (input, output) => {
-      output.env.MASSA_TH0TH_PROJECT_ID = projectPins.for(input.sessionID)
-      output.env.MASSA_TH0TH_PROJECT_PATH = projectPath
-      output.env.MASSA_TH0TH_API_URL = MASSA_TH0TH_API_URL
+      output.env.MASSA_AI_PROJECT_ID = projectPins.for(input.sessionID)
+      output.env.MASSA_AI_PROJECT_PATH = projectPath
+      output.env.MASSA_AI_API_URL = MASSA_AI_API_URL
     },
 
     // Unified event handler for file tracking + LSP diagnostics + observations
@@ -767,4 +767,4 @@ export const MassaTh0thPlugin: Plugin = async ({ project, directory, worktree, c
   }
 }
 
-export default MassaTh0thPlugin
+export default MassaAiPlugin

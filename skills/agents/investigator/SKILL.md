@@ -52,7 +52,7 @@ Read and understand the codebase to answer engineering questions without modifyi
 - The task needs unresolved user intent.
 - The work is tightly coupled without a clear owner.
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: summarize search output, logs, and source reads; return only `path:line` pointers and findings.
 - Verification Ladder: static checks (grep, search) and file-integrity; no behavioral changes.
 - Th0th Memory: suggest durable architecture/dependency memories only when useful; main agent persists.

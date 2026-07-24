@@ -55,7 +55,7 @@ graph TD
     subgraph Shared[Shared Config]
         XDG[xdg.ts NEW]
         CL[config-loader.ts]
-        MC[massa-th0th-config.ts]
+        MC[massa-ai-config.ts]
     end
     subgraph DataLayer[Data Layer]
         SR[symbol-repository-pg.ts]
@@ -156,8 +156,8 @@ contract implication); the choice is recorded here per the design.md template.
 | `get_references` total/shown precedent | `packages/core/src/tools/get_references.ts:73-74`, `apps/tools-api/src/routes/workspace.ts:299-300` | Reuse the `total: refs.length` / `shown: limited.length` pattern; add `omitted: total - shown` on the same path. N4. |
 | `memory_list` total/offset precedent | `apps/tools-api/src/routes/memory.ts:267-272` | Same-path `total`/`rows` pattern. N4. |
 | `defaultDiffRunner` | `packages/core/src/services/symbol/impact-analysis.ts:447-509` | Extend with `git ls-files --others --exclude-standard` merge + secrets denylist. N7. |
-| `boundedInt` | `apps/tools-api/src/routes/workspace.ts:40-53` | Reuse for `MASSA_TH0TH_READ_FILE_MAX_LINES` env parse + bounds. N9. |
-| `FILE_CACHE_MAX_ENTRIES` pattern | `packages/core/src/tools/read_file.ts:140` | Reuse the env-read + default pattern for `MASSA_TH0TH_READ_FILE_MAX_LINES`. N9. |
+| `boundedInt` | `apps/tools-api/src/routes/workspace.ts:40-53` | Reuse for `MASSA_AI_READ_FILE_MAX_LINES` env parse + bounds. N9. |
+| `FILE_CACHE_MAX_ENTRIES` pattern | `packages/core/src/tools/read_file.ts:140` | Reuse the env-read + default pattern for `MASSA_AI_READ_FILE_MAX_LINES`. N9. |
 | `activatedGraphGenerationId` emitter | `packages/core/src/services/symbol/symbol-graph.service.ts:455` | Extract the lookup into a reusable `getActiveGeneration(projectId)` helper; call from graph-reader tools. N1. |
 | `ActiveGenerationScope` | `packages/core/src/data/symbol/symbol-repository-pg.ts:181-184, 1635-1642` | Already returns `{projectId, generationId}`. N1 helper wraps it. |
 | `describe.skipIf(!DB_AVAILABLE)` gate | `packages/core/src/__tests__/scheduler-store-pg.test.ts:8,51` | Preserve. Add instance-scoped seam. M35. |
@@ -277,7 +277,7 @@ contract implication); the choice is recorded here per the design.md template.
 
 ### 5. read_file cap + source_clipped (N9)
 
-- **Purpose**: Cap user-facing read_file/snippet at `MASSA_TH0TH_READ_FILE_MAX_LINES`
+- **Purpose**: Cap user-facing read_file/snippet at `MASSA_AI_READ_FILE_MAX_LINES`
   (default 500); emit `source_clipped` when hit. Internal enrichment excluded.
 - **Location**: `packages/core/src/tools/read_file.ts` (cap + flag),
   `apps/tools-api/src/routes/workspace.ts:619-678` (symbol_snippet HTTP — replace
@@ -286,7 +286,7 @@ contract implication); the choice is recorded here per the design.md template.
 - **Interfaces**:
   ```typescript
   const MAX_LINES = (() => {
-    const v = Number(process.env.MASSA_TH0TH_READ_FILE_MAX_LINES);
+    const v = Number(process.env.MASSA_AI_READ_FILE_MAX_LINES);
     return Number.isFinite(v) && v > 0 ? Math.floor(v) : 500;
   })();
   // In ReadFileTool.handle, after adjustRange:
@@ -437,17 +437,17 @@ contract implication); the choice is recorded here per the design.md template.
   ```
 - **Changes**:
   - `config-loader.ts:6-11` — replace inlined `XDG_CONFIG_HOME` with
-    `import { configDir } from "./xdg.js"; const CONFIG_DIR = configDir("massa-th0th");`.
-  - `massa-th0th-config.ts:4-11` — replace inlined `XDG_CONFIG_HOME` + circular-dep
+    `import { configDir } from "./xdg.js"; const CONFIG_DIR = configDir("massa-ai");`.
+  - `massa-ai-config.ts:4-11` — replace inlined `XDG_CONFIG_HOME` + circular-dep
     comment with `import { xdgConfigHome, dataDir } from "./xdg.js";`.
-  - `massa-th0th-config.ts:209` — `dataDir: dataDir("massa-th0th")` instead of
-    `path.join(XDG_CONFIG_HOME, "massa-th0th", "data")`.
+  - `massa-ai-config.ts:209` — `dataDir: dataDir("massa-ai")` instead of
+    `path.join(XDG_CONFIG_HOME, "massa-ai", "data")`.
 - **Zero-imports guarantee**: `xdg.ts` imports nothing (uses `process.env`, `os`,
   `path` — all Node builtins available without `import`? No — `os` and `path`
   require `import`). **Refinement**: "zero imports" in the M6 residual means "no
   imports from the project's own modules" (i.e. no circular-dep source). The module
   MAY import Node builtins (`path`, `os`). The circular-dep was
-  `config-loader ↔ massa-th0th-config`; `xdg.ts` imports neither, so the cycle is
+  `config-loader ↔ massa-ai-config`; `xdg.ts` imports neither, so the cycle is
   broken. Record this refinement in the N36 task.
 
 ---
@@ -482,12 +482,12 @@ artifact, not a DB migration).
 | Concern | Location (file:line) | Impact | Mitigation |
 | --- | --- | --- | --- |
 | N7 breaking default change on `scope=unstaged` | `impact-analysis.ts:497` | Existing callers receive untracked files in the default scope | Documented in HANDOFF.md; AC 9a filters secrets; `scope=committed` stays single-source for callers that want the old behavior. |
-| N9 cap too aggressive for large-file workflows | `read_file.ts:378` | Clients reading >500-line files get clipped | `MASSA_TH0TH_READ_FILE_MAX_LINES` env override; default 500 matches cbm. |
+| N9 cap too aggressive for large-file workflows | `read_file.ts:378` | Clients reading >500-line files get clipped | `MASSA_AI_READ_FILE_MAX_LINES` env override; default 500 matches cbm. |
 | N1 `ifNoneMatch` adoption cost | (new param) | Existing clients do not send it; no effect (opt-in) | Opt-in by design; clients that want the precondition add the param. |
 | N4 `COUNT(*) OVER()` perf on >100k workspaces | `symbol-repository-pg.ts:881` | Latency regression on `search_definitions` | AC 4 allows `SELECT COUNT(*)` or sentinel `">=10000"` with `definitions_total_exact: false`. Task picks the cheaper path per workspace size. |
 | N6 throws on invalid enums — existing clients passing bad values break | (6 tool handlers) | Silent fallback → hard error | This is the intended behavior (teaching error). Document in HANDOFF.md. |
 | M35 seam leak if test crashes before `afterEach` | `scheduler-store-pg.test.ts` | Other tests receive filtered `listAll()` | AC 5 follow-up `listAll()` assertion catches it; instance-scoped (not class/global). |
-| N36 `xdg.ts` zero-imports interpretation | (new file) | If "zero imports" is read literally, Node builtins are forbidden — impossible | Record refinement: "zero imports from project modules; Node builtins allowed." Circular-dep was `config-loader ↔ massa-th0th-config`; `xdg.ts` imports neither. |
+| N36 `xdg.ts` zero-imports interpretation | (new file) | If "zero imports" is read literally, Node builtins are forbidden — impossible | Record refinement: "zero imports from project modules; Node builtins allowed." Circular-dep was `config-loader ↔ massa-ai-config`; `xdg.ts` imports neither. |
 | N34 path-filter action availability | `.github/workflows/ci.yml` | `dorny/paths-filter@v3` may be unavailable | Fallback: shell step `git diff --name-only origin/main...HEAD -- packages/core/src/services/structural bun.lock package.json` → `if [ -n "$changed" ]; then bun run verify:tree-sitter-native; fi`. |
 | N10 regression test brittle to refactor | (new test) | A future refactor of `postgres-vector-store` could break the test | Test asserts the bounded contract (LIMIT 200), not the implementation. |
 | N33 `normalizeRRFScore` removal if a dynamic caller exists | `hybrid-search.ts:152` | Removing a live method breaks the caller | Task greps for `normalizeRRFScore\b` (singular, word boundary) before deletion; audit already confirmed zero callers. |
@@ -501,7 +501,7 @@ artifact, not a DB migration).
 | N4/N6/N1 centralization | Per-tool emission + shared helpers (Approach A) | Matches existing convention; M36 contract on `serializeToolResponse` preserved; lowest regression risk. |
 | N7 untracked inclusion | `scope=unstaged` (default) + `staged` + `all` include untracked; `committed` stays single-source | Matches cbm; `committed` preserves the old single-source escape hatch. |
 | N7 secrets denylist | Fixed regex patterns (`*.env`, `*.key`, `*.pem`, `*.p12`, `*.pfx`, `secrets.*`, `*.keystore`, `id_rsa*`, `*.asc`) | Conservative; does NOT rely on `.gitignore` (user may forget). `untracked_filtered` count surfaces the filter. |
-| N9 cap default | 500 (matches cbm); env override `MASSA_TH0TH_READ_FILE_MAX_LINES` | Conservative default + escape hatch for power users. |
+| N9 cap default | 500 (matches cbm); env override `MASSA_AI_READ_FILE_MAX_LINES` | Conservative default + escape hatch for power users. |
 | N9 enrichment exclusion | `SymbolGraphService.readSnippet`/`readContext` NOT capped | Internal enrichment has no MCP propagation path; capping would silently clip. |
 | N1 scope | `impact_analysis`, `trace_path`, `get_references`, `search_definitions` only; `search_code` excluded | Vector + keyword search is graph-independent; avoid coupling + a DB round trip on the hot search path. |
 | N34 path filter | `dorny/paths-filter@v3` with shell fallback | Standard action; fallback avoids hard dep. |
@@ -523,7 +523,7 @@ artifact, not a DB migration).
 | N6 teaching errors | `wave-4-correctness.test.ts`: call each tool with an invalid enum → assert `ToolError` with valid-values list in the message. |
 | N7 untracked merge + denylist | `wave-4-correctness.test.ts`: create an untracked file + an untracked `.env` → `scope=unstaged` includes the untracked non-secret, excludes `.env`, increments `untracked_filtered`. |
 | N8 shell-arg guard | `wave-4-correctness.test.ts`: call `impact_analysis` with `base_branch="--upload-pack=..."` → `ToolError` thrown, no git invocation (assert via a mock `execFileSync`). |
-| N9 read_file cap | `wave-4-correctness.test.ts`: 1000-line file, `read_file` with no range → returns 500 lines + `source_clipped: true` + total=1000. `MASSA_TH0TH_READ_FILE_MAX_LINES=1000` → returns 1000. `go_to_definition` on a 1000-line symbol → `readContext` returns full context (NOT capped). |
+| N9 read_file cap | `wave-4-correctness.test.ts`: 1000-line file, `read_file` with no range → returns 500 lines + `source_clipped: true` + total=1000. `MASSA_AI_READ_FILE_MAX_LINES=1000` → returns 1000. `go_to_definition` on a 1000-line symbol → `readContext` returns full context (NOT capped). |
 | M35 scheduler seam | `scheduler-store-pg.test.ts`: existing `storeB.listAll()` assertion passes; new follow-up test asserts `listAll()` after `afterEach` returns the full set. |
 | N34 CI gate | Open a PR touching `packages/core/src/services/structural/parse.ts` → `bun run verify:tree-sitter-native` runs. Open a PR touching only `README.md` → step skipped. (Verified via the workflow's `if:` condition, not a live PR run.) |
 | N36 xdg.ts | `grep -n "XDG_CONFIG_HOME" packages/shared/src/config/` returns matches only in `xdg.ts`. `bun run typecheck && bun run build` pass. Existing config tests pass unchanged. |

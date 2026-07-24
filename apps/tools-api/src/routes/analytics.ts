@@ -4,7 +4,7 @@
  * POST /api/v1/analytics - Obter analytics e métricas
  */
 
-import { GetAnalyticsTool } from "@massa-th0th/core";
+import { GetAnalyticsTool } from "@massa-ai/core";
 import { Elysia, t } from "elysia";
 
 let analyticsTool: GetAnalyticsTool | null = null;

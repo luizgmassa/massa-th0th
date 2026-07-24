@@ -5,8 +5,8 @@
  * Thin layer — delegates to CheckpointManager service.
  */
 
-import { IToolHandler, ToolResponse, TaskState, TaskStatus, CheckpointType } from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse, TaskState, TaskStatus, CheckpointType } from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
 import { CheckpointManager } from "../services/checkpoint/checkpoint-manager.js";
 import { serializeToolResponse } from "./serialize.js";
 import { validateEnum } from "./enum-validation.js";

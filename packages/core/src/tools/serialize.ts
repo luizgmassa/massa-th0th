@@ -17,7 +17,7 @@
  */
 
 import { encode as toTOON } from "@toon-format/toon";
-import type { ToolResponse } from "@massa-th0th/shared";
+import type { ToolResponse } from "@massa-ai/shared";
 import type {
   GroupRowsByPrefixOptions,
   GroupedResult,

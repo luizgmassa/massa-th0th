@@ -1,11 +1,11 @@
-# massa-th0th Hook Scripts (Passive Capture)
+# massa-ai Hook Scripts (Passive Capture)
 
-These POSIX shell scripts wire Claude Code lifecycle hooks into the massa-th0th
+These POSIX shell scripts wire Claude Code lifecycle hooks into the massa-ai
 observation ingestion endpoint (`POST /api/v1/hook`). Each forwards the hook
 payload as an Observation so the consolidation bridge can later summarize it
 into a structured memory.
 
-| Script | Claude Code hook | massa-th0th event |
+| Script | Claude Code hook | massa-ai event |
 | --- | --- | --- |
 | `session-start.sh` | `SessionStart` | `session-start` |
 | `user-prompt-submit.sh` | `UserPromptSubmit` | `user-prompt` |
@@ -19,8 +19,8 @@ into a structured memory.
   and always `exit 0`. The agent is never blocked, even if the API is down or
   `curl` is missing.
 - **No stdout:** scripts produce no output (Claude Code would surface it).
-- **Config via env:** `MASSA_TH0TH_API_BASE` (default `http://localhost:3333`),
-  `MASSA_TH0TH_API_KEY` (optional), `MASSA_TH0TH_PROJECT_ID` (optional; defaults to the
+- **Config via env:** `MASSA_AI_API_BASE` (default `http://localhost:3333`),
+  `MASSA_AI_API_KEY` (optional), `MASSA_AI_PROJECT_ID` (optional; defaults to the
   current directory's basename).
 
 ## Install (Claude Code)

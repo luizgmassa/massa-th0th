@@ -272,7 +272,7 @@ dep; R7 polish inherits `llm.enabled`).
 - The single P6-SEARCH-01 block resets the `MemoryRepository` singleton
   to a temp dataDir (mirrors Phase-4 P4-SEARCH-01) and restores it in
   `afterEach`.
-- No `mock.module("@massa-th0th/shared")`.
+- No `mock.module("@massa-ai/shared")`.
 
 A separate `handoff-repository.test.ts` exercises `SqliteHandoffStore`
 with an explicit temp `dbPath` (mirrors

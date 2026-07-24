@@ -1,7 +1,7 @@
 /**
  * BootstrapService tests (Phase 4 — repo bootstrap, G6).
  *
- * Test-isolation rule (Phase 1/2/3): do NOT `mock.module("@massa-th0th/shared")`
+ * Test-isolation rule (Phase 1/2/3): do NOT `mock.module("@massa-ai/shared")`
  * (process-wide collision — memory-crud.test.ts owns it). Inject a fake
  * MemoryRepoSeam, a fake LlmSurface, a fake CentralitySource, and a fake
  * GitRunner. Use a temp project root with fixture files for scanSignals.
@@ -156,7 +156,7 @@ function makeFixtureRoot(opts: {
   docs?: Array<{ name: string; content: string }>;
   manifests?: string[];
 } = {}): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-boot-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-boot-"));
   if (opts.readme !== undefined) {
     fs.writeFileSync(path.join(root, "README.md"), opts.readme);
   }
@@ -231,7 +231,7 @@ describe("BootstrapService — scan, seed, idempotency, degradation, event", () 
     });
 
     it("skips missing signals silently (no README, no manifests, git fails, centrality empty)", async () => {
-      const emptyRoot = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-empty-"));
+      const emptyRoot = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-empty-"));
       try {
         const failingGit = async () => ({ ok: false, stdout: "" });
         const signals = await scanSignals(
@@ -394,7 +394,7 @@ describe("BootstrapService — scan, seed, idempotency, degradation, event", () 
     });
 
     it("does not emit bootstrap:completed when no signals (no-signals skip)", async () => {
-      const emptyRoot = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-nosig-"));
+      const emptyRoot = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-nosig-"));
       try {
         const memRepo = makeFakeMemoryRepo();
         const service = new BootstrapService({

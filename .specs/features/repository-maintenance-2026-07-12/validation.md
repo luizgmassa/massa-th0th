@@ -2,7 +2,7 @@
 
 **Status:** Complete with one documented performance exception  
 **Acceptance backend:** PostgreSQL 17 + pgvector 0.8.4  
-**Dedicated database:** `massa_th0th_test` at `127.0.0.1:5433`
+**Dedicated database:** `massa_ai_test` at `127.0.0.1:5433`
 
 ## Acceptance Evidence
 
@@ -49,7 +49,7 @@
 - Scheduler rapid same-ID write sensor distinguishes fixed-delay drain from true FIFO drain.
 - Memory access-reinforcement sensor proves why sequential transport recall scores are mutable.
 - Exact dedicated guards reject any database other than
-  `test:test@127.0.0.1:5433/massa_th0th_test` in new PG parity suites.
+  `test:test@127.0.0.1:5433/massa_ai_test` in new PG parity suites.
 
 ## Protected Assets
 

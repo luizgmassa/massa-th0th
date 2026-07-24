@@ -49,7 +49,7 @@ Provide architectural guidance by evaluating structure, suggesting boundaries, a
 - The task needs a concrete implementation (route to builder).
 - An audit-specific lens is needed (route to audit-specialist with `lens: architecture`).
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: summarize source reads; return findings and metrics, not raw code.
 - Verification Ladder: static (coupling, depth, boundary) checks; no behavioral changes.
 - Th0th Memory: suggest durable architecture-decision memories only when a boundary or abstraction is recommended; main agent persists.

@@ -23,7 +23,7 @@
  * anyway. Resolution NEVER throws.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { getPgPool } from "../../data/db-connection.js";
 
 /** Minimal query surface (pg Pool/PoolClient both satisfy it). */

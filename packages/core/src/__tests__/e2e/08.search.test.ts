@@ -5,7 +5,7 @@
  * Targets the RUNNING Tools API (http://localhost:3333) + Ollama + the MCP
  * subprocess. Read-only: no production source, schema, or dist changes.
  *
- * Backend: PostgreSQL. Auth: off. Reuses the shared index `e2e-th0th-shared`
+ * Backend: PostgreSQL. Auth: off. Reuses the shared index `e2e-ai-shared`
  * (indexed ONCE across the whole E2E suite via ensureSharedIndex) — never
  * indexes its own repo (avoids OOM under slow Ollama).
  *
@@ -70,9 +70,9 @@ const READY = await (async () => {
 // ── Long-timeout POST (shared helper caps at 120s; search embeds can exceed) ─
 async function postLong<T = any>(endpoint: string, body?: unknown, timeoutMs = 180_000): Promise<T> {
   const headers: Record<string, string> = { "content-type": "application/json" };
-  const key = process.env.MASSA_TH0TH_API_KEY ?? "";
+  const key = process.env.MASSA_AI_API_KEY ?? "";
   if (key) headers["x-api-key"] = key;
-  const api = process.env.MASSA_TH0TH_API_URL ?? "http://localhost:3333";
+  const api = process.env.MASSA_AI_API_URL ?? "http://localhost:3333";
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {

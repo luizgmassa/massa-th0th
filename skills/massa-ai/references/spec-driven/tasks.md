@@ -185,7 +185,7 @@ These three checks fold in the broader pre-approval gates that also apply: (1) *
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
-Implement these tasks with the `massa-th0th` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
+Implement these tasks with the `massa-ai` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
 
 **If the skill cannot be activated, STOP and tell the user — do not proceed without it.**
 

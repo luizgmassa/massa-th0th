@@ -11,10 +11,10 @@
  *   discover → parse → resolve → load
  */
 
-import { IToolHandler } from "@massa-th0th/shared";
-import { ToolResponse } from "@massa-th0th/shared";
+import { IToolHandler } from "@massa-ai/shared";
+import { ToolResponse } from "@massa-ai/shared";
 import { ContextualSearchRLM } from "../services/search/contextual-search-rlm.js";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { indexJobTracker } from "../services/jobs/index-job-tracker.js";
 import { EtlPipeline, EtlPipelineBusyError } from "../services/etl/pipeline.js";
 import { workspaceManager } from "../services/workspace/workspace-manager.js";

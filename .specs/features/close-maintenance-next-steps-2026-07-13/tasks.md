@@ -52,7 +52,7 @@ Sources: root `AGENTS.md`, `package.json`, `turbo.json`, package manifests, `pac
 - No task is parallel-safe because production and E2E state overlap and the user requires sequential execution.
 - Diagram/body dependencies match the single chain above.
 - Every CMT requirement maps to at least one task and gate; no test deferral exists.
-- MCP/skill decision: `massa-th0th`, `coding-guidelines`, and local source/CLI tools are selected. No shared `:3333` MCP/REST retrieval is used beyond `/health` because the user hard boundary overrides optional tool preference.
+- MCP/skill decision: `massa-ai`, `coding-guidelines`, and local source/CLI tools are selected. No shared `:3333` MCP/REST retrieval is used beyond `/health` because the user hard boundary overrides optional tool preference.
 
 ## Failure Policy
 

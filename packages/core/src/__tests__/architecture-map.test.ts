@@ -464,7 +464,7 @@ const FIXTURE: Record<string, string> = {
 };
 
 async function makeTempProject(files: Record<string, string>): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-d4-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-d4-"));
   await Promise.all(
     Object.entries(files).map(async ([rel, content]) => {
       const fp = path.join(dir, rel);

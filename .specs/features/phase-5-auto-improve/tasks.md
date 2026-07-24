@@ -88,6 +88,6 @@ Tests derive from ACs (spec.md) and assert spec-defined outcomes.
 - Commit: `test(auto-improve): cover detect/list/approve/auto-approve/reject/degrade + validation`.
 
 ## Gate (per task 5)
-- `bun run --filter @massa-th0th/core test` ≥ 791 pass / 0 fail / 46 skip (no regression).
+- `bun run --filter @massa-ai/core test` ≥ 791 pass / 0 fail / 46 skip (no regression).
 - `bun run type-check` clean (5/5).
 - Discrimination mutant killed.

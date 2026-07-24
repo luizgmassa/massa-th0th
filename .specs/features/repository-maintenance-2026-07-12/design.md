@@ -9,10 +9,10 @@ fresh read-only verifier. DB/schema/MCP/cross-package failures escalate immediat
 ## Isolation Contract
 
 - Shared stack: `localhost:3333`; observe only, never restart or mutate.
-- Dedicated PostgreSQL: `127.0.0.1:5433`, database `massa_th0th_test`, credentials
+- Dedicated PostgreSQL: `127.0.0.1:5433`, database `massa_ai_test`, credentials
   `test`/`test`; set `DATABASE_URL` and `POSTGRES_VECTOR_URL` explicitly.
-- Dedicated Tools API: `localhost:3334`, `MASSA_TH0TH_DEDICATED=1`, scheduler off.
-- Dedicated state/config root: `/tmp/massa-th0th-maintenance-20260712`.
+- Dedicated Tools API: `localhost:3334`, `MASSA_AI_DEDICATED=1`, scheduler off.
+- Dedicated state/config root: `/tmp/massa-ai-maintenance-20260712`.
 - Dedicated Ollama: prefer `127.0.0.1:11435` for destructive timing/outage scenarios.
 - Record owned PIDs; stop only owned processes. Verify shared health before and after.
 - Run destructive gates last, then reprovision before final non-destructive verification.

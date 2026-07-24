@@ -1,4 +1,4 @@
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import type { EmbeddingCacheStore } from "./embedding-cache-contract.js";
 import { EmbeddingCachePg } from "./embedding-cache-pg.js";
 

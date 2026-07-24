@@ -28,7 +28,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { logger, config } from "@massa-th0th/shared";
+import { logger, config } from "@massa-ai/shared";
 import { getSymbolRepository } from "../../data/symbol/symbol-repository-factory.js";
 import type { SymbolDefinition } from "../../data/symbol/symbol-repository-pg.js";
 import { validateGitRef } from "./git-ref-validation.js";
@@ -180,7 +180,7 @@ const W_PROXIMITY = 0.4;
 const TEST_FILE_RE = /(^|\/)(test|tests|spec|specs|__tests__)(\/|$)|(\.|_|-)(test|spec)\.(t|j)sx?$/i;
 
 // ─── Wave 5 FR-05 / N3: BFS CTE behind-flag helper ─────────────────────────────
-// When MASSA_TH0TH_IMPACT_BFS_CTE=true (config.impact.bfsCteEnabled), impact
+// When MASSA_AI_IMPACT_BFS_CTE=true (config.impact.bfsCteEnabled), impact
 // analysis skips the TS reverse-import BFS (buildReverseImportGraph + the
 // queue loop in step 5a) and uses the single recursive CTE `runBfsCteImpact`
 // instead. Parity gated by impact-bfs-parity.test.ts: same FQN set; depths may
@@ -286,7 +286,7 @@ export class ImpactAnalysisService {
 
     // ── 3. Build the reverse import graph (file-level dependents) ───────────
     // importerOf: file → set of files that import it (the reverse of symbol_imports).
-    // Wave 5 FR-05: when MASSA_TH0TH_IMPACT_BFS_CTE=true, skip building the
+    // Wave 5 FR-05: when MASSA_AI_IMPACT_BFS_CTE=true, skip building the
     // TS reverse graph and use runBfsCteImpact (single recursive CTE) instead.
     // The CTE returns { file, hop }[] directly, so step 5a uses that list
     // instead of walking importerOf. Parity gated by impact-bfs-parity.test.ts.

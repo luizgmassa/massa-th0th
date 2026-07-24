@@ -4,7 +4,7 @@
  */
 
 import { MemoryController } from "../../controllers/memory-controller.js";
-import { logger, MemoryType } from "@massa-th0th/shared";
+import { logger, MemoryType } from "@massa-ai/shared";
 import { getPrismaClient, disconnectPrisma } from "../../services/query/prisma-client.js";
 
 async function testMemoryOperations() {

@@ -8,17 +8,17 @@ import {
 } from "../db-guard";
 import { parsePositiveIntEnv } from "../int-env";
 
-const SHARED_URL = "postgresql://massa_th0th:x@localhost:5432/massa_th0th";
-const ISOLATED_URL = "postgresql://massa_th0th:x@localhost:5432/massa_th0th_dedicated";
+const SHARED_URL = "postgresql://massa_ai:x@localhost:5432/massa_ai";
+const ISOLATED_URL = "postgresql://massa_ai:x@localhost:5432/massa_ai_dedicated";
 
 describe("getDbName / isSharedDb", () => {
   test("extracts lowercased last path segment, query stripped", () => {
-    expect(getDbName("postgresql://u:p@h:5432/massa_th0th")).toBe("massa_th0th");
+    expect(getDbName("postgresql://u:p@h:5432/massa_ai")).toBe("massa_ai");
     expect(getDbName("postgresql://u:p@h:5432/Massa_Th0th?sslmode=require")).toBe(
-      "massa_th0th",
+      "massa_ai",
     );
-    expect(getDbName("postgresql://u:p@h:5432/massa_th0th_dedicated")).toBe(
-      "massa_th0th_dedicated",
+    expect(getDbName("postgresql://u:p@h:5432/massa_ai_dedicated")).toBe(
+      "massa_ai_dedicated",
     );
     expect(getDbName(undefined)).toBeNull();
     expect(getDbName("not a url")).toBeNull();
@@ -64,20 +64,20 @@ describe("assertDedicatedDbAllowed — dedicated-vector guard", () => {
     process.env = { ...ORIG };
   });
 
-  test("inert (no throw) when MASSA_TH0TH_DEDICATED is unset", () => {
-    delete process.env.MASSA_TH0TH_DEDICATED;
+  test("inert (no throw) when MASSA_AI_DEDICATED is unset", () => {
+    delete process.env.MASSA_AI_DEDICATED;
     process.env.DATABASE_URL = SHARED_URL;
     expect(() => assertDedicatedDbAllowed()).not.toThrow();
   });
 
   test("throws when DEDICATED=1 + shared DATABASE_URL (vector unset)", () => {
-    process.env.MASSA_TH0TH_DEDICATED = "1";
+    process.env.MASSA_AI_DEDICATED = "1";
     process.env.DATABASE_URL = SHARED_URL;
     expect(() => assertDedicatedDbAllowed()).toThrow(/refuses to bind the shared DB/);
   });
 
   test("no throw when DEDICATED=1 + isolated DATABASE_URL", () => {
-    process.env.MASSA_TH0TH_DEDICATED = "1";
+    process.env.MASSA_AI_DEDICATED = "1";
     process.env.DATABASE_URL = ISOLATED_URL;
     expect(() => assertDedicatedDbAllowed()).not.toThrow();
   });

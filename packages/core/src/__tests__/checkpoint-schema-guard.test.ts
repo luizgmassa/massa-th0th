@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { PgCheckpointStore } from "../services/checkpoint/checkpoint-store-pg.js";
 import type { CheckpointRow } from "../services/checkpoint/checkpoint-store-pg.js";
-import { TaskState, CheckpointType } from "@massa-th0th/shared";
+import { TaskState, CheckpointType } from "@massa-ai/shared";
 import { SchemaAheadError } from "../services/structural/schema-version.js";
 
 /**

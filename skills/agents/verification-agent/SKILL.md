@@ -48,7 +48,7 @@ Centralize Verification Ladder logic and validate that a task's output meets its
 - No implementation exists to verify.
 - The task is docs-only with no behavioral sensors (use file-integrity level only).
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: summarize command output; return PASS/FAIL + evidence, not raw logs.
 - Verification Ladder: this agent IS the ladder; choose the cheapest sufficient evidence first.
 - Th0th Memory: suggest durable verification-recipe memories only when a sensor pattern is reusable; main agent persists.

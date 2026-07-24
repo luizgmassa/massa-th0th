@@ -1,6 +1,6 @@
-# massa-th0th Ticket Workflow
+# massa-ai Ticket Workflow
 
-Human-facing guide for the Jira-only ticket workflow built directly into `massa-th0th`. Canonical agent instructions live in [`workflows/ticket.md`](../../skills/massa-th0th/workflows/ticket.md) and [`references/ticket/`](../../skills/massa-th0th/references/ticket/).
+Human-facing guide for the Jira-only ticket workflow built directly into `massa-ai`. Canonical agent instructions live in [`workflows/ticket.md`](../../skills/massa-ai/workflows/ticket.md) and [`references/ticket/`](../../skills/massa-ai/references/ticket/).
 
 ## Purpose
 
@@ -26,7 +26,7 @@ Create a bug ticket for EXP. Use our Confluence DoR and DoD pages, then let me r
 - Reference tickets influence structure and tone only; their business facts and fields are not copied blindly.
 - Titles use one supported mobile, frontend, backend, spike, E2E, infrastructure, or DevOps prefix.
 - Current Jira metadata controls issue types, required fields, allowed values, and parent relationships.
-- Current source may be explored through the read-only massa-th0th exploration workflow, but Git history and repository ticket examples are excluded.
+- Current source may be explored through the read-only massa-ai exploration workflow, but Git history and repository ticket examples are excluded.
 - One temporary review artifact is written to the active agent's plans directory outside the repository.
 - Every revision invalidates prior approval. Creation proceeds Epic first, then standard issues, then sub-tasks.
 - Partial failures retain the draft and stop further mutations. Resume re-checks Jira before creating only confirmed missing items.

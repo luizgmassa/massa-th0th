@@ -2,7 +2,7 @@
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
-Implement these tasks with the `massa-th0th` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
+Implement these tasks with the `massa-ai` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
 
 **If the skill cannot be activated, STOP and tell the user — do not proceed without it.**
 
@@ -41,7 +41,7 @@ Findings:
 | Service (`ImpactAnalysisService`, `TracePathService`, `SymbolGraphService`, `ContextualSearchRLM`) | unit | 1:1 to spec ACs for clamp totals, untracked merge, secrets denylist, read_file cap exclusion, generation staleness | `packages/core/src/__tests__/wave-4-*.test.ts` | `bun test packages/core/src/__tests__/wave-4-*.test.ts` |
 | Repository (`symbol-repository-pg.ts` `searchDefinitions` total path) | integration | SQL `LIMIT` + total count coexist; sentinel path for >100k | `packages/core/src/__tests__/wave-4-correctness.test.ts` (uses `DATABASE_URL=""` to force skip-if-no-DB OR mocks the repo) | `DATABASE_URL="" bun test packages/core/src/__tests__/wave-4-correctness.test.ts` |
 | HTTP route (`apps/tools-api/src/routes/workspace.ts`) | e2e/integration | Each modified route mirrors the tool-handler response fields; happy + edge + error | `apps/tools-api/src/__tests__/wave-4-transport.test.ts` (NEW) | `bun test apps/tools-api/src/__tests__/wave-4-transport.test.ts` |
-| Shared config (`xdg.ts`, `config-loader.ts`, `massa-th0th-config.ts`) | unit | XDG paths resolve correctly; zero circular imports; existing config tests pass | `packages/shared/src/config/__tests__/xdg.test.ts` (NEW) + existing config tests | `bun test packages/shared/src/config/__tests__/xdg.test.ts` |
+| Shared config (`xdg.ts`, `config-loader.ts`, `massa-ai-config.ts`) | unit | XDG paths resolve correctly; zero circular imports; existing config tests pass | `packages/shared/src/config/__tests__/xdg.test.ts` (NEW) + existing config tests | `bun test packages/shared/src/config/__tests__/xdg.test.ts` |
 | CI workflow (`.github/workflows/ci.yml`) | none (artifact check) | Path-filter step exists; `verify:tree-sitter-native` runs on structural/`bun.lock`/`package.json` touch | `grep -n "verify:tree-sitter-native" .github/workflows/ci.yml` + `grep -n "paths-filter\|dorny" .github/workflows/ci.yml` | artifact check only |
 | Spec docs (`.specs/features/phase-*/validation.md`, `FEATURES.json`) | none (artifact check) | "PG parity deferred" returns zero; `sqlite-removal` status `complete`; `sqlite-removal-followup` exists | `grep -n "PG parity deferred" .specs/features/phase-*/validation.md` | artifact check only |
 | Test fixture (scheduler-store-pg seam) | integration | `storeB.listAll()` assertion passes against shared DB; follow-up `listAll()` after restore returns full set | `packages/core/src/__tests__/scheduler-store-pg.test.ts` (modify) | `DATABASE_URL=postgresql://... bun test packages/core/src/__tests__/scheduler-store-pg.test.ts` |
@@ -194,9 +194,9 @@ T21 (N10 regression test) → T22 (final full gate run before independent verifi
 ### T4: `xdg.ts` extraction (N36)
 
 **What**: Create the pure `xdg.ts` module that both config files import, killing the duplicated-XDP circular-dep workaround.
-**Where**: `packages/shared/src/config/xdg.ts` (NEW); modify `packages/shared/src/config/config-loader.ts:6-11` and `packages/shared/src/config/massa-th0th-config.ts:4-11, 209`
+**Where**: `packages/shared/src/config/xdg.ts` (NEW); modify `packages/shared/src/config/config-loader.ts:6-11` and `packages/shared/src/config/massa-ai-config.ts:4-11, 209`
 **Depends on**: None (independent of T1-T3; can run in parallel with Phase 1 but sequenced for clear commits)
-**Reuses**: `config-loader.ts:6-9` and `massa-th0th-config.ts:8-11` XDG logic (consolidated)
+**Reuses**: `config-loader.ts:6-9` and `massa-ai-config.ts:8-11` XDG logic (consolidated)
 **Requirement**: WAVE4-N36
 
 **Tools**:
@@ -206,9 +206,9 @@ T21 (N10 regression test) → T22 (final full gate run before independent verifi
 **Done when**:
 - [ ] `packages/shared/src/config/xdg.ts` exists
 - [ ] Exports `xdgConfigHome()`, `xdgDataHome()`, `xdgCacheHome()`, `xdgRuntimeDir()`, `xdgStateHome()`, `configDir(app)`, `dataDir(app)`, `cacheDir(app)`
-- [ ] Zero project-module imports (Node builtins `path`, `os` allowed; the circular-dep source `config-loader`/`massa-th0th-config` is NOT imported)
-- [ ] `config-loader.ts` imports `configDir` from `./xdg.js` and uses `configDir("massa-th0th")` instead of the inlined `XDG_CONFIG_HOME`
-- [ ] `massa-th0th-config.ts` imports `xdgConfigHome`/`dataDir` from `./xdg.js`; the circular-dep comment at lines 4-7 is removed; `dataDir` at line 209 uses `dataDir("massa-th0th")`
+- [ ] Zero project-module imports (Node builtins `path`, `os` allowed; the circular-dep source `config-loader`/`massa-ai-config` is NOT imported)
+- [ ] `config-loader.ts` imports `configDir` from `./xdg.js` and uses `configDir("massa-ai")` instead of the inlined `XDG_CONFIG_HOME`
+- [ ] `massa-ai-config.ts` imports `xdgConfigHome`/`dataDir` from `./xdg.js`; the circular-dep comment at lines 4-7 is removed; `dataDir` at line 209 uses `dataDir("massa-ai")`
 - [ ] Unit tests in `packages/shared/src/config/__tests__/xdg.test.ts`: each function returns the env override when set, the default when unset, the app-suffixed dir for `configDir`/`dataDir`/`cacheDir`
 - [ ] `grep -n "XDG_CONFIG_HOME" packages/shared/src/config/` returns matches only in `xdg.ts`
 - [ ] `grep -n "circular dependency" packages/shared/src/config/` returns zero
@@ -291,7 +291,7 @@ T21 (N10 regression test) → T22 (final full gate run before independent verifi
 
 ### T7: `read_file` cap + `source_clipped` (N9)
 
-**What**: Cap user-facing `read_file` and `symbol_snippet` HTTP endpoint at `MASSA_TH0TH_READ_FILE_MAX_LINES` (default 500); emit `source_clipped: true` + true total. Internal `SymbolGraphService.readSnippet`/`readContext` NOT capped.
+**What**: Cap user-facing `read_file` and `symbol_snippet` HTTP endpoint at `MASSA_AI_READ_FILE_MAX_LINES` (default 500); emit `source_clipped: true` + true total. Internal `SymbolGraphService.readSnippet`/`readContext` NOT capped.
 **Where**: `packages/core/src/tools/read_file.ts` (cap + flag + env read), `apps/tools-api/src/routes/workspace.ts:619-678` (symbol_snippet — replace `start+10_000` with the env cap), `packages/core/src/services/symbol/symbol-graph.service.ts:619-654` (EXCLUDED — add a comment noting the exclusion)
 **Depends on**: None (independent of T1-T6; can run in parallel with Phase 2 but sequenced for clear commits)
 **Reuses**: `boundedInt` pattern (`apps/tools-api/src/routes/workspace.ts:40-53`); `FILE_CACHE_MAX_ENTRIES` env-read pattern (`read_file.ts:140`)
@@ -302,13 +302,13 @@ T21 (N10 regression test) → T22 (final full gate run before independent verifi
 - Skill: none
 
 **Done when**:
-- [ ] `read_file.ts` reads `MASSA_TH0TH_READ_FILE_MAX_LINES` at module load (default 500, invalid/negative → 500)
+- [ ] `read_file.ts` reads `MASSA_AI_READ_FILE_MAX_LINES` at module load (default 500, invalid/negative → 500)
 - [ ] `ReadFileTool.handle` caps `selectedContent` at `MAX_LINES` when the adjusted range exceeds it; sets `source_clipped: true` in the response
 - [ ] Response includes `lineRange.actual.total` (true total line count) so `omitted = total - shown` is derivable
 - [ ] When the range is within the cap, `source_clipped: false` and the full range is returned
 - [ ] `symbol_snippet` HTTP endpoint (`workspace.ts:619-678`) caps `end` at `start + MAX_LINES` instead of `start + 10_000`; emits `source_clipped: true` when clamped
 - [ ] `SymbolGraphService.readSnippet`/`readContext` (`symbol-graph.service.ts:619-654`) are NOT capped — a comment at both functions states: "Internal enrichment path — read_file cap does NOT apply (no MCP propagation path for source_clipped). See Wave 4 N9 AC 15."
-- [ ] Unit tests in `packages/core/src/__tests__/wave-4-correctness.test.ts`: 1000-line file, no range → 500 lines + `source_clipped: true` + `total: 1000`; `MASSA_TH0TH_READ_FILE_MAX_LINES=1000` env → 1000 lines + `source_clipped: false`; 200-line file, no range → 200 lines + `source_clipped: false`; `go_to_definition` on a 1000-line symbol → `readContext` returns full 1000-line context (NOT capped)
+- [ ] Unit tests in `packages/core/src/__tests__/wave-4-correctness.test.ts`: 1000-line file, no range → 500 lines + `source_clipped: true` + `total: 1000`; `MASSA_AI_READ_FILE_MAX_LINES=1000` env → 1000 lines + `source_clipped: false`; 200-line file, no range → 200 lines + `source_clipped: false`; `go_to_definition` on a 1000-line symbol → `readContext` returns full 1000-line context (NOT capped)
 - [ ] `bun run type-check` passes
 - [ ] Existing `read-file.test.ts` passes (update if it asserts the old uncapped behavior for large files)
 - [ ] Test count: 4+ new tests pass
@@ -316,7 +316,7 @@ T21 (N10 regression test) → T22 (final full gate run before independent verifi
 **Tests**: unit
 **Gate**: quick + full type-check
 
-**Commit**: `feat(read-file): cap at MASSA_TH0TH_READ_FILE_MAX_LINES (default 500) + source_clipped flag (N9)`
+**Commit**: `feat(read-file): cap at MASSA_AI_READ_FILE_MAX_LINES (default 500) + source_clipped flag (N9)`
 
 ---
 
@@ -506,7 +506,7 @@ T21 (N10 regression test) → T22 (final full gate run before independent verifi
 
 **Done when**:
 - [ ] `rg -n "normalizeRRFScore\b" packages/core/src/data/vector/hybrid-search.ts` returns only the batch `normalizeRRFScores` (plural) — singular removed
-- [ ] `rg -n "console.error" packages/core/src/services/monitoring/metrics.ts` returns zero — replaced with `logger.error("[Metrics] Failed to save:", error);` (add `import { logger } from "@massa-th0th/shared"` or the existing logger import path if different)
+- [ ] `rg -n "console.error" packages/core/src/services/monitoring/metrics.ts` returns zero — replaced with `logger.error("[Metrics] Failed to save:", error);` (add `import { logger } from "@massa-ai/shared"` or the existing logger import path if different)
 - [ ] `rg -n "catch \{" packages/core/src/services/synapse/session/session-registry.ts` returns zero — both sites at `:76` and `:92-94` replaced with `catch (error) { logger.warn("[SessionRegistry] store <op> failed:", error); }` (where `<op>` is `save`/`ensureReady`)
 - [ ] `relation-extractor.ts:44` `"deprecated"` literal is UNCHANGED (audit confirmed functional keyword data)
 - [ ] `bun run type-check` passes; `bun run build` passes
@@ -650,7 +650,7 @@ T21 (N10 regression test) → T22 (final full gate run before independent verifi
 - [ ] `.specs/HANDOFF.md` has a "Wave 4 Breaking Changes" section listing:
   - N7: `scope=unstaged` (default) now includes untracked new files; `scope=committed` preserves the old single-source behavior
   - N6: invalid enum params now throw `ToolError` with valid-values list instead of silent fallback
-  - N9: `read_file` default cap 500 lines; `MASSA_TH0TH_READ_FILE_MAX_LINES` env override
+  - N9: `read_file` default cap 500 lines; `MASSA_AI_READ_FILE_MAX_LINES` env override
 - [ ] Artifact check passes
 
 **Tests**: none (artifact)
@@ -673,7 +673,7 @@ T21 (N10 regression test) → T22 (final full gate run before independent verifi
 - Skill: none
 
 **Done when**:
-- [ ] `STATE.md` adds a "Wave 4 — Active" section: projectId `massa-th0th`, workflowSessionId `spec-wave-4-correctness-hygiene`, workflow `spec-driven`, feature `wave-4-correctness-hygiene`, status `in progress`, branch `main`, baseline `f3d8020`
+- [ ] `STATE.md` adds a "Wave 4 — Active" section: projectId `massa-ai`, workflowSessionId `spec-wave-4-correctness-hygiene`, workflow `spec-driven`, feature `wave-4-correctness-hygiene`, status `in progress`, branch `main`, baseline `f3d8020`
 - [ ] The `sqlite-removal stays in_progress` invariant line at `:13` is updated to `sqlite-removal complete; sqlite-removal-followup in_progress (M29)`
 - [ ] Artifact check passes
 
@@ -842,10 +842,10 @@ All tasks satisfy the Test Coverage Matrix. No test deferral. No "tested in anot
 ## MCP / Skill Question
 
 For each task, the available MCPs and skills:
-- **MCPs**: `massa-th0th` (th0th — for code search if needed during implementation), `context7` (if a library API needs verification — not anticipated for Wave 4's surgical edits).
-- **Skills**: `massa-th0th` (the active workflow skill), `caveman` (communication compression, already active).
+- **MCPs**: `massa-ai` (th0th — for code search if needed during implementation), `context7` (if a library API needs verification — not anticipated for Wave 4's surgical edits).
+- **Skills**: `massa-ai` (the active workflow skill), `caveman` (communication compression, already active).
 
-No task requires an external MCP or skill beyond the active `massa-th0th` workflow. All Wave 4 tasks are surgical TS/CI/doc edits against known files with confirmed signatures. The `massa-th0th` th0th search may be used during Execute if a task reveals an unexpected caller, but is not required by the task plan.
+No task requires an external MCP or skill beyond the active `massa-ai` workflow. All Wave 4 tasks are surgical TS/CI/doc edits against known files with confirmed signatures. The `massa-ai` th0th search may be used during Execute if a task reveals an unexpected caller, but is not required by the task plan.
 
 ---
 

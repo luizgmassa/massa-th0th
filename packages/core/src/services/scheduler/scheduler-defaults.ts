@@ -4,8 +4,8 @@
  *
  * This does NOT rewrite the existing jobs. It registers their existing
  * entrypoints as handlers and defines default job rows. A deployment opts in by
- * setting MASSA_TH0TH_SCHEDULER_ENABLED=true (master switch) AND the per-kind
- * enable env var (e.g. MASSA_TH0TH_SCHEDULER_CONSOLIDATION_ENABLED=true).
+ * setting MASSA_AI_SCHEDULER_ENABLED=true (master switch) AND the per-kind
+ * enable env var (e.g. MASSA_AI_SCHEDULER_CONSOLIDATION_ENABLED=true).
  *
  * Job kinds and their existing entrypoints:
  *   memory-consolidation → memoryConsolidationJob.consolidate()
@@ -27,7 +27,7 @@
  * jobs are registered here.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import type { Scheduler } from "./scheduler.js";
 import type { JobKind, ScheduleSpec } from "./scheduler-types.js";
 
@@ -57,8 +57,8 @@ export const DEFAULT_SCHEDULED_JOBS: DefaultJobDef[] = [
     jobKind: "memory-consolidation",
     schedule: { type: "interval", intervalMs: THIRTY_MIN },
     defaultEnabled: false,
-    enableEnvVar: "MASSA_TH0TH_SCHEDULER_CONSOLIDATION_ENABLED",
-    intervalEnvVar: "MASSA_TH0TH_SCHEDULER_CONSOLIDATION_INTERVAL_MS",
+    enableEnvVar: "MASSA_AI_SCHEDULER_CONSOLIDATION_ENABLED",
+    intervalEnvVar: "MASSA_AI_SCHEDULER_CONSOLIDATION_INTERVAL_MS",
   },
   {
     id: "scheduled-decay-sweep",
@@ -66,8 +66,8 @@ export const DEFAULT_SCHEDULED_JOBS: DefaultJobDef[] = [
     jobKind: "decay-sweep",
     schedule: { type: "interval", intervalMs: ONE_HOUR },
     defaultEnabled: false,
-    enableEnvVar: "MASSA_TH0TH_SCHEDULER_DECAY_ENABLED",
-    intervalEnvVar: "MASSA_TH0TH_SCHEDULER_DECAY_INTERVAL_MS",
+    enableEnvVar: "MASSA_AI_SCHEDULER_DECAY_ENABLED",
+    intervalEnvVar: "MASSA_AI_SCHEDULER_DECAY_INTERVAL_MS",
   },
   {
     id: "scheduled-auto-improve",
@@ -75,8 +75,8 @@ export const DEFAULT_SCHEDULED_JOBS: DefaultJobDef[] = [
     jobKind: "auto-improve",
     schedule: { type: "interval", intervalMs: THIRTY_MIN },
     defaultEnabled: false,
-    enableEnvVar: "MASSA_TH0TH_SCHEDULER_AUTO_IMPROVE_ENABLED",
-    intervalEnvVar: "MASSA_TH0TH_SCHEDULER_AUTO_IMPROVE_INTERVAL_MS",
+    enableEnvVar: "MASSA_AI_SCHEDULER_AUTO_IMPROVE_ENABLED",
+    intervalEnvVar: "MASSA_AI_SCHEDULER_AUTO_IMPROVE_INTERVAL_MS",
   },
   {
     id: "scheduled-observation-bridge",
@@ -84,8 +84,8 @@ export const DEFAULT_SCHEDULED_JOBS: DefaultJobDef[] = [
     jobKind: "observation-bridge",
     schedule: { type: "interval", intervalMs: THIRTY_MIN },
     defaultEnabled: false,
-    enableEnvVar: "MASSA_TH0TH_SCHEDULER_OBSERVATION_BRIDGE_ENABLED",
-    intervalEnvVar: "MASSA_TH0TH_SCHEDULER_OBSERVATION_BRIDGE_INTERVAL_MS",
+    enableEnvVar: "MASSA_AI_SCHEDULER_OBSERVATION_BRIDGE_ENABLED",
+    intervalEnvVar: "MASSA_AI_SCHEDULER_OBSERVATION_BRIDGE_INTERVAL_MS",
   },
 ];
 
@@ -104,7 +104,7 @@ function envNum(key: string, fallback: number): number {
 
 /**
  * Apply the safe-defaults preset to a single job definition. When
- * `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true`, consolidation + decay jobs get
+ * `MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true`, consolidation + decay jobs get
  * `defaultEnabled=true` at conservative intervals (≥30 min consolidation,
  * ≥60 min decay). Auto-improve is NOT enabled by the preset. Individual envs
  * still override the preset (the envBool loop runs after this).
@@ -114,7 +114,7 @@ function envNum(key: string, fallback: number): number {
  * NOT as a separate export (silent no-op if caller forgets).
  */
 function applySafeDefaults(job: DefaultJobDef): DefaultJobDef {
-  if (!envBool("MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS", false)) {
+  if (!envBool("MASSA_AI_SCHEDULER_SAFE_DEFAULTS", false)) {
     return job;
   }
   if (job.jobKind === "memory-consolidation") {

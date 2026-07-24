@@ -1,6 +1,6 @@
-# massa-th0th Commit Workflow
+# massa-ai Commit Workflow
 
-Human-facing guide for the safe commit workflow built directly into `massa-th0th`. Canonical agent instructions live in [`workflows/commit.md`](../../skills/massa-th0th/workflows/commit.md).
+Human-facing guide for the safe commit workflow built directly into `massa-ai`. Canonical agent instructions live in [`workflows/commit.md`](../../skills/massa-ai/workflows/commit.md).
 
 ## Purpose
 

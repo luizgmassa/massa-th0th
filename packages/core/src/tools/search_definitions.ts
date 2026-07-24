@@ -10,7 +10,7 @@ import {
   STRUCTURAL_SYMBOL_KINDS,
   STRUCTURAL_SYMBOL_KIND_SCHEMA,
   ToolResponse,
-} from "@massa-th0th/shared";
+} from "@massa-ai/shared";
 import { symbolGraphService } from "../services/symbol/symbol-graph.service.js";
 import { validateEnum, ToolError } from "./enum-validation.js";
 import { getActiveGeneration, assertGenerationNotStale } from "../services/symbol/active-generation.js";

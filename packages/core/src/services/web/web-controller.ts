@@ -20,8 +20,8 @@
  * in-memory deps map instead.
  */
 
-import type { IVectorStore, IKeywordSearch, VectorDocument } from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
+import type { IVectorStore, IKeywordSearch, VectorDocument } from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
 import { runPool, type PoolJob } from "../executor/run-pool.js";
 import {
   fetchAndConvertOne,

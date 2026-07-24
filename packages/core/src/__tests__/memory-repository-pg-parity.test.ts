@@ -9,15 +9,15 @@
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { randomUUID } from "crypto";
-import { MemoryLevel, MemoryType } from "@massa-th0th/shared";
+import { MemoryLevel, MemoryType } from "@massa-ai/shared";
 import { MemoryController } from "../controllers/memory-controller.js";
 import { MemoryRepositoryPg } from "../data/memory/memory-repository-pg.js";
 import type { InsertMemoryInput } from "../data/memory/memory-repository.js";
 
 const databaseUrl = process.env.DATABASE_URL ?? "";
 const DEDICATED_DB =
-  process.env.MASSA_TH0TH_DEDICATED === "1"
-  && /127\.0\.0\.1:5433\/massa_th0th_test(?:\?|$)/.test(databaseUrl);
+  process.env.MASSA_AI_DEDICATED === "1"
+  && /127\.0\.0\.1:5433\/massa_ai_test(?:\?|$)/.test(databaseUrl);
 const TEST_PREFIX = "pg-memory-parity-";
 
 let prisma: any;

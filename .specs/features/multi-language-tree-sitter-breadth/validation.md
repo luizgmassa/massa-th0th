@@ -2,7 +2,7 @@
 
 **Role:** Final independent verifier (TLC v3 Validate phase). Author ≠ verifier.
 **Date:** 2026-07-17
-**Repo:** `/Users/luizmassa/Personal Projects/massa-th0th` (branch `main`)
+**Repo:** `/Users/luizmassa/Personal Projects/massa-ai` (branch `main`)
 **Baseline:** `5d43a96f4c0f1dfbd04ee7ae95f589f9b023bf03`
 **Diff range:** `5d43a96..232b22c` (223 files changed, +39349 / -2153; includes native re-baseline `202bebf`, perf optimizations `490f302`/`13718af`/`4a26353`, docs `aa7464b`, and the MLTS-022 reframe `232b22c`)
 **Runtime:** Bun `1.3.11`, Node `25.9.0` (npm `11.14.1`), macOS arm64 only.
@@ -60,7 +60,7 @@ Three behavior-level faults were injected into throwaway copies, confirmed kille
 | (b) FQN golden separator | Changed the nested-FQN encode separator `~` → `-` at `fqn-codec.ts:171` (`${file}#${qualifiedName}~${input.kind}~${signatureHash}` → `-`) | `structural-identity.test.ts` nested/overload/reserved/canonical goldens | **KILLED:** `22 pass, 4 fail` — received `src/outer.ts#Outer.method-method-b738f0516b…` vs expected `Outer.method~method~b738f0516b…` (frozen golden hash), plus 3 other nested/overload/reserved goldens. Mutant discarded; tree clean. |
 | (c) Docs parity forbidden phrase | Injected "Some extensions may yield zero symbols in legacy paths." into the README structural-indexing prose | `polyglot-indexing-docs.test.ts` forbidden-phrase scan | **KILLED:** `12 pass, 1 fail` — offender `"zero symbols"` matched by `/zero[\s-]*symbols?/i`. Mutant discarded; tree clean. |
 
-Note (carried forward, transparency): mutating `DEFAULT_ALLOWED_EXTENSIONS` in `packages/shared/src/config/index.ts` does not fail the manifest test, because the test imports `@massa-th0th/shared/config` which resolves to the built `shared/dist` artifact, not the edited source. This is a real test-coupling observation but does not weaken AC-001: the manifest-side mutation (sensor a) is killed deterministically, and `assertLanguageManifestExhaustive` runs at module load against whatever `DEFAULT_ALLOWED_EXTENSIONS` the resolved artifact provides. No test weakening was performed.
+Note (carried forward, transparency): mutating `DEFAULT_ALLOWED_EXTENSIONS` in `packages/shared/src/config/index.ts` does not fail the manifest test, because the test imports `@massa-ai/shared/config` which resolves to the built `shared/dist` artifact, not the edited source. This is a real test-coupling observation but does not weaken AC-001: the manifest-side mutation (sensor a) is killed deterministically, and `assertLanguageManifestExhaustive` runs at module load against whatever `DEFAULT_ALLOWED_EXTENSIONS` the resolved artifact provides. No test weakening was performed.
 
 ## Gate Results (run this validation, read-only)
 

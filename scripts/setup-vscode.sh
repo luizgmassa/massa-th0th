@@ -2,20 +2,20 @@
 set -e
 
 # ========================================
-# massa-th0th - VSCode/Antigravity Setup Script
+# massa-ai - VSCode/Antigravity Setup Script
 # ========================================
-# Configures massa-th0th for use with VSCode Copilot or Antigravity.
+# Configures massa-ai for use with VSCode Copilot or Antigravity.
 #
 # Usage: ./scripts/setup-vscode.sh
 # ========================================
 
 # shellcheck source=scripts/banner.sh
 source "$(dirname "${BASH_SOURCE[0]}")/banner.sh"
-massa_th0th_banner
+massa_ai_banner
 
-# Get massa-th0th root directory
+# Get massa-ai root directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MASSA_TH0TH_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+MASSA_AI_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # ---- Step 1: Check prerequisites ----
 echo -e "${BOLD}[1/5] Checking prerequisites...${NC}"
@@ -69,9 +69,9 @@ fi
 
 # ---- Step 3: Start API if not running ----
 echo ""
-echo -e "${BOLD}[3/5] Checking massa-th0th API...${NC}"
+echo -e "${BOLD}[3/5] Checking massa-ai API...${NC}"
 
-API_URL="${MASSA_TH0TH_API_URL:-http://localhost:3333}"
+API_URL="${MASSA_AI_API_URL:-http://localhost:3333}"
 
 if curl -s "${API_URL}/health" > /dev/null 2>&1; then
     echo -e "  ${GREEN}✓${NC} API: healthy at ${API_URL}"
@@ -79,8 +79,8 @@ else
     echo -e "  ${YELLOW}⚠${NC} API not running at ${API_URL}"
     echo -e "      Starting API..."
     
-    cd "$MASSA_TH0TH_ROOT"
-    nohup bun run start:api > /tmp/massa-th0th-api.log 2>&1 &
+    cd "$MASSA_AI_ROOT"
+    nohup bun run start:api > /tmp/massa-ai-api.log 2>&1 &
     API_PID=$!
     
     # Wait for API to start
@@ -98,7 +98,7 @@ else
     if ! curl -s "${API_URL}/health" > /dev/null 2>&1; then
         echo ""
         echo -e "  ${RED}✗${NC} Failed to start API"
-        echo -e "      Check logs: /tmp/massa-th0th-api.log"
+        echo -e "      Check logs: /tmp/massa-ai-api.log"
         exit 1
     fi
 fi
@@ -127,11 +127,11 @@ if [ "$CREATE_CONFIG" = true ]; then
     cat > .vscode/mcp.json << EOF
 {
   "servers": {
-    "massa-th0th": {
+    "massa-ai": {
       "command": "${MCP_CMD}",
-      "args": ["@massa-th0th/mcp-client"],
+      "args": ["@massa-ai/mcp-client"],
       "env": {
-        "MASSA_TH0TH_API_URL": "${API_URL}"
+        "MASSA_AI_API_URL": "${API_URL}"
       }
     }
   }
@@ -142,17 +142,17 @@ EOF
 fi
 
 # Also create user-level config example
-USER_CONFIG_DIR="${HOME}/.config/massa-th0th"
+USER_CONFIG_DIR="${HOME}/.config/massa-ai"
 mkdir -p "$USER_CONFIG_DIR"
 
 cat > "$USER_CONFIG_DIR/mcp.json.example" << EOF
 {
   "servers": {
-    "massa-th0th": {
+    "massa-ai": {
       "command": "${MCP_CMD}",
-      "args": ["@massa-th0th/mcp-client"],
+      "args": ["@massa-ai/mcp-client"],
       "env": {
-        "MASSA_TH0TH_API_URL": "${API_URL}"
+        "MASSA_AI_API_URL": "${API_URL}"
       }
     }
   }
@@ -167,10 +167,10 @@ echo -e "${BOLD}[5/5] Testing MCP server...${NC}"
 
 # Test if MCP server can start
 TEST_OUTPUT=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-    MASSA_TH0TH_API_URL="${API_URL}" ${MCP_CMD} @massa-th0th/mcp-client 2>&1 || true)
+    MASSA_AI_API_URL="${API_URL}" ${MCP_CMD} @massa-ai/mcp-client 2>&1 || true)
 
 if echo "$TEST_OUTPUT" | grep -q "search"; then
-    TOOL_COUNT=$(echo "$TEST_OUTPUT" | grep -o '"name":"massa_th0th_[^"]*"' | wc -l)
+    TOOL_COUNT=$(echo "$TEST_OUTPUT" | grep -o '"name":"massa_ai_[^"]*"' | wc -l)
     echo -e "  ${GREEN}✓${NC} MCP server: OK (${TOOL_COUNT} tools discovered)"
 else
     echo -e "  ${YELLOW}⚠${NC} MCP server test failed"
@@ -186,19 +186,19 @@ echo ""
 echo -e "  ${GREEN}Configuration:${NC}"
 echo -e "    ${BLUE}•${NC} API: ${API_URL}"
 echo -e "    ${BLUE}•${NC} MCP Config: .vscode/mcp.json"
-echo -e "    ${BLUE}•${NC} massa-th0th Root: ${MASSA_TH0TH_ROOT}"
+echo -e "    ${BLUE}•${NC} massa-ai Root: ${MASSA_AI_ROOT}"
 echo ""
 echo -e "  ${BOLD}Next Steps:${NC}"
 echo ""
 echo -e "  ${YELLOW}For VSCode:${NC}"
 echo -e "    1. Restart VSCode: Cmd+Shift+P → 'Reload Window'"
 echo -e "    2. Open Copilot Chat"
-echo -e "    3. Test: 'List all massa-th0th tools'"
+echo -e "    3. Test: 'List all massa-ai tools'"
 echo ""
 echo -e "  ${YELLOW}For Antigravity:${NC}"
 echo -e "    1. Restart Antigravity"
 echo -e "    2. Open chat/agent interface"
-echo -e "    3. Test: 'List all massa-th0th tools'"
+echo -e "    3. Test: 'List all massa-ai tools'"
 echo ""
 echo -e "  ${YELLOW}If tools don't appear:${NC}"
 echo -e "    1. Check VSCode Output: View → Output → MCP"
@@ -207,6 +207,6 @@ echo -e "    3. Check docs: docs/VSCODE_TROUBLESHOOTING.md"
 echo ""
 echo -e "  ${BOLD}API Management:${NC}"
 echo -e "    ${BLUE}•${NC} Stop API: kill \$(lsof -t -i:3333)"
-echo -e "    ${BLUE}•${NC} View logs: tail -f /tmp/massa-th0th-api.log"
+echo -e "    ${BLUE}•${NC} View logs: tail -f /tmp/massa-ai-api.log"
 echo -e "    ${BLUE}•${NC} Restart API: bun run start:api"
 echo ""

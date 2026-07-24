@@ -21,7 +21,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import {
   fetchWithSsrfGuard,
   SsrfBlockedError,

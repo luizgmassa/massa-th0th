@@ -101,7 +101,7 @@ Conform to AD-004/005/006 (exact Bun 1.3.11 gate runtime, pinned native stack �
 
 ### Emitter pinning
 
-- `apps/claude-plugin/hooks/_pin.sh` (new sourced helper): `masa_th0th_pin_project_id <session_id> <cwd>` echoes the pinned id — if pin file `${TMPDIR:-/tmp}/massa-th0th-hooks/<sanitized-session_id>` exists, cat it; else compute `$MASSA_TH0TH_PROJECT_ID` > `git -C <cwd> rev-parse --show-toplevel` basename > `basename <cwd>`, write pin, echo. **Constraint (plan-critic C3): `_post.sh:21-25` consumes stdin once; pin logic MUST run after stdin capture inside `_post.sh`/`pre-compact.sh`, never in a pre-read wrapper — otherwise the POST body is empty and the script silently exits 0.** Any first event type of a session writes the pin; no special role for `session-start.sh` (keeps its current shape).
+- `apps/claude-plugin/hooks/_pin.sh` (new sourced helper): `masa_th0th_pin_project_id <session_id> <cwd>` echoes the pinned id — if pin file `${TMPDIR:-/tmp}/massa-ai-hooks/<sanitized-session_id>` exists, cat it; else compute `$MASSA_AI_PROJECT_ID` > `git -C <cwd> rev-parse --show-toplevel` basename > `basename <cwd>`, write pin, echo. **Constraint (plan-critic C3): `_post.sh:21-25` consumes stdin once; pin logic MUST run after stdin capture inside `_post.sh`/`pre-compact.sh`, never in a pre-read wrapper — otherwise the POST body is empty and the script silently exits 0.** Any first event type of a session writes the pin; no special role for `session-start.sh` (keeps its current shape).
 - `_post.sh` / `pre-compact.sh`: after existing stdin capture, replace the bare `basename "$PWD"` fallback with the `_pin.sh` call. Silent-degrade (exit 0) preserved; git absence tolerated.
 - `apps/opencode-plugin/src/index.ts`: per-session memo of the computed id (`project?.id` > git toplevel basename > directory basename > `"default"`), reused by all emitters for that session; populate `agentId` on emit paths from the host context (HAR-06).
 
@@ -112,10 +112,10 @@ Conform to AD-004/005/006 (exact Bun 1.3.11 gate runtime, pinned native stack �
 
 ### Shared-DB grooming runbook (ops, NOT executed by this feature)
 
-Plan-critic C1/C2 verified the dev DB holds duplicate (`e2e-th0th-shared` ≡ `massa-th0th-self-test` at the same root), nested (`e2e-th0th-verify-586`), and `/tmp` (`partial`) workspace rows. Design hardening (path dedupe, self-match, ambiguous-safe) keeps the resolver honest under this shape, but full real-DB effect requires grooming: retire junk/test registrations and register the canonical `massa-th0th` workspace id. **Execution requires explicit user approval; `e2e-th0th-shared` is intentionally preserved per standing ops decision (original-suite shared index, do not delete).** Runbook lives here as documentation; recommended before running the repair migration against the shared dev DB:
+Plan-critic C1/C2 verified the dev DB holds duplicate (`e2e-ai-shared` ≡ `massa-ai-self-test` at the same root), nested (`e2e-ai-verify-586`), and `/tmp` (`partial`) workspace rows. Design hardening (path dedupe, self-match, ambiguous-safe) keeps the resolver honest under this shape, but full real-DB effect requires grooming: retire junk/test registrations and register the canonical `massa-ai` workspace id. **Execution requires explicit user approval; `e2e-ai-shared` is intentionally preserved per standing ops decision (original-suite shared index, do not delete).** Runbook lives here as documentation; recommended before running the repair migration against the shared dev DB:
 
 1. `SELECT project_id, project_path FROM workspaces ORDER BY project_path;` — inventory.
-2. Retire rows whose path no longer exists or that are suite leftovers except `e2e-th0th-shared` (user confirms each).
+2. Retire rows whose path no longer exists or that are suite leftovers except `e2e-ai-shared` (user confirms each).
 3. Register canonical id for the main repo if absent (index run with explicit `projectId`).
 4. Re-run repair migration dry counts; inspect `DO $$` notices before commit.
 
@@ -172,7 +172,7 @@ interface Observation {
 ## Verification Design
 
 - Unit (DB-free): resolver order matrix, nested/ambiguous/broad containment, sticky pin hit/miss/expiry, sanitized failure; pin store bounds; script pin read/write; plugin memo.
-- Owned PG acceptance (`HOOK_ATTRIBUTION_ACCEPTANCE_DATABASE_URL`, owned DB `massa_th0th_hook_attribution`): end-to-end ingest attribution per AC-1..7; migration 2 seed/repair/idempotency/self-verification per AC-8; sanitized-failure probe AC-9; skips cleanly without var (AC-10); turbo `passThroughEnv` forwards var.
+- Owned PG acceptance (`HOOK_ATTRIBUTION_ACCEPTANCE_DATABASE_URL`, owned DB `massa_ai_hook_attribution`): end-to-end ingest attribution per AC-1..7; migration 2 seed/repair/idempotency/self-verification per AC-8; sanitized-failure probe AC-9; skips cleanly without var (AC-10); turbo `passThroughEnv` forwards var.
 - Full regression / type-check 6/6 / build 5/5 under pinned Bun 1.3.11.
 - Independent verifier: spec-anchored + discrimination sensor ≥2 mutations.
 

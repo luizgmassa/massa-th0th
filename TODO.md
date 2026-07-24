@@ -1,4 +1,4 @@
-# TODO — massa-th0th
+# TODO — massa-ai
 
 Current architecture state and verified follow-up work. Detailed maintenance evidence lives in
 `.specs/features/repository-maintenance-2026-07-12/`; E2E coverage decisions live in
@@ -54,7 +54,7 @@ Last updated: 2026-07-23.
   because tests depend on live databases, localhost services, and process-global mocks.
 - Dedicated verification must attest PostgreSQL explicitly and use isolated resources. Never let
   a test fall back to the shared API on `:3333` or an implicit root `.env` database.
-- Full-repository indexes run sequentially and reuse `e2e-th0th-shared`; concurrent full indexes
+- Full-repository indexes run sequentially and reuse `e2e-ai-shared`; concurrent full indexes
   can exhaust memory or wedge Ollama.
 - SSRF protection pins resolved addresses through connect time, and execution tools resolve
   symlinks with `realpath` before boundary and deny-glob checks. These controls are containment,

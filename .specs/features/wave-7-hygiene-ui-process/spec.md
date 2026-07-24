@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-massa-th0th Waves 1–6 shipped core indexing, cross-pollination features, and architecture refactors. Wave 7 closes the remaining hygiene, UI, process, and decision items from the v3 improvement plan: repo-root AGENTS.md, runtime version pinning, LLM/embedding default alignment, CHANGELOG merge gate, D5 Cypher deferral removal, web UI write mode, stale doc cleanup, OS-level sandbox for the executor, json_schema constrained decoding, spec archive, and branch/state reconciliation. These items remove accumulated tech debt, harden the executor security boundary, and make the repo self-documenting for the agent startup contract.
+massa-ai Waves 1–6 shipped core indexing, cross-pollination features, and architecture refactors. Wave 7 closes the remaining hygiene, UI, process, and decision items from the v3 improvement plan: repo-root AGENTS.md, runtime version pinning, LLM/embedding default alignment, CHANGELOG merge gate, D5 Cypher deferral removal, web UI write mode, stale doc cleanup, OS-level sandbox for the executor, json_schema constrained decoding, spec archive, and branch/state reconciliation. These items remove accumulated tech debt, harden the executor security boundary, and make the repo self-documenting for the agent startup contract.
 
 ## Goals
 
@@ -56,15 +56,15 @@ massa-th0th Waves 1–6 shipped core indexing, cross-pollination features, and a
 
 ### P1: AGENTS.md at repo root ⭐ MVP
 
-**User Story**: As an agent using the massa-th0th startup contract, I want an `AGENTS.md` at the repo root so that the global CLAUDE.md startup contract resolves runtime routing.
+**User Story**: As an agent using the massa-ai startup contract, I want an `AGENTS.md` at the repo root so that the global CLAUDE.md startup contract resolves runtime routing.
 
 **Why P1**: The global CLAUDE.md references `AGENTS.md` at the repo root for runtime workflow routing. Its absence blocks the startup contract.
 
 **Acceptance Criteria**:
 
-1. WHEN an agent starts in the massa-th0th repo THEN the repo root SHALL contain `AGENTS.md` with project-specific routing guidance (projectId resolution, workflow selection hints, indexing exclusions, plan-challenge policy, conversation-feedback policy)
-2. WHEN `AGENTS.md` is read THEN it SHALL reference `.specs/project/STATE.md`, `.specs/project/FEATURES.json`, and the skill paths that actually exist (`massa-th0th-memory/`, `synapse-usage/`)
-3. WHEN `AGENTS.md` is read THEN it SHALL NOT reference paths that do not exist in this repo (e.g., `skills/massa-th0th/SKILL.md`, `skills/persona-router/SKILL.md` — those are global, not repo-local)
+1. WHEN an agent starts in the massa-ai repo THEN the repo root SHALL contain `AGENTS.md` with project-specific routing guidance (projectId resolution, workflow selection hints, indexing exclusions, plan-challenge policy, conversation-feedback policy)
+2. WHEN `AGENTS.md` is read THEN it SHALL reference `.specs/project/STATE.md`, `.specs/project/FEATURES.json`, and the skill paths that actually exist (`massa-ai-memory/`, `synapse-usage/`)
+3. WHEN `AGENTS.md` is read THEN it SHALL NOT reference paths that do not exist in this repo (e.g., `skills/massa-ai/SKILL.md`, `skills/persona-router/SKILL.md` — those are global, not repo-local)
 
 **Independent Test**: `ls AGENTS.md && head -20 AGENTS.md` shows project routing.
 
@@ -72,7 +72,7 @@ massa-th0th Waves 1–6 shipped core indexing, cross-pollination features, and a
 
 ### P1: Runtime version pinning ⭐ MVP
 
-**User Story**: As a developer cloning massa-th0th, I want `.tool-versions` and `mise.toml` pinning Bun 1.3.14 + Node 25.9 so that my local runtime matches CI and Dockerfile.
+**User Story**: As a developer cloning massa-ai, I want `.tool-versions` and `mise.toml` pinning Bun 1.3.14 + Node 25.9 so that my local runtime matches CI and Dockerfile.
 
 **Why P1**: Dockerfile pins versions but repo-level does not. Version drift causes native addon ABI mismatches.
 
@@ -88,14 +88,14 @@ massa-th0th Waves 1–6 shipped core indexing, cross-pollination features, and a
 
 ### P1: LLM/embedding defaults alignment ⭐ MVP
 
-**User Story**: As a user configuring massa-th0th, I want consistent LLM/embedding model defaults across config, health-checker, and docs so that I don't get conflicting guidance.
+**User Story**: As a user configuring massa-ai, I want consistent LLM/embedding model defaults across config, health-checker, and docs so that I don't get conflicting guidance.
 
 **Why P1**: Config says `qwen2.5:7b-instruct`, health-checker says `nomic-embed-text:latest`, embedding config defaults to `qwen3-embedding:8b`. Users get confused.
 
 **Acceptance Criteria**:
 
 1. WHEN `local-health-checker.ts` checks Ollama embedding model availability THEN it SHALL use the same default as `config.embedding.model` (not a hardcoded `nomic-embed-text:latest`)
-2. WHEN the README documents default models THEN it SHALL list the exact same defaults as `config/index.ts` `DEFAULT_LLM_MODEL`, `DEFAULT_LLM_CODE_MODEL`, and `massa-th0th-config.ts` `embedding.model`
+2. WHEN the README documents default models THEN it SHALL list the exact same defaults as `config/index.ts` `DEFAULT_LLM_MODEL`, `DEFAULT_LLM_CODE_MODEL`, and `massa-ai-config.ts` `embedding.model`
 3. WHEN `config.embedding.model` is read THEN it SHALL be consistent with the health-checker's expected model (both derive from the same source)
 
 **Independent Test**: `grep -r "nomic-embed-text" packages/core/src/services/health/` returns no hardcoded default that conflicts with config.
@@ -142,7 +142,7 @@ massa-th0th Waves 1–6 shipped core indexing, cross-pollination features, and a
 
 **Acceptance Criteria**:
 
-1. WHEN a user opens the web UI THEN it SHALL show a memory list with edit/delete buttons (gated by `MASSA_TH0TH_WEB_WRITE_MODE=true`, default off)
+1. WHEN a user opens the web UI THEN it SHALL show a memory list with edit/delete buttons (gated by `MASSA_AI_WEB_WRITE_MODE=true`, default off)
 2. WHEN a user edits a memory via the web UI THEN the change SHALL persist via `PUT /api/v1/memory/:id` and the list SHALL update in-place
 3. WHEN a user deletes a memory via the web UI THEN the deletion SHALL persist via `DELETE /api/v1/memory/:id` with a confirmation dialog
 4. WHEN a user views proposals THEN the web UI SHALL show approve/reject buttons that call the proposal API
@@ -180,7 +180,7 @@ massa-th0th Waves 1–6 shipped core indexing, cross-pollination features, and a
 
 1. WHEN `execute` runs on macOS THEN the child process SHALL be wrapped in `sandbox-exec` with a seatbelt profile that restricts file writes to the sandbox tmpdir + read-only project root
 2. WHEN `execute` runs on Linux THEN the child process SHALL be wrapped in a Docker container with read-only project root mount + tmpfs sandbox dir + no network
-3. WHEN `MASSA_TH0TH_EXECUTOR_SANDBOX=none` is set THEN the executor SHALL fall back to current best-effort containment (opt-out for dev/CI)
+3. WHEN `MASSA_AI_EXECUTOR_SANDBOX=none` is set THEN the executor SHALL fall back to current best-effort containment (opt-out for dev/CI)
 4. WHEN the sandbox fails to start (Docker not available, seatbelt profile missing) THEN the executor SHALL error with a teaching message, NOT fall back silently
 5. WHEN `execute_file` runs THEN the file read SHALL be confined to the project boundary + deny-glob (existing checks preserved, sandbox added on top)
 6. WHEN the sandbox is active THEN env denylist + timeout + cwd restrictions SHALL still apply (defense-in-depth)
@@ -191,7 +191,7 @@ massa-th0th Waves 1–6 shipped core indexing, cross-pollination features, and a
 
 ### P3: Stale compression.llm doc cleanup
 
-**User Story**: As a reader of massa-th0th docs, I want no stale `compression.llm` references so that I don't try to use a removed config path.
+**User Story**: As a reader of massa-ai docs, I want no stale `compression.llm` references so that I don't try to use a removed config path.
 
 **Why P3**: Code already dropped `compression.llm` in `da4c60f`. Only stale refs in `.specs/PHASE-INTEGRATION.md`, README, and old design docs remain.
 
@@ -270,8 +270,8 @@ massa-th0th Waves 1–6 shipped core indexing, cross-pollination features, and a
 
 ## Edge Cases
 
-- WHEN `MASSA_TH0TH_WEB_WRITE_MODE` is unset THEN web UI write buttons SHALL be hidden (default off)
-- WHEN Docker is not installed on Linux THEN executor sandbox SHALL error with "Docker not found; set MASSA_TH0TH_EXECUTOR_SANDBOX=none to disable" (not silent fallback)
+- WHEN `MASSA_AI_WEB_WRITE_MODE` is unset THEN web UI write buttons SHALL be hidden (default off)
+- WHEN Docker is not installed on Linux THEN executor sandbox SHALL error with "Docker not found; set MASSA_AI_EXECUTOR_SANDBOX=none to disable" (not silent fallback)
 - WHEN `mise.toml` and `.tool-versions` conflict THEN `.tool-versions` SHALL take precedence (mise reads it first)
 - WHEN Ollama version < 0.5.0 (no json_schema support) THEN llm-client SHALL use reasoning-channel fallback (graceful degradation)
 - WHEN `CHANGELOG.md` has no `[Unreleased]` section THEN CI SHALL fail with "Add [Unreleased] section to CHANGELOG.md"

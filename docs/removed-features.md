@@ -1,6 +1,6 @@
 # Removed Features
 
-This document records features that were intentionally removed from massa-th0th to
+This document records features that were intentionally removed from massa-ai to
 narrow scope to a local-first single-user memory platform.
 
 ## Commit 5547afc — "chore: remove old docs, and update readme"
@@ -35,10 +35,10 @@ The following docs were deleted (~6000 lines total):
 
 ### Removed features (by implication of doc removal)
 
-- **Multi-tenant architecture**: No longer supported. massa-th0th is single-user local-first.
-- **Subagents system**: Removed. The agent workflow is now driven by the massa-th0th skill router.
+- **Multi-tenant architecture**: No longer supported. massa-ai is single-user local-first.
+- **Subagents system**: Removed. The agent workflow is now driven by the massa-ai skill router.
 - **Agent roles (architect/implementer/optimizer/orchestrator)**: Removed. Replaced by the
-  persona-router catalog and massa-th0th workflow router.
+  persona-router catalog and massa-ai workflow router.
 - **Mistral orchestrator**: Removed. LLM calls are now handled by the shared `llm-client.ts`.
 
 ### What remains in docs/

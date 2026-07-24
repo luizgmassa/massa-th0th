@@ -1,7 +1,7 @@
 /**
  * SSRF guard — Server-Side Request Forgery defense for `fetch_and_index`.
  *
- * Policy (massa-th0th is STRICT BY DEFAULT, unlike context-mode's lenient mode):
+ * Policy (massa-ai is STRICT BY DEFAULT, unlike context-mode's lenient mode):
  *
  *   HARD BLOCK — no legitimate fetch use case reaches these:
  *     - non-http(s) schemes (file://, gopher://, javascript:, data:, …)
@@ -14,7 +14,7 @@
  *     - RFC1918 private (10/8, 172.16/12, 192.168/16) and IPv6 ULA (fc00::/7)
  *     - malformed / non-IP strings
  *
- * The massa-th0th trust model treats fetch targets as OPEN WORLD (arbitrary
+ * The massa-ai trust model treats fetch targets as OPEN WORLD (arbitrary
  * URLs the agent fetched at the user's request), so a private/loopback hit is
  * treated as a rebinding attack probe, not a local-dev convenience. This is the
  * conservative default; there is no lenient escape hatch (unlike context-mode's
@@ -50,7 +50,7 @@
  */
 
 import { lookup as dnsLookup } from "node:dns/promises";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 export type IpClass = "block" | "public";
 
@@ -347,7 +347,7 @@ export async function fetchWithSsrfGuard(
       // Conservative default headers — identify as a fetcher, not a browser.
       // Host header pins virtual hosting + TLS SNI to the original hostname.
       headers: {
-        "user-agent": "massa-th0th-fetch/1.0",
+        "user-agent": "massa-ai-fetch/1.0",
         ...(hostHeader ? { host: hostHeader } : {}),
       },
     });

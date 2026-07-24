@@ -1,6 +1,6 @@
 # Session State: Checkpoints vs Compaction Snapshots
 
-massa-th0th has two state-preservation mechanisms that both "save state" but
+massa-ai has two state-preservation mechanisms that both "save state" but
 serve **orthogonal purposes**. This document reconciles the split so users and
 contributors know which to use, how they compose, and why they do not collide.
 

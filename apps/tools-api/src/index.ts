@@ -1,20 +1,20 @@
 #!/usr/bin/env bun
 /**
- * massa-th0th Tools API
+ * massa-ai Tools API
  *
- * API REST com ElysiaJS que expõe todas as ferramentas do massa-th0th.
+ * API REST com ElysiaJS que expõe todas as ferramentas do massa-ai.
  * Separada do protocolo MCP para permitir múltiplos clientes.
  *
  * Local-first: PostgreSQL/pgvector persistence with local Ollama embeddings.
  */
 
-import "@massa-th0th/shared/config";
-import { parsePositiveIntEnv } from "@massa-th0th/shared/config";
+import "@massa-ai/shared/config";
+import { parsePositiveIntEnv } from "@massa-ai/shared/config";
 import { validateApiStartup } from "./startup-config.js";
 
 // Fail fast if a DEDICATE-flagged process would bind the shared production DB.
 // Must run AFTER env loading and BEFORE any DB/client initialization. No-op
-// unless MASSA_TH0TH_DEDICATED=1, so the normal :3333 shared stack is unaffected.
+// unless MASSA_AI_DEDICATED=1, so the normal :3333 shared stack is unaffected.
 validateApiStartup();
 
 import { Elysia } from "elysia";
@@ -44,18 +44,18 @@ import { dashboardRoutes } from "./routes/dashboard.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { adminPreservationMiddleware } from "./middleware/admin-preservation.js";
 import { errorHandler } from "./middleware/error.js";
-import { getHealthChecker, searchSessionHook, coRetrievalHook } from "@massa-th0th/core";
-import { installProjectIdentityGuardsFromPool } from "@massa-th0th/core";
+import { getHealthChecker, searchSessionHook, coRetrievalHook } from "@massa-ai/core";
+import { installProjectIdentityGuardsFromPool } from "@massa-ai/core";
 import {
   getParserReadiness,
   indexJobTracker,
   getScheduler,
   registerDefaultJobs,
   validateAllGrammars,
-} from "@massa-th0th/core/services";
+} from "@massa-ai/core/services";
 import { buildHealthResponse, listenAfterParserValidation } from "./health.js";
 
-const PORT = process.env.MASSA_TH0TH_API_PORT || 3333;
+const PORT = process.env.MASSA_AI_API_PORT || 3333;
 
 // Stale-job reaper config. A job whose heartbeat hasn't been refreshed within
 // this window is flipped to `failed` by the in-process reaper interval below.
@@ -63,9 +63,9 @@ const PORT = process.env.MASSA_TH0TH_API_PORT || 3333;
 // that, and a real index finishes well within the window. `0`/negative/garbage
 // are floored to the default (a 0ms stale-window would flip everything to
 // failed instantly; a 0ms interval would be a tight loop).
-const JOB_STALE_MS = parsePositiveIntEnv(process.env.MASSA_TH0TH_JOB_STALE_MS, 300_000);
+const JOB_STALE_MS = parsePositiveIntEnv(process.env.MASSA_AI_JOB_STALE_MS, 300_000);
 const JOB_REAPER_INTERVAL_MS = parsePositiveIntEnv(
-  process.env.MASSA_TH0TH_JOB_REAPER_INTERVAL_MS,
+  process.env.MASSA_AI_JOB_REAPER_INTERVAL_MS,
   60_000,
 );
 
@@ -75,7 +75,7 @@ const app = new Elysia({ adapter: node() })
     swagger({
       documentation: {
         info: {
-          title: "massa-th0th Tools API",
+          title: "massa-ai Tools API",
           version: "1.0.0",
           description:
             "Semantic context, memory, and code search tooling API. Consumed by the MCP Client and other clients.",
@@ -109,7 +109,7 @@ const app = new Elysia({ adapter: node() })
               type: "apiKey",
               in: "header",
               name: "x-api-key",
-              description: "API key — set MASSA_TH0TH_API_KEY on the server. Omit when running locally without a key configured.",
+              description: "API key — set MASSA_AI_API_KEY on the server. Omit when running locally without a key configured.",
             },
           },
         },
@@ -177,9 +177,9 @@ await installProjectIdentityGuardsFromPool()
   });
 
 searchSessionHook.register();
-coRetrievalHook.register(); // active only when MASSA_TH0TH_CO_RETRIEVAL_HOOK=true
+coRetrievalHook.register(); // active only when MASSA_AI_CO_RETRIEVAL_HOOK=true
 
-console.log(`massa-th0th Tools API running at http://localhost:${PORT}`);
+console.log(`massa-ai Tools API running at http://localhost:${PORT}`);
 console.log(`Swagger docs at http://localhost:${PORT}/swagger`);
 
 // Stale-job reaper: periodically flip any `running` job whose heartbeat is
@@ -203,7 +203,7 @@ jobReaperTimer.unref?.(); // never keep the event loop alive solely for the reap
 
 // In-process scheduler (Phase 3, C2): runs periodic jobs on a clock alongside
 // the existing event-debounce triggers. Default OFF — a deployment opts in via
-// MASSA_TH0TH_SCHEDULER_ENABLED=true + per-kind enable env vars. The scheduler
+// MASSA_AI_SCHEDULER_ENABLED=true + per-kind enable env vars. The scheduler
 // only fires memory/decay/consolidation/auto-improve/observation jobs (NEVER
 // indexing jobs — OOM risk). registerDefaultJobs is idempotent and preserves
 // nextRunAt/lastRunAt across restarts so the schedule resumes on boot.
@@ -230,7 +230,7 @@ for (const signal of ['SIGTERM', 'SIGINT'] as const) {
     clearInterval(jobReaperTimer);
     try { scheduler.stop(); } catch {}
     try {
-      const { disconnectPrisma } = await import('@massa-th0th/core/services');
+      const { disconnectPrisma } = await import('@massa-ai/core/services');
       await disconnectPrisma();
     } catch {}
     process.exit(0);

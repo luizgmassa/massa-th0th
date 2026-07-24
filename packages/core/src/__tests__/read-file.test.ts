@@ -23,7 +23,7 @@ import type { SymbolGraphService } from "../services/symbol/symbol-graph.service
 // Use a real temp dir so the tool can actually fs.readFile the resolved path.
 const FAKE_WORKSPACE_ROOT = path.join(
   os.tmpdir(),
-  `massa-th0th-readfile-ws-${process.pid}`
+  `massa-ai-readfile-ws-${process.pid}`
 );
 type IndexingStartedPayload = {
   jobId: string;
@@ -34,18 +34,18 @@ type IndexingStartedPayload = {
 const indexingStartedListeners = new Set<(payload: IndexingStartedPayload) => void>();
 
 // Wave 5 FR-12: read_file path containment rejects absolute paths outside
-// project root + cwd + MASSA_TH0TH_READ_FILE_ROOTS. These Wave-4 tests
+// project root + cwd + MASSA_AI_READ_FILE_ROOTS. These Wave-4 tests
 // create temp files under os.tmpdir() (outside cwd), so allow tmpdir as an
 // extra root. The tool reads this env at CALL TIME, so setting it here
 // covers all tests in this file. Restored in afterAll.
-const PREV_READ_FILE_ROOTS = process.env.MASSA_TH0TH_READ_FILE_ROOTS;
+const PREV_READ_FILE_ROOTS = process.env.MASSA_AI_READ_FILE_ROOTS;
 beforeEach(() => {
   fs.mkdirSync(FAKE_WORKSPACE_ROOT, { recursive: true });
-  process.env.MASSA_TH0TH_READ_FILE_ROOTS = os.tmpdir();
+  process.env.MASSA_AI_READ_FILE_ROOTS = os.tmpdir();
 });
 afterAll(() => {
-  if (PREV_READ_FILE_ROOTS === undefined) delete process.env.MASSA_TH0TH_READ_FILE_ROOTS;
-  else process.env.MASSA_TH0TH_READ_FILE_ROOTS = PREV_READ_FILE_ROOTS;
+  if (PREV_READ_FILE_ROOTS === undefined) delete process.env.MASSA_AI_READ_FILE_ROOTS;
+  else process.env.MASSA_AI_READ_FILE_ROOTS = PREV_READ_FILE_ROOTS;
 });
 mock.module("../services/events/event-bus.js", () => ({
   eventBus: {
@@ -73,7 +73,7 @@ describe("ReadFileTool — resolveFilePath branches", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-readfile-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-readfile-"));
     tmpFile = path.join(tmpDir, "sample.txt");
     fs.writeFileSync(tmpFile, "line1\nline2\nline3\n");
   });
@@ -121,7 +121,7 @@ describe("ReadFileTool — resolveFilePath branches", () => {
     const projectId = "proj-moved-root";
     const rel = "nested/file.txt";
     const oldAbs = path.resolve(FAKE_WORKSPACE_ROOT, rel);
-    const nextRoot = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-readfile-moved-"));
+    const nextRoot = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-readfile-moved-"));
     const nextAbs = path.resolve(nextRoot, rel);
 
     fs.mkdirSync(path.dirname(oldAbs), { recursive: true });
@@ -186,7 +186,7 @@ describe("ReadFileTool — cache key includes option flags", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-readfile-cache-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-readfile-cache-"));
     // .ts so extractMetadata detects a language and the symbol path engages.
     tmpFile = path.join(tmpDir, "sample.ts");
     fs.writeFileSync(tmpFile, "import { x } from 'y';\nexport function foo() {}\n");
@@ -304,7 +304,7 @@ describe("ReadFileTool — cache-hit metadata writeback", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-readfile-writeback-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-readfile-writeback-"));
     tmpFile = path.join(tmpDir, "sample.ts");
     fs.writeFileSync(tmpFile, "import { x } from 'y';\nexport function foo() {}\n");
   });

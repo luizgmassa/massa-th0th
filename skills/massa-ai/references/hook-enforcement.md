@@ -1,6 +1,6 @@
 # Hook Enforcement
 
-Maps the runtime hook layer (`scripts/hooks/`, `hooks/hooks.json`) to massa-th0th
+Maps the runtime hook layer (`scripts/hooks/`, `hooks/hooks.json`) to massa-ai
 workflows and references, and documents the th0th dual-write/tag contract.
 Hooks **enforce** existing references and the gate the router already selected;
 they never re-author policy and never re-route. One canonical location per rule.
@@ -33,8 +33,8 @@ nudge, exit 0).
 
 | Flag | Values | Effect |
 |---|---|---|
-| `MASSA_TH0TH_HOOK_PROFILE` | `minimal` \| `standard` \| `strict` | `minimal`: only blocking safety hooks (gateguard, config_protection). `standard` (default): blocking + nudges + observation + stop gate as nudge. `strict`: stop gate blocks once per session to force acknowledgment. |
-| `MASSA_TH0TH_DISABLED_HOOKS` | comma-separated hook names | Skip named hooks entirely. |
+| `MASSA_AI_HOOK_PROFILE` | `minimal` \| `standard` \| `strict` | `minimal`: only blocking safety hooks (gateguard, config_protection). `standard` (default): blocking + nudges + observation + stop gate as nudge. `strict`: stop gate blocks once per session to force acknowledgment. |
+| `MASSA_AI_DISABLED_HOOKS` | comma-separated hook names | Skip named hooks entirely. |
 
 Every hook exits 0 on bad stdin or non-critical error. Blocking hooks are
 <200 ms and make no network calls. Observation hooks are non-blocking.
@@ -111,12 +111,12 @@ The continuous-learning loop writes two stores, not one:
 **Type:** always `pattern` (lessons are procedural knowledge) or `decision`
 (when a lesson captures a chosen trade-off). `procedural` is a **tag**, never a
 type — th0th supports only `critical | conversation | code | decision | pattern`
-(`references/th0th-tools.md`).
+(`references/mcp-tools.md`).
 
-**Tags:** every th0th lesson write carries the full massa-th0th persistence
+**Tags:** every th0th lesson write carries the full massa-ai persistence
 contract: `project:<projectId>`, `session:<workflowSessionId>`,
 `workflow:<type>`, `entity:<name>`, `memory:procedural`. This puts lessons in
-the same recall namespace as massa-th0th decisions/patterns, so future
+the same recall namespace as massa-ai decisions/patterns, so future
 `recall` surfaces them at Specify/Design.
 
 `PreCompact` (`precompact_save_state.py`) writes a th0th `critical` memory
@@ -125,7 +125,7 @@ window compacts; file-only fallback when REST is unavailable.
 
 ## No SessionStart Recall Duplication
 
-massa-th0th's router already runs budgeted `recall` on startup. The hook
+massa-ai's router already runs budgeted `recall` on startup. The hook
 layer adds **no** competing SessionStart recall. The installer keeps the
 existing SessionStart bootstrap (which transports `AGENTS.md` policy); memory
 recall stays owned by the router.

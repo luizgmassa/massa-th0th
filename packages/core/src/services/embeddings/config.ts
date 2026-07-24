@@ -5,7 +5,7 @@
  * Supports: OpenAI, Google, Cohere, Ollama (local), Mistral
  */
 
-import { parsePositiveIntEnv } from "@massa-th0th/shared/config";
+import { parsePositiveIntEnv } from "@massa-ai/shared/config";
 
 export interface EmbeddingProviderConfig {
   provider: "openai" | "google" | "cohere" | "ollama" | "mistral" | "vercel" | "custom" | "litellm" | string;

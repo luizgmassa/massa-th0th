@@ -1,5 +1,5 @@
 /**
- * @massa-th0th/web-ui — entrypoint module (type-check anchor).
+ * @massa-ai/web-ui — entrypoint module (type-check anchor).
  *
  * The actual browser bundle is the zero-build static set in `src/static/`
  * (`index.html`, `styles.css`, `app.js`), served verbatim by the Tools API at
@@ -10,4 +10,4 @@
  * root, not an importable module.
  */
 
-export const WEB_UI_PACKAGE_MARKER = "@massa-th0th/web-ui";
+export const WEB_UI_PACKAGE_MARKER = "@massa-ai/web-ui";

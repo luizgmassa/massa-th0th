@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
- * massa-th0th first-class multi-agent installer.
+ * massa-ai first-class multi-agent installer.
  *
- * Writes (with safe-merge + backup) the massa-th0th MCP config — and, for
+ * Writes (with safe-merge + backup) the massa-ai MCP config — and, for
  * Claude Code, the skill-root / hooks pointers — into each supported agent's
  * config file. Idempotent: re-running produces no change after the first run.
  *
@@ -16,17 +16,17 @@
  * Usage:
  *   bun scripts/install-agents.ts                       # interactive (prompts on real home)
  *   bun scripts/install-agents.ts --dry-run             # show diff, write nothing
- *   bun scripts/install-agents.ts --uninstall           # remove massa-th0th keys
+ *   bun scripts/install-agents.ts --uninstall           # remove massa-ai keys
  *   bun scripts/install-agents.ts --agent codex         # limit to one agent
  *   bun scripts/install-agents.ts --target /tmp/fakehome --yes   # tests / CI
  *
  * Safety:
- *   - Backup is always created before any write (.massa-th0th.bak-<ts>).
+ *   - Backup is always created before any write (.massa-ai.bak-<ts>).
  *   - --dry-run writes nothing and creates no backup.
  *   - Writing to real $HOME requires --yes (or an interactive "y" on a TTY).
  *     Without consent the installer refuses and exits non-zero.
- *   - Deep-merge preserves every existing user key; only massa-th0th-owned keys
- *     (the "massa-th0th" mcp server entry) are overwritten, and only on apply.
+ *   - Deep-merge preserves every existing user key; only massa-ai-owned keys
+ *     (the "massa-ai" mcp server entry) are overwritten, and only on apply.
  */
 
 import { promises as fs } from "fs";
@@ -35,11 +35,11 @@ import os from "os";
 import { fileURLToPath } from "url";
 
 // ── Ownership marker ───────────────────────────────────────────────────────
-// Every value massa-th0th writes carries this marker in a hidden field so
+// Every value massa-ai writes carries this marker in a hidden field so
 // uninstall can find exactly our keys without guessing or pattern matching.
-export const MASSA_TH0TH_OWNED_KEY = "massa-th0th";
-const OWNED_MARKER = "_massaTh0thOwned";
-const BACKUP_SUFFIX = ".massa-th0th.bak";
+export const MASSA_AI_OWNED_KEY = "massa-ai";
+const OWNED_MARKER = "_massaAiOwned";
+const BACKUP_SUFFIX = ".massa-ai.bak";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export type AgentName =
@@ -64,7 +64,7 @@ export interface InstallerOptions {
   agent?: AgentName;
   /** Print the diff, write nothing. */
   dryRun?: boolean;
-  /** Remove massa-th0th-owned keys instead of adding them. */
+  /** Remove massa-ai-owned keys instead of adding them. */
   uninstall?: boolean;
   /** Explicit consent to write real $HOME. */
   yes?: boolean;
@@ -79,7 +79,7 @@ export interface InstallerOptions {
 export type Json = Record<string, unknown>;
 
 export interface PlanChange {
-  /** JSON-pointer-ish path describing what changed, e.g. "/mcpServers/massa-th0th". */
+  /** JSON-pointer-ish path describing what changed, e.g. "/mcpServers/massa-ai". */
   path: string;
   kind: "add" | "replace" | "remove";
   before?: unknown;
@@ -114,7 +114,7 @@ export interface AgentWriter {
   plan(root: string, entry: McpEntry): Promise<Plan>;
   /** Apply a plan: backup + write. No-op if dryRun or plan has no changes. */
   apply(plan: Plan, entry: McpEntry, opts: Pick<InstallerOptions, "dryRun">): Promise<ApplyResult>;
-  /** Remove massa-th0th-owned keys, preserving user keys. */
+  /** Remove massa-ai-owned keys, preserving user keys. */
   uninstall(root: string): Promise<ApplyResult>;
 }
 
@@ -122,8 +122,8 @@ export interface AgentWriter {
 function defaultEntry(apiBaseUrl: string): McpEntry {
   return {
     type: "local",
-    command: ["npx", "@massa-th0th/mcp-client"],
-    env: { MASSA_TH0TH_API_URL: apiBaseUrl },
+    command: ["npx", "@massa-ai/mcp-client"],
+    env: { MASSA_AI_API_URL: apiBaseUrl },
     enabled: true,
   };
 }
@@ -203,13 +203,13 @@ abstract class JsonMcpWriter implements AgentWriter {
   }
   /** Env key this agent expects inside the mcp server entry. */
   protected envKey(): string {
-    return "MASSA_TH0TH_API_URL";
+    return "MASSA_AI_API_URL";
   }
 
   protected buildOwnedEntry(entry: McpEntry): Json {
     // The owned entry is exactly what install.sh prints for Option B, plus a
     // hidden marker so uninstall is exact and never removes a user's manually
-    // added "massa-th0th" block.
+    // added "massa-ai" block.
     const e: Json = { command: entry.command };
     if (entry.type) e.type = entry.type;
     if (entry.env && Object.keys(entry.env).length) {
@@ -234,13 +234,13 @@ abstract class JsonMcpWriter implements AgentWriter {
       }
     }
     const servers = (current[this.serversKey()] as Json | undefined) ?? {};
-    const existing = servers[MASSA_TH0TH_OWNED_KEY];
+    const existing = servers[MASSA_AI_OWNED_KEY];
     const after = this.buildOwnedEntry(entry);
     const changes: PlanChange[] = [];
     if (existing === undefined) {
-      changes.push({ path: `/${this.serversKey()}/massa-th0th`, kind: "add", after });
+      changes.push({ path: `/${this.serversKey()}/massa-ai`, kind: "add", after });
     } else if (!deepEqual(existing, after)) {
-      changes.push({ path: `/${this.serversKey()}/massa-th0th`, kind: "replace", before: existing, after });
+      changes.push({ path: `/${this.serversKey()}/massa-ai`, kind: "replace", before: existing, after });
     }
     return { agent: this.agent, configPath: cp, exists, changes };
   }
@@ -257,7 +257,7 @@ abstract class JsonMcpWriter implements AgentWriter {
     }
     const owned = this.buildOwnedEntry(entry);
     const merged: Json = deepMerge(current, {
-      [this.serversKey()]: { [MASSA_TH0TH_OWNED_KEY]: owned },
+      [this.serversKey()]: { [MASSA_AI_OWNED_KEY]: owned },
     });
     await ensureDirFor(plan.configPath);
     const backupPath = await backupFile(plan.configPath);
@@ -279,18 +279,18 @@ abstract class JsonMcpWriter implements AgentWriter {
     }
     const key = this.serversKey();
     const servers = (current[key] as Json | undefined) ?? {};
-    const existing = servers[MASSA_TH0TH_OWNED_KEY] as Json | undefined;
+    const existing = servers[MASSA_AI_OWNED_KEY] as Json | undefined;
     // Only remove if we own it (marker present) OR it's missing the marker but
-    // the user explicitly asks — we still only touch the massa-th0th key.
+    // the user explicitly asks — we still only touch the massa-ai key.
     const changes: PlanChange[] = [];
     if (existing !== undefined) {
-      changes.push({ path: `/${key}/massa-th0th`, kind: "remove", before: existing });
+      changes.push({ path: `/${key}/massa-ai`, kind: "remove", before: existing });
     }
     if (changes.length === 0) {
       return { agent: this.agent, configPath: cp, backupPath: null, written: false, changes, dryRun: false };
     }
     const newServers: Json = { ...servers };
-    delete newServers[MASSA_TH0TH_OWNED_KEY];
+    delete newServers[MASSA_AI_OWNED_KEY];
     const merged: Json = { ...current };
     if (Object.keys(newServers).length) (merged as Json)[key] = newServers;
     else delete (merged as Json)[key];
@@ -307,9 +307,9 @@ class ClaudeCodeWriter extends JsonMcpWriter {
     return path.join(root, ".claude", "settings.json");
   }
 
-  // Claude Code's settings.json is shared with the massa-th0th Claude plugin,
+  // Claude Code's settings.json is shared with the massa-ai Claude plugin,
   // which writes a top-level "hooks" block (each owned entry carries
-  // _massaTh0thOwned: true). JsonMcpWriter.apply uses deepMerge starting from
+  // _massaAiOwned: true). JsonMcpWriter.apply uses deepMerge starting from
   // {...current}, so the "hooks" sibling key survives an MCP write — but we
   // detect the plugin's hooks here so we can (a) confirm coordination to the
   // user and (b) guard against any future writer that might rewrite the whole
@@ -338,14 +338,14 @@ class ClaudeCodeWriter extends JsonMcpWriter {
         pluginHooksPresent = this.hasPluginHooks(cfg);
       } catch { /* best-effort detection */ }
       console.log(
-        "💡 If you installed the massa-th0th Claude plugin (apps/claude-plugin/install.sh), hooks are already wired — skip this install-agents step for Claude Code.",
+        "💡 If you installed the massa-ai Claude plugin (apps/claude-plugin/install.sh), hooks are already wired — skip this install-agents step for Claude Code.",
       );
       console.log(
-        "💡 For the 12 subagent specialists, run: apps/claude-plugin/install.sh --user (installs massa-th0th-*.md agents to ~/.claude/agents/).",
+        "💡 For the 12 subagent specialists, run: apps/claude-plugin/install.sh --user (installs massa-ai-*.md agents to ~/.claude/agents/).",
       );
       if (pluginHooksPresent) {
         console.log(
-          "💡 massa-th0th plugin hooks detected in settings.json — MCP entry merged alongside; plugin hooks preserved.",
+          "💡 massa-ai plugin hooks detected in settings.json — MCP entry merged alongside; plugin hooks preserved.",
         );
       }
     }
@@ -372,10 +372,10 @@ class CursorWriter extends JsonMcpWriter {
     const res = await super.apply(plan, entry, opts);
     if (res.written) {
       console.log(
-        "💡 If you installed the massa-th0th Cursor plugin (apps/cursor-plugin/install.sh), MCP is already registered — skip this install-agents step for Cursor.",
+        "💡 If you installed the massa-ai Cursor plugin (apps/cursor-plugin/install.sh), MCP is already registered — skip this install-agents step for Cursor.",
       );
       console.log(
-        "💡 For the 12 subagent specialists, run: apps/cursor-plugin/install.sh --user (bundles massa-th0th-*.md agents into the plugin's agents/ dir).",
+        "💡 For the 12 subagent specialists, run: apps/cursor-plugin/install.sh --user (bundles massa-ai-*.md agents into the plugin's agents/ dir).",
       );
     }
     return res;
@@ -395,7 +395,7 @@ class OpenCodeWriter extends JsonMcpWriter {
   }
 
   // OpenCode entry shape (FEATURES.md:268-274): "type":"local",
-  // "command":["bunx","@massa-th0th/mcp-client"], "environment":{...},
+  // "command":["bunx","@massa-ai/mcp-client"], "environment":{...},
   // "enabled":true. Note "environment" (not "env") and "bunx" (not "npx").
   protected buildOwnedEntry(entry: McpEntry): Json {
     const e: Json = {
@@ -416,10 +416,10 @@ class OpenCodeWriter extends JsonMcpWriter {
     const res = await super.apply(plan, entry, opts);
     if (res.written) {
       console.log(
-        "💡 If you installed the massa-th0th OpenCode plugin (@massa-th0th/opencode-plugin), hooks are already wired — skip this install-agents step for OpenCode.",
+        "💡 If you installed the massa-ai OpenCode plugin (@massa-ai/opencode-plugin), hooks are already wired — skip this install-agents step for OpenCode.",
       );
       console.log(
-        "💡 For the 12 subagent specialists, run: massa-th0th-config agents install --user (writes massa-th0th-*.md to ~/.config/opencode/agents/).",
+        "💡 For the 12 subagent specialists, run: massa-ai-config agents install --user (writes massa-ai-*.md to ~/.config/opencode/agents/).",
       );
     }
     return res;
@@ -440,10 +440,10 @@ function rewriteToBunx(command: string[]): string[] {
 
 // ── Codex TOML writer ──────────────────────────────────────────────────────
 // Codex uses ~/.codex/config.toml with [mcp_servers.<id>] tables:
-//   [mcp_servers.massa-th0th]
+//   [mcp_servers.massa-ai]
 //   command = "npx"
-//   args = ["@massa-th0th/mcp-client"]
-//   env = { MASSA_TH0TH_API_URL = "http://localhost:3333" }
+//   args = ["@massa-ai/mcp-client"]
+//   env = { MASSA_AI_API_URL = "http://localhost:3333" }
 //
 // We hand-roll a *minimal* TOML reader/writer scoped to this shape: we parse
 // the whole file into (topKeys, tables) so we can preserve user tables and
@@ -451,7 +451,7 @@ function rewriteToBunx(command: string[]): string[] {
 // This avoids adding @iarna/toml as a dependency for a 5-line use case.
 
 interface TomlTable {
-  /** Dotted header path, e.g. ["mcp_servers","massa-th0th"]. */
+  /** Dotted header path, e.g. ["mcp_servers","massa-ai"]. */
   header: string[];
   /** Raw body lines (preserved verbatim, including comments + blank lines). */
   body: string[];
@@ -517,11 +517,11 @@ class CodexWriter implements AgentWriter {
       const raw = await fs.readFile(cp, "utf8");
       doc = parseToml(raw);
     }
-    const owned = findTable(doc, ["mcp_servers", MASSA_TH0TH_OWNED_KEY]);
+    const owned = findTable(doc, ["mcp_servers", MASSA_AI_OWNED_KEY]);
     const after = emitCodexBody(entry);
     const changes: PlanChange[] = [];
     if (!owned) {
-      changes.push({ path: "/mcp_servers/massa-th0th", kind: "add", after });
+      changes.push({ path: "/mcp_servers/massa-ai", kind: "add", after });
     } else {
       // Strip trailing blank lines from the parsed body so re-runs are no-ops
       // (stringifyToml appends a trailing newline that round-trips as "").
@@ -530,7 +530,7 @@ class CodexWriter implements AgentWriter {
       const beforeKey = bodyTrimmed.map((l) => l.trim()).join("|");
       const afterKey = after.map((l) => l.trim()).join("|");
       if (beforeKey !== afterKey) {
-        changes.push({ path: "/mcp_servers/massa-th0th", kind: "replace", before: owned.body, after });
+        changes.push({ path: "/mcp_servers/massa-ai", kind: "replace", before: owned.body, after });
       }
     }
     return { agent: this.agent, configPath: cp, exists, changes };
@@ -545,21 +545,21 @@ class CodexWriter implements AgentWriter {
     if (exists) {
       doc = parseToml(await fs.readFile(plan.configPath, "utf8"));
     }
-    const owned = findTable(doc, ["mcp_servers", MASSA_TH0TH_OWNED_KEY]);
+    const owned = findTable(doc, ["mcp_servers", MASSA_AI_OWNED_KEY]);
     const body = emitCodexBody(entry);
     if (owned) {
       owned.body = body;
     } else {
-      doc.tables.push({ header: ["mcp_servers", MASSA_TH0TH_OWNED_KEY], body });
+      doc.tables.push({ header: ["mcp_servers", MASSA_AI_OWNED_KEY], body });
     }
     await ensureDirFor(plan.configPath);
     const backupPath = await backupFile(plan.configPath);
     await fs.writeFile(plan.configPath, stringifyToml(doc), "utf8");
     console.log(
-      "💡 If you installed the massa-th0th Codex plugin (apps/codex-plugin/install.sh), MCP is already registered — skip this install-agents step for Codex.",
+      "💡 If you installed the massa-ai Codex plugin (apps/codex-plugin/install.sh), MCP is already registered — skip this install-agents step for Codex.",
     );
     console.log(
-      "💡 For the 12 subagent specialists, run: apps/codex-plugin/install.sh --user (writes massa-th0th-*.toml agents to ~/.codex/agents/).",
+      "💡 For the 12 subagent specialists, run: apps/codex-plugin/install.sh --user (writes massa-ai-*.toml agents to ~/.codex/agents/).",
     );
     return { agent: this.agent, configPath: plan.configPath, backupPath, written: true, changes: plan.changes, dryRun: false };
   }
@@ -569,15 +569,15 @@ class CodexWriter implements AgentWriter {
     const exists = await pathExists(cp);
     if (!exists) return { agent: this.agent, configPath: cp, backupPath: null, written: false, changes: [], dryRun: false };
     const doc = parseToml(await fs.readFile(cp, "utf8"));
-    const owned = findTable(doc, ["mcp_servers", MASSA_TH0TH_OWNED_KEY]);
+    const owned = findTable(doc, ["mcp_servers", MASSA_AI_OWNED_KEY]);
     const changes: PlanChange[] = [];
     if (owned) {
-      changes.push({ path: "/mcp_servers/massa-th0th", kind: "remove", before: owned.body });
+      changes.push({ path: "/mcp_servers/massa-ai", kind: "remove", before: owned.body });
     }
     if (changes.length === 0) {
       return { agent: this.agent, configPath: cp, backupPath: null, written: false, changes, dryRun: false };
     }
-    doc.tables = doc.tables.filter((t) => !(t.header.length === 2 && t.header[0] === "mcp_servers" && t.header[1] === MASSA_TH0TH_OWNED_KEY));
+    doc.tables = doc.tables.filter((t) => !(t.header.length === 2 && t.header[0] === "mcp_servers" && t.header[1] === MASSA_AI_OWNED_KEY));
     await ensureDirFor(cp);
     const backupPath = await backupFile(cp);
     await fs.writeFile(cp, stringifyToml(doc), "utf8");
@@ -716,14 +716,14 @@ function parseArgs(argv: string[]): InstallerOptions {
   return opts;
 }
 
-const USAGE = `massa-th0th agent installer
+const USAGE = `massa-ai agent installer
 
 Usage:
   bun scripts/install-agents.ts [flags]
 
 Flags:
   --dry-run              Print the merge diff, write nothing (no backup either)
-  --uninstall            Remove massa-th0th-owned keys, preserve user keys
+  --uninstall            Remove massa-ai-owned keys, preserve user keys
   --agent <name>         One of: ${ALL_AGENTS.join(", ")}
   --target <dir>         Override $HOME root (required for tests)
   --api-base <url>       MCP API base url written into env (default http://localhost:3333)
@@ -742,7 +742,7 @@ async function main(argv: string[]): Promise<number> {
   const opts = parseArgs(argv);
   try {
     const { results, plans } = await runInstall(opts);
-    console.log(opts.uninstall ? "massa-th0th uninstall plan:" : (opts.dryRun ? "massa-th0th dry-run plan:" : "massa-th0th installer:"));
+    console.log(opts.uninstall ? "massa-ai uninstall plan:" : (opts.dryRun ? "massa-ai dry-run plan:" : "massa-ai installer:"));
     for (const p of plans) printPlan(p);
     const wrote = results.filter((r) => r.written).length;
     const backed = results.filter((r) => r.backupPath).length;

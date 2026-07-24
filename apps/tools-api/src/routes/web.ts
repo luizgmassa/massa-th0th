@@ -14,7 +14,7 @@ import {
   WebController,
   getVectorStore,
   getKeywordSearch,
-} from "@massa-th0th/core";
+} from "@massa-ai/core";
 
 let tool: FetchAndIndexTool | null = null;
 let initPromise: Promise<FetchAndIndexTool> | null = null;

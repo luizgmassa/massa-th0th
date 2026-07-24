@@ -5,12 +5,12 @@
  * using Reciprocal Rank Fusion (RRF) for reranking
  */
 
-import { IHybridSearch } from '@massa-th0th/shared';
-import { SearchResult, RetrievalOptions } from '@massa-th0th/shared';
-import type { IVectorStore } from '@massa-th0th/shared';
+import { IHybridSearch } from '@massa-ai/shared';
+import { SearchResult, RetrievalOptions } from '@massa-ai/shared';
+import type { IVectorStore } from '@massa-ai/shared';
 import { getVectorStore } from './vector-store-factory.js';
 import { KeywordSearchPg } from '../keyword/keyword-search-pg.js';
-import { logger } from '@massa-th0th/shared';
+import { logger } from '@massa-ai/shared';
 
 /**
  * Reciprocal Rank Fusion constant

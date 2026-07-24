@@ -10,8 +10,8 @@
  * error envelope; domain rejections surface as {ok:false, reason}.
  */
 
-import { getAutoImproveJob, SearchServiceError } from "@massa-th0th/core";
-import { config, logger } from "@massa-th0th/shared";
+import { getAutoImproveJob, SearchServiceError } from "@massa-ai/core";
+import { config, logger } from "@massa-ai/shared";
 import { Elysia, t } from "elysia";
 
 let cachedJob: ReturnType<typeof getAutoImproveJob> | null = null;

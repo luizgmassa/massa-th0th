@@ -24,23 +24,23 @@
  *    alive solely for scheduling (parity with the job-reaper pattern).
  *
  * Config (env-overridable, default OFF or conservative):
- *   MASSA_TH0TH_SCHEDULER_ENABLED        (default false) master switch
- *   MASSA_TH0TH_SCHEDULER_TICK_MS        (default 60000) tick interval
- *   MASSA_TH0TH_SCHEDULER_MAX_CONCURRENT (default 2)     concurrent fire cap
+ *   MASSA_AI_SCHEDULER_ENABLED        (default false) master switch
+ *   MASSA_AI_SCHEDULER_TICK_MS        (default 60000) tick interval
+ *   MASSA_AI_SCHEDULER_MAX_CONCURRENT (default 2)     concurrent fire cap
  *
  * Default job intervals (conservative, env-overridable per kind):
  *   memory-consolidation: 30 min
  *   decay-sweep:           60 min
  *   auto-improve:          30 min
  *   observation-bridge:    30 min
- * All default to disabled=false unless MASSA_TH0TH_SCHEDULER_ENABLED=true AND
+ * All default to disabled=false unless MASSA_AI_SCHEDULER_ENABLED=true AND
  * the job's own enable flag is set. The boot wiring registers them as
  * default-disabled; a deployment opts in by setting enabled=true on the row or
- * MASSA_TH0TH_SCHEDULER_<KIND>_ENABLED=true before boot.
+ * MASSA_AI_SCHEDULER_<KIND>_ENABLED=true before boot.
  */
 
-import { logger } from "@massa-th0th/shared";
-import { parsePositiveIntEnv } from "@massa-th0th/shared/config";
+import { logger } from "@massa-ai/shared";
+import { parsePositiveIntEnv } from "@massa-ai/shared/config";
 import {
   parseCron,
   nextCronRun,
@@ -77,7 +77,7 @@ const DEFAULTS = {
 } as const;
 
 function readEnabled(): boolean {
-  const raw = process.env.MASSA_TH0TH_SCHEDULER_ENABLED;
+  const raw = process.env.MASSA_AI_SCHEDULER_ENABLED;
   return raw === "true" || raw === "1";
 }
 
@@ -101,10 +101,10 @@ export class Scheduler {
     this.store = opts.store ?? getScheduledJobStore();
     this.tickIntervalMs =
       opts.tickIntervalMs ??
-      parsePositiveIntEnv(process.env.MASSA_TH0TH_SCHEDULER_TICK_MS, DEFAULTS.tickMs);
+      parsePositiveIntEnv(process.env.MASSA_AI_SCHEDULER_TICK_MS, DEFAULTS.tickMs);
     this.maxConcurrent =
       opts.maxConcurrent ??
-      parsePositiveIntEnv(process.env.MASSA_TH0TH_SCHEDULER_MAX_CONCURRENT, DEFAULTS.maxConcurrent);
+      parsePositiveIntEnv(process.env.MASSA_AI_SCHEDULER_MAX_CONCURRENT, DEFAULTS.maxConcurrent);
     this.enabled = opts.enabled ?? readEnabled();
   }
 
@@ -257,7 +257,7 @@ export class Scheduler {
     if (this.started) return;
     this.started = true;
     if (!this.enabled) {
-      logger.info("Scheduler disabled (MASSA_TH0TH_SCHEDULER_ENABLED != true)");
+      logger.info("Scheduler disabled (MASSA_AI_SCHEDULER_ENABLED != true)");
       return;
     }
     // Seed default jobs that have no row yet (registerDefaultJobs is called by

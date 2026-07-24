@@ -2,9 +2,9 @@
 set -e
 
 # ========================================
-# massa-th0th - Local-First Setup Script
+# massa-ai - Local-First Setup Script
 # ========================================
-# Sets up massa-th0th to work 100% offline
+# Sets up massa-ai to work 100% offline
 # with no dependency on external services.
 #
 # Usage: ./scripts/setup-local-first.sh
@@ -14,7 +14,7 @@ set -e
 source "$(dirname "${BASH_SOURCE[0]}")/banner.sh"
 # shellcheck source=scripts/lib/installer-env-transaction.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/installer-env-transaction.sh"
-massa_th0th_banner
+massa_ai_banner
 
 # Back up an existing config file to <file>.bak before it gets regenerated.
 backup_if_exists() {
@@ -228,17 +228,17 @@ echo -e "  Choose your database backend:"
 echo -e "    ${BLUE}1)${NC} Native PostgreSQL  (recommended, ~100MB RAM, no Docker)"
 echo -e "    ${BLUE}2)${NC} Docker PostgreSQL  (colima + Docker, ~5GB RAM)"
 echo ""
-# Non-interactive override (mirrors MASSA_TH0TH_MODE in install.sh)
-case "${MASSA_TH0TH_DB_BACKEND:-}" in
+# Non-interactive override (mirrors MASSA_AI_MODE in install.sh)
+case "${MASSA_AI_DB_BACKEND:-}" in
     native) DB_CHOICE=1 ;;
     docker) DB_CHOICE=2 ;;
-    sqlite) die "MASSA_TH0TH_DB_BACKEND=sqlite is not supported. Choose native or docker." ;;
+    sqlite) die "MASSA_AI_DB_BACKEND=sqlite is not supported. Choose native or docker." ;;
     "")
         read -rp "  Enter your choice [1]: " DB_CHOICE </dev/tty || true
         DB_CHOICE=${DB_CHOICE:-1}
         ;;
     *)
-        die "Invalid MASSA_TH0TH_DB_BACKEND. Choose native or docker."
+        die "Invalid MASSA_AI_DB_BACKEND. Choose native or docker."
         ;;
 esac
 
@@ -283,11 +283,11 @@ elif [ "$DB_CHOICE" = "2" ]; then
         fi
         
         # Check if postgres container is running
-        if docker ps --format '{{.Names}}' | grep -q "massa-th0th-postgres"; then
+        if docker ps --format '{{.Names}}' | grep -q "massa-ai-postgres"; then
             echo -e "  ${GREEN}✓${NC} PostgreSQL container already running"
             
             # Get the port from running container
-            RUNNING_PORT=$(docker port massa-th0th-postgres 5432 2>/dev/null | cut -d: -f2)
+            RUNNING_PORT=$(docker port massa-ai-postgres 5432 2>/dev/null | cut -d: -f2)
             if [ -n "$RUNNING_PORT" ]; then
                 POSTGRES_PORT=$RUNNING_PORT
                 echo -e "  ${GREEN}✓${NC} Using existing container port: ${POSTGRES_PORT}"
@@ -300,7 +300,7 @@ elif [ "$DB_CHOICE" = "2" ]; then
             PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
             
             # Export port for docker-compose
-            export MASSA_TH0TH_POSTGRES_PORT=$POSTGRES_PORT
+            export MASSA_AI_POSTGRES_PORT=$POSTGRES_PORT
             
             cd "$PROJECT_ROOT"
             docker compose up -d postgres
@@ -310,12 +310,12 @@ elif [ "$DB_CHOICE" = "2" ]; then
                 sleep 3  # Wait for postgres to be ready
             else
                 echo -e "  ${RED}✗${NC} Failed to start PostgreSQL"
-                echo -e "      Try manually: cd ${PROJECT_ROOT} && MASSA_TH0TH_POSTGRES_PORT=${POSTGRES_PORT} docker compose up -d postgres"
+                echo -e "      Try manually: cd ${PROJECT_ROOT} && MASSA_AI_POSTGRES_PORT=${POSTGRES_PORT} docker compose up -d postgres"
                 exit 1
             fi
         fi
         
-        DATABASE_URL="postgresql://massa_th0th:massa_th0th_password@localhost:${POSTGRES_PORT}/massa_th0th"
+        DATABASE_URL="postgresql://massa_ai:massa_ai_password@localhost:${POSTGRES_PORT}/massa_ai"
         echo -e "  ${GREEN}✓${NC} Database URL: ${DATABASE_URL}"
     else
         die "Docker not found. Install/start Docker and re-run, or choose native PostgreSQL."
@@ -331,12 +331,12 @@ echo ""
 echo -e "${BOLD}[4/5] Creating directories and config...${NC}"
 
 # Data directory — unified under the XDG config home so config + data live in
-# one place (~/.config/massa-th0th/). The legacy ~/.massa-th0th-data/ location
+# one place (~/.config/massa-ai/). The legacy ~/.massa-ai-data/ location
 # is migrated idempotently if present and the new path does not yet exist.
-DATA_DIR="${HOME}/.config/massa-th0th/data"
-LEGACY_DATA_DIR="${HOME}/.massa-th0th-data"
+DATA_DIR="${HOME}/.config/massa-ai/data"
+LEGACY_DATA_DIR="${HOME}/.massa-ai-data"
 if [ -d "$LEGACY_DATA_DIR" ] && [ ! -d "$DATA_DIR" ]; then
-    mkdir -p "${HOME}/.config/massa-th0th"
+    mkdir -p "${HOME}/.config/massa-ai"
     if mv "$LEGACY_DATA_DIR" "$DATA_DIR" 2>/dev/null; then
         echo -e "  ${GREEN}✓${NC} Migrated data directory: ${LEGACY_DATA_DIR} -> ${DATA_DIR}"
     else
@@ -347,7 +347,7 @@ mkdir -p "$DATA_DIR"
 echo -e "  ${GREEN}✓${NC} Data directory: ${DATA_DIR}"
 
 # Config directory
-CONFIG_DIR="${HOME}/.config/massa-th0th"
+CONFIG_DIR="${HOME}/.config/massa-ai"
 mkdir -p "$CONFIG_DIR"
 CONFIG_FILE="${CONFIG_DIR}/config.json"
 
@@ -392,7 +392,7 @@ fi
     fi
 
     installer_env_publish "$ENV_FILE" << ENVEOF
-# MCP MASSA_TH0TH - Auto-generated by setup-local-first.sh
+# MCP MASSA_AI - Auto-generated by setup-local-first.sh
 #
 # NOTE: config.json (${CONFIG_FILE}) is now the RUNTIME source of truth for
 # all tunables (llm, embedding, cache, search, memory, hooks, compression,
@@ -570,11 +570,11 @@ if command -v psql &> /dev/null; then
     else
         die "Cannot connect to PostgreSQL at ${DATABASE_URL}. Ensure the server is running and the URL is correct. Setup stopped."
     fi
-elif command -v docker &> /dev/null && docker ps --format '{{.Names}}' | grep -qx "massa-th0th-postgres"; then
-    verify_pgvector "docker exec massa-th0th-postgres psql -U massa_th0th -d massa_th0th" \
-        || die "PostgreSQL container is up but pgvector verification failed. Run: docker exec massa-th0th-postgres psql -U massa_th0th -d massa_th0th -c \"CREATE EXTENSION vector;\""
+elif command -v docker &> /dev/null && docker ps --format '{{.Names}}' | grep -qx "massa-ai-postgres"; then
+    verify_pgvector "docker exec massa-ai-postgres psql -U massa_ai -d massa_ai" \
+        || die "PostgreSQL container is up but pgvector verification failed. Run: docker exec massa-ai-postgres psql -U massa_ai -d massa_ai -c \"CREATE EXTENSION vector;\""
 else
-    die "Cannot verify PostgreSQL reachability and pgvector: neither psql nor the massa-th0th-postgres container is available. Setup stopped."
+    die "Cannot verify PostgreSQL reachability and pgvector: neither psql nor the massa-ai-postgres container is available. Setup stopped."
 fi
 echo -e "  ${GREEN}✓${NC} PostgreSQL + pgvector: connected"
 
@@ -598,8 +598,8 @@ echo -e "  ${BOLD}Data directory:${NC}  ${DATA_DIR}"
 echo -e "  ${BOLD}Database URL:${NC}    ${DATABASE_URL}"
 echo ""
 echo -e "  ${BOLD}To change provider:${NC}"
-echo -e "    npx massa-th0th-config use mistral --api-key YOUR_KEY"
-echo -e "    npx massa-th0th-config use openai --api-key YOUR_KEY"
+echo -e "    npx massa-ai-config use mistral --api-key YOUR_KEY"
+echo -e "    npx massa-ai-config use openai --api-key YOUR_KEY"
 echo ""
 echo -e "  ${BOLD}Next steps (from source):${NC}"
 echo -e "    1. ${BLUE}bun install${NC}"
@@ -621,9 +621,9 @@ echo -e '    Add to ~/.config/opencode/opencode.json:'
 echo ""
 echo -e '    {'
 echo -e '      "mcpServers": {'
-echo -e '        "massa-th0th": {'
+echo -e '        "massa-ai": {'
 echo -e '          "type": "local",'
-echo -e '          "command": ["npx", "@massa-th0th/mcp-client"],'
+echo -e '          "command": ["npx", "@massa-ai/mcp-client"],'
 echo -e '          "enabled": true'
 echo -e '        }'
 echo -e '      }'

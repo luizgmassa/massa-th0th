@@ -6,7 +6,7 @@ Do not load this reference for ordinary one-off delegation. For runtime delegati
 
 ## Principle
 
-Subagents are execution units inside a harness, not independent workflow owners. In massa-th0th:
+Subagents are execution units inside a harness, not independent workflow owners. In massa-ai:
 
 - the main agent owns workflow routing, memory recall and persistence, user-facing synthesis, and the final Evidence Gate
 - reusable subagents own one bounded capability with explicit context inputs, permission limits, deterministic sensors, and a compact output contract

@@ -7,7 +7,7 @@
  * historical signal can compete.
  */
 
-import type { SearchResult } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-ai/shared";
 
 export interface TemporalInhibitionConfig {
   enabled: boolean;

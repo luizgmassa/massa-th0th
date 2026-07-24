@@ -27,7 +27,7 @@ wrong structural output.
 - Wired into parser init (`parser-readiness.ts` `runValidation`), before the
   first parse, on the production loader path only (test stub loaders exempt).
 - Default ON. Dev-skip gated behind
-  `MASSA_TH0TH_SKIP_GRAMMAR_INTEGRITY=1` (defaults to verifying).
+  `MASSA_AI_SKIP_GRAMMAR_INTEGRITY=1` (defaults to verifying).
 - Prior worker's uncommitted data extraction (`native-lock-identities.ts` +
   `verify-tree-sitter-grammars.ts` refactor) included in the same commit,
   with the extraction's compile bug fixed and its pins reconciled.

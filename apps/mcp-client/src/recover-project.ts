@@ -1,13 +1,13 @@
 /**
  * N42 — Path recovery: re-associate a project index with a new filesystem path.
  *
- * Used by the `massa-th0th-config recover <projectId> --path <newPath>` CLI
+ * Used by the `massa-ai-config recover <projectId> --path <newPath>` CLI
  * command. Updates the `Workspace.projectPath` column without re-indexing.
  * The alias-chain (M16/M17) is preserved — the `projectId` doesn't change,
  * only the `projectPath`.
  */
 
-import { getPrismaClient } from "@massa-th0th/core/services";
+import { getPrismaClient } from "@massa-ai/core/services";
 
 export interface RecoverResult {
   found: boolean;

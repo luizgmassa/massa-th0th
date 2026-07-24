@@ -123,18 +123,18 @@ describe("xdgStateHome", () => {
 describe("app-suffixed dirs", () => {
   test("configDir(app) = xdgConfigHome/app", () => {
     process.env.XDG_CONFIG_HOME = "/etc/xdg";
-    expect(configDir("massa-th0th")).toBe(path.join("/etc/xdg", "massa-th0th"));
+    expect(configDir("massa-ai")).toBe(path.join("/etc/xdg", "massa-ai"));
   });
 
   test("dataDir(app) = xdgDataHome/app", () => {
     process.env.XDG_DATA_HOME = "/var/data";
-    expect(dataDir("massa-th0th")).toBe(path.join("/var/data", "massa-th0th"));
+    expect(dataDir("massa-ai")).toBe(path.join("/var/data", "massa-ai"));
   });
 
   test("cacheDir(app) = xdgCacheHome/app", () => {
     process.env.XDG_CACHE_HOME = "/var/cache";
-    expect(cacheDir("massa-th0th")).toBe(
-      path.join("/var/cache", "massa-th0th"),
+    expect(cacheDir("massa-ai")).toBe(
+      path.join("/var/cache", "massa-ai"),
     );
   });
 
@@ -142,14 +142,14 @@ describe("app-suffixed dirs", () => {
     delete process.env.XDG_CONFIG_HOME;
     delete process.env.XDG_DATA_HOME;
     delete process.env.XDG_CACHE_HOME;
-    expect(configDir("massa-th0th")).toBe(
-      path.join(os.homedir(), ".config", "massa-th0th"),
+    expect(configDir("massa-ai")).toBe(
+      path.join(os.homedir(), ".config", "massa-ai"),
     );
-    expect(dataDir("massa-th0th")).toBe(
-      path.join(os.homedir(), ".local", "share", "massa-th0th"),
+    expect(dataDir("massa-ai")).toBe(
+      path.join(os.homedir(), ".local", "share", "massa-ai"),
     );
-    expect(cacheDir("massa-th0th")).toBe(
-      path.join(os.homedir(), ".cache", "massa-th0th"),
+    expect(cacheDir("massa-ai")).toBe(
+      path.join(os.homedir(), ".cache", "massa-ai"),
     );
   });
 });

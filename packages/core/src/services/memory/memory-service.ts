@@ -6,7 +6,7 @@
  * and embedding coordination. No DB calls — those live in MemoryRepository.
  */
 
-import { MemoryType, MemoryLevel, config } from "@massa-th0th/shared";
+import { MemoryType, MemoryLevel, config } from "@massa-ai/shared";
 import { EmbeddingService } from "../embeddings/index.js";
 import type { MemoryRow } from "../../data/memory/memory-repository.js";
 import { decayScore } from "./decay.js";

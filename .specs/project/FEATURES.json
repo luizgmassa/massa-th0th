@@ -1,5 +1,5 @@
 {
-  "project": "massa-th0th",
+  "project": "massa-ai",
   "version": 1,
   "source": ".specs/features/local-first-memory-platform-roadmap/spec.md",
   "features": [
@@ -149,7 +149,7 @@
     },
     {
       "slug": "project-identity-rename",
-      "title": "Project identity rename to massa-th0th",
+      "title": "Project identity rename to massa-ai",
       "status": "complete",
       "priority": "P1",
       "phases": {
@@ -485,7 +485,7 @@
     },
     {
       "slug": "workflow-tools-adaptation",
-      "title": "Workflow Tools Adaptation \u2014 Adapt massa-th0th workflows to use the full 52-tool surface (checkpoints, handoffs, bootstrap, compact_snapshot, trace_path, impact_analysis, code execution, full Synapse, read_file, symbol_snippet, memory ops, analytics) with canonical un-prefixed naming",
+      "title": "Workflow Tools Adaptation \u2014 Adapt massa-ai workflows to use the full 52-tool surface (checkpoints, handoffs, bootstrap, compact_snapshot, trace_path, impact_analysis, code execution, full Synapse, read_file, symbol_snippet, memory ops, analytics) with canonical un-prefixed naming",
       "status": "complete",
       "priority": "P1",
       "phases": {

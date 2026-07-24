@@ -211,7 +211,7 @@ async function measureDisposalStress(command: string): Promise<StressResult> {
 }
 
 async function setupBaselineWorktree(commit: string): Promise<string> {
-  const worktreePath = mkdtempSync(resolve(tmpdir(), "massa-th0th-bench-baseline-"));
+  const worktreePath = mkdtempSync(resolve(tmpdir(), "massa-ai-bench-baseline-"));
   log(`baseline worktree: ${worktreePath}`);
   await run("git", ["worktree", "add", "--detach", worktreePath, commit], REPO_ROOT);
   try {

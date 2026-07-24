@@ -5,7 +5,7 @@ Slug: `native-postgresql-installer`. Source: `change-the-installers-to-cozy-scro
 ## Requirements
 
 - macOS/Homebrew users can select native PostgreSQL/pgvector; SQLite and Docker PostgreSQL remain supported.
-- `MASSA_TH0TH_DB_BACKEND` supports non-interactive `native`, `sqlite`, and `docker` modes.
+- `MASSA_AI_DB_BACKEND` supports non-interactive `native`, `sqlite`, and `docker` modes.
 - Docker/Colima selection communicates approximate ~5GB cost; native-helper failure yields a manual URL path.
 - Native/Docker PostgreSQL uses `DATABASE_URL` and existing migration flow.
 

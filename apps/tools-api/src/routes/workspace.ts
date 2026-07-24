@@ -17,12 +17,12 @@ import {
   symbolGraphService,
   toSymbolIdentityResolution,
   workspaceManager,
-} from "@massa-th0th/core";
+} from "@massa-ai/core";
 import { Elysia, t } from "elysia";
 import fs from "fs/promises";
 import path from "path";
 import { realpathSync } from "fs";
-import { getActiveGeneration, assertGenerationNotStale } from "@massa-th0th/core";
+import { getActiveGeneration, assertGenerationNotStale } from "@massa-ai/core";
 
 let indexProjectTool: IndexProjectTool | null = null;
 
@@ -764,14 +764,14 @@ export const workspaceRoutes = new Elysia({ prefix: "/api/v1" })
         }
 
         const start = boundedInt(lineStart, 1, 1, 1_000_000);
-        // N9: cap symbol_snippet output at MASSA_TH0TH_READ_FILE_MAX_LINES
+        // N9: cap symbol_snippet output at MASSA_AI_READ_FILE_MAX_LINES
         // (default 500) — same env override as read_file. The prior hard-coded
         // ceiling was start+10_000. When the requested range exceeds the cap,
         // we clamp end and emit source_clipped: true. The full file line count
         // is NOT fetched here (it would require a second pass for a hot route);
         // omitted is derivable by the caller as `lines.length - (endLine-startLine+1)`.
         const MAX_SNIPPET_LINES = (() => {
-          const v = Number(process.env.MASSA_TH0TH_READ_FILE_MAX_LINES);
+          const v = Number(process.env.MASSA_AI_READ_FILE_MAX_LINES);
           return Number.isFinite(v) && v > 0 ? Math.floor(v) : 500;
         })();
         const cappedEndMax = start + MAX_SNIPPET_LINES - 1;

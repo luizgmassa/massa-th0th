@@ -30,15 +30,15 @@ import { defaultDiffRunner } from "../services/symbol/impact-analysis.js";
 const tempDirs: string[] = [];
 
 // Wave 5 FR-12: read_file path containment rejects absolute paths outside
-// project root + cwd + MASSA_TH0TH_READ_FILE_ROOTS. The N9 read_file tests
+// project root + cwd + MASSA_AI_READ_FILE_ROOTS. The N9 read_file tests
 // create temp files under os.tmpdir() (outside cwd), so allow tmpdir as an
 // extra root. The tool reads this env at CALL TIME, so setting it here
 // covers all read_file tests in this file. Restored in afterAll.
-const PREV_READ_FILE_ROOTS = process.env.MASSA_TH0TH_READ_FILE_ROOTS;
-process.env.MASSA_TH0TH_READ_FILE_ROOTS = os.tmpdir();
+const PREV_READ_FILE_ROOTS = process.env.MASSA_AI_READ_FILE_ROOTS;
+process.env.MASSA_AI_READ_FILE_ROOTS = os.tmpdir();
 afterAll(() => {
-  if (PREV_READ_FILE_ROOTS === undefined) delete process.env.MASSA_TH0TH_READ_FILE_ROOTS;
-  else process.env.MASSA_TH0TH_READ_FILE_ROOTS = PREV_READ_FILE_ROOTS;
+  if (PREV_READ_FILE_ROOTS === undefined) delete process.env.MASSA_AI_READ_FILE_ROOTS;
+  else process.env.MASSA_AI_READ_FILE_ROOTS = PREV_READ_FILE_ROOTS;
 });
 
 afterEach(async () => {
@@ -58,7 +58,7 @@ function git(dir: string, args: string[], env?: Record<string, string>): string 
 }
 
 async function makeRepo(): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-wave4-n7-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-wave4-n7-"));
   tempDirs.push(dir);
   git(dir, ["init", "-q"]);
   git(dir, ["config", "user.email", "test@example.com"]);
@@ -223,7 +223,7 @@ describe("defaultDiffRunner — N7 three-source diff + secrets denylist", () => 
  *
  * Asserts spec AC 11-15 (N9):
  *   - 1000-line file, no range → 500 lines + source_clipped:true + total:1000
- *   - MASSA_TH0TH_READ_FILE_MAX_LINES=1000 env → 1000 lines + source_clipped:false
+ *   - MASSA_AI_READ_FILE_MAX_LINES=1000 env → 1000 lines + source_clipped:false
  *   - 200-line file, no range → 200 lines + source_clipped:false
  *   - readContext (internal enrichment) is NOT capped
  *
@@ -240,7 +240,7 @@ import { SymbolGraphService } from "../services/symbol/symbol-graph.service.js";
 
 describe("ReadFileTool — N9 read_file cap + source_clipped", () => {
   test("1000-line file, no range → 500 lines + source_clipped:true + total:1000", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-n9-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-n9-"));
     tempDirs.push(tmpDir);
     const file = path.join(tmpDir, "big.txt");
     const content = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join("\n");
@@ -266,7 +266,7 @@ describe("ReadFileTool — N9 read_file cap + source_clipped", () => {
   });
 
   test("200-line file, no range → 200 lines + source_clipped:false", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-n9-small-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-n9-small-"));
     tempDirs.push(tmpDir);
     const file = path.join(tmpDir, "small.txt");
     const content = Array.from({ length: 200 }, (_, i) => `line ${i + 1}`).join("\n");
@@ -286,7 +286,7 @@ describe("ReadFileTool — N9 read_file cap + source_clipped", () => {
   });
 
   test("range within the cap → full range returned, source_clipped:false", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-n9-range-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-n9-range-"));
     tempDirs.push(tmpDir);
     const file = path.join(tmpDir, "ranged.txt");
     const content = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join("\n");
@@ -313,7 +313,7 @@ describe("ReadFileTool — N9 read_file cap + source_clipped", () => {
   });
 
   test("range exceeding the cap → clamped to 500 lines + source_clipped:true", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-n9-exceed-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-n9-exceed-"));
     tempDirs.push(tmpDir);
     const file = path.join(tmpDir, "huge.txt");
     const content = Array.from({ length: 2000 }, (_, i) => `line ${i + 1}`).join("\n");

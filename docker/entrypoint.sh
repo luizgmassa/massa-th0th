@@ -1,6 +1,6 @@
 #!/bin/sh
 # ============================================
-# massa-th0th API - Container Entrypoint
+# massa-ai API - Container Entrypoint
 # ============================================
 # Runs Prisma migrations before starting the API.
 # Safe to run on every startup: migrate deploy is idempotent.
@@ -27,5 +27,5 @@ echo "[entrypoint] Running database migrations..."
 (cd /app/packages/core && bunx prisma migrate deploy)
 echo "[entrypoint] Migrations complete."
 
-echo "[entrypoint] Starting massa-th0th API..."
+echo "[entrypoint] Starting massa-ai API..."
 exec "$@"

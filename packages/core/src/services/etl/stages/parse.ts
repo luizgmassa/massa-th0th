@@ -13,7 +13,7 @@
 
 import path from "path";
 import fs from "fs/promises";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { smartChunk, type Chunk } from "../../search/smart-chunker.js";
 import { structuralRuntime, type StructuralRuntime } from "../../structural/structural-runtime.js";
 import { LANGUAGE_MANIFEST } from "../../structural/language-manifest.js";

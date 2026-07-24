@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================
-#  massa-th0th - Shared CLI utilities
+#  massa-ai - Shared CLI utilities
 #  Source this file from other scripts — do not run directly.
 #
 #  Usage:
 #    source "$(dirname "${BASH_SOURCE[0]}")/banner.sh"
-#    massa_th0th_banner
+#    massa_ai_banner
 # ============================================================
 
 # ── Colours ──────────────────────────────────────────────────
@@ -22,26 +22,26 @@ die()  { err "$*"; exit 1; }
 
 # ── Version detection ─────────────────────────────────────────
 # Resolves project root from the location of this file (scripts/).
-_MASSA_TH0TH_BANNER_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd 2>/dev/null)"
+_MASSA_AI_BANNER_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd 2>/dev/null)"
 
-_massa_th0th_detect_version() {
-  [ -n "${MASSA_TH0TH_VERSION:-}" ] && return
-  local pkg="${_MASSA_TH0TH_BANNER_ROOT}/package.json"
+_massa_ai_detect_version() {
+  [ -n "${MASSA_AI_VERSION:-}" ] && return
+  local pkg="${_MASSA_AI_BANNER_ROOT}/package.json"
   if [ -f "$pkg" ]; then
     if command -v node &>/dev/null; then
-      MASSA_TH0TH_VERSION="$(node -e "process.stdout.write(require('${pkg}').version)" 2>/dev/null)"
+      MASSA_AI_VERSION="$(node -e "process.stdout.write(require('${pkg}').version)" 2>/dev/null)"
     elif command -v python3 &>/dev/null; then
-      MASSA_TH0TH_VERSION="$(python3 -c "import json; print(json.load(open('${pkg}'))['version'],end='')" 2>/dev/null)"
+      MASSA_AI_VERSION="$(python3 -c "import json; print(json.load(open('${pkg}'))['version'],end='')" 2>/dev/null)"
     elif command -v jq &>/dev/null; then
-      MASSA_TH0TH_VERSION="$(jq -r .version "${pkg}" 2>/dev/null)"
+      MASSA_AI_VERSION="$(jq -r .version "${pkg}" 2>/dev/null)"
     fi
   fi
-  MASSA_TH0TH_VERSION="${MASSA_TH0TH_VERSION:-?}"
+  MASSA_AI_VERSION="${MASSA_AI_VERSION:-?}"
 }
 
 # ── Banner ────────────────────────────────────────────────────
-massa_th0th_banner() {
-  _massa_th0th_detect_version
+massa_ai_banner() {
+  _massa_ai_detect_version
   cat << EOF
 
               ██             ██████               ██
@@ -54,8 +54,8 @@ massa_th0th_banner() {
     ███████  ███   ████    ████████     ███████░ ████  ████
      ░████  █████  █████    █████         ████   ████░ █████
 
-   Context, memory and cross-agent management.  v${MASSA_TH0TH_VERSION}
-   https://github.com/luizgmassa/massa-th0th
+   Context, memory and cross-agent management.  v${MASSA_AI_VERSION}
+   https://github.com/luizgmassa/massa-ai
 
 EOF
 }

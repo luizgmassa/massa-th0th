@@ -5,7 +5,7 @@
  * Defaults to PostgreSQL for local-first mode.
  */
 
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import { SymbolRepositoryPg } from "./symbol-repository-pg.js";
 
 export function getSymbolRepository(): SymbolRepositoryPg {

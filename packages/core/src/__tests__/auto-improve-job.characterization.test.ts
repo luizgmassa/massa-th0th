@@ -34,7 +34,7 @@ import {
 } from "../data/memory/observation-repository.js";
 import type { InsertMemoryInput, UpdateMemoryPatch, MemoryRow } from "../data/memory/memory-repository.js";
 import type { LlmSurface } from "../services/memory/consolidator.js";
-import { MemoryType, MemoryLevel } from "@massa-th0th/shared";
+import { MemoryType, MemoryLevel } from "@massa-ai/shared";
 
 // ── Fakes ────────────────────────────────────────────────────────────────────
 

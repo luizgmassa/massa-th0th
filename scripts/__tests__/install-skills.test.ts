@@ -43,7 +43,7 @@ describe("discoverSkillSources", () => {
   test("finds skills with SKILL.md in repo root", async () => {
     const skills = await discoverSkillSources(REPO_ROOT);
     expect(skills.size).toBeGreaterThan(0);
-    expect(skills.has("massa-th0th")).toBe(true);
+    expect(skills.has("massa-ai")).toBe(true);
     expect(skills.has("persona-router")).toBe(true);
   });
 
@@ -78,7 +78,7 @@ describe("extractBootstrap from repo", () => {
     const bootstrap = await extractBootstrap(REPO_ROOT);
     expect(bootstrap).toContain(BOOTSTRAP_START);
     expect(bootstrap).toContain(BOOTSTRAP_END);
-    expect(bootstrap).toContain("massa-th0th");
+    expect(bootstrap).toContain("massa-ai");
   });
 });
 
@@ -145,13 +145,13 @@ describe("loadState", () => {
       version: 2,
       repository: "/repo",
       platforms: {
-        claude: { root: path.join(tmp, ".claude"), skills: ["massa-th0th"] },
+        claude: { root: path.join(tmp, ".claude"), skills: ["massa-ai"] },
       },
     };
     await fs.writeFile(sPath, JSON.stringify(state));
     const loaded = await loadState(sPath, tmp, path.join(tmp, ".codex"));
     expect(loaded.version).toBe(2);
-    expect(loaded.platforms.claude.skills).toEqual(["massa-th0th"]);
+    expect(loaded.platforms.claude.skills).toEqual(["massa-ai"]);
   });
 
   test("migrates v1 state to v2", async () => {
@@ -202,7 +202,7 @@ describe("saveState", () => {
 
 describe("applyPlatform (claude)", () => {
   const skills = new Map([
-    ["massa-th0th", path.join(REPO_ROOT, "skills", "massa-th0th")],
+    ["massa-ai", path.join(REPO_ROOT, "skills", "massa-ai")],
     ["persona-router", path.join(REPO_ROOT, "skills", "persona-router")],
   ]);
   const bootstrap = `${BOOTSTRAP_START}\n# bootstrap content\n${BOOTSTRAP_END}`;
@@ -212,9 +212,9 @@ describe("applyPlatform (claude)", () => {
     expect(result.results.some((r) => r.status === "changed")).toBe(true);
 
     // Verify symlinks
-    const link = await fs.readlink(path.join(tmp, ".claude", "skills", "massa-th0th"));
-    expect(path.resolve(path.join(tmp, ".claude", "skills", "massa-th0th"), link)).toBe(
-      path.join(REPO_ROOT, "skills", "massa-th0th")
+    const link = await fs.readlink(path.join(tmp, ".claude", "skills", "massa-ai"));
+    expect(path.resolve(path.join(tmp, ".claude", "skills", "massa-ai"), link)).toBe(
+      path.join(REPO_ROOT, "skills", "massa-ai")
     );
 
     // Verify bootstrap in AGENTS.md
@@ -233,19 +233,19 @@ describe("applyPlatform (claude)", () => {
     const result = await applyPlatform("claude", tmp, path.join(tmp, ".codex"), skills, bootstrap, true);
     expect(result.results.some((r) => r.status === "would-change")).toBe(true);
     // Verify nothing was written
-    expect(fs.access(path.join(tmp, ".claude", "skills", "massa-th0th"))).rejects.toThrow();
+    expect(fs.access(path.join(tmp, ".claude", "skills", "massa-ai"))).rejects.toThrow();
   });
 
   test("aborts on non-symlink conflict", async () => {
     // Create a regular file where symlink should go
     await fs.mkdir(path.join(tmp, ".claude", "skills"), { recursive: true });
-    await fs.writeFile(path.join(tmp, ".claude", "skills", "massa-th0th"), "user content");
+    await fs.writeFile(path.join(tmp, ".claude", "skills", "massa-ai"), "user content");
 
     const result = await applyPlatform("claude", tmp, path.join(tmp, ".codex"), skills, bootstrap, false);
     expect(result.results.some((r) => r.status === "error")).toBe(true);
 
     // Verify user file preserved
-    const content = await fs.readFile(path.join(tmp, ".claude", "skills", "massa-th0th"), "utf-8");
+    const content = await fs.readFile(path.join(tmp, ".claude", "skills", "massa-ai"), "utf-8");
     expect(content).toBe("user content");
   });
 
@@ -265,7 +265,7 @@ describe("applyPlatform (claude)", () => {
 
 describe("uninstallPlatform (claude)", () => {
   const skills = new Map([
-    ["massa-th0th", path.join(REPO_ROOT, "skills", "massa-th0th")],
+    ["massa-ai", path.join(REPO_ROOT, "skills", "massa-ai")],
   ]);
   const bootstrap = `${BOOTSTRAP_START}\n# bootstrap\n${BOOTSTRAP_END}`;
 
@@ -279,7 +279,7 @@ describe("uninstallPlatform (claude)", () => {
     expect(result.results.some((r) => r.status === "changed")).toBe(true);
 
     // Verify symlink gone
-    expect(fs.access(path.join(tmp, ".claude", "skills", "massa-th0th"))).rejects.toThrow();
+    expect(fs.access(path.join(tmp, ".claude", "skills", "massa-ai"))).rejects.toThrow();
 
     // Verify bootstrap removed
     const agents = await fs.readFile(path.join(tmp, ".claude", "AGENTS.md"), "utf-8");
@@ -299,7 +299,7 @@ describe("uninstallPlatform (claude)", () => {
     await fs.writeFile(path.join(tmp, ".claude", "skills", "user-skill"), "user");
 
     // Uninstall
-    const stateRecord = { root: path.join(tmp, ".claude"), skills: ["massa-th0th"] };
+    const stateRecord = { root: path.join(tmp, ".claude"), skills: ["massa-ai"] };
     await uninstallPlatform("claude", tmp, path.join(tmp, ".codex"), stateRecord, REPO_ROOT, false);
 
     // Verify user content preserved
@@ -324,19 +324,19 @@ describe("uninstallPlatform (claude)", () => {
 
 describe("checkPlatform (claude)", () => {
   const skills = new Map([
-    ["massa-th0th", path.join(REPO_ROOT, "skills", "massa-th0th")],
+    ["massa-ai", path.join(REPO_ROOT, "skills", "massa-ai")],
   ]);
   const bootstrap = `${BOOTSTRAP_START}\n# bootstrap\n${BOOTSTRAP_END}`;
 
   test("clean — no drift after apply", async () => {
     await applyPlatform("claude", tmp, path.join(tmp, ".codex"), skills, bootstrap, false);
-    const stateRecord = { root: path.join(tmp, ".claude"), skills: ["massa-th0th"] };
+    const stateRecord = { root: path.join(tmp, ".claude"), skills: ["massa-ai"] };
     const results = await checkPlatform("claude", tmp, path.join(tmp, ".codex"), skills, stateRecord, REPO_ROOT);
     expect(results.every((r) => r.status !== "drift")).toBe(true);
   });
 
   test("detects missing symlink as drift", async () => {
-    const stateRecord = { root: path.join(tmp, ".claude"), skills: ["massa-th0th"] };
+    const stateRecord = { root: path.join(tmp, ".claude"), skills: ["massa-ai"] };
     const results = await checkPlatform("claude", tmp, path.join(tmp, ".codex"), skills, stateRecord, REPO_ROOT);
     expect(results.some((r) => r.status === "drift" && r.message.includes("Missing symlink"))).toBe(true);
   });
@@ -344,9 +344,9 @@ describe("checkPlatform (claude)", () => {
   test("detects wrong symlink target as drift", async () => {
     // Create symlink pointing to wrong place
     await fs.mkdir(path.join(tmp, ".claude", "skills"), { recursive: true });
-    await fs.symlink("/wrong/path", path.join(tmp, ".claude", "skills", "massa-th0th"), "dir");
+    await fs.symlink("/wrong/path", path.join(tmp, ".claude", "skills", "massa-ai"), "dir");
 
-    const stateRecord = { root: path.join(tmp, ".claude"), skills: ["massa-th0th"] };
+    const stateRecord = { root: path.join(tmp, ".claude"), skills: ["massa-ai"] };
     const results = await checkPlatform("claude", tmp, path.join(tmp, ".codex"), skills, stateRecord, REPO_ROOT);
     expect(results.some((r) => r.status === "drift" && r.message.includes("points to"))).toBe(true);
   });
@@ -354,15 +354,15 @@ describe("checkPlatform (claude)", () => {
   test("detects stale symlink (skill removed from repo) as drift", async () => {
     // Install with a skill, then check with a smaller skill set
     const oldSkills = new Map([
-      ["massa-th0th", path.join(REPO_ROOT, "skills", "massa-th0th")],
+      ["massa-ai", path.join(REPO_ROOT, "skills", "massa-ai")],
       ["removed-skill", path.join(REPO_ROOT, "skills", "removed-skill")],
     ]);
     // Simulate old install by creating symlink
     await fs.mkdir(path.join(tmp, ".claude", "skills"), { recursive: true });
     await fs.symlink(REPO_ROOT, path.join(tmp, ".claude", "skills", "removed-skill"), "dir");
 
-    const stateRecord = { root: path.join(tmp, ".claude"), skills: ["massa-th0th", "removed-skill"] };
-    const currentSkills = new Map([["massa-th0th", path.join(REPO_ROOT, "skills", "massa-th0th")]]);
+    const stateRecord = { root: path.join(tmp, ".claude"), skills: ["massa-ai", "removed-skill"] };
+    const currentSkills = new Map([["massa-ai", path.join(REPO_ROOT, "skills", "massa-ai")]]);
     const results = await checkPlatform("claude", tmp, path.join(tmp, ".codex"), currentSkills, stateRecord, REPO_ROOT);
     expect(results.some((r) => r.status === "drift" && r.message.includes("Stale symlink"))).toBe(true);
   });
@@ -378,7 +378,7 @@ describe("resolveRepoRoot", () => {
   test("falls back to script location", () => {
     const root = resolveRepoRoot();
     expect(root).toBeTruthy();
-    // Should resolve to the massa-th0th repo root (parent of scripts/)
+    // Should resolve to the massa-ai repo root (parent of scripts/)
     expect(root).not.toBe("/");
   });
 });
@@ -404,22 +404,22 @@ describe("hook gating scenarios (ported, no Python hooks layer)", () => {
   test("conflicting path aborts before any mutation", async () => {
     // Create a regular file where a symlink should go
     await fs.mkdir(path.join(tmp, ".claude", "skills"), { recursive: true });
-    await fs.writeFile(path.join(tmp, ".claude", "skills", "massa-th0th"), "user file");
+    await fs.writeFile(path.join(tmp, ".claude", "skills", "massa-ai"), "user file");
 
-    const skills = new Map([["massa-th0th", path.join(REPO_ROOT, "skills", "massa-th0th")]]);
+    const skills = new Map([["massa-ai", path.join(REPO_ROOT, "skills", "massa-ai")]]);
     const bootstrap = `${BOOTSTRAP_START}\n# bootstrap\n${BOOTSTRAP_END}`;
 
     const result = await applyPlatform("claude", tmp, path.join(tmp, ".codex"), skills, bootstrap, false);
     expect(result.results.some((r) => r.status === "error")).toBe(true);
 
     // Verify user file is untouched
-    const content = await fs.readFile(path.join(tmp, ".claude", "skills", "massa-th0th"), "utf-8");
+    const content = await fs.readFile(path.join(tmp, ".claude", "skills", "massa-ai"), "utf-8");
     expect(content).toBe("user file");
   });
 
   test("partial platform uninstall preserves other platform state", async () => {
     const skills = new Map([
-      ["massa-th0th", path.join(REPO_ROOT, "skills", "massa-th0th")],
+      ["massa-ai", path.join(REPO_ROOT, "skills", "massa-ai")],
     ]);
     const bootstrap = `${BOOTSTRAP_START}\n# bootstrap\n${BOOTSTRAP_END}`;
 
@@ -433,7 +433,7 @@ describe("hook gating scenarios (ported, no Python hooks layer)", () => {
       repository: REPO_ROOT,
       platforms: {
         claude: claudeResult.state,
-        codex: { root: path.join(tmp, ".codex"), skills: ["massa-th0th"] },
+        codex: { root: path.join(tmp, ".codex"), skills: ["massa-ai"] },
       },
     };
     await saveState(statePath(tmp), state);
@@ -442,11 +442,11 @@ describe("hook gating scenarios (ported, no Python hooks layer)", () => {
     await uninstallPlatform("claude", tmp, path.join(tmp, ".codex"), state.platforms.claude, REPO_ROOT, false);
 
     // Verify codex symlinks still exist
-    const codexLink = await fs.readlink(path.join(tmp, ".codex", "skills", "massa-th0th"));
+    const codexLink = await fs.readlink(path.join(tmp, ".codex", "skills", "massa-ai"));
     expect(codexLink).toBeTruthy();
 
     // Verify claude symlinks gone
-    expect(fs.access(path.join(tmp, ".claude", "skills", "massa-th0th"))).rejects.toThrow();
+    expect(fs.access(path.join(tmp, ".claude", "skills", "massa-ai"))).rejects.toThrow();
   });
 
   test("v1 state can be uninstalled without migration apply", async () => {

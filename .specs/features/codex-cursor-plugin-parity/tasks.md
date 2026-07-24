@@ -2,7 +2,7 @@
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
-Implement these tasks with the `massa-th0th` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
+Implement these tasks with the `massa-ai` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
 
 **If the skill cannot be activated, STOP and tell the user — do not proceed without it.**
 
@@ -19,21 +19,21 @@ Implement these tasks with the `massa-th0th` skill: **activate it by name and fo
 - `AGENTS.md` (repo root) — test runner `bun test`, type-check `bun run type-check` (6 tsc projects), build `bun run build` (turbo, 5 packages)
 - `CONTRIBUTING.md` — 7-step harness protocol; `_DETERMINISTIC_ONLY=1` for deterministic-only runs
 - `package.json` — scripts: `test` (turbo), `type-check`, `build`, `lint`, `diagnose`
-- `scripts/__tests__/install-agents.test.ts` — existing installer test convention: `bun:test`, temp dir via `fs.mkdtemp`, plan/apply/idempotent/uninstall assertions, `MASSA_TH0TH_OWNED_KEY` checks
-- `apps/claude-plugin/hooks/__tests__/massa-th0th-hook.test.ts` — binary test convention: child process + mock HTTP server
+- `scripts/__tests__/install-agents.test.ts` — existing installer test convention: `bun:test`, temp dir via `fs.mkdtemp`, plan/apply/idempotent/uninstall assertions, `MASSA_AI_OWNED_KEY` checks
+- `apps/claude-plugin/hooks/__tests__/massa-ai-hook.test.ts` — binary test convention: child process + mock HTTP server
 - `apps/opencode-plugin/src/__tests__/observation-emitter.test.ts` — plugin unit test convention
 
-**Conventions:** `bun:test` with `describe`/`test`/`expect`; temp dirs in `beforeEach`/`afterEach`; co-located `__tests__/` directories; no mocks of `@massa-th0th/shared` (use DI); `_DETERMINISTIC_ONLY=1` to skip env-dependent tests.
+**Conventions:** `bun:test` with `describe`/`test`/`expect`; temp dirs in `beforeEach`/`afterEach`; co-located `__tests__/` directories; no mocks of `@massa-ai/shared` (use DI); `_DETERMINISTIC_ONLY=1` to skip env-dependent tests.
 
 ---
 
 ## Test Coverage Matrix
 
-> Generated from codebase, project guidelines, and spec. Guidelines found: `AGENTS.md`, `CONTRIBUTING.md`, `package.json`, existing `install-agents.test.ts` + `massa-th0th-hook.test.ts`.
+> Generated from codebase, project guidelines, and spec. Guidelines found: `AGENTS.md`, `CONTRIBUTING.md`, `package.json`, existing `install-agents.test.ts` + `massa-ai-hook.test.ts`.
 
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
-| Binary `EVENT_MAP` (1-line `pre-tool-use` add) | unit | All branches; every new subcommand produces a POST; exit-0 on unknown | `apps/claude-plugin/hooks/__tests__/massa-th0th-hook.test.ts` (extend) | `bun test apps/claude-plugin/hooks/__tests__/` |
+| Binary `EVENT_MAP` (1-line `pre-tool-use` add) | unit | All branches; every new subcommand produces a POST; exit-0 on unknown | `apps/claude-plugin/hooks/__tests__/massa-ai-hook.test.ts` (extend) | `bun test apps/claude-plugin/hooks/__tests__/` |
 | Codex plugin installer (`install.sh`) | integration | Idempotent install; user/project scope; uninstall removes only owned; array-append merge preserves user hooks; trust warning printed | `apps/codex-plugin/__tests__/install.test.ts` | `bun test apps/codex-plugin/__tests__/` |
 | Codex plugin manifest + skills + hooks.json | unit (shape) | Manifest valid; 6 events mapped; skills content matches claude-plugin; MCP entry present | `apps/codex-plugin/__tests__/manifest.test.ts` | `bun test apps/codex-plugin/__tests__/` |
 | Cursor plugin installer (`install.sh`) | integration | Idempotent install; user/project scope; uninstall removes only owned; array-append merge; `sessionStart` + `preCompact` wired | `apps/cursor-plugin/__tests__/install.test.ts` | `bun test apps/cursor-plugin/__tests__/` |
@@ -83,8 +83,8 @@ T16 → T17 → T18 → T19 → T20
 
 ### T1: Add `pre-tool-use` to binary EVENT_MAP
 
-**What**: Add one entry `"pre-tool-use": "pre-tool-use"` to the `EVENT_MAP` in the shared `massa-th0th-hook.ts` binary so Codex `PreToolUse` and Cursor `preToolUse` events produce a POST instead of a silent exit-0.
-**Where**: `apps/claude-plugin/hooks/massa-th0th-hook.ts:36-42` (modify)
+**What**: Add one entry `"pre-tool-use": "pre-tool-use"` to the `EVENT_MAP` in the shared `massa-ai-hook.ts` binary so Codex `PreToolUse` and Cursor `preToolUse` events produce a POST instead of a silent exit-0.
+**Where**: `apps/claude-plugin/hooks/massa-ai-hook.ts:36-42` (modify)
 **Depends on**: None
 **Reuses**: Existing binary; `pre-tool-use` is already a valid `LIFECYCLE_EVENTS` kind in `hook-service.ts:94-102`
 **Requirement**: CPX-05 (partial), CRS-03 (partial)
@@ -96,9 +96,9 @@ T16 → T17 → T18 → T19 → T20
 **Done when**:
 - [ ] `EVENT_MAP` includes `"pre-tool-use": "pre-tool-use"`
 - [ ] Existing 5 subcommands still produce a POST
-- [ ] `pre-tool-use` subcommand produces a POST (new test in `massa-th0th-hook.test.ts`)
+- [ ] `pre-tool-use` subcommand produces a POST (new test in `massa-ai-hook.test.ts`)
 - [ ] Unknown subcommand still exits 0 with no POST
-- [ ] Gate: `bun test apps/claude-plugin/hooks/__tests__/massa-th0th-hook.test.ts` passes
+- [ ] Gate: `bun test apps/claude-plugin/hooks/__tests__/massa-ai-hook.test.ts` passes
 
 **Tests**: unit
 **Gate**: quick
@@ -107,10 +107,10 @@ T16 → T17 → T18 → T19 → T20
 
 ### T2: Create apps/codex-plugin/ manifest + skills + MCP + hooks.json
 
-**What**: Create the Codex plugin directory structure: `.codex-plugin/plugin.json`, `skills/*.md` (6 files adapted from `apps/claude-plugin/commands/*.md`), `hooks/hooks.json` (6 Codex events → binary subcommands), `.mcp.json`, and a symlink `hooks/massa-th0th-hook` → `../../claude-plugin/hooks/massa-th0th-hook.ts`.
+**What**: Create the Codex plugin directory structure: `.codex-plugin/plugin.json`, `skills/*.md` (6 files adapted from `apps/claude-plugin/commands/*.md`), `hooks/hooks.json` (6 Codex events → binary subcommands), `.mcp.json`, and a symlink `hooks/massa-ai-hook` → `../../claude-plugin/hooks/massa-ai-hook.ts`.
 **Where**: `apps/codex-plugin/` (new directory)
 **Depends on**: T1 (binary has `pre-tool-use` entry)
-**Reuses**: `apps/claude-plugin/commands/*.md` content (adapt frontmatter to Codex SKILL.md format), `apps/claude-plugin/hooks/massa-th0th-hook.ts` (symlink)
+**Reuses**: `apps/claude-plugin/commands/*.md` content (adapt frontmatter to Codex SKILL.md format), `apps/claude-plugin/hooks/massa-ai-hook.ts` (symlink)
 **Requirement**: CPX-01, CPX-03, CPX-04, CPX-05, CPX-06
 
 **Tools**:
@@ -120,9 +120,9 @@ T16 → T17 → T18 → T19 → T20
 **Done when**:
 - [ ] `.codex-plugin/plugin.json` exists with `name`, `version`, `description`, `skills`, `mcp`, `hooks` fields
 - [ ] 6 `skills/*.md` files exist with adapted content (map, index, find, def, graph, status)
-- [ ] `hooks/hooks.json` contains 6 Codex events (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PreCompact`, `Stop`) each pointing at the binary with `_massaTh0thOwned: true`
-- [ ] `.mcp.json` declares `npx @massa-th0th/mcp-client` with `MASSA_TH0TH_API_URL` env
-- [ ] `hooks/massa-th0th-hook` symlink resolves to the claude-plugin binary
+- [ ] `hooks/hooks.json` contains 6 Codex events (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PreCompact`, `Stop`) each pointing at the binary with `_massaAiOwned: true`
+- [ ] `.mcp.json` declares `npx @massa-ai/mcp-client` with `MASSA_AI_API_URL` env
+- [ ] `hooks/massa-ai-hook` symlink resolves to the claude-plugin binary
 - [ ] Gate: `bun test apps/codex-plugin/__tests__/manifest.test.ts` passes (new)
 
 **Tests**: unit (shape)
@@ -132,7 +132,7 @@ T16 → T17 → T18 → T19 → T20
 
 ### T3: Create apps/codex-plugin/install.sh
 
-**What**: Create the Codex plugin installer script with `--user`/`--project`/`--uninstall` flags. Copies the plugin dir to `~/.codex/plugins/massa-th0th/` (user) or `./.codex/plugins/massa-th0th/` (project). Auto-writes `~/.codex/hooks.json` (or project) with array-append merge (backup + `_massaTh0thOwned` marker). Prints the blocking trust warning: "Run `/hooks` in Codex to trust massa-th0th hooks." Prints the MCP deconfliction hint.
+**What**: Create the Codex plugin installer script with `--user`/`--project`/`--uninstall` flags. Copies the plugin dir to `~/.codex/plugins/massa-ai/` (user) or `./.codex/plugins/massa-ai/` (project). Auto-writes `~/.codex/hooks.json` (or project) with array-append merge (backup + `_massaAiOwned` marker). Prints the blocking trust warning: "Run `/hooks` in Codex to trust massa-ai hooks." Prints the MCP deconfliction hint.
 **Where**: `apps/codex-plugin/install.sh` (new)
 **Depends on**: T2 (plugin files exist to install)
 **Reuses**: `scripts/install-agents.ts` backup + ownership-marker + `assertHomeWriteConsent` conventions (reimplemented in bash); `apps/claude-plugin/install.sh` script-copy pattern
@@ -143,8 +143,8 @@ T16 → T17 → T18 → T19 → T20
 - Skill: NONE
 
 **Done when**:
-- [ ] `install.sh --user` copies plugin dir to `~/.codex/plugins/massa-th0th/` and merges `~/.codex/hooks.json`
-- [ ] `install.sh --project` copies to `./.codex/plugins/massa-th0th/` and merges `./.codex/hooks.json`
+- [ ] `install.sh --user` copies plugin dir to `~/.codex/plugins/massa-ai/` and merges `~/.codex/hooks.json`
+- [ ] `install.sh --project` copies to `./.codex/plugins/massa-ai/` and merges `./.codex/hooks.json`
 - [ ] Array-append merge: pre-existing user hooks survive (backup created first)
 - [ ] `install.sh --uninstall` removes only ownership-marked entries + plugin dir
 - [ ] Idempotent: re-running `--user` is a no-op when owned entries already present
@@ -183,7 +183,7 @@ T16 → T17 → T18 → T19 → T20
 **What**: Create `apps/codex-plugin/__tests__/manifest.test.ts` (manifest shape + 6 events + skills content) and `apps/codex-plugin/__tests__/install.test.ts` (install/uninstall/idempotent/array-merge in a temp HOME).
 **Where**: `apps/codex-plugin/__tests__/` (new)
 **Depends on**: T2, T3
-**Reuses**: `scripts/__tests__/install-agents.test.ts` temp-dir + plan/apply/uninstall convention; `apps/claude-plugin/hooks/__tests__/massa-th0th-hook.test.ts` child-process convention
+**Reuses**: `scripts/__tests__/install-agents.test.ts` temp-dir + plan/apply/uninstall convention; `apps/claude-plugin/hooks/__tests__/massa-ai-hook.test.ts` child-process convention
 **Requirement**: CPX-01..08 verification
 
 **Tools**:
@@ -224,10 +224,10 @@ T16 → T17 → T18 → T19 → T20
 
 ### T7: Create apps/cursor-plugin/ manifest + skills + MCP + hooks.json + agents
 
-**What**: Create the Cursor plugin directory: `skills/<name>/SKILL.md` (6 skills adapted from claude-plugin commands), `hooks/hooks.json` (7 Cursor events incl. `sessionStart` + `preCompact`), `mcp.json`, `agents/massa-th0th-navigator.md` (copied from claude-plugin), `.cursor-plugin/plugin.json` (optional manifest), and `hooks/massa-th0th-hook` symlink.
+**What**: Create the Cursor plugin directory: `skills/<name>/SKILL.md` (6 skills adapted from claude-plugin commands), `hooks/hooks.json` (7 Cursor events incl. `sessionStart` + `preCompact`), `mcp.json`, `agents/massa-ai-navigator.md` (copied from claude-plugin), `.cursor-plugin/plugin.json` (optional manifest), and `hooks/massa-ai-hook` symlink.
 **Where**: `apps/cursor-plugin/` (new directory)
 **Depends on**: T1 (binary has `pre-tool-use` entry)
-**Reuses**: `apps/claude-plugin/commands/*.md` → `skills/` (adapt to Cursor `SKILL.md` format per `cursor.com/docs/skills.md`), `apps/claude-plugin/agents/massa-th0th-navigator.md` (copy), `apps/claude-plugin/hooks/massa-th0th-hook.ts` (symlink)
+**Reuses**: `apps/claude-plugin/commands/*.md` → `skills/` (adapt to Cursor `SKILL.md` format per `cursor.com/docs/skills.md`), `apps/claude-plugin/agents/massa-ai-navigator.md` (copy), `apps/claude-plugin/hooks/massa-ai-hook.ts` (symlink)
 **Requirement**: CRS-01, CRS-03, CRS-04, CRS-05, CRS-06, CRS-08
 
 **Tools**:
@@ -236,11 +236,11 @@ T16 → T17 → T18 → T19 → T20
 
 **Done when**:
 - [ ] 6 `skills/<name>/SKILL.md` files exist with adapted content
-- [ ] `hooks/hooks.json` contains 7 events: `sessionStart`, `sessionEnd`, `beforeSubmitPrompt`, `preToolUse`, `postToolUse`, `preCompact`, `stop` — each pointing at the binary with `_massaTh0thOwned: true`
+- [ ] `hooks/hooks.json` contains 7 events: `sessionStart`, `sessionEnd`, `beforeSubmitPrompt`, `preToolUse`, `postToolUse`, `preCompact`, `stop` — each pointing at the binary with `_massaAiOwned: true`
 - [ ] `mcp.json` declares the MCP server
-- [ ] `agents/massa-th0th-navigator.md` copied
+- [ ] `agents/massa-ai-navigator.md` copied
 - [ ] `.cursor-plugin/plugin.json` optional manifest present
-- [ ] `hooks/massa-th0th-hook` symlink resolves
+- [ ] `hooks/massa-ai-hook` symlink resolves
 - [ ] Directory layout matches `vscode.cursor.plugins.registerPath` auto-discovery (`skills/`, `hooks/hooks.json`, `mcp.json`, `agents/`)
 - [ ] Gate: `bun test apps/cursor-plugin/__tests__/manifest.test.ts` passes (new)
 
@@ -251,7 +251,7 @@ T16 → T17 → T18 → T19 → T20
 
 ### T8: Create apps/cursor-plugin/install.sh
 
-**What**: Create the Cursor plugin installer with `--user`/`--project`/`--uninstall`. Copies to `~/.cursor/plugins/massa-th0th/` or `./.cursor/plugins/massa-th0th/`. Auto-writes `~/.cursor/hooks.json` with array-append merge (backup + marker). Prints MCP deconfliction hint.
+**What**: Create the Cursor plugin installer with `--user`/`--project`/`--uninstall`. Copies to `~/.cursor/plugins/massa-ai/` or `./.cursor/plugins/massa-ai/`. Auto-writes `~/.cursor/hooks.json` with array-append merge (backup + marker). Prints MCP deconfliction hint.
 **Where**: `apps/cursor-plugin/install.sh` (new)
 **Depends on**: T7 (plugin files exist)
 **Reuses**: Same conventions as T3 (Codex installer); `scripts/install-agents.ts` patterns
@@ -262,8 +262,8 @@ T16 → T17 → T18 → T19 → T20
 - Skill: NONE
 
 **Done when**:
-- [ ] `install.sh --user` copies to `~/.cursor/plugins/massa-th0th/` + merges `~/.cursor/hooks.json`
-- [ ] `install.sh --project` copies to `./.cursor/plugins/massa-th0th/` + merges `./.cursor/hooks.json`
+- [ ] `install.sh --user` copies to `~/.cursor/plugins/massa-ai/` + merges `~/.cursor/hooks.json`
+- [ ] `install.sh --project` copies to `./.cursor/plugins/massa-ai/` + merges `./.cursor/hooks.json`
 - [ ] Array-append merge preserves user hooks (backup first)
 - [ ] `install.sh --uninstall` removes only owned entries + plugin dir
 - [ ] Idempotent re-run
@@ -342,7 +342,7 @@ T16 → T17 → T18 → T19 → T20
 
 ### T12: Integrate into root install.sh menu + install-agents.ts hint
 
-**What**: Add menu choices to the root `install.sh` post-install menu for installing Codex/Cursor plugins (invoking the per-plugin `install.sh` with the same scope). Add a deconfliction hint print to `scripts/install-agents.ts` Codex/Cursor writers: "If you installed the massa-th0th plugin, MCP is already registered — skip this."
+**What**: Add menu choices to the root `install.sh` post-install menu for installing Codex/Cursor plugins (invoking the per-plugin `install.sh` with the same scope). Add a deconfliction hint print to `scripts/install-agents.ts` Codex/Cursor writers: "If you installed the massa-ai plugin, MCP is already registered — skip this."
 **Where**: root `install.sh` (~`:620` menu section), `scripts/install-agents.ts` (`CodexWriter.apply` `:424-444` + `CursorWriter.apply`)
 **Depends on**: T6, T11 (both plugins exist)
 **Reuses**: Existing root `install.sh` menu infrastructure; `install-agents.ts` writer pattern
@@ -434,10 +434,10 @@ T16 → T17 → T18 → T19 → T20
 
 ### T16: Extend apps/claude-plugin/install.sh with hooks auto-write
 
-**What**: Extend the existing `apps/claude-plugin/install.sh` to auto-write the Claude Code hooks block into `~/.claude/settings.json` (user) or `./.claude/settings.json` (project), using array-append merge + `_massaTh0thOwned` marker + backup. The hooks block uses Claude's nested matcher-group + `hooks[]` form with 5 events (SessionStart, UserPromptSubmit, PostToolUse, PreCompact, Stop), each pointing at the shared `massa-th0th-hook.ts` binary. Also add `--uninstall` flag to remove only owned hooks entries. Keep the existing command/agent copy behavior.
+**What**: Extend the existing `apps/claude-plugin/install.sh` to auto-write the Claude Code hooks block into `~/.claude/settings.json` (user) or `./.claude/settings.json` (project), using array-append merge + `_massaAiOwned` marker + backup. The hooks block uses Claude's nested matcher-group + `hooks[]` form with 5 events (SessionStart, UserPromptSubmit, PostToolUse, PreCompact, Stop), each pointing at the shared `massa-ai-hook.ts` binary. Also add `--uninstall` flag to remove only owned hooks entries. Keep the existing command/agent copy behavior.
 **Where**: `apps/claude-plugin/install.sh` (modify), `apps/claude-plugin/__tests__/install.test.ts` (new)
 **Depends on**: T15 (Phase 3 complete, binary has all 6 EVENT_MAP entries)
-**Reuses**: Codex/Cursor installer array-append merge pattern; `settings.json.template` content as the hooks block source; `_massaTh0thOwned` marker from `install-agents.ts`
+**Reuses**: Codex/Cursor installer array-append merge pattern; `settings.json.template` content as the hooks block source; `_massaAiOwned` marker from `install-agents.ts`
 **Requirement**: INS-08, INS-09 (Claude hooks auto-write + idempotency)
 
 **Tools**:
@@ -459,7 +459,7 @@ T16 → T17 → T18 → T19 → T20
 
 ### T17: Extend root install.sh plugin menu to all four tools
 
-**What**: Extend the `install_plugins_menu()` function in root `install.sh` (added in T12) from 3 options (Codex/Cursor/Both) to 5 options: 1) Claude Code, 2) Codex, 3) Cursor, 4) OpenCode, 5) All four. The Claude option invokes `apps/claude-plugin/install.sh`. The OpenCode option prints the `npm install @massa-th0th/opencode-plugin` command and the `opencode.json` config snippet (or source-build instructions if from source). "All four" invokes all installers in sequence.
+**What**: Extend the `install_plugins_menu()` function in root `install.sh` (added in T12) from 3 options (Codex/Cursor/Both) to 5 options: 1) Claude Code, 2) Codex, 3) Cursor, 4) OpenCode, 5) All four. The Claude option invokes `apps/claude-plugin/install.sh`. The OpenCode option prints the `npm install @massa-ai/opencode-plugin` command and the `opencode.json` config snippet (or source-build instructions if from source). "All four" invokes all installers in sequence.
 **Where**: root `install.sh` `install_plugins_menu()` (modify), `scripts/__tests__/root-install-menu.test.ts` (extend)
 **Depends on**: T16 (Claude installer has hooks auto-write)
 **Reuses**: Existing `install_plugins_menu()` infrastructure from T12
@@ -484,7 +484,7 @@ T16 → T17 → T18 → T19 → T20
 
 ### T18: Add install-agents.ts deconfliction hints for Claude + OpenCode
 
-**What**: Add deconfliction hints to `ClaudeCodeWriter.apply()` and `OpenCodeWriter.apply()` in `scripts/install-agents.ts`, matching the pattern from T12 (Codex/Cursor hints). After a successful write, print: "If you installed the massa-th0th Claude plugin (apps/claude-plugin/install.sh), hooks are already wired — skip this." / "If you installed the massa-th0th OpenCode plugin (@massa-th0th/opencode-plugin), hooks are already wired — skip this."
+**What**: Add deconfliction hints to `ClaudeCodeWriter.apply()` and `OpenCodeWriter.apply()` in `scripts/install-agents.ts`, matching the pattern from T12 (Codex/Cursor hints). After a successful write, print: "If you installed the massa-ai Claude plugin (apps/claude-plugin/install.sh), hooks are already wired — skip this." / "If you installed the massa-ai OpenCode plugin (@massa-ai/opencode-plugin), hooks are already wired — skip this."
 **Where**: `scripts/install-agents.ts` (modify), `scripts/__tests__/install-agents.test.ts` (extend)
 **Depends on**: T16
 **Reuses**: T12 hint pattern (Codex/Cursor)
@@ -652,7 +652,7 @@ All validations pass. No ❌ violations.
 
 ## MCP and Skill Question
 
-For all tasks: no MCP or skill materially changes implementation or verification. The work is bash scripts, JSON manifests, markdown skills, and bun:test tests — all within the existing toolchain. The `massa-th0th` skill (Execute flow) is the only skill activated, per the Execution Protocol.
+For all tasks: no MCP or skill materially changes implementation or verification. The work is bash scripts, JSON manifests, markdown skills, and bun:test tests — all within the existing toolchain. The `massa-ai` skill (Execute flow) is the only skill activated, per the Execution Protocol.
 
 ---
 

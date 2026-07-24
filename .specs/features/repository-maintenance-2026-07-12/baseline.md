@@ -3,7 +3,7 @@
 - HEAD: `81d33606fb6826e1759a073006b165419d0e3ba4`; branch: `main`
 - Dirty patch SHA-256: `a4233b365819c931418a10119ef94d08efe45998713636644142d199e590ac0b`
 - Bun `1.3.11`; Node `v25.9.0`; Git `2.49.0`
-- Shared API: PID `9754`; health `ok`; service `massa-th0th-tools-api`; version `1.0.0`
+- Shared API: PID `9754`; health `ok`; service `massa-ai-tools-api`; version `1.0.0`
 - Sandbox note: shared API health needs host-network access.
 
 ## User-Owned Dirty Files

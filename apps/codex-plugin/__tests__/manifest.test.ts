@@ -6,8 +6,8 @@
  * - .codex-plugin/plugin.json has name, version, description, skills, mcp, hooks
  * - 6 skills/*.md files exist (map, index, find, def, graph, status)
  * - hooks/hooks.json has exactly 6 event keys, each with an owned entry
- * - .mcp.json declares the massa-th0th MCP server (npx @massa-th0th/mcp-client)
- * - hooks/massa-th0th-hook symlink resolves to the claude-plugin binary
+ * - .mcp.json declares the massa-ai MCP server (npx @massa-ai/mcp-client)
+ * - hooks/massa-ai-hook symlink resolves to the claude-plugin binary
  */
 
 import { describe, test, expect } from "bun:test";
@@ -18,7 +18,7 @@ const PLUGIN_ROOT = path.resolve(import.meta.dir, "..");
 const REPO_ROOT = path.resolve(PLUGIN_ROOT, "../..");
 const CLAUDE_PLUGIN_BIN = path.resolve(
   REPO_ROOT,
-  "apps/claude-plugin/hooks/massa-th0th-hook.ts",
+  "apps/claude-plugin/hooks/massa-ai-hook.ts",
 );
 
 async function readJson(p: string): Promise<Record<string, unknown>> {
@@ -71,30 +71,30 @@ describe("codex-plugin manifest (T5 / CPX-01,03,04,05)", () => {
       expect(arr.length).toBeGreaterThanOrEqual(1);
       const owned = arr.find(
         (e) =>
-          (e as Record<string, unknown>)._massaTh0thOwned === true,
+          (e as Record<string, unknown>)._massaAiOwned === true,
       );
       expect(owned).toBeDefined();
       // Each owned entry points at the binary with a subcommand
       const cmd = (owned as Record<string, unknown>).command as string;
-      expect(cmd).toContain("massa-th0th-hook");
+      expect(cmd).toContain("massa-ai-hook");
     }
   });
 
-  test(".mcp.json declares massa-th0th MCP server with npx @massa-th0th/mcp-client", async () => {
+  test(".mcp.json declares massa-ai MCP server with npx @massa-ai/mcp-client", async () => {
     const mcp = await readJson(path.join(PLUGIN_ROOT, ".mcp.json"));
     expect(mcp).toHaveProperty("mcpServers");
     const servers = mcp.mcpServers as Record<string, Record<string, unknown>>;
-    expect(servers).toHaveProperty("massa-th0th");
-    const entry = servers["massa-th0th"];
+    expect(servers).toHaveProperty("massa-ai");
+    const entry = servers["massa-ai"];
     const cmd = entry.command as unknown[];
     expect(Array.isArray(cmd)).toBe(true);
     expect(cmd).toContain("npx");
-    expect(cmd).toContain("@massa-th0th/mcp-client");
-    expect(entry.env).toHaveProperty("MASSA_TH0TH_API_URL");
+    expect(cmd).toContain("@massa-ai/mcp-client");
+    expect(entry.env).toHaveProperty("MASSA_AI_API_URL");
   });
 
-  test("hooks/massa-th0th-hook symlink resolves to the claude-plugin binary", async () => {
-    const linkPath = path.join(PLUGIN_ROOT, "hooks/massa-th0th-hook");
+  test("hooks/massa-ai-hook symlink resolves to the claude-plugin binary", async () => {
+    const linkPath = path.join(PLUGIN_ROOT, "hooks/massa-ai-hook");
     const stat = await fs.lstat(linkPath);
     expect(stat.isSymbolicLink()).toBe(true);
     const target = await fs.readlink(linkPath);

@@ -12,9 +12,9 @@ claude-code (`~/.claude/settings.json`), claude-desktop macOS (`~/Library/Applic
 Gemini, Grok, Devin — `install.sh` prints no config shapes for them; formats unstated. Document shapes first, then add writers. Skill-root file copies (slash commands, navigator subagent) still owned by `apps/claude-plugin/install.sh`; consolidation behind the same AgentWriter interface is a follow-up.
 
 ## Behavior
-- Deep-merge preserves every user key; only the massa-th0th-owned entry is replaced (carries a namespaced `_massaTh0thOwned` marker for exact uninstall).
-- Backup `<path>.massa-th0th.bak-<ts>` before every write (dir ensured first).
-- `--dry-run` prints diff, writes nothing, no backup. `--uninstall` removes only massa-th0th keys, drops emptied `mcpServers`. Idempotent (second run = 0 writes / 0 backups).
+- Deep-merge preserves every user key; only the massa-ai-owned entry is replaced (carries a namespaced `_massaAiOwned` marker for exact uninstall).
+- Backup `<path>.massa-ai.bak-<ts>` before every write (dir ensured first).
+- `--dry-run` prints diff, writes nothing, no backup. `--uninstall` removes only massa-ai keys, drops emptied `mcpServers`. Idempotent (second run = 0 writes / 0 backups).
 - Flags: `--dry-run --uninstall --agent <name> --target <dir> --api-base <url> --yes`.
 
 ## Home-write safety
@@ -26,7 +26,7 @@ Gemini, Grok, Devin — `install.sh` prints no config shapes for them; formats u
 - CLI smoke (tmpdir): dry-run 0 writes / 5-change diff; real 5 writes + 5 backups; second run 0/0; no-consent exit 13.
 
 ## SPEC_DEVIATION
-TOML parser is hand-rolled and scoped to `[mcp_servers.*]` (not a full AST); user content outside our table is byte-passthrough — backup protects on malformed input. `_massaTh0thOwned` marker is visible to users (namespaced boolean, required for safe uninstall).
+TOML parser is hand-rolled and scoped to `[mcp_servers.*]` (not a full AST); user content outside our table is byte-passthrough — backup protects on malformed input. `_massaAiOwned` marker is visible to users (namespaced boolean, required for safe uninstall).
 
 ## Residual risk
 - Scoped TOML parser (backup mitigates).

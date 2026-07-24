@@ -4,22 +4,22 @@
 
 User request, answered via four clarifying questions:
 
-1. **Destination repo** → massa-th0th product repo (cwd). Move both agents and the workflow skill into the cwd. Useful-Agent-Skills keeps its copy; the user decides its lifecycle separately.
+1. **Destination repo** → massa-ai product repo (cwd). Move both agents and the workflow skill into the cwd. Useful-Agent-Skills keeps its copy; the user decides its lifecycle separately.
 2. **Invocation style** → Named dispatch blocks. Each workflow replaces duplicated inline prompt text with a compact dispatch block carrying the capability-packet fields (role/purpose/trigger/scope/permissions/inputs/sensors/output/firewall/memory) per `agent-orchestration.md:74-87`.
 3. **Workflow scope** → All workflows with duplication. Rewrite every workflow that contains duplicated inline prompt sections that map to an existing agent charter.
 4. **Plan challenge** → Full The Fool. spec-driven + >5 files + cross-repo contracts trigger the full gate per `AGENTS.md` Plan Challenge Policy.
 
 ## Two-Repo Starting State (verified by source inspection)
 
-- **Product repo (cwd)** `/Users/luizmassa/Personal Projects/massa-th0th/`:
-  - `skills/<name>/SKILL.md` for 12 specialists + 2 meta-skills (`massa-th0th-memory`, `synapse-usage`)
+- **Product repo (cwd)** `/Users/luizmassa/Personal Projects/massa-ai/`:
+  - `skills/<name>/SKILL.md` for 12 specialists + 2 meta-skills (`massa-ai-memory`, `synapse-usage`)
   - `skills/AGENTS.md` — sub-agent registry (12 agents, capability packet, output contract, role-mapping table)
   - `scripts/generate-subagent-artifacts.ts` — reads `skills/<name>/SKILL.md`, emits 48 host agent files into `apps/*/agents/`, `--check` drift gate
   - `scripts/install-agents.ts` — writes MCP config into host agent config files (unaffected by the move)
   - Prior feature `subagent-skills-plugin-parity` is COMPLETE + validated PASS; `skills/AGENTS.md:99` notes the follow-up this feature implements
 
 - **Useful-Agent-Skills** `/Users/luizmassa/Personal Projects/Useful-Agent-Skills/`:
-  - `skills/massa-th0th/` = `SKILL.md` (router) + `workflows/` (39 files, ~2759 LOC) + `references/` (~30 files) + `scripts/lessons.py`
+  - `skills/massa-ai/` = `SKILL.md` (router) + `workflows/` (39 files, ~2759 LOC) + `references/` (~30 files) + `scripts/lessons.py`
   - Workflows use pre-consolidation role names: `investigator`, `implementer`, `verifier`, `domain-mapper`, `coupling-auditor`, `deepening-architect`, `plan-critic`, `furps-analyst`, `handoff-writer`
   - Workflows carry duplicated inline blocks: scope-resolution prose, false-positive pass, severity rules, "Use subagents only when useful"
 
@@ -77,10 +77,10 @@ Already role-based; stays as prompt-contract dispatch (no charter).
 
 ## Decisions
 
-- AD-WAC-001: Destination = product repo (cwd). Agents → `skills/agents/`; workflow skill → `skills/massa-th0th/`.
+- AD-WAC-001: Destination = product repo (cwd). Agents → `skills/agents/`; workflow skill → `skills/massa-ai/`.
 - AD-WAC-002: Invocation = named dispatch blocks with capability-packet fields.
 - AD-WAC-003: Scope = all 39 workflows; only those with duplication get rewritten, the rest are copied as-is.
-- AD-WAC-004: `massa-th0th-memory` and `synapse-usage` stay at `skills/` top level (meta-skills, excluded by generator).
+- AD-WAC-004: `massa-ai-memory` and `synapse-usage` stay at `skills/` top level (meta-skills, excluded by generator).
 - AD-WAC-005: `plan-critic`, `furps-analyst`, `handoff-writer` stay role-based dispatches (no charter).
 - AD-WAC-006: `audit-specialist` lens config stays in its charter; workflows name the lens in the dispatch `inputs` field, not inline.
 - AD-WAC-007: Useful-Agent-Skills source tree is left untouched; the user decides its lifecycle separately.

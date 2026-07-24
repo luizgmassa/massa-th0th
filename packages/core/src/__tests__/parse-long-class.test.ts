@@ -13,7 +13,7 @@ afterEach(async () => {
 
 describeNative("ParseStage long blocks", () => {
   test("keeps a class spanning more than 500 lines as the caller of its edges", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-long-class-"));
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-long-class-"));
     tempDirs.push(dir);
     const filePath = path.join(dir, "long-service.ts");
     const filler = Array.from({ length: 510 }, (_, i) => `  // filler ${i}`).join("\n");

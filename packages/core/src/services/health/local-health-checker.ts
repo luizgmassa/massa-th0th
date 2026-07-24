@@ -1,6 +1,6 @@
 /** PostgreSQL/pgvector health checks used by local system status endpoints. */
-import { config, logger } from "@massa-th0th/shared";
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { config, logger } from "@massa-ai/shared";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import { getPgPool } from "../../data/db-connection.js";
 import fs from "fs/promises";
 import { existsSync } from "fs";

@@ -8,7 +8,7 @@
  * host process on a store init error.
  */
 
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import type { ScheduledJobStore } from "./scheduler-store.js";
 
 let cachedStore: ScheduledJobStore | null = null;

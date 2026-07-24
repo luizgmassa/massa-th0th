@@ -13,7 +13,7 @@
  *
  * Gate: runs only with IDENTITY_ACCEPTANCE_DATABASE_URL pointing at an OWNED
  * database with all migrations deployed (the T6 gate provisions
- * `massa_th0th_identity_t6` via prisma migrate deploy). Skipped otherwise —
+ * `massa_ai_identity_t6` via prisma migrate deploy). Skipped otherwise —
  * recorded in validation.md, never weakened.
  */
 

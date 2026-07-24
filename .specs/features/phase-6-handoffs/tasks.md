@@ -52,7 +52,7 @@ One atomic commit per task. Conventional Commits. Branch `main`.
   (P6-BEGIN/ACCEPT/CANCEL/FAIL/SEARCH/DUALWRITE/AUTOINJECT/EVENT/DEGRADE/TOOL/MIGRATION).
 - Discrimination sensor (mutate accept status-guard → P6-FAIL-02 fails).
 - `handoff-repository.test.ts`: SqliteHandoffStore direct unit test.
-- Run gates: `bun run --filter @massa-th0th/core test` (no regressions vs
+- Run gates: `bun run --filter @massa-ai/core test` (no regressions vs
   754), `bun run type-check` (clean).
 - `validation.md` (verdict, per-AC evidence, gate output, discrimination
   sensor, accepted assumptions, same-author caveat).

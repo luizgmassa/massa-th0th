@@ -1,16 +1,16 @@
 # Wave 5 — Cross-pollination Spec
 
-- projectId: `massa-th0th`
+- projectId: `massa-ai`
 - workflowSessionId: `spec-wave-5`
 - workflow: spec-driven (Large/Complex)
 - branch: `wave-5` (off `main` post-`92b7fb4`)
 - baseline: `92b7fb4` (Wave 4 head)
-- source plan: `~/Downloads/massa-th0th-improvement-plan-v3.md` Wave 5
+- source plan: `~/Downloads/massa-ai-improvement-plan-v3.md` Wave 5
 - gray-area resolutions: see `context.md` "Gray areas needing resolution" — all closed
 
 ## Objective
 
-Port the highest-impact cbm/ai-memory delta features onto massa-th0th's existing
+Port the highest-impact cbm/ai-memory delta features onto massa-ai's existing
 `architecture.ts` / `impact-analysis.ts` / `serialize.ts` / ETL pipeline / scheduler /
 Synapse API / MCP surface, without regressing Wave 4 correctness or Wave 3 native runtime.
 
@@ -73,7 +73,7 @@ prefix quotient and `(other)` overflow past a cap (default 20). Reuses the exist
 **FR-05 — Multi-source BFS recursive CTE (additive)**
 New SQL path: temp-table anchor over changed files, recursive CTE over
 `symbol_imports` with `NOT IN` seed exclusion, `MIN(hop)`, `(hop, file_id)` ordering,
-`*truncated` ceiling at `MAX_IMPACTED`. Gated by `MASSA_TH0TH_IMPACT_BFS_CTE=true`
+`*truncated` ceiling at `MAX_IMPACTED`. Gated by `MASSA_AI_IMPACT_BFS_CTE=true`
 (default off). TS reverse-import BFS retained as fallback + parity oracle. Parity
 test asserts both paths produce identical `impacted` sets on a frozen fixture.
 
@@ -102,7 +102,7 @@ Prisma model added. Repository mirrors `graph-generation-repository-pg.ts` patte
 **FR-09 — Lease-based single-writer for indexing**
 `IndexProjectTool` + auto-reindex path acquire a `managed_runs` lease (`run_kind='indexing'`)
 before ETL starts; 90s expiry + 30s heartbeat; release on terminal state. Concurrent
-`th0th_index`/`th0th_reindex` on the same project gets `409 busy` with the active run id.
+`index`/`th0th_reindex` on the same project gets `409 busy` with the active run id.
 
 **FR-10 — Idempotent incremental import**
 Each ETL file-batch event has `event_id = SHA-256(source_record || content_hash)`.
@@ -118,14 +118,14 @@ New `packages/core/src/services/search/capture-policy.ts` (pure, no I/O):
 - `denyUnknownFields: true` (reject unknown policy keys)
 - `applyPolicy(filePath, policy): Disposition`
 Existing `DEFAULT_IGNORES` migrates into a default policy. Loaded from config
-(`capturePolicy` block in `massa-th0th-config.ts`). `loadProjectIgnore` becomes a
+(`capturePolicy` block in `massa-ai-config.ts`). `loadProjectIgnore` becomes a
 thin wrapper over the policy module. Server-side re-validation on config load.
 
 **FR-12 — Filesystem-side path containment for `read_file`**
 `packages/core/src/tools/read_file.ts` imports `sanitizeFilePath` from
 `packages/shared/src/utils/sanitizer.ts`. Absolute paths must resolve under one of:
 the project root (`projectPath` arg), `cwd`, or an explicit allowlist env var
-`MASSA_TH0TH_READ_FILE_ROOTS` (colon-separated). Outside → teaching error with
+`MASSA_AI_READ_FILE_ROOTS` (colon-separated). Outside → teaching error with
 valid roots. Does not regress the existing 500-line cap (Wave 4 N9).
 
 ### Persisted scheduler (Theme B extension)
@@ -245,7 +245,7 @@ verbatim — no re-implementation. Interface drift blocks the batch (failing tes
 - **AC-4 (FR-04)**: mcp-client `impact_analysis` schema enum includes `"all"`; calling
   with `scope:"all"` reaches the service unchanged; calling with an unknown aspect on
   `get_architecture` returns a Wave-4-N6 teaching error listing valid values.
-- **AC-5 (FR-05)**: With `MASSA_TH0TH_IMPACT_BFS_CTE=true`, `impact_analysis` produces
+- **AC-5 (FR-05)**: With `MASSA_AI_IMPACT_BFS_CTE=true`, `impact_analysis` produces
   an `impacted[]` set identical (same FQNs, same depths, modulo sort) to the TS path
   on the frozen characterization fixture. SQL path does not issue per-FQN follow-up
   queries (single CTE).
@@ -253,7 +253,7 @@ verbatim — no re-implementation. Interface drift blocks the batch (failing tes
   `impact_analysis` / `get_references` / `get_architecture` emits the grouped text-indented
   shape; `format:"json"` emits the same grouped model as JSON. Both go through one shared
   helper (asserted by a test that mutates the helper and observes both formats change).
-- **AC-7 (FR-08, FR-09)**: Two concurrent `th0th_index` calls on the same `projectId`:
+- **AC-7 (FR-08, FR-09)**: Two concurrent `index` calls on the same `projectId`:
   the first acquires the lease (status 202 with run id); the second gets `409 busy`
   with the active run id. Stopping the first process mid-run lets the lease expire;
   the next call acquires after `lease_expires_at`.

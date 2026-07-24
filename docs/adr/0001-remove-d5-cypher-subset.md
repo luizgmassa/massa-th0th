@@ -6,7 +6,7 @@
 
 ## Context
 
-The massa-th0th roadmap originally included a "D5 Cypher subset" as a deferred capability — a bounded Cypher query language layer over the symbol graph. The deferral was recorded in `.specs/features/native-ts-platform-expansion/design.md` and `TODO.md`, pending the completion of D1–D4 (native tree-sitter structural indexing across 33 extensions).
+The massa-ai roadmap originally included a "D5 Cypher subset" as a deferred capability — a bounded Cypher query language layer over the symbol graph. The deferral was recorded in `.specs/features/native-ts-platform-expansion/design.md` and `TODO.md`, pending the completion of D1–D4 (native tree-sitter structural indexing across 33 extensions).
 
 D1–D4 equivalent work is now complete:
 - Native Tree-sitter structural indexing ships across 33 canonical extensions
@@ -37,5 +37,5 @@ D1–D4 equivalent work is now complete:
 
 - `native-ts-platform-expansion/design.md` D5 reference updated to "closed/superseded by ADR 0001"
 - `TODO.md` (if it exists) D5 reference removed
-- No Cypher query language will be added to massa-th0th
+- No Cypher query language will be added to massa-ai
 - Users wanting graph queries use `trace_path`, `impact_analysis`, or `get_architecture`

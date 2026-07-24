@@ -9,7 +9,7 @@ afterEach(() => {
 
 describe("Tools API PostgreSQL startup validation", () => {
   test("rejects missing, malformed, non-PostgreSQL, and database-less URLs", () => {
-    delete process.env.MASSA_TH0TH_DEDICATED;
+    delete process.env.MASSA_AI_DEDICATED;
 
     for (const value of [undefined, "", "not a url", "mysql://u:p@localhost/app", "postgresql://u:p@localhost/"]) {
       if (value === undefined) delete process.env.DATABASE_URL;
@@ -19,8 +19,8 @@ describe("Tools API PostgreSQL startup validation", () => {
   });
 
   test("accepts PostgreSQL URLs with an explicit database", () => {
-    delete process.env.MASSA_TH0TH_DEDICATED;
-    process.env.DATABASE_URL = "postgresql://user:password@localhost:5432/massa_th0th_test";
+    delete process.env.MASSA_AI_DEDICATED;
+    process.env.DATABASE_URL = "postgresql://user:password@localhost:5432/massa_ai_test";
     expect(validateApiStartup()).toBe(process.env.DATABASE_URL);
   });
 });

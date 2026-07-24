@@ -5,7 +5,7 @@
  * config reader. Also VALID_MEMORY_TYPES for apply validation.
  */
 
-import { config, MemoryType } from "@massa-th0th/shared";
+import { config, MemoryType } from "@massa-ai/shared";
 import type { PatternThresholds } from "./auto-improve-job.js";
 
 export const DEFAULT_THRESHOLDS: PatternThresholds = {

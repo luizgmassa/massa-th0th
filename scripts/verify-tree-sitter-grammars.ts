@@ -476,8 +476,8 @@ export function verifyStaticContract(): {
     "core must bundle the patched tree-sitter runtime",
   );
   invariant(
-    corePackage.dependencies?.["@massa-th0th/shared"] === "1.1.0",
-    "core must publish a semver dependency on @massa-th0th/shared",
+    corePackage.dependencies?.["@massa-ai/shared"] === "1.1.0",
+    "core must publish a semver dependency on @massa-ai/shared",
   );
   const patchPath = resolve(ROOT, TREE_SITTER_PATCH.path);
   invariant(existsSync(patchPath) && statSync(patchPath).isFile(), `patch is missing: ${patchPath}`);

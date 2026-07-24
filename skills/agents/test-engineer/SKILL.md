@@ -50,7 +50,7 @@ Generate a testing strategy that covers unit, integration, edge cases, negative 
 - No acceptance criteria or spec exists.
 - The task is a docs-only change with no testable behavior.
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: summarize test output; return the plan and coverage map, not raw logs.
 - Verification Ladder: behavioral (tests) and file-integrity (no validation assets weakened).
 - Th0th Memory: suggest durable test-pattern memories only when a testing convention is established; main agent persists.

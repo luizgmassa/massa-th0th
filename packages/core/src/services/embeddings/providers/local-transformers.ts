@@ -30,7 +30,7 @@
 import type { EmbeddingProvider } from "../provider.js";
 import type { EmbeddingProviderConfig } from "../config.js";
 import { metrics } from "../../monitoring/metrics.js";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 /**
  * Default transformers.js model. all-MiniLM-L6-v2 is a small (~25MB ONNX),

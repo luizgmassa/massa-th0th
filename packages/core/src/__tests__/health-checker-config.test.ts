@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test";
 
-mock.module("@massa-th0th/shared", () => ({
+mock.module("@massa-ai/shared", () => ({
   config: {
     get: (key: string) => {
       if (key === "embedding") return { model: "qwen3-embedding:8b" };
-      if (key === "dataDir") return "/tmp/massa-th0th-test";
+      if (key === "dataDir") return "/tmp/massa-ai-test";
       return undefined;
     },
     getAll: () => ({
@@ -63,11 +63,11 @@ describe("health-checker embedding model config", () => {
   });
 
   it("checkOllama falls back to nomic-embed-text:latest when config model is undefined", async () => {
-    mock.module("@massa-th0th/shared", () => ({
+    mock.module("@massa-ai/shared", () => ({
       config: {
         get: (key: string) => {
           if (key === "embedding") return { model: undefined };
-          if (key === "dataDir") return "/tmp/massa-th0th-test";
+          if (key === "dataDir") return "/tmp/massa-ai-test";
           return undefined;
         },
         getAll: () => ({

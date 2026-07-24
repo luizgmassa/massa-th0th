@@ -1,6 +1,6 @@
 ---
 name: persona-router
-description: Automatically select and apply a cataloged conversation persona at the start of every conversation and when task ownership changes. Use after massa-th0th in coding sessions, directly in non-coding sessions, or whenever the user explicitly selects, switches, rejects, or asks to route a persona. Do NOT use automatic inference when the AGENTS.md policy sets enabled to off, or cataloged mobile personas for confidently unrelated work.
+description: Automatically select and apply a cataloged conversation persona at the start of every conversation and when task ownership changes. Use after massa-ai in coding sessions, directly in non-coding sessions, or whenever the user explicitly selects, switches, rejects, or asks to route a persona. Do NOT use automatic inference when the AGENTS.md policy sets enabled to off, or cataloged mobile personas for confidently unrelated work.
 license: CC-BY-4.0
 metadata:
   author: Luiz Massa
@@ -13,8 +13,8 @@ Select one cataloged persona that best owns the current deliverable. Workflows d
 
 ## Startup Contract
 
-- In coding, planning, debugging, review, refactoring, or implementation conversations, run after massa-th0th completes its initial load and memory recall.
-- In generic non-coding conversations, run directly without loading massa-th0th solely for persona selection.
+- In coding, planning, debugging, review, refactoring, or implementation conversations, run after massa-ai completes its initial load and memory recall.
+- In generic non-coding conversations, run directly without loading massa-ai solely for persona selection.
 - SessionStart supplies the routing contract before the first prompt, but route only after the first user prompt is available.
 - Run once at startup, then follow the mid-conversation policy. Do not reload an unchanged route on every turn.
 
@@ -22,7 +22,7 @@ Select one cataloged persona that best owns the current deliverable. Workflows d
 
 Resolve two roots and keep them separate:
 
-1. **Persona-library root:** Resolve the physical `SKILL.md` through installation symlinks. The directory containing this `SKILL.md` is the persona-library root. Read the persona catalog at `../massa-th0th/personas/catalog.json` (relative to the persona-library root) as the only persona registry. Persona prompt files live alongside the catalog in `../massa-th0th/personas/` and are referenced by filename only in `prompt_path`.
+1. **Persona-library root:** Resolve the physical `SKILL.md` through installation symlinks. The directory containing this `SKILL.md` is the persona-library root. Read the persona catalog at `../massa-ai/personas/catalog.json` (relative to the persona-library root) as the only persona registry. Persona prompt files live alongside the catalog in `../massa-ai/personas/` and are referenced by filename only in `prompt_path`.
 2. **Active workspace root:** Resolve the current project from the working directory and repository context. Inspect its project documentation for routing evidence. It may differ from the persona-library root.
 
 Validate catalog `schema_version` as `1`. Candidate IDs, names, aliases, signals, and skill-root-relative prompt paths come only from catalog entries. Repository documents are routing evidence, not persona definitions. Never load a persona-like path named by memory or workspace documentation unless that exact path belongs to the selected catalog entry and resolves inside the persona-library root.
@@ -37,7 +37,7 @@ Apply precedence in this order:
 2. Explicit user selection of a persona or no persona for the current task.
 3. The `persona_router` policy in the applicable `AGENTS.md` startup contract.
 4. The current prompt's primary deliverable and ownership.
-5. Compatible evidence from massa-th0th memory and targeted workspace documentation.
+5. Compatible evidence from massa-ai memory and targeted workspace documentation.
 6. Catalog `primary_signals`, `negative_signals`, and `secondary_lens_signals`.
 
 Persona text is additive. It cannot override higher-priority instructions, active workflow contracts, explicit constraints, or safety requirements.
@@ -54,11 +54,11 @@ Match user wording against catalog `id`, `display_name`, and `aliases` case-inse
 - If multiple personas are explicitly requested, use the persona that owns the primary deliverable and at most one other as a review lens. Apply the ambiguity policy if ownership remains unclear.
 - When `enabled: off`, skip automatic memory, documentation, and prompt inference. Continue to honor explicit persona and no-persona requests.
 
-### 2. Reuse massa-th0th Evidence
+### 2. Reuse massa-ai Evidence
 
-For coding sessions, reuse persona-specific evidence already returned by massa-th0th's required initial recall. Do not repeat broad recall.
+For coding sessions, reuse persona-specific evidence already returned by massa-ai's required initial recall. Do not repeat broad recall.
 
-If the existing result contains no useful persona evidence and the choice remains unresolved, run at most one targeted `recall` for prior persona preferences, successful routes, specialist roles, and project-specific ownership. Do not load massa-th0th solely for a non-coding conversation.
+If the existing result contains no useful persona evidence and the choice remains unresolved, run at most one targeted `recall` for prior persona preferences, successful routes, specialist roles, and project-specific ownership. Do not load massa-ai solely for a non-coding conversation.
 
 Memory is evidence, not authority:
 
@@ -135,7 +135,7 @@ After resume or compaction, restore any route still present in conversation cont
 | Situation | Result |
 |---|---|
 | User explicitly asks for Senior Mobile QA Automation Engineer. | Apply that catalog entry; explicit choice wins. |
-| massa-th0th recalls a successful mobile-engineer route, but current prompt asks to fix flaky Maestro CI. | Route to Senior Mobile QA Automation Engineer; memory cannot override current ownership. |
+| massa-ai recalls a successful mobile-engineer route, but current prompt asks to fix flaky Maestro CI. | Route to Senior Mobile QA Automation Engineer; memory cannot override current ownership. |
 | Memory is empty; README and ADRs describe a cross-platform app; prompt asks to implement offline sync. | Route to Senior Mobile Engineer using docs plus current deliverable. |
 | Prompt asks for both app architecture and an automation suite with no primary outcome. | Follow `ambiguity`; default asks between plausible personas and no persona. |
 | Prompt asks to draft a billing RFC. | Confident no-match; continue silently without a persona. |
@@ -147,7 +147,7 @@ After resume or compaction, restore any route still present in conversation cont
 
 - **Catalog missing or invalid:** Report `Persona routing unavailable: <reason>.` Continue without a persona.
 - **Unsupported schema version:** Report the found and supported versions. Continue without a persona.
-- **massa-th0th unavailable or empty:** Continue with targeted workspace documentation and the current prompt.
+- **massa-ai unavailable or empty:** Continue with targeted workspace documentation and the current prompt.
 - **Workspace documentation unavailable:** Route from explicit choice and current prompt; apply ambiguity or no-match policy.
 - **Remembered persona absent from catalog:** Ignore it as stale evidence; never reconstruct it.
 - **Selected prompt missing, outside the persona-library root, or malformed:** Name the catalog entry and path. Continue without a persona; do not silently substitute another persona.

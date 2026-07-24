@@ -333,14 +333,14 @@ Four POSIX shell scripts, one per Claude Code hook:
 - `post-tool-use.sh` ← `PostToolUse`
 - `stop.sh` ← `Stop`
 
-Each reads `$MASSA_TH0TH_API_BASE` (default `http://localhost:3333`) and optional
-`$MASSA_TH0TH_API_KEY`, builds a JSON body from stdin/env, and:
+Each reads `$MASSA_AI_API_BASE` (default `http://localhost:3333`) and optional
+`$MASSA_AI_API_KEY`, builds a JSON body from stdin/env, and:
 ```sh
 command -v curl >/dev/null 2>&1 || exit 0
 curl -sS -m 2 -o /dev/null \
   -H "Content-Type: application/json" \
-  ${MASSA_TH0TH_API_KEY:+-H "x-api-key: $MASSA_TH0TH_API_KEY"} \
-  -X POST "$MASSA_TH0TH_API_BASE/api/v1/hook" \
+  ${MASSA_AI_API_KEY:+-H "x-api-key: $MASSA_AI_API_KEY"} \
+  -X POST "$MASSA_AI_API_BASE/api/v1/hook" \
   --data "$BODY" 2>/dev/null || true
 exit 0
 ```
@@ -369,7 +369,7 @@ existing `memory_update`.
 | Queue saturated | route returns 429 + Retry-After; caller retries. |
 | `curl` missing / API down (hook script) | exit 0, no output, agent unaffected. |
 
-## 12. Test strategy (no @massa-th0th/shared mock)
+## 12. Test strategy (no @massa-ai/shared mock)
 
 Following the Phase-1/2 rule (`memory-crud.test.ts` is the only file mocking
 shared config), Phase-3 tests:

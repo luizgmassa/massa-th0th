@@ -44,7 +44,7 @@ describe("graph generation migration sensors", () => {
 });
 
 const runIntegration = process.env.RUN_GRAPH_GENERATION_MIGRATION === "1" &&
-  process.env.MASSA_TH0TH_DEDICATED === "1";
+  process.env.MASSA_AI_DEDICATED === "1";
 const adminUrl = process.env.GRAPH_GENERATION_TEST_ADMIN_URL;
 const databaseName = `massa_graph_migration_${process.pid}_${Date.now()}`;
 let admin: Client | undefined;
@@ -65,7 +65,7 @@ afterAll(async () => {
 describe.skipIf(!runIntegration)("owned PostgreSQL graph migration", () => {
   test("backfills populated and empty workspaces without changing legacy rows", async () => {
     expect(adminUrl).toBeTruthy();
-    expect(process.env.MASSA_TH0TH_DEDICATED).toBe("1");
+    expect(process.env.MASSA_AI_DEDICATED).toBe("1");
     const parsed = new URL(adminUrl!);
     expect(parsed.protocol).toBe("postgresql:");
     expect(parsed.hostname).toBe("127.0.0.1");

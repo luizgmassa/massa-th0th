@@ -1,9 +1,9 @@
 /**
- * Shared E2E helpers — massa-th0th live-stack tests.
+ * Shared E2E helpers — massa-ai live-stack tests.
  *
  * Targets the RUNNING Tools API (default http://localhost:3333) + Ollama +
  * the MCP stdio subprocess. No mocks. All mutating tests scope to an
- * `e2e-th0th-*` projectId that is reset in afterAll.
+ * `e2e-ai-*` projectId that is reset in afterAll.
  *
  * Gating: the whole suite is skipped unless RUN_E2E=1 AND the API /health is
  * reachable (matches the real-api.test.ts self-skip pattern).
@@ -16,13 +16,13 @@ import path from "path";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-export const API = process.env.MASSA_TH0TH_API_URL ?? "http://localhost:3333";
-export const API_KEY = process.env.MASSA_TH0TH_API_KEY ?? "";
+export const API = process.env.MASSA_AI_API_URL ?? "http://localhost:3333";
+export const API_KEY = process.env.MASSA_AI_API_KEY ?? "";
 export const E2E_ENABLED = process.env.RUN_E2E === "1";
 
 /** One stamp per bun-test process; shared by every file imported in the run. */
 export const RUN_STAMP = Date.now().toString(36);
-export const PREFIX = "e2e-th0th-";
+export const PREFIX = "e2e-ai-";
 export const PROJECT_ID = `${PREFIX}self-${RUN_STAMP}`;
 export const POLY_PROJECT_ID = `${PREFIX}poly-${RUN_STAMP}`;
 export const DEFAULT_PROJECT_PATH = path.resolve(import.meta.dir, "../../../../../");
@@ -31,7 +31,7 @@ export function resolveE2EProjectPath(
   defaultPath: string,
   env: Record<string, string | undefined> = process.env,
 ): string {
-  const explicitPath = env.MASSA_TH0TH_E2E_PROJECT_PATH?.trim();
+  const explicitPath = env.MASSA_AI_E2E_PROJECT_PATH?.trim();
   return isOwnedDedicatedE2eEnvironment(env) && explicitPath
     ? path.resolve(explicitPath)
     : defaultPath;
@@ -45,7 +45,7 @@ function matchesDedicatedDatabaseUrl(raw: string | undefined): boolean {
       (url.protocol === "postgres:" || url.protocol === "postgresql:") &&
       url.hostname === "127.0.0.1" &&
       url.port === "5433" &&
-      url.pathname === "/massa_th0th_test"
+      url.pathname === "/massa_ai_test"
     );
   } catch {
     return false;
@@ -63,13 +63,13 @@ export function isOwnedDedicatedE2eEnvironment(
 ): boolean {
   let apiOrigin = "";
   try {
-    apiOrigin = new URL(env.MASSA_TH0TH_API_URL ?? "").origin;
+    apiOrigin = new URL(env.MASSA_AI_API_URL ?? "").origin;
   } catch {
     return false;
   }
   return (
-    env.MASSA_TH0TH_DEDICATED === "1" &&
-    !!env.MASSA_TH0TH_E2E_PROJECT_PATH?.trim() &&
+    env.MASSA_AI_DEDICATED === "1" &&
+    !!env.MASSA_AI_E2E_PROJECT_PATH?.trim() &&
     apiOrigin === "http://127.0.0.1:3334" &&
     matchesDedicatedDatabaseUrl(env.DATABASE_URL)
   );
@@ -79,8 +79,8 @@ function hasDedicatedE2eIntent(
   env: Record<string, string | undefined>,
 ): boolean {
   return (
-    env.MASSA_TH0TH_DEDICATED === "1" ||
-    !!env.MASSA_TH0TH_E2E_PROJECT_PATH?.trim()
+    env.MASSA_AI_DEDICATED === "1" ||
+    !!env.MASSA_AI_E2E_PROJECT_PATH?.trim()
   );
 }
 
@@ -94,7 +94,7 @@ export function assertSafeE2eEnvironment(
 ): void {
   if (hasDedicatedE2eIntent(env) && !isOwnedDedicatedE2eEnvironment(env)) {
     throw new Error(
-      "Refusing incomplete dedicated E2E environment: require explicit fixture, API 127.0.0.1:3334, and DATABASE_URL=postgresql://…@127.0.0.1:5433/massa_th0th_test",
+      "Refusing incomplete dedicated E2E environment: require explicit fixture, API 127.0.0.1:3334, and DATABASE_URL=postgresql://…@127.0.0.1:5433/massa_ai_test",
     );
   }
 }
@@ -218,7 +218,7 @@ export async function probeAvailability(): Promise<Availability> {
   const MCP_BIN = path.resolve(import.meta.dir, "../../../../../apps/mcp-client/dist/index.js");
   const configPath = path.join(
     process.env.XDG_CONFIG_HOME ?? `${process.env.HOME}/.config`,
-    "massa-th0th/config.json",
+    "massa-ai/config.json",
   );
 
   let binOk = false;
@@ -258,7 +258,7 @@ export async function probeAvailability(): Promise<Availability> {
         signal: AbortSignal.timeout(4000),
       }).then((r) => r.json() as Promise<any>);
       BACKEND = resolveBackendAttestation(
-        process.env.MASSA_TH0TH_DEDICATED === "1",
+        process.env.MASSA_AI_DEDICATED === "1",
         process.env.DATABASE_URL,
         info?.databases?.sizes,
       );
@@ -514,7 +514,7 @@ let _sharedPromise: Promise<string> | null = null;
  * across invocations.
  *
  * Cold-DB caveat (2026-07-12): on a cold/dedicated stack the shared workspace
- * `e2e-th0th-shared` can report `indexed` (251 files) while `vector_documents`
+ * `e2e-ai-shared` can report `indexed` (251 files) while `vector_documents`
  * is 0 rows — the symbol graph is warm but the vectors haven't been seeded.
  * Vectors re-seed on demand; a full re-index to warm them takes ~95 s. The
  * strong-probe gate below forces this re-index, so callers of

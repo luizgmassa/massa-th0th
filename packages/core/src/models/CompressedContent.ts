@@ -8,7 +8,7 @@ import {
   CompressedContent as ICompressedContent,
   CompressionStrategy,
   CompressionMetadata
-} from '@massa-th0th/shared';
+} from '@massa-ai/shared';
 
 export class CompressedContent implements ICompressedContent {
   original: string;

@@ -34,7 +34,7 @@ import {
   hasApiKey,
   type EmbeddingProviderConfig,
 } from "./config.js";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 /**
  * Options for creating an embedding provider

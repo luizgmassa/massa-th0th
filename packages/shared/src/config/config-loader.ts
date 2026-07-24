@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
-import { MassaTh0thConfig, defaultMassaTh0thConfig } from "./massa-th0th-config";
+import { MassaAiConfig, defaultMassaAiConfig } from "./massa-ai-config";
 import { configDir } from "./xdg";
 
-const CONFIG_DIR = configDir("massa-th0th");
+const CONFIG_DIR = configDir("massa-ai");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
 
 export function getConfigDir(): string {
@@ -19,9 +19,9 @@ export function configExists(): boolean {
   return fs.existsSync(CONFIG_FILE);
 }
 
-export function loadConfig(): MassaTh0thConfig {
+export function loadConfig(): MassaAiConfig {
   if (!fs.existsSync(CONFIG_FILE)) {
-    return defaultMassaTh0thConfig;
+    return defaultMassaAiConfig;
   }
 
   try {
@@ -29,22 +29,22 @@ export function loadConfig(): MassaTh0thConfig {
     const userConfig = JSON.parse(content);
 
     return {
-      ...defaultMassaTh0thConfig,
+      ...defaultMassaAiConfig,
       ...userConfig,
-      database: { ...defaultMassaTh0thConfig.database, ...userConfig.database },
-      embedding: { ...defaultMassaTh0thConfig.embedding, ...userConfig.embedding },
-      compression: { ...defaultMassaTh0thConfig.compression, ...userConfig.compression },
-      cache: { ...defaultMassaTh0thConfig.cache, ...userConfig.cache },
-      logging: { ...defaultMassaTh0thConfig.logging, ...userConfig.logging },
-      search: { ...defaultMassaTh0thConfig.search, ...userConfig.search },
-      llm: { ...defaultMassaTh0thConfig.llm, ...userConfig.llm },
-      memory: { ...defaultMassaTh0thConfig.memory, ...userConfig.memory },
-      hooks: { ...defaultMassaTh0thConfig.hooks, ...userConfig.hooks },
-      handoffs: { ...defaultMassaTh0thConfig.handoffs, ...userConfig.handoffs },
+      database: { ...defaultMassaAiConfig.database, ...userConfig.database },
+      embedding: { ...defaultMassaAiConfig.embedding, ...userConfig.embedding },
+      compression: { ...defaultMassaAiConfig.compression, ...userConfig.compression },
+      cache: { ...defaultMassaAiConfig.cache, ...userConfig.cache },
+      logging: { ...defaultMassaAiConfig.logging, ...userConfig.logging },
+      search: { ...defaultMassaAiConfig.search, ...userConfig.search },
+      llm: { ...defaultMassaAiConfig.llm, ...userConfig.llm },
+      memory: { ...defaultMassaAiConfig.memory, ...userConfig.memory },
+      hooks: { ...defaultMassaAiConfig.hooks, ...userConfig.hooks },
+      handoffs: { ...defaultMassaAiConfig.handoffs, ...userConfig.handoffs },
     };
   } catch (error) {
     console.error(`Error loading config from ${CONFIG_FILE}:`, error);
-    return defaultMassaTh0thConfig;
+    return defaultMassaAiConfig;
   }
 }
 
@@ -54,18 +54,18 @@ export function loadConfig(): MassaTh0thConfig {
  * and config/index.ts where config.json is a best-effort middle-precedence
  * layer and must never abort startup.
  */
-export function loadConfigSafe(): MassaTh0thConfig {
+export function loadConfigSafe(): MassaAiConfig {
   try {
     return loadConfig();
   } catch {
-    return defaultMassaTh0thConfig;
+    return defaultMassaAiConfig;
   }
 }
 
 /**
  * One-time, idempotent data-directory migration from the legacy location
- * (`~/.massa-th0th-data/`) to the unified XDG config home
- * (`~/.config/massa-th0th/data/`). Atomic `rename` on the same volume; a
+ * (`~/.massa-ai-data/`) to the unified XDG config home
+ * (`~/.config/massa-ai/data/`). Atomic `rename` on the same volume; a
  * cross-volume move fails rename and surfaces a clear manual-move error.
  *
  * GUARDS (never runs twice, never overwrites, never throws):
@@ -81,7 +81,7 @@ export function migrateDataDirOnce(): void {
   migrationAttempted = true;
 
   try {
-    const oldDir = path.join(os.homedir(), ".massa-th0th-data");
+    const oldDir = path.join(os.homedir(), ".massa-ai-data");
     const newDir = path.join(getConfigDir(), "data");
 
     if (fs.existsSync(newDir)) return; // already migrated / present
@@ -92,13 +92,13 @@ export function migrateDataDirOnce(): void {
     try {
       fs.renameSync(oldDir, newDir);
       console.warn(
-        `[massa-th0th] Migrated data directory: ${oldDir} -> ${newDir}`,
+        `[massa-ai] Migrated data directory: ${oldDir} -> ${newDir}`,
       );
     } catch (renameErr: any) {
       // Cross-volume (EXDEV) or permission failure: do NOT silently copy —
       // surface a clear manual instruction so the user controls the move.
       console.error(
-        `[massa-th0th] Could not move data directory ${oldDir} -> ${newDir} ` +
+        `[massa-ai] Could not move data directory ${oldDir} -> ${newDir} ` +
           `(rename failed: ${renameErr?.code || renameErr?.message}). ` +
           `Move it manually, e.g.:\n` +
           `  mv "${oldDir}" "${newDir}"`,
@@ -106,11 +106,11 @@ export function migrateDataDirOnce(): void {
     }
   } catch (err) {
     // Defensive: migration must never abort startup.
-    console.error(`[massa-th0th] Data directory migration skipped:`, err);
+    console.error(`[massa-ai] Data directory migration skipped:`, err);
   }
 }
 
-export function saveConfig(config: MassaTh0thConfig): void {
+export function saveConfig(config: MassaAiConfig): void {
   if (!fs.existsSync(CONFIG_DIR)) {
     fs.mkdirSync(CONFIG_DIR, { recursive: true });
   }
@@ -120,7 +120,7 @@ export function saveConfig(config: MassaTh0thConfig): void {
 
 export function initConfig(): void {
   if (!fs.existsSync(CONFIG_FILE)) {
-    saveConfig(defaultMassaTh0thConfig);
+    saveConfig(defaultMassaAiConfig);
     console.log(`Created default config at ${CONFIG_FILE}`);
   }
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * massa-th0th subagent-artifacts generator (single source of truth).
+ * massa-ai subagent-artifacts generator (single source of truth).
  *
  * Reads the 12 specialist charters under skills/ and emits per-host agent
  * files into apps/{claude,codex,cursor,opencode}-plugin/agents/. Outputs are
@@ -30,7 +30,7 @@ const HOST_DIRS: Record<Host, string> = {
   opencode: path.join(APPS_DIR, "opencode-plugin", "agents"),
 };
 
-// ── Charter registry (the 12 specialists; excludes massa-th0th-memory/synapse-usage) ─
+// ── Charter registry (the 12 specialists; excludes massa-ai-memory/synapse-usage) ─
 const SPECIALIST_NAMES = [
   "investigator",
   "planner",
@@ -93,7 +93,7 @@ const AGENT_MODELS_CODEX: Record<SpecialistName, string> = {
 // (Resolved at parse time from each charter's frontmatter.)
 
 // ── Permission -> tools mapping (spec permission mapping) ───────────────────
-// Navigator precedent (apps/claude-plugin/agents/massa-th0th-navigator.md) uses
+// Navigator precedent (apps/claude-plugin/agents/massa-ai-navigator.md) uses
 // JSON-array tools with capital "Glob"; match that convention for all Claude/Cursor agents.
 const READ_ONLY_TOOLS = ["Read", "Grep", "Glob", "Bash"];
 const WRITE_TOOLS = [...READ_ONLY_TOOLS, "Write", "Edit"];
@@ -231,7 +231,7 @@ async function loadAllCharters(): Promise<Charter[]> {
 // ── Per-host emitters ───────────────────────────────────────────────────────
 
 function emitClaude(c: Charter): string {
-  const agentName = `massa-th0th-${c.name}`;
+  const agentName = `massa-ai-${c.name}`;
   const isWrite = WRITE_AGENTS.has(c.name);
   const tools = isWrite ? WRITE_TOOLS : READ_ONLY_TOOLS;
   const toolsJson = JSON.stringify(tools);
@@ -251,7 +251,7 @@ function emitClaude(c: Charter): string {
 }
 
 function emitCursor(c: Charter): string {
-  const agentName = `massa-th0th-${c.name}`;
+  const agentName = `massa-ai-${c.name}`;
   const isWrite = WRITE_AGENTS.has(c.name);
   const tools = isWrite ? WRITE_TOOLS : READ_ONLY_TOOLS;
   const toolsJson = JSON.stringify(tools);
@@ -274,14 +274,14 @@ function escapeTomlTripleQuote(s: string): string {
 }
 
 function emitCodex(c: Charter): string {
-  const agentName = `massa-th0th-${c.name}`;
+  const agentName = `massa-ai-${c.name}`;
   const isWrite = WRITE_AGENTS.has(c.name);
   const sandboxMode = isWrite ? "workspace-write" : "read-only";
   const model = AGENT_MODELS_CODEX[c.name];
   const bodyEscaped = escapeTomlTripleQuote(c.body);
-  // CDX-07: top comment `# massa-th0th-owned` for scoped uninstall
+  // CDX-07: top comment `# massa-ai-owned` for scoped uninstall
   const lines = [
-    "# massa-th0th-owned",
+    "# massa-ai-owned",
     `name = "${agentName}"`,
     `description = ${tomlQuoted(c.description)}`,
     `model = "${model}"`,
@@ -299,7 +299,7 @@ function tomlQuoted(s: string): string {
 }
 
 function emitOpenCode(c: Charter): string {
-  const agentName = `massa-th0th-${c.name}`;
+  const agentName = `massa-ai-${c.name}`;
   const isWrite = WRITE_AGENTS.has(c.name);
   // OPC-07: permission per-agent bash mapping
   let permissionBlock: string;
@@ -319,7 +319,7 @@ function emitOpenCode(c: Charter): string {
     `model: ${c.modelHint}`,
     `reasoningEffort: max`,
     `permission: ${permissionBlock}`,
-    `metadata: { massa-th0th-owned: true }`,
+    `metadata: { massa-ai-owned: true }`,
     "---",
     "",
   ].join("\n");
@@ -333,7 +333,7 @@ async function emitAll(targetDirs: Record<Host, string>): Promise<void> {
     await fs.mkdir(dir, { recursive: true });
     for (const c of charters) {
       const ext = host === "codex" ? "toml" : "md";
-      const fileName = `massa-th0th-${c.name}.${ext}`;
+      const fileName = `massa-ai-${c.name}.${ext}`;
       const filePath = path.join(dir, fileName);
       const content =
         host === "claude"
@@ -354,11 +354,11 @@ async function diffHost(
   host: Host
 ): Promise<string[]> {
   // Compare ONLY the 12 generated specialist files per host. The navigator
-  // (Claude/Cursor) and any non-massa-th0th files are not generator-owned and
+  // (Claude/Cursor) and any non-massa-ai files are not generator-owned and
   // are excluded from the drift check (spec: navigator preserved as-is).
   const ext = host === "codex" ? "toml" : "md";
   const expected = SPECIALIST_NAMES.map(
-    (n) => `massa-th0th-${n}.${ext}`
+    (n) => `massa-ai-${n}.${ext}`
   );
   const diffs: string[] = [];
   for (const rel of expected) {
@@ -383,7 +383,7 @@ async function diffHost(
 
 async function runCheck(): Promise<number> {
   // Emit to a temp dir, diff against checked-in dirs.
-  const tmp = await fs.mkdtemp(path.join(tmpdir(), "massa-th0th-gen-"));
+  const tmp = await fs.mkdtemp(path.join(tmpdir(), "massa-ai-gen-"));
   try {
     const tmpDirs: Record<Host, string> = {
       claude: path.join(tmp, "claude"),

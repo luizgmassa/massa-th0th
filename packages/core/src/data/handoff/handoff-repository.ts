@@ -1,4 +1,4 @@
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import { PgHandoffStore } from "./handoff-repository-pg.js";
 export * from "./handoff-contract.js";
 export { PgHandoffStore } from "./handoff-repository-pg.js";

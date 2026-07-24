@@ -2,7 +2,7 @@
  * Pure XDG Base Directory resolution (N36).
  *
  * Zero project-module imports — only Node builtins (`path`, `os`). The
- * circular dependency was `config-loader.ts ↔ massa-th0th-config.ts`; this
+ * circular dependency was `config-loader.ts ↔ massa-ai-config.ts`; this
  * module imports neither, so importing it from both sides breaks the cycle
  * without inlining the XDG logic in each file.
  *

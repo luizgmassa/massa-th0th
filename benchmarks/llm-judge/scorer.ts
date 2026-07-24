@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * LLM-judge scorer for massa-th0th (qwen2.5 swap benchmark).
+ * LLM-judge scorer for massa-ai (qwen2.5 swap benchmark).
  *
  * Given the judge's actual decisions vs the fixtures' ground truth, compute
  * precision / recall / F1 for three judges:
@@ -241,7 +241,7 @@ function renderMarkdown(
 ): string {
   const { summary: s } = evals;
   const lines: string[] = [];
-  lines.push(`# massa-th0th LLM-judge Benchmark Report`);
+  lines.push(`# massa-ai LLM-judge Benchmark Report`);
   lines.push("");
   lines.push(`- Ran at: \`${results.ranAt}\``);
   lines.push(`- Instruction model: \`${results.model}\``);

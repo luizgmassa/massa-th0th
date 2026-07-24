@@ -3,7 +3,7 @@
  * Singleton + 1-line delegates to per-domain modules. Barrel re-exports keep
  * import paths unchanged. See M14 delegate pattern.
  */
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import type { GraphGenerationLease } from "../graph-generation/graph-generation-contract.js";
 import type {
   SymbolKind, RefKind, WorkspaceStatus, SymbolFileRow, SymbolDefinition,

@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /**
- * massa-th0th-hook — single typed Bun binary replacing 7 shell hook scripts.
+ * massa-ai-hook — single typed Bun binary replacing 7 shell hook scripts.
  *
  * Wave 6 N30 (T20): reads JSON from stdin (Bun-native, no jq), resolves the
  * project id through the per-session pin, and POSTs a lifecycle observation
- * to the massa-th0th hook endpoint. Silent-degrade: never blocks the agent
+ * to the massa-ai hook endpoint. Silent-degrade: never blocks the agent
  * (exit 0, no stdout).
  *
  * Subcommands (Claude Code hook event types):
@@ -22,7 +22,7 @@
  *   All other subcommands: single POST to /api/v1/hook (2s timeout).
  *
  * Pin resolution order (ported from _pin.sh):
- *   existing pin → env (MASSA_TH0TH_PROJECT_ID) → git toplevel basename → cwd basename
+ *   existing pin → env (MASSA_AI_PROJECT_ID) → git toplevel basename → cwd basename
  *
  * Terminal stdin (no pipe) → exit 0, no POST (same as shell [ -t 0 ] check).
  */
@@ -49,7 +49,7 @@ function sanitizeSessionId(sessionId: string): string {
 }
 
 function getPinDir(): string {
-  return `${process.env.TMPDIR || "/tmp"}/massa-th0th-hooks`;
+  return `${process.env.TMPDIR || "/tmp"}/massa-ai-hooks`;
 }
 
 function getPinFile(sessionId: string): string | null {
@@ -76,7 +76,7 @@ function resolveProjectId(sessionId: string, cwd: string): string {
   }
 
   // 2. Compute: env override > git toplevel basename > cwd basename
-  let computed = process.env.MASSA_TH0TH_PROJECT_ID || "";
+  let computed = process.env.MASSA_AI_PROJECT_ID || "";
   if (!computed) {
     try {
       const result = spawnSync("git", ["-C", cwd, "rev-parse", "--show-toplevel"], {
@@ -149,7 +149,7 @@ function postObservation(
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    const apiKey = process.env.MASSA_TH0TH_API_KEY;
+    const apiKey = process.env.MASSA_AI_API_KEY;
     if (apiKey) {
       headers["x-api-key"] = apiKey;
     }
@@ -244,7 +244,7 @@ async function main(): Promise<void> {
 
   const projectId = resolveProjectId(sessionId, cwd);
 
-  const baseUrl = process.env.MASSA_TH0TH_API_BASE || "http://localhost:3333";
+  const baseUrl = process.env.MASSA_AI_API_BASE || "http://localhost:3333";
   const hookUrl = `${baseUrl}/api/v1/hook`;
 
   if (subcommand === "pre-compact") {

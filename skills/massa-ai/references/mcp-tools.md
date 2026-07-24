@@ -1,4 +1,4 @@
-# massa-th0th Tool Contracts (52 Tools)
+# massa-ai Tool Contracts (52 Tools)
 
 Load this reference when exact MCP schemas, REST fallbacks, response modes, or
 polling rules are needed. Prefer the active tool declaration over copied
@@ -136,7 +136,7 @@ shape or package version.
 8. `trace_path` for typed-edge BFS call/data-flow path tracing (fresh index only).
 9. `impact_analysis` for git-diff centrality-ranked impact (fresh index only).
 10. `optimized_context` for compact synthesized context when available.
-11. Focused `rg`/file reads when massa-th0th is unavailable, stale, incomplete, or misses obvious local truth.
+11. Focused `rg`/file reads when massa-ai is unavailable, stale, incomplete, or misses obvious local truth.
 
 Do not use `full` or `enriched` for broad whole-project sweeps. Attempt REST fallback exactly once after a documented MCP schema, adapter, or missing-operation failure; if REST also fails, continue with MCP/local fallback and record the skipped reason.
 

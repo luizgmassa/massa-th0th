@@ -5,10 +5,10 @@
  * Uses the same caching, auto-reindex, and filter capabilities.
  */
 
-import { IToolHandler } from "@massa-th0th/shared";
-import { ToolResponse } from "@massa-th0th/shared";
+import { IToolHandler } from "@massa-ai/shared";
+import { ToolResponse } from "@massa-ai/shared";
 import { SearchProjectTool } from "./search_project.js";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 interface SearchCodeParams {
   query: string;

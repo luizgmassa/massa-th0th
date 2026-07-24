@@ -23,11 +23,11 @@ describe("web-ui views (R8-VIEW-*-01)", () => {
   test("R8-VIEW-PROJECTS-01: project list renders rows from data.projects", () => {
     const html = ui.renderProjects({
       projects: [
-        { projectId: "massa-th0th", documentCount: 42 },
+        { projectId: "massa-ai", documentCount: 42 },
         { projectId: "other", docCount: 7 },
       ],
     });
-    expect(html).toContain("massa-th0th");
+    expect(html).toContain("massa-ai");
     expect(html).toContain("42");
     expect(html).toContain("other");
     expect(html).toContain("7");
@@ -148,7 +148,7 @@ describe("web-ui views (R8-VIEW-*-01)", () => {
         count: 1,
       },
     };
-    const html = ui.renderHandoffs(data, { project: "massa-th0th" });
+    const html = ui.renderHandoffs(data, { project: "massa-ai" });
     expect(html).toContain("implementer");
     expect(html).toContain("finish phase 8");
     expect(html).toContain("h-1");
@@ -163,7 +163,7 @@ describe("web-ui views (R8-VIEW-*-01)", () => {
   test("R8-VIEW-HANDOFF-01: empty pending → empty state", () => {
     const html = ui.renderHandoffs(
       { success: true, data: { pending: [], count: 0 } },
-      { project: "massa-th0th" },
+      { project: "massa-ai" },
     );
     expect(html).toContain("No pending handoffs");
   });

@@ -131,7 +131,7 @@ async function runValidation(
     // ABI-independent source hash and fail loud before the first parse if a
     // pin has drifted. Runs once per process, only on the production loader
     // path (test stubs that swap the loader are exempt). Default is ON; set
-    // MASSA_TH0TH_SKIP_GRAMMAR_INTEGRITY=1 to skip for local dev.
+    // MASSA_AI_SKIP_GRAMMAR_INTEGRITY=1 to skip for local dev.
     if (loader === loadNativeGrammarSet) {
       verifyNativeGrammarIntegrity();
     }

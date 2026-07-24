@@ -99,13 +99,13 @@ jobs:
         with:
           name: build-output
 
-      - name: Publish @massa-th0th/shared
+      - name: Publish @massa-ai/shared
         working-directory: packages/shared
         run: npm publish --access public --tag ${{ env.NPM_TAG }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @massa-th0th/core
+      - name: Publish @massa-ai/core
         working-directory: packages/core
         run: npm publish --access public --tag ${{ env.NPM_TAG }}
         env:
@@ -131,19 +131,19 @@ jobs:
         with:
           name: build-output
 
-      - name: Publish @massa-th0th/tools-api
+      - name: Publish @massa-ai/tools-api
         working-directory: apps/tools-api
         run: npm publish --access public --tag ${{ env.NPM_TAG }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @massa-th0th/mcp-client
+      - name: Publish @massa-ai/mcp-client
         working-directory: apps/mcp-client
         run: npm publish --access public --tag ${{ env.NPM_TAG }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @massa-th0th/opencode-plugin
+      - name: Publish @massa-ai/opencode-plugin
         working-directory: apps/opencode-plugin
         run: npm publish --access public --tag ${{ env.NPM_TAG }}
         env:
@@ -186,7 +186,7 @@ jobs:
         id: meta-api
         uses: docker/metadata-action@v5
         with:
-          images: massa/massa-th0th
+          images: massa/massa-ai
           tags: |
             type=raw,value=api-${{ steps.version.outputs.version }},enable=${{ github.event_name == 'release' }}
             type=raw,value=api-latest,enable=${{ github.event_name == 'release' }}
@@ -196,7 +196,7 @@ jobs:
         id: meta-mcp
         uses: docker/metadata-action@v5
         with:
-          images: massa/massa-th0th
+          images: massa/massa-ai
           tags: |
             type=raw,value=mcp-${{ steps.version.outputs.version }},enable=${{ github.event_name == 'release' }}
             type=raw,value=mcp-latest,enable=${{ github.event_name == 'release' }}

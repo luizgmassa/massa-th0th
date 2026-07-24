@@ -11,7 +11,7 @@
  * {@link TracePathService}.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { tracePathService } from "../services/symbol/trace-path.js";
 import type {
   TracePathOptions,
@@ -28,7 +28,7 @@ import type {
 } from "../services/symbol/impact-analysis.js";
 import type { DefinitionLookupResult } from "../services/symbol/definition-lookup.js";
 import { toSymbolIdentityResolution } from "../services/symbol/definition-lookup.js";
-import type { SymbolIdentityResolution } from "@massa-th0th/shared";
+import type { SymbolIdentityResolution } from "@massa-ai/shared";
 
 export interface TracePathInput {
   projectId: string;

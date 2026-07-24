@@ -1,7 +1,7 @@
 import path from "path";
 import { configDir } from "./xdg";
 
-export interface MassaTh0thConfig {
+export interface MassaAiConfig {
   database?: {
     // Optional DATABASE_URL home (secret). Seeded into process.env at runtime
     // by env.ts when DATABASE_URL is unset, so config.json is the source of
@@ -127,7 +127,7 @@ export interface MassaTh0thConfig {
     enabled: boolean;
   };
   // NOTE: `scheduler` is intentionally NOT a config key — it is env-driven
-  // (MASSA_TH0TH_SCHEDULER_ENABLED + job-stale/reaper env vars). Do not add it.
+  // (MASSA_AI_SCHEDULER_ENABLED + job-stale/reaper env vars). Do not add it.
 }
 
 /**
@@ -190,7 +190,7 @@ export interface SynapseConfig {
   };
 }
 
-export const defaultMassaTh0thConfig: MassaTh0thConfig = {
+export const defaultMassaAiConfig: MassaAiConfig = {
   database: {
     url: "",
   },
@@ -219,7 +219,7 @@ export const defaultMassaTh0thConfig: MassaTh0thConfig = {
     l2MaxSizeMB: 500,
     defaultTTLSeconds: 3600,
   },
-  dataDir: path.join(configDir("massa-th0th"), "data"),
+  dataDir: path.join(configDir("massa-ai"), "data"),
   logging: {
     level: "info",
     enableMetrics: false,

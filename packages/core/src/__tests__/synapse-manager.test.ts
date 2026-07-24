@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { SynapseManager } from "../services/synapse/synapse-manager.js";
-import type { SynapseRuntimeConfig, SearchResult } from "@massa-th0th/shared";
-import { SearchSource } from "@massa-th0th/shared";
+import type { SynapseRuntimeConfig, SearchResult } from "@massa-ai/shared";
+import { SearchSource } from "@massa-ai/shared";
 
 function r(id: string, content: string, score: number, createdAt?: number): SearchResult {
   return {

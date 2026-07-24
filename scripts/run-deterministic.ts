@@ -63,7 +63,7 @@ function classify(file: string, source: string): IsolationReason | undefined {
     !/mock/i.test(source)
   ) {
     // Only flag as network if it looks like a real call (not mocked)
-    if (/localhost|127\.0\.0\.1|0\.0\.0\.0|MASSA_TH0TH_API/.test(source)) {
+    if (/localhost|127\.0\.0\.1|0\.0\.0\.0|MASSA_AI_API/.test(source)) {
       return "network";
     }
   }

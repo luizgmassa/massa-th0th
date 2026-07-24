@@ -9,7 +9,7 @@
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
-| Required coding bootstrap | PASS | `caveman full`, `coding-guidelines`, `massa-th0th`, persona router loaded in required order. |
+| Required coding bootstrap | PASS | `caveman full`, `coding-guidelines`, `massa-ai`, persona router loaded in required order. |
 | Memory/context restore | PASS with degradation | No exact-session memories; current source and `.specs/` used. Fresh index mapped the workspace; Synapse failed because shared `dist` lacks `requirePostgresDatabaseUrl`, so searches were stateless and source-confirmed. |
 | Specify closure | PASS | 23 requirement IDs, 12 ACs, edge/failure cases, full implicit sweep, no open questions. |
 | Discuss closure | PASS | Consequential native/readiness/generation/FQN/span/capability/custom-extension decisions recorded in `context.md`. |
@@ -106,7 +106,7 @@ Stock `tree-sitter@0.25.0` retained approximately 1 MiB RSS per repeated 32 KiB 
 
 Second independent review proved that native liveness checks alone were insufficient: public mutable `.tree` properties let stale nodes/cursors substitute a different live tree and crash Bun with SIGSEGV. A follow-up then proved cross-tree `resetTo` could desynchronize an otherwise immutable owner and crash, while cross-tree `reset` returned garbage. Patch v3 makes owner properties non-writable/non-configurable, marshals same-tree reset nodes, and rejects cross-tree reset/resetTo in both JS and native code. The cold child discriminates every path with clean exits and same-tree positive controls.
 
-Bun 1.3.0 `pm pack` was rejected for core distribution because both accepted npm bundle-field spellings produced tarballs without the bundled dependency. Exact Node 22.22.2/npm 10.9.7 preserved the bundle. The core manifest now uses publish-safe `@massa-th0th/shared@1.0.0`; repository installation still resolves the matching local workspace. The local packed-consumer proof redirects only that unpublished shared package to its sibling tarball.
+Bun 1.3.0 `pm pack` was rejected for core distribution because both accepted npm bundle-field spellings produced tarballs without the bundled dependency. Exact Node 22.22.2/npm 10.9.7 preserved the bundle. The core manifest now uses publish-safe `@massa-ai/shared@1.0.0`; repository installation still resolves the matching local workspace. The local packed-consumer proof redirects only that unpublished shared package to its sibling tarball.
 
 ### TASK-002 Post-Gate Adequacy Review
 
@@ -334,7 +334,7 @@ Pending poison rows across all graph tables kill missing active filters. Wrong l
 ## Planned Gate Commands
 
 - `bun run verify:tree-sitter-native`
-- `bun run --filter @massa-th0th/core test:unit`
+- `bun run --filter @massa-ai/core test:unit`
 - `bun run type-check`
 - `bun run build`
 - Owned PostgreSQL focused generation/migration tests with `--max-concurrency 1`
@@ -671,7 +671,7 @@ These draft checksums are retained as failed-review evidence and are not an acti
 ## TASK-013 Accepted Gate Evidence v17
 
 - Platform: macOS arm64 only; exact Bun `1.3.0`; dedicated owned PostgreSQL 17 at `127.0.0.1:5433`.
-- Exact focused/owned command: `RUN_GRAPH_GENERATION_LIFECYCLE=1 RUN_GRAPH_GENERATION_SYMBOL_REPOSITORY=1 MASSA_TH0TH_DEDICATED=1 GRAPH_GENERATION_TEST_ADMIN_URL='postgresql://test@127.0.0.1:5433/postgres' bunx bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/graph-generation-etl-lifecycle.test.ts packages/core/src/__tests__/graph-generation-lifecycle-pg.test.ts packages/core/src/__tests__/graph-generation-symbol-repository-pg.test.ts` — PASS, 38 tests, 147 assertions.
+- Exact focused/owned command: `RUN_GRAPH_GENERATION_LIFECYCLE=1 RUN_GRAPH_GENERATION_SYMBOL_REPOSITORY=1 MASSA_AI_DEDICATED=1 GRAPH_GENERATION_TEST_ADMIN_URL='postgresql://test@127.0.0.1:5433/postgres' bunx bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/graph-generation-etl-lifecycle.test.ts packages/core/src/__tests__/graph-generation-lifecycle-pg.test.ts packages/core/src/__tests__/graph-generation-symbol-repository-pg.test.ts` — PASS, 38 tests, 147 assertions.
 - `bunx bun@1.3.0 run type-check` — PASS, 6/6 packages.
 - `bunx bun@1.3.0 run build` — PASS, 5/5 packages.
 - `git diff --check` — PASS.
@@ -682,7 +682,7 @@ These draft checksums are retained as failed-review evidence and are not an acti
 ## TASK-014 Accepted Gate Evidence v18
 
 - Platform: macOS arm64 only; exact Bun `1.3.0`; dedicated owned PostgreSQL 17.
-- Exact focused/owned command: `RUN_GRAPH_GENERATION_LIFECYCLE=1 RUN_GRAPH_GENERATION_SYMBOL_REPOSITORY=1 MASSA_TH0TH_DEDICATED=1 GRAPH_GENERATION_TEST_ADMIN_URL='postgresql://test@127.0.0.1:5433/postgres' bunx bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/graph-generation-etl-lifecycle.test.ts packages/core/src/__tests__/graph-generation-lifecycle-pg.test.ts packages/core/src/__tests__/graph-generation-symbol-repository-pg.test.ts packages/core/src/__tests__/structural-etl.test.ts` — PASS, 50 tests, 249 assertions.
+- Exact focused/owned command: `RUN_GRAPH_GENERATION_LIFECYCLE=1 RUN_GRAPH_GENERATION_SYMBOL_REPOSITORY=1 MASSA_AI_DEDICATED=1 GRAPH_GENERATION_TEST_ADMIN_URL='postgresql://test@127.0.0.1:5433/postgres' bunx bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/graph-generation-etl-lifecycle.test.ts packages/core/src/__tests__/graph-generation-lifecycle-pg.test.ts packages/core/src/__tests__/graph-generation-symbol-repository-pg.test.ts packages/core/src/__tests__/structural-etl.test.ts` — PASS, 50 tests, 249 assertions.
 - `bunx bun@1.3.0 run type-check` — PASS, 6/6 packages. `bunx bun@1.3.0 run build` — PASS, 5/5 packages. `git diff --check` — PASS.
 - Recovered evidence: exact total 14 with ten persisted details. Incremental LKG hard evidence: two files, exact total 28, hard 2, stale 2, ten original ranged details per file. Active/pending isolation and generation swap plus language aggregation passed.
 - Durable evidence: parser totals/status/language summary and activated generation identity round-trip together; pre-migration-compatible NULL summary rows hydrate without a result. Top-level indexing completion preserves the pipeline summary.
@@ -693,7 +693,7 @@ These draft checksums are retained as failed-review evidence and are not an acti
 
 - Platform: macOS arm64 only; exact Bun `1.3.0`.
 - Exact focused command: `bunx bun@1.3.0 test packages/core/src/__tests__/structural-query-pack.test.ts packages/core/src/__tests__/structural-resolver.test.ts packages/core/src/__tests__/structural-etl.test.ts` — PASS, 67 tests, 333 assertions.
-- `bunx turbo run build --filter=@massa-th0th/core` — PASS, shared/core TypeScript compilation and core build. `git diff --check` — PASS.
+- `bunx turbo run build --filter=@massa-ai/core` — PASS, shared/core TypeScript compilation and core build. `git diff --check` — PASS.
 - Native capability evidence: Python/Ruby/PHP/Lua declarations and documentation; per-module Python, per-clause/group PHP, Ruby require, and Lua local-require imports; Python/PHP type references; Python/Ruby/PHP inheritance where applicable; calls, bare-argument data flow, HTTP, and events; exact Lua no-type-edge negative; semantic-only unknown-language negative.
 - Resolver evidence: same-file, imported alias, unique global, ambiguity, unresolved, language-specific extension probing, scripting dialect isolation, and TS/scripting cross-language negative sensors.
 - Independent read-only review: initial NOT PASS identified four P1 findings (cross-language leakage, missing applicable types, dishonest multi-imports, missing Lua alias). All were remediated; independent re-review PASS with no actionable finding.
@@ -703,7 +703,7 @@ These draft checksums are retained as failed-review evidence and are not an acti
 
 - Platform: macOS arm64 only; exact Bun `1.3.0`.
 - Exact focused command: `bunx bun@1.3.0 test packages/core/src/__tests__/structural-query-pack.test.ts packages/core/src/__tests__/structural-resolver.test.ts packages/core/src/__tests__/language-manifest.test.ts packages/core/src/__tests__/structural-runtime.test.ts packages/core/src/__tests__/structural-etl.test.ts` — PASS, 95 tests, 1,010 assertions.
-- `bunx turbo run build --filter=@massa-th0th/core` — PASS, shared/core TypeScript compilation and core build. `git diff --check` — PASS.
+- `bunx turbo run build --filter=@massa-ai/core` — PASS, shared/core TypeScript compilation and core build. `git diff --check` — PASS.
 - Native capability evidence: C/C++/Go/Rust/Zig declarations and exact nested owners, documentation, honest includes/imports, applicable type/inheritance/trait relations, calls, bare-argument data flow, HTTP, and events; at least four native parses per `.c`, `.cpp`, `.hpp`, `.go`, `.rs`, and `.zig`.
 - `.h` evidence: deterministic C default; C++ only for unambiguous AST-derived C++ importer or compilation-database proof; conflict defaults C; cached importer evidence-only native parsing retains empty graph/semantic output; `compile_commands.json` honors absolute/project-relative `directory`; comment/string fake includes are absent and angle includes remain unresolved.
 - Resolver evidence: dialect isolation, honest Go/Rust imports, ambiguity/unresolved negatives, Rust alias/group/nested/glob/grouped-self semantics from native grammar records, and cross-language isolation.
@@ -725,7 +725,7 @@ These draft checksums are retained as failed-review evidence and are not an acti
 
 - Platform: macOS arm64 only; exact Bun `1.3.0`.
 - Exact focused command: `bunx bun@1.3.0 test packages/core/src/__tests__/structural-query-pack.test.ts packages/core/src/__tests__/structural-resolver.test.ts packages/core/src/__tests__/structural-identity.test.ts` — PASS, 101 tests, 575 assertions.
-- `bunx bun@1.3.0 run type-check` — PASS, 6/6 packages. `bunx turbo run build --filter=@massa-th0th/core` — PASS, shared/core 2/2. `git diff --check` — PASS.
+- `bunx bun@1.3.0 run type-check` — PASS, 6/6 packages. `bunx turbo run build --filter=@massa-ai/core` — PASS, shared/core 2/2. `git diff --check` — PASS.
 - Native capability evidence: Elixir/EXS/Erlang/Clojure/OCaml/Haskell modules, functions, types/classes/protocols where applicable; comments, attributes, metadata/specs, and Haddock documentation; behaviour/inheritance/instance relations; calls and bare-identifier data flow without invented specialized edges.
 - Import evidence: exact Elixir alias/import/require/use and `only`/`as`; Erlang named imports; Clojure `:as`/`:refer`; OCaml open/include/module alias; Haskell qualified/as/list/hiding. Namespace-only forms do not leak bare names, hidden names remain unavailable, and only injecting forms expose unqualified members.
 - Resolver/identity evidence: EX/EXS compatibility with foreign isolation; parser-produced Erlang, Clojure, Elixir, and Haskell provider/consumer resolution; unresolved and namespace-leakage negatives; Haskell equation dedupe; BEAM import arity selects the declared overload modern identity.
@@ -747,7 +747,7 @@ These draft checksums are retained as failed-review evidence and are not an acti
 
 - Platform: macOS arm64 only; exact Bun `1.3.0`; dedicated owned PostgreSQL 17 at frozen admin URL `postgresql://test@127.0.0.1:5433/postgres`.
 - Exact focused command: `bunx bun@1.3.0 test definition-lookup.test.ts impact-analysis-diff.test.ts` — PASS, 8 tests, 19 assertions.
-- Exact owned PostgreSQL command: `RUN_GRAPH_GENERATION_SYMBOL_REPOSITORY=1 MASSA_TH0TH_DEDICATED=1 GRAPH_GENERATION_TEST_ADMIN_URL='postgresql://test@127.0.0.1:5433/postgres' bunx bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/graph-generation-symbol-repository-pg.test.ts` — PASS, 21 tests, 81 assertions.
+- Exact owned PostgreSQL command: `RUN_GRAPH_GENERATION_SYMBOL_REPOSITORY=1 MASSA_AI_DEDICATED=1 GRAPH_GENERATION_TEST_ADMIN_URL='postgresql://test@127.0.0.1:5433/postgres' bunx bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/graph-generation-symbol-repository-pg.test.ts` — PASS, 21 tests, 81 assertions.
 - `bunx bun@1.3.0 run type-check` — PASS, 6/6 packages. `bunx bun@1.3.0 run build` — PASS, 5/5 packages. `git diff --check` — PASS.
 - Identity evidence: one active-generation lookup discriminates modern resolution, deterministic legacy ambiguity, malformed/missing inputs, and bare-name compatibility; definition/reference/trace consumers return zero traversal for ambiguous explicit identities rather than first-match or verbatim behavior. Impact analysis retains the exact modern FQN and never falls back to a bare overload name.
 - Generation/kind evidence: pending-generation definitions and references remain invisible; active bare-name lookup remains compatible; project-map aggregates expose exactly all 18 canonical structural kinds while excluding pending rows; search schema consumes the canonical kind list.
@@ -759,7 +759,7 @@ These draft checksums are retained as failed-review evidence and are not an acti
 
 - Platform: macOS arm64 only; exact Bun `1.3.0`; dedicated owned PostgreSQL 17 at frozen admin URL `postgresql://test@127.0.0.1:5433/postgres`.
 - Exact focused command: `bunx bun@1.3.0 test packages/core/src/__tests__/definition-lookup.test.ts apps/tools-api/src/__tests__/parser-readiness-health.test.ts apps/tools-api/src/__tests__/structural-transport.test.ts apps/mcp-client/src/tool-definitions-checkpoints.test.ts apps/mcp-client/src/call-tool-proxy.test.ts` — PASS, 19 tests, 92 assertions.
-- Exact owned PostgreSQL command: `RUN_GRAPH_GENERATION_SYMBOL_REPOSITORY=1 MASSA_TH0TH_DEDICATED=1 GRAPH_GENERATION_TEST_ADMIN_URL='postgresql://test@127.0.0.1:5433/postgres' bunx bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/graph-generation-symbol-repository-pg.test.ts` — PASS, 21 tests, 93 assertions.
+- Exact owned PostgreSQL command: `RUN_GRAPH_GENERATION_SYMBOL_REPOSITORY=1 MASSA_AI_DEDICATED=1 GRAPH_GENERATION_TEST_ADMIN_URL='postgresql://test@127.0.0.1:5433/postgres' bunx bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/graph-generation-symbol-repository-pg.test.ts` — PASS, 21 tests, 93 assertions.
 - `bunx bun@1.3.0 run type-check` — PASS, 6/6 packages. `bunx bun@1.3.0 run build` — PASS, 5/5 packages. `git diff --check` — PASS.
 - Transport evidence: shared types own the exact parser-summary, active-generation identity, stable structural FQN resolution, and canonical 18-kind schema. Durable index status and project map expose exact aggregate counts without raw per-file diagnostics. HTTP definition/reference/trace preserve resolved, missing, and explicit stable ambiguity outcomes; the production MCP `CallTool` proxy serializes the same payloads and operational failures.
 - Project-map consistency evidence: one PostgreSQL transaction share-locks the workspace, captures one active generation, and scopes centrality, symbol/extension/recent aggregates, typed edges, diagnostics, counts, and architecture inputs to that generation. A deterministic concurrent activation sensor observed the writer blocked on the workspace lock; active output excluded all pending poison rows, and the next read exposed only the newly activated generation. Extension-based `filesByLanguage` remains separate from parser language totals.
@@ -774,7 +774,7 @@ These draft checksums are retained as failed-review evidence and are not an acti
 - Fixture/capability evidence: the polyglot fixture contains exactly one file for each of the 33 canonical extensions and one deterministic sentinel per file. All 29 Flow-tier fixtures prove a native edge to an exact target; the four Structure-tier Markdown/JSON/YAML/YML fixtures prove exact declarations with zero edges. The frozen qwen sparse fixture now carries all 33 files; its 69 manifest entries, including 44 support files, have zero SHA-256 mismatches.
 - Identity/transport evidence: all 33 sentinels expose exact kind and qualified identity. Java overloads have distinct modern 64-hex signature identities; the stable legacy alias reports exact ambiguity. HTTP and production MCP agree for modern resolution, legacy ambiguity, definitions, references, diagnostics, and unresolved null-target rows.
 - Generation/failure/concurrency evidence: exact 33-file activation, recoverable syntax with retained declarations, atomic old/new reader snapshots, 33-to-32 deletion, three serialized same-project jobs, and three successful different-project jobs pass. A FIFO first-read acknowledgement plus exact 33/33 initial-snapshot progress guarantees mutation after accepted discovery; the job then fails specifically with `graph_generation_stale_snapshot` while the complete active generation and definitions remain visible.
-- Exact owned sequential E2E command: `RUN_E2E=1 MASSA_TH0TH_DEDICATED=1 MASSA_TH0TH_API_URL=http://127.0.0.1:3334 MASSA_TH0TH_E2E_PROJECT_PATH=<frozen-qwen-sparse-root> DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/e2e/02.indexing.test.ts packages/core/src/__tests__/e2e/09.symbol-graph.test.ts packages/core/src/__tests__/e2e/15.nfr.test.ts` — PASS, 41 tests, 664 assertions, zero failures, and one explained N18 auth-on skip because the owned server is intentionally auth-off. Focused `02.indexing` rerun — PASS, 7 tests, 249 assertions.
+- Exact owned sequential E2E command: `RUN_E2E=1 MASSA_AI_DEDICATED=1 MASSA_AI_API_URL=http://127.0.0.1:3334 MASSA_AI_E2E_PROJECT_PATH=<frozen-qwen-sparse-root> DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test bun@1.3.0 test --max-concurrency 1 packages/core/src/__tests__/e2e/02.indexing.test.ts packages/core/src/__tests__/e2e/09.symbol-graph.test.ts packages/core/src/__tests__/e2e/15.nfr.test.ts` — PASS, 41 tests, 664 assertions, zero failures, and one explained N18 auth-on skip because the owned server is intentionally auth-off. Focused `02.indexing` rerun — PASS, 7 tests, 249 assertions.
 - Final regression gates: static routing/native slice — PASS, 20 tests, 278 assertions, with seven expected `RUN_E2E`-off skips; type-check — PASS, 6/6 packages; build — PASS, 5/5 tasks; `git diff --check` — PASS.
 - Independent read-only review: initial P1 findings covered missing nonterminal lifecycle evidence, tautological tier assertions, missing modern MCP parity, FIFO cleanup, omitted qwen sentinels, and weak N14 assertions. Remediation added deterministic lifecycle gates, real tier-specific edges, exact modern/legacy transport parity, owned FIFO cleanup, complete sparse support, and exact unresolved-target checks. Final re-review found one remaining stale-failure race; first-read/33-of-33 synchronization and exact `graph_generation_stale_snapshot` assertion closed it. Independent final verdict: PASS with no remaining P0-P2 finding.
 

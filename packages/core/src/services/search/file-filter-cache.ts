@@ -12,7 +12,7 @@
  */
 
 import { minimatch } from "minimatch";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 interface FilterCacheEntry {
   files: Set<string>;

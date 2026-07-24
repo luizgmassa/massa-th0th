@@ -1,5 +1,5 @@
 # ============================================
-# massa-th0th - Multi-stage Docker Build
+# massa-ai - Multi-stage Docker Build
 # ============================================
 # Targets:
 #   api  - Tools API (ElysiaJS REST on :3333)
@@ -67,7 +67,7 @@ RUN chmod +x /entrypoint.sh
 RUN mkdir -p /data
 
 ENV NODE_ENV=production
-ENV MASSA_TH0TH_API_PORT=3333
+ENV MASSA_AI_API_PORT=3333
 # Default: Ollama on host network
 ENV OLLAMA_BASE_URL=http://host.docker.internal:11434
 ENV OLLAMA_EMBEDDING_MODEL=qwen3-embedding:8b
@@ -92,7 +92,7 @@ COPY --from=base /app ./
 
 ENV NODE_ENV=production
 # MCP client connects to the API container
-ENV MASSA_TH0TH_API_URL=http://massa-th0th-api:3333
+ENV MASSA_AI_API_URL=http://massa-ai-api:3333
 
 # stdio transport - no ports exposed
 CMD ["bun", "./apps/mcp-client/src/index.ts"]

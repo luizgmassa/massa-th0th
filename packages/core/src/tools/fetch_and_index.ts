@@ -17,7 +17,7 @@
  * race in the run-pool. Returns per-URL status + chunk counts.
  */
 
-import type { ToolResponse, IToolHandler } from "@massa-th0th/shared";
+import type { ToolResponse, IToolHandler } from "@massa-ai/shared";
 import type { FetchAndIndexParams } from "../services/web/web-controller.js";
 
 export class FetchAndIndexTool implements IToolHandler {

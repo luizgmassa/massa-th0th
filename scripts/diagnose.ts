@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * massa-th0th - Stack Diagnostic Tool
+ * massa-ai - Stack Diagnostic Tool
  *
  * Validates the entire local infrastructure in seconds:
  * 1. Ollama installation
@@ -32,7 +32,7 @@ console.log(
   `\n${BOLD}╔═══════════════════════════════════════════════════════════════╗${NC}`,
 );
 console.log(
-  `${BOLD}║            massa-th0th - Stack Diagnostic Tool                      ║${NC}`,
+  `${BOLD}║            massa-ai - Stack Diagnostic Tool                      ║${NC}`,
 );
 console.log(
   `${BOLD}╚═══════════════════════════════════════════════════════════════╝${NC}\n`,
@@ -190,7 +190,7 @@ async function checkOllama(): Promise<boolean> {
         signal: controller.signal,
         body: JSON.stringify({
           model: modelName,
-          input: "massa-th0th diagnostic test",
+          input: "massa-ai diagnostic test",
         }),
       });
       clearTimeout(timeoutId);
@@ -316,7 +316,7 @@ async function checkPostgres(): Promise<boolean> {
       }
     }
 
-    // Check if massa-th0th tables exist (Prisma migrations)
+    // Check if massa-ai tables exist (Prisma migrations)
     const tablesResult = await client.query(
       "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename",
     );
@@ -325,9 +325,9 @@ async function checkPostgres(): Promise<boolean> {
     const foundTables = expectedTables.filter((t) => tables.includes(t));
 
     if (foundTables.length > 0) {
-      console.log(`  ${GREEN}✓${NC} massa-th0th tables found: ${foundTables.join(", ")}`);
+      console.log(`  ${GREEN}✓${NC} massa-ai tables found: ${foundTables.join(", ")}`);
     } else if (tables.length > 0) {
-      console.log(`  ${YELLOW}!${NC} Database has ${tables.length} tables but no massa-th0th tables`);
+      console.log(`  ${YELLOW}!${NC} Database has ${tables.length} tables but no massa-ai tables`);
       console.log(`  ${YELLOW}!${NC} Run migrations: ${BOLD}cd packages/core && bunx prisma migrate deploy${NC}`);
     } else {
       console.log(`  ${YELLOW}!${NC} Database is empty (no tables)`);

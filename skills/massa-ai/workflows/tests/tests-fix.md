@@ -48,7 +48,7 @@ Do not use this workflow for findings-only test coverage, assertion quality, fix
 10. Use strict harness sensors:
    - Never rely on AI subjective evaluation.
    - If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:
-     `python3 skills/massa-th0th/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
+     `python3 skills/massa-ai/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
    - Apply the Mandatory Verification Fix Gate from `references/verification-ladder.md`: run the report's Verification Suggestion or an equivalent deterministic command/artifact check for each selected finding or coherent group.
    - Run the actual focused test command first, then broader relevant suites when feasible, such as `rtk yarn test`, `rtk npm test`, `rtk pytest`, or `rtk cargo test`.
    - Continue only when the execution harness returns a clean exit code, or report the exact skipped-check reason.

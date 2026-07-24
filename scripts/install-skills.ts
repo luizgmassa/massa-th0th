@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * massa-th0th unified skills installer.
+ * massa-ai unified skills installer.
  *
  * Symlinks repo-local skills (skills dir, each with SKILL.md) into each
  * supported coding agent's config directory, and writes the bootstrap
@@ -19,7 +19,7 @@
  * Safety:
  *   - Aborts on non-symlink conflict at a target path (won't overwrite user files).
  *   - --dry-run writes nothing.
- *   - State persisted to ~/.config/massa-th0th/install-state.json (v2 format).
+ *   - State persisted to ~/.config/massa-ai/install-state.json (v2 format).
  *   - v1 state (legacy) auto-migrated to v2.
  *   - Idempotent: re-running --apply is a no-op when symlinks are correct.
  */
@@ -54,10 +54,10 @@ const PLATFORM_EXECUTABLES: Record<Platform, string[]> = {
   opencode: ["opencode"],
 };
 
-export const BOOTSTRAP_START = "<!-- massa-th0th:bootstrap:start -->";
-export const BOOTSTRAP_END = "<!-- massa-th0th:bootstrap:end -->";
+export const BOOTSTRAP_START = "<!-- massa-ai:bootstrap:start -->";
+export const BOOTSTRAP_END = "<!-- massa-ai:bootstrap:end -->";
 
-const STATE_RELATIVE_PATH = path.join(".config", "massa-th0th", "install-state.json");
+const STATE_RELATIVE_PATH = path.join(".config", "massa-ai", "install-state.json");
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -715,14 +715,14 @@ function parseArgs(argv: string[]): CliOptions {
   return opts;
 }
 
-const USAGE = `massa-th0th skills installer
+const USAGE = `massa-ai skills installer
 
 Usage:
   bun scripts/install-skills.ts [flags]
 
 Flags:
   --apply                 Install skills (symlinks + bootstrap block) (default)
-  --uninstall             Remove massa-th0th-owned symlinks + bootstrap block
+  --uninstall             Remove massa-ai-owned symlinks + bootstrap block
   --dry-run               Preview changes, write nothing
   --check                 Report drift, exit 1 if found
   --platform <name>       One of: ${PLATFORMS.join(", ")}, all (default: all)

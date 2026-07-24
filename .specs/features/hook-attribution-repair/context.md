@@ -2,9 +2,9 @@
 
 ## Verify-First Fan-out (2026-07-20, 3 read-only subagents, branch wave-3 @ 356b8bd)
 
-Plan text (~/Downloads/massa-th0th-improvement-plan.md):
+Plan text (~/Downloads/massa-ai-improvement-plan.md):
 
-- **M45** `[new]` Feat — Session-sticky attribution (override-wins + containment + broad-root-exclusion) *if massa-th0th attributes by cwd*. Evidence: ai-memory `d43e859` (`router.rs` +253).
+- **M45** `[new]` Feat — Session-sticky attribution (override-wins + containment + broad-root-exclusion) *if massa-ai attributes by cwd*. Evidence: ai-memory `d43e859` (`router.rs` +253).
 - **M47** `[new]` Feat — Idempotent data-repair migration pattern (V27 shape) for systematic attribution bugs. Evidence: ai-memory `d43e859` (`V27__….sql`).
 
 Fan-out verdict: M45 precondition TRUE (attribution is client-side cwd basename); all four bug modes REAL (subdirectory, worktree/symlink, unregistered/$HOME silent bucket, basename collision); no sentinel; zero pinned tests for attribution correctness. M47 warranted; in-repo template precedent `20260714170000_add_graph_generations` (backfill UPDATE + self-verifying `DO $$`). No discrepancy between plan text and current source.

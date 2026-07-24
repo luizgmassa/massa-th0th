@@ -1,13 +1,13 @@
 {
-  "name": "@massa-th0th/mcp-client",
+  "name": "@massa-ai/mcp-client",
   "version": "1.1.0",
-  "description": "massa-th0th MCP server - Semantic code search, memory, and context compression via Model Context Protocol",
+  "description": "massa-ai MCP server - Semantic code search, memory, and context compression via Model Context Protocol",
   "author": "luizgmassa",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "massa-th0th": "dist/index.js",
-    "massa-th0th-config": "dist/config-cli.js"
+    "massa-ai": "dist/index.js",
+    "massa-ai-config": "dist/config-cli.js"
   },
   "files": [
     "dist"
@@ -20,8 +20,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@massa-th0th/core": "workspace:*",
-    "@massa-th0th/shared": "workspace:*",
+    "@massa-ai/core": "workspace:*",
+    "@massa-ai/shared": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
@@ -32,6 +32,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/luizgmassa/massa-th0th"
+    "url": "https://github.com/luizgmassa/massa-ai"
   }
 }

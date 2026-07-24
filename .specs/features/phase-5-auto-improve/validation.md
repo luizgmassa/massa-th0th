@@ -15,7 +15,7 @@ The auto-improvement deliverable (`ProposalStore` SQLite-canonical +
 `AutoImproveJob` rule-based pattern detection + LLM-optional enrichment +
 review-gate/auto-approve + apply/reject state machine + `memory:auto-improved`
 event + 3 MCP tools + API route + core barrel re-exports) meets its acceptance
-criteria. Gate = `bun run --filter @massa-th0th/core test` **822 pass / 0 fail /
+criteria. Gate = `bun run --filter @massa-ai/core test` **822 pass / 0 fail /
 46 skip** (baseline 791 → +31), `bun run type-check` clean (5/5). The
 discrimination sensor killed its mutant. The state machine
 (pending → approved | rejected, both terminal) is proven; every failure mode
@@ -78,7 +78,7 @@ the LLM-off degradation path still produces proposals.
 
 | Gate | Command | Result |
 | --- | --- | --- |
-| Full suite (core) | `bun run --filter @massa-th0th/core test` | **822 pass / 0 fail / 46 skip** (baseline 791 → +31). Ran 868 tests across 67 files. |
+| Full suite (core) | `bun run --filter @massa-ai/core test` | **822 pass / 0 fail / 46 skip** (baseline 791 → +31). Ran 868 tests across 67 files. |
 | type-check | `bun run type-check` | **clean** (5/5 tasks). |
 | pattern generation | `auto-improve-job.test.ts` P5-DETECT-01 | ≥1 pending proposal from hot-file pattern. |
 | listPending | `auto-improve-job.test.ts` P5-LIST-01 + repo test | pending-only, project-scoped, newest-first. |

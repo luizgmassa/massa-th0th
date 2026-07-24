@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Standalone needle-in-haystack harness for massa-th0th chunker/search tuning.
+ * Standalone needle-in-haystack harness for massa-ai chunker/search tuning.
  *
  * Self-contained retrieval pipeline — does NOT need the live tools-api stack:
  *   1. Read the fixture (needles + expected hits).
@@ -35,7 +35,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { smartChunk, type ChunkerConfig, type Chunk } from "../../packages/core/src/services/search/smart-chunker.ts";
 
-// ── Types (mirror fixtures/massa-th0th.json + scorer.ts) ───────────────────
+// ── Types (mirror fixtures/massa-ai.json + scorer.ts) ───────────────────
 interface NeedleExpected {
   filePath: string;
   lineStart: number;
@@ -205,7 +205,7 @@ async function main() {
   const repoRoot = resolve(import.meta.dir, "..", "..");
   const fixturePath = resolve(
     repoRoot,
-    args.dataset ?? "benchmarks/needles/fixtures/massa-th0th.json",
+    args.dataset ?? "benchmarks/needles/fixtures/massa-ai.json",
   );
   if (!existsSync(fixturePath)) {
     console.error(`Fixture not found: ${fixturePath}`);
@@ -360,7 +360,7 @@ async function main() {
     config: { ...cfgOverride, totalChunks: allChunks.length },
     results: rawResults,
   };
-  const resultsPath = resolve(reportsDir, `massa-th0th-${label}-results.json`);
+  const resultsPath = resolve(reportsDir, `massa-ai-${label}-results.json`);
   writeFileSync(resultsPath, JSON.stringify(resultsFile, null, 2));
   console.log(`\nresults: ${resultsPath}`);
 

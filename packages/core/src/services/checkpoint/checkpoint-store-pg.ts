@@ -40,7 +40,7 @@ import {
   TaskState,
   CheckpointType,
   logger,
-} from "@massa-th0th/shared";
+} from "@massa-ai/shared";
 import { getPrismaClient } from "../query/prisma-client.js";
 import { getProjectIdentityAliasResolver } from "../project-identity/alias-resolver.js";
 import { Prisma } from "../../generated/prisma/index.js";

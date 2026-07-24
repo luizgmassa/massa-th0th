@@ -18,8 +18,8 @@ const mockFetch = mock(() => {
 globalThis.fetch = mockFetch as any;
 
 // ── Mock shared module ────────────────────────────────────────
-mock.module("@massa-th0th/shared", () => {
-  const actual = require("@massa-th0th/shared");
+mock.module("@massa-ai/shared", () => {
+  const actual = require("@massa-ai/shared");
   return {
     ...actual,
     logger: {

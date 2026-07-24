@@ -133,7 +133,7 @@ installer_env_try_reclaim_lock() {
 installer_env_test_barrier() {
     local barrier_dir="$1" phase="$2" waited=0 limit
     [ -n "$barrier_dir" ] || return 0
-    limit="${MASSA_TH0TH_INSTALLER_TEST_BARRIER_TIMEOUT:-15}"
+    limit="${MASSA_AI_INSTALLER_TEST_BARRIER_TIMEOUT:-15}"
     mkdir -p "$barrier_dir"
     : > "${barrier_dir}/${phase}.ready"
     while [ ! -e "${barrier_dir}/${phase}.continue" ]; do
@@ -189,7 +189,7 @@ installer_env_publish() (
     candidate="$(mktemp "${target}.candidate.XXXXXX")" || exit 1
     cat > "$candidate" || exit 1
     candidate_digest="$(installer_env_sha256 "$candidate")" || exit 1
-    installer_env_test_barrier "${MASSA_TH0TH_INSTALLER_TEST_BARRIER_DIR:-}" "candidate" || exit 1
+    installer_env_test_barrier "${MASSA_AI_INSTALLER_TEST_BARRIER_DIR:-}" "candidate" || exit 1
 
     token="$(installer_env_random_token)" || {
         installer_env_error "could not create lock token"
@@ -198,8 +198,8 @@ installer_env_publish() (
     host="$(hostname 2>/dev/null || uname -n)"
     backup_temp="${backup}.tmp.${token}"
     owner_temp="${target}.owner.${token}.tmp"
-    lock_timeout="${MASSA_TH0TH_INSTALLER_LOCK_TIMEOUT_SECONDS:-30}"
-    stale_after="${MASSA_TH0TH_INSTALLER_STALE_LOCK_SECONDS:-300}"
+    lock_timeout="${MASSA_AI_INSTALLER_LOCK_TIMEOUT_SECONDS:-30}"
+    stale_after="${MASSA_AI_INSTALLER_STALE_LOCK_SECONDS:-300}"
     started="$(date +%s)"
 
     # Write complete ownership proof before mkdir. The mkdir-to-publish gap is
@@ -229,11 +229,11 @@ installer_env_publish() (
         sleep 1
     done
     acquired=1
-    installer_env_test_barrier "${MASSA_TH0TH_INSTALLER_TEST_AFTER_MKDIR_BARRIER_DIR:-}" "mkdir" || exit 1
+    installer_env_test_barrier "${MASSA_AI_INSTALLER_TEST_AFTER_MKDIR_BARRIER_DIR:-}" "mkdir" || exit 1
     mv "$owner_temp" "${lock_dir}/owner" || exit 1
     owner_temp=""
 
-    installer_env_test_barrier "${MASSA_TH0TH_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR:-}" "locked" || exit 1
+    installer_env_test_barrier "${MASSA_AI_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR:-}" "locked" || exit 1
     installer_env_validate_target "$target" ".env" || exit 1
     installer_env_validate_target "$backup" ".env.bak" || exit 1
     [ "$(installer_env_sha256 "$candidate")" = "$candidate_digest" ] || {
@@ -256,14 +256,14 @@ installer_env_publish() (
             installer_env_error "backup verification failed: ${backup_temp}"
             exit 1
         }
-        installer_env_test_barrier "${MASSA_TH0TH_INSTALLER_TEST_AFTER_BACKUP_BARRIER_DIR:-}" "backup" || exit 1
+        installer_env_test_barrier "${MASSA_AI_INSTALLER_TEST_AFTER_BACKUP_BARRIER_DIR:-}" "backup" || exit 1
         mv "$backup_temp" "$backup" || exit 1
         backup_temp=""
         [ "$(installer_env_sha256 "$backup")" = "$(installer_env_sha256 "$target")" ] || {
             installer_env_error "published backup verification failed: ${backup}"
             exit 1
         }
-        installer_env_test_barrier "${MASSA_TH0TH_INSTALLER_TEST_AFTER_BACKUP_PUBLISH_BARRIER_DIR:-}" "backup-published" || exit 1
+        installer_env_test_barrier "${MASSA_AI_INSTALLER_TEST_AFTER_BACKUP_PUBLISH_BARRIER_DIR:-}" "backup-published" || exit 1
     fi
 
     current_snapshot="$(installer_env_snapshot "$target")" || exit 1

@@ -52,7 +52,7 @@ This is commit-backed implementation evidence; it does not by itself prove every
 
 ## Spec/acceptance facts
 
-- Plan required real API, MCP stdio, Ollama, and PostgreSQL; mutations were confined to `e2e-th0th-*` project IDs with cleanup.
+- Plan required real API, MCP stdio, Ollama, and PostgreSQL; mutations were confined to `e2e-ai-*` project IDs with cleanup.
 - Plan required availability-gated skips with stated reasons and a dedicated-stack gate for globally disruptive scenarios.
 - Plan specified 35 tools. Later commit evidence establishes a 42-tool test roster; coverage scope therefore evolved.
 - Commit `517cc331` added source artifacts matching the planned harness, domain suites, benchmark, destructive gate, and cleanup evidence surface.

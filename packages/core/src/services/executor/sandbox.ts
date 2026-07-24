@@ -9,8 +9,8 @@
  *
  * Default mode is `auto`: uses the sandbox if the platform tool is available,
  * falls back to best-effort containment if not (F1 mitigation — CI can't run
- * Docker). `MASSA_TH0TH_EXECUTOR_SANDBOX=none` forces best-effort.
- * `MASSA_TH0TH_EXECUTOR_SANDBOX=on` forces sandbox and errors if unavailable
+ * Docker). `MASSA_AI_EXECUTOR_SANDBOX=none` forces best-effort.
+ * `MASSA_AI_EXECUTOR_SANDBOX=on` forces sandbox and errors if unavailable
  * (teaching error, not silent fallback).
  *
  * Seatbelt profile uses `realpathSync` for the project root, not lexical
@@ -20,7 +20,7 @@
 import { spawn } from "node:child_process";
 import { realpathSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 export type SandboxMode = "docker" | "seatbelt" | "none";
 
@@ -70,12 +70,12 @@ export function _resetSandboxAvailabilityCache(): void {
 /**
  * Determine the sandbox mode based on env + platform + tool availability.
  *
- * - `MASSA_TH0TH_EXECUTOR_SANDBOX=none` → best-effort (no sandbox)
- * - `MASSA_TH0TH_EXECUTOR_SANDBOX=on` → force sandbox, error if unavailable
+ * - `MASSA_AI_EXECUTOR_SANDBOX=none` → best-effort (no sandbox)
+ * - `MASSA_AI_EXECUTOR_SANDBOX=on` → force sandbox, error if unavailable
  * - unset / `auto` → use sandbox if available, fall back to best-effort
  */
 export function getSandboxMode(): SandboxMode {
-  const env = process.env.MASSA_TH0TH_EXECUTOR_SANDBOX ?? "auto";
+  const env = process.env.MASSA_AI_EXECUTOR_SANDBOX ?? "auto";
 
   if (env === "none") return "none";
 
@@ -86,8 +86,8 @@ export function getSandboxMode(): SandboxMode {
     if (isMac && isSeatbeltAvailable()) return "seatbelt";
     if (isLinux && isDockerAvailable()) return "docker";
     throw new Error(
-      `Sandbox forced (MASSA_TH0TH_EXECUTOR_SANDBOX=on) but no sandbox tool available. ` +
-        `Set MASSA_TH0TH_EXECUTOR_SANDBOX=none to disable.`,
+      `Sandbox forced (MASSA_AI_EXECUTOR_SANDBOX=on) but no sandbox tool available. ` +
+        `Set MASSA_AI_EXECUTOR_SANDBOX=none to disable.`,
     );
   }
 

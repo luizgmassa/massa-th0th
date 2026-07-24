@@ -5,7 +5,7 @@ import {
   indexJobTracker,
   symbolGraphService,
   type DefinitionLookupResult,
-} from "@massa-th0th/core";
+} from "@massa-ai/core";
 import { projectRoutes } from "../routes/project.js";
 import { workspaceRoutes } from "../routes/workspace.js";
 

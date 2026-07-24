@@ -21,7 +21,7 @@
  * throws.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { eventBus } from "../events/event-bus.js";
 import type { HandoffService } from "./handoff-service.js";
 

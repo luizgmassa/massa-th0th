@@ -5,10 +5,10 @@
  * criteria (CRS-01, CRS-03, CRS-04, CRS-05, CRS-06, CRS-08):
  * - 7 events in hooks/hooks.json including sessionStart + preCompact (historical gap fix)
  * - 6 skills/<name>/SKILL.md files exist
- * - agents/massa-th0th-navigator.md exists
- * - mcp.json declares the massa-th0th MCP server (npx @massa-th0th/mcp-client)
+ * - agents/massa-ai-navigator.md exists
+ * - mcp.json declares the massa-ai MCP server (npx @massa-ai/mcp-client)
  * - .cursor-plugin/plugin.json has name and version
- * - hooks/massa-th0th-hook symlink resolves to the claude-plugin binary
+ * - hooks/massa-ai-hook symlink resolves to the claude-plugin binary
  * - directory layout matches vscode.cursor.plugins.registerPath auto-discovery
  */
 
@@ -20,7 +20,7 @@ const PLUGIN_ROOT = path.resolve(import.meta.dir, "..");
 const REPO_ROOT = path.resolve(PLUGIN_ROOT, "../..");
 const CLAUDE_PLUGIN_BIN = path.resolve(
   REPO_ROOT,
-  "apps/claude-plugin/hooks/massa-th0th-hook.ts",
+  "apps/claude-plugin/hooks/massa-ai-hook.ts",
 );
 
 async function readJson(p: string): Promise<Record<string, unknown>> {
@@ -52,11 +52,11 @@ describe("cursor-plugin manifest (T10 / CRS-01,03,04,05,06,08)", () => {
       expect(arr.length).toBeGreaterThanOrEqual(1);
       const owned = arr.find(
         (e) =>
-          (e as Record<string, unknown>)._massaTh0thOwned === true,
+          (e as Record<string, unknown>)._massaAiOwned === true,
       );
       expect(owned).toBeDefined();
       const cmd = (owned as Record<string, unknown>).command as string;
-      expect(cmd).toContain("massa-th0th-hook");
+      expect(cmd).toContain("massa-ai-hook");
     }
   });
 
@@ -73,25 +73,25 @@ describe("cursor-plugin manifest (T10 / CRS-01,03,04,05,06,08)", () => {
     }
   });
 
-  test("agents/massa-th0th-navigator.md exists", async () => {
-    const p = path.join(PLUGIN_ROOT, "agents/massa-th0th-navigator.md");
+  test("agents/massa-ai-navigator.md exists", async () => {
+    const p = path.join(PLUGIN_ROOT, "agents/massa-ai-navigator.md");
     const stat = await fs.stat(p);
     expect(stat.isFile()).toBe(true);
     const content = await fs.readFile(p, "utf8");
-    expect(content).toContain("massa-th0th-navigator");
+    expect(content).toContain("massa-ai-navigator");
   });
 
-  test("mcp.json declares massa-th0th MCP server with npx @massa-th0th/mcp-client", async () => {
+  test("mcp.json declares massa-ai MCP server with npx @massa-ai/mcp-client", async () => {
     const mcp = await readJson(path.join(PLUGIN_ROOT, "mcp.json"));
     expect(mcp).toHaveProperty("mcpServers");
     const servers = mcp.mcpServers as Record<string, Record<string, unknown>>;
-    expect(servers).toHaveProperty("massa-th0th");
-    const entry = servers["massa-th0th"];
+    expect(servers).toHaveProperty("massa-ai");
+    const entry = servers["massa-ai"];
     const cmd = entry.command as unknown[];
     expect(Array.isArray(cmd)).toBe(true);
     expect(cmd).toContain("npx");
-    expect(cmd).toContain("@massa-th0th/mcp-client");
-    expect(entry.env).toHaveProperty("MASSA_TH0TH_API_URL");
+    expect(cmd).toContain("@massa-ai/mcp-client");
+    expect(entry.env).toHaveProperty("MASSA_AI_API_URL");
   });
 
   test(".cursor-plugin/plugin.json has name and version", async () => {
@@ -106,8 +106,8 @@ describe("cursor-plugin manifest (T10 / CRS-01,03,04,05,06,08)", () => {
     expect(typeof manifest.description).toBe("string");
   });
 
-  test("hooks/massa-th0th-hook symlink resolves to the claude-plugin binary", async () => {
-    const linkPath = path.join(PLUGIN_ROOT, "hooks/massa-th0th-hook");
+  test("hooks/massa-ai-hook symlink resolves to the claude-plugin binary", async () => {
+    const linkPath = path.join(PLUGIN_ROOT, "hooks/massa-ai-hook");
     const stat = await fs.lstat(linkPath);
     expect(stat.isSymbolicLink()).toBe(true);
     const target = await fs.readlink(linkPath);
@@ -130,7 +130,7 @@ describe("cursor-plugin manifest (T10 / CRS-01,03,04,05,06,08)", () => {
       "skills/status/SKILL.md",
       "hooks/hooks.json",
       "mcp.json",
-      "agents/massa-th0th-navigator.md",
+      "agents/massa-ai-navigator.md",
     ];
     for (const rel of required) {
       const p = path.join(PLUGIN_ROOT, rel);

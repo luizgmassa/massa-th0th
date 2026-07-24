@@ -19,11 +19,11 @@
 import { describe, expect, test, beforeEach, afterEach } from "bun:test";
 import { Elysia } from "elysia";
 import { eventBus } from "../services/events/event-bus.js";
-// The SSE route imports `@massa-th0th/core` (the built dist), whose `eventBus`
+// The SSE route imports `@massa-ai/core` (the built dist), whose `eventBus`
 // is a separate module instance from the source one above when running under
 // `bun test` (no bundling). Import the dist eventBus for the SSE integration
 // test so publishes reach the route's subscribers.
-import { eventBus as distEventBus } from "@massa-th0th/core";
+import { eventBus as distEventBus } from "@massa-ai/core";
 import { IndexJobTracker } from "../services/jobs/index-job-tracker.js";
 import { eventsRoutes } from "../../../../apps/tools-api/src/routes/events.js";
 
@@ -203,7 +203,7 @@ describe("SSE end-to-end ?jobId= receipt of tracker event (W5-T24, FR-16/AC-13)"
     await new Promise((r) => setTimeout(r, 100)); // let stream open + connected
 
     // The tracker publishes to the source eventBus; the SSE route subscribes
-    // to the dist eventBus (@massa-th0th/core). In the bundled production
+    // to the dist eventBus (@massa-ai/core). In the bundled production
     // binary these are the same singleton; under `bun test` they differ, so
     // re-emit the tracker's event on the dist bus to verify the route's
     // ?jobId= filter end-to-end. The unit tests above already proved the

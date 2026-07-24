@@ -1,4 +1,4 @@
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import { PgProposalStore } from "./proposal-repository-pg.js";
 export * from "./proposal-contract.js";
 export { PgProposalStore } from "./proposal-repository-pg.js";

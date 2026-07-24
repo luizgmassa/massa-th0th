@@ -2,7 +2,7 @@
  * Embedded mode wiring + handleIndexTool parity tests (Wave 6 N32, T19)
  *
  * Verifies:
- * - MASSA_TH0TH_EMBEDDED=true selects EmbeddedApiClient; unset selects ApiClient
+ * - MASSA_AI_EMBEDDED=true selects EmbeddedApiClient; unset selects ApiClient
  * - Health check reports mode ("embedded" or "http")
  * - handleIndexTool in embedded mode exercises path-safety validation
  * - Parity: same tool call in both modes → same result shape (including index tool)
@@ -24,18 +24,18 @@ describe("Embedded mode wiring (T19)", () => {
     process.env = { ...originalEnv };
   });
 
-  test("MASSA_TH0TH_EMBEDDED=true → EmbeddedApiClient instance", () => {
-    process.env.MASSA_TH0TH_EMBEDDED = "true";
+  test("MASSA_AI_EMBEDDED=true → EmbeddedApiClient instance", () => {
+    process.env.MASSA_AI_EMBEDDED = "true";
     // Simulate the constructor logic
-    const isEmbedded = process.env.MASSA_TH0TH_EMBEDDED === "true";
+    const isEmbedded = process.env.MASSA_AI_EMBEDDED === "true";
     expect(isEmbedded).toBe(true);
     const client = isEmbedded ? new EmbeddedApiClient() : new ApiClient();
     expect(client).toBeInstanceOf(EmbeddedApiClient);
   });
 
-  test("MASSA_TH0TH_EMBEDDED not set → ApiClient instance (HTTP, unchanged)", () => {
-    delete process.env.MASSA_TH0TH_EMBEDDED;
-    const isEmbedded = process.env.MASSA_TH0TH_EMBEDDED === "true";
+  test("MASSA_AI_EMBEDDED not set → ApiClient instance (HTTP, unchanged)", () => {
+    delete process.env.MASSA_AI_EMBEDDED;
+    const isEmbedded = process.env.MASSA_AI_EMBEDDED === "true";
     expect(isEmbedded).toBe(false);
     const client = isEmbedded ? new EmbeddedApiClient() : new ApiClient();
     expect(client).toBeInstanceOf(ApiClient);

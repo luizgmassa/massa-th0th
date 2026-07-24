@@ -10,19 +10,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgresql://massa_th0th:massa_th0th_password@localhost:5432/massa_th0th
+      DATABASE_URL: postgresql://massa_ai:massa_ai_password@localhost:5432/massa_ai
 
     services:
       postgres:
         image: pgvector/pgvector:pg17
         env:
-          POSTGRES_USER: massa_th0th
-          POSTGRES_PASSWORD: massa_th0th_password
-          POSTGRES_DB: massa_th0th
+          POSTGRES_USER: massa_ai
+          POSTGRES_PASSWORD: massa_ai_password
+          POSTGRES_DB: massa_ai
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U massa_th0th"
+          --health-cmd "pg_isready -U massa_ai"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
@@ -87,7 +87,7 @@ jobs:
       - name: Test
         run: bun run test
         env:
-          MASSA_TH0TH_EXECUTOR_SANDBOX: none
+          MASSA_AI_EXECUTOR_SANDBOX: none
 
   mcp:
     runs-on: ubuntu-latest
@@ -97,9 +97,9 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg17
         env:
-          POSTGRES_USER: massa_th0th
-          POSTGRES_PASSWORD: massa_th0th_password
-          POSTGRES_DB: massa_th0th
+          POSTGRES_USER: massa_ai
+          POSTGRES_PASSWORD: massa_ai_password
+          POSTGRES_DB: massa_ai
         ports:
           - 5432:5432
         options: >-
@@ -122,7 +122,7 @@ jobs:
           target: api
           push: false
           load: true
-          tags: massa-th0th-api:test
+          tags: massa-ai-api:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -133,18 +133,18 @@ jobs:
           target: mcp
           push: false
           load: true
-          tags: massa-th0th-mcp:test
+          tags: massa-ai-mcp:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Start API container
         run: |
-          docker run -d --name massa-th0th-api \
+          docker run -d --name massa-ai-api \
             --network host \
-            -e DATABASE_URL="postgresql://massa_th0th:massa_th0th_password@localhost:5432/massa_th0th" \
+            -e DATABASE_URL="postgresql://massa_ai:massa_ai_password@localhost:5432/massa_ai" \
             -e NODE_ENV=test \
             -p 3333:3333 \
-            massa-th0th-api:test
+            massa-ai-api:test
 
       - name: Wait for API to be ready
         run: |
@@ -156,7 +156,7 @@ jobs:
             sleep 1
           done
           echo "API did not become ready in 20s"
-          docker logs massa-th0th-api
+          docker logs massa-ai-api
           exit 1
 
       - name: Health check
@@ -170,7 +170,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker rm -f massa-th0th-api 2>/dev/null || true
+        run: docker rm -f massa-ai-api 2>/dev/null || true
 
   structural-native:
     name: Structural native tests (darwin-arm64)

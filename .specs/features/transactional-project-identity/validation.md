@@ -2,7 +2,7 @@
 
 Verdict: **PASS** (independent verifier: see §8)
 Diff range: `1e21f9a..HEAD` (T1 `3dc85b5` … T7). Base before feature: `476b93f`.
-Environment: macOS arm64, Bun **1.3.11** (repo pin `packageManager: bun@1.3.11`; machine default 1.3.14 fails the exact-version native parser gate — see §6), PostgreSQL 127.0.0.1:5432, owned acceptance DB `massa_th0th_identity_t6`.
+Environment: macOS arm64, Bun **1.3.11** (repo pin `packageManager: bun@1.3.11`; machine default 1.3.14 fails the exact-version native parser gate — see §6), PostgreSQL 127.0.0.1:5432, owned acceptance DB `massa_ai_identity_t6`.
 
 ## 1. Task-by-task evidence
 

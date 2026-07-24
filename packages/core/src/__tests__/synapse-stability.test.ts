@@ -31,7 +31,7 @@ import {
   DEFAULT_EMBEDDING_EVOLUTION_CONFIG,
 } from "../services/synapse/plasticity/embedding-evolution.js";
 import { CORPUS, toResult } from "./fixtures/synapse-test-corpus.js";
-import type { SynapseRuntimeConfig } from "@massa-th0th/shared";
+import type { SynapseRuntimeConfig } from "@massa-ai/shared";
 
 const RUNS = 10;
 const FIXED_NOW = 2_000_000_000;

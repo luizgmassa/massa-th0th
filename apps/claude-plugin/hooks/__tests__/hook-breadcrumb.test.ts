@@ -16,7 +16,7 @@ import { spawnSync, spawn } from "child_process";
 import { writeFileSync, unlinkSync } from "fs";
 import path from "path";
 
-const HOOK_SCRIPT = path.resolve(import.meta.dir, "../massa-th0th-hook.ts");
+const HOOK_SCRIPT = path.resolve(import.meta.dir, "../massa-ai-hook.ts");
 
 interface RunResult {
   exitCode: number | null;
@@ -125,7 +125,7 @@ function runHook(baseUrl: string, payload: string): RunResult {
     [HOOK_SCRIPT, "post-tool-use"],
     {
       input: payload,
-      env: { ...process.env, MASSA_TH0TH_API_BASE: baseUrl },
+      env: { ...process.env, MASSA_AI_API_BASE: baseUrl },
       timeout: 30000,
       encoding: "utf-8",
     },

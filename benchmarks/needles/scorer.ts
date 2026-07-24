@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Needle-in-haystack scorer for massa-th0th semantic search.
+ * Needle-in-haystack scorer for massa-ai semantic search.
  *
  * Reads a dataset (needles + expected hits) and a results file (raw search
  * output from a harness), then writes a Markdown report and an evaluations
@@ -17,7 +17,7 @@
  *   --results = benchmarks/needles/reports/<projectId>-results.json
  *   --out     = benchmarks/needles/reports/<projectId>
  *
- * The harness (typically Claude Code calling mcp__massa-th0th__search) is
+ * The harness (typically Claude Code calling mcp__massa-ai__search) is
  * responsible for producing the results file in this format:
  *   {
  *     "projectId": "sicad",
@@ -173,7 +173,7 @@ function renderMarkdown(
   summary: any,
 ): string {
   const lines: string[] = [];
-  lines.push(`# massa-th0th Needles Benchmark Report — ${dataset.projectId}`);
+  lines.push(`# massa-ai Needles Benchmark Report — ${dataset.projectId}`);
   lines.push("");
   lines.push(`- Ran at: \`${results.ranAt}\``);
   lines.push(`- Dataset version: \`${dataset.version}\``);

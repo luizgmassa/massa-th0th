@@ -27,10 +27,10 @@ Verified from the diffs:
   creates the configured role/database, enables `vector`, and prints a
   `DATABASE_URL`.
 - `scripts/setup-local-first.sh` gained native (default), SQLite, and Docker
-  choices plus `MASSA_TH0TH_DB_BACKEND=native|sqlite|docker`. Its Docker branch
+  choices plus `MASSA_AI_DB_BACKEND=native|sqlite|docker`. Its Docker branch
   prints the ~5GB warning; native-helper failure falls back to a manual URL.
 - `install.sh`, `.env.example`, `README.md`, and
-  `skills/massa-th0th-memory/SKILL.md` received native-vs-Docker guidance and
+  `skills/massa-ai-memory/SKILL.md` received native-vs-Docker guidance and
   database-setting documentation.
 - `scripts/tests/test-setup-wizard-db-selection.sh` was extended with menu,
   helper-presence, Docker-warning, and backend-mapping assertions.
@@ -63,8 +63,8 @@ Verified from the diffs:
 
 - `614bf91e5c72cf25c76f465846768bc7351c18f1` — `docs: add operational knobs + e2e/observation notes`
   - Preserved README rows for `DATABASE_URL`, `VECTOR_STORE_TYPE`,
-    `POSTGRES_PASSWORD`, `MASSA_TH0TH_POSTGRES_PORT`, and
-    `MASSA_TH0TH_DB_BACKEND`; the commit's new material was operational-knob
+    `POSTGRES_PASSWORD`, `MASSA_AI_POSTGRES_PORT`, and
+    `MASSA_AI_DB_BACKEND`; the commit's new material was operational-knob
     documentation, not installer behavior.
 
 ## Spec and acceptance facts worth preserving
@@ -76,7 +76,7 @@ Verified from the diffs:
   selected.
 - Docker warning text distinguishes the approximate ~5GB Docker/colima cost
   from the plan/commit's ~100MB native estimate.
-- `MASSA_TH0TH_DB_BACKEND` provides non-interactive `native`, `sqlite`, or
+- `MASSA_AI_DB_BACKEND` provides non-interactive `native`, `sqlite`, or
   `docker` selection.
 
 ## Deviations and unresolved gaps

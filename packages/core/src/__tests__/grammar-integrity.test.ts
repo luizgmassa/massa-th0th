@@ -96,9 +96,9 @@ describeNative("runtime grammar integrity verification", () => {
     }
   });
 
-  test("MASSA_TH0TH_SKIP_GRAMMAR_INTEGRITY=1 skips verification and sets the memo", () => {
-    const saved = process.env.MASSA_TH0TH_SKIP_GRAMMAR_INTEGRITY;
-    process.env.MASSA_TH0TH_SKIP_GRAMMAR_INTEGRITY = "1";
+  test("MASSA_AI_SKIP_GRAMMAR_INTEGRITY=1 skips verification and sets the memo", () => {
+    const saved = process.env.MASSA_AI_SKIP_GRAMMAR_INTEGRITY;
+    process.env.MASSA_AI_SKIP_GRAMMAR_INTEGRITY = "1";
     resetGrammarIntegrityForTests();
     try {
       expect(() => verifyNativeGrammarIntegrity(requireFromCore)).not.toThrow();
@@ -107,9 +107,9 @@ describeNative("runtime grammar integrity verification", () => {
       expect(() => verifyNativeGrammarIntegrity(requireFromCore)).not.toThrow();
     } finally {
       if (saved === undefined) {
-        delete process.env.MASSA_TH0TH_SKIP_GRAMMAR_INTEGRITY;
+        delete process.env.MASSA_AI_SKIP_GRAMMAR_INTEGRITY;
       } else {
-        process.env.MASSA_TH0TH_SKIP_GRAMMAR_INTEGRITY = saved;
+        process.env.MASSA_AI_SKIP_GRAMMAR_INTEGRITY = saved;
       }
       resetGrammarIntegrityForTests();
     }

@@ -16,7 +16,7 @@ Runtime behavior currently selects SQLite or PostgreSQL in many independent path
 | SQLR-004 | Preserve durable behavior. | CRUD, filtering, graph traversal, clustering/deduplication, caches, restart persistence, and singleton behavior have PostgreSQL or in-memory-double coverage. |
 | SQLR-005 | Enforce operations contract. | Docker/setup migrates after URL validation; health/system responses report PostgreSQL, pgvector, and database metadata rather than SQLite files. |
 | SQLR-006 | Remove public SQLite support. | Active source, manifests, scripts, tests, CI, installer, and docs contain no active SQLite backend selection or `.db` backend heuristics. Historical `.specs/` and immutable migration history are excluded. |
-| SQLR-007 | Constrain installer choice. | `MASSA_TH0TH_DB_BACKEND` permits only `native` or `docker`; `sqlite` is rejected and an unusable URL stops setup. |
+| SQLR-007 | Constrain installer choice. | `MASSA_AI_DB_BACKEND` permits only `native` or `docker`; `sqlite` is rejected and an unusable URL stops setup. |
 
 ## Out of Scope
 

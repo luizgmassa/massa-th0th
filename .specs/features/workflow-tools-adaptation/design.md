@@ -7,13 +7,13 @@
 
 ## Architecture Overview
 
-This feature is a documentation-layer adaptation: it edits `skills/massa-th0th/` workflow files, the `references/th0th-tools.md` tool-contract reference, and the `SKILL.md` router. No tool implementation, MCP schema, or generated artifact changes. The design is a tool-to-workflow adoption map plus a canonical-naming rename pass.
+This feature is a documentation-layer adaptation: it edits `skills/massa-ai/` workflow files, the `references/mcp-tools.md` tool-contract reference, and the `SKILL.md` router. No tool implementation, MCP schema, or generated artifact changes. The design is a tool-to-workflow adoption map plus a canonical-naming rename pass.
 
 **Approach A (chosen): Single-pass rename + selective adoption.** One atomic sweep replaces all `th0th_*` prefixes with canonical un-prefixed names across workflows/references/SKILL.md, then each workflow adopts the new tools that materially benefit it. Rejected alternative: **Approach B (two-phase)** — rename first, adopt tools in a separate feature. Rejected because the rename and adoption share the same edit surface (every workflow file), so splitting them doubles the touch count and review overhead.
 
 ```mermaid
 graph TD
-    A[tool-definitions.ts CANONICAL_ORDER - 52 tools] --> B[references/th0th-tools.md - expanded matrix]
+    A[tool-definitions.ts CANONICAL_ORDER - 52 tools] --> B[references/mcp-tools.md - expanded matrix]
     B --> C[Workflows - adopt new tools]
     B --> D[SKILL.md router - Core Contract + Retrieval]
     C --> E[Graceful degradation preserved]
@@ -29,44 +29,44 @@ graph TD
 | Component | Location | How to Use |
 | --- | --- | --- |
 | `tool-definitions.ts` CANONICAL_ORDER | `apps/mcp-client/src/tool-definitions.ts:24` | Source of truth for canonical tool names (52 tools, un-prefixed) |
-| `massa-th0th-memory` SKILL.md | `skills/massa-th0th-memory/SKILL.md` | Already uses un-prefixed names; reference for naming convention + tool priority table |
+| `massa-ai-memory` SKILL.md | `skills/massa-ai-memory/SKILL.md` | Already uses un-prefixed names; reference for naming convention + tool priority table |
 | `synapse-usage` SKILL.md | `skills/synapse-usage/SKILL.md` | Documents full Synapse lifecycle (5 moves); reference for synapse_task_begin/end/prefetch adoption |
 | `FEATURES.md` tool roster | `FEATURES.md:791-895` | Canonical human-readable tool descriptions for the expanded matrix |
-| Existing graceful-degradation table | `skills/massa-th0th/SKILL.md:268-279` | Pattern for new tool fallback rules |
+| Existing graceful-degradation table | `skills/massa-ai/SKILL.md:268-279` | Pattern for new tool fallback rules |
 
 ### Integration Points
 
 | System | Integration Method |
 | --- | --- |
 | Workflows → MCP tools | Tool name references in workflow prose (no code calls) |
-| `references/th0th-tools.md` → workflows | Workflows point to it as the single tool-contract reference |
+| `references/mcp-tools.md` → workflows | Workflows point to it as the single tool-contract reference |
 | `SKILL.md` router → workflows | Core Contract + Retrieval sections set the tool surface workflows follow |
 
 ---
 
 ## Components
 
-### 1. `references/th0th-tools.md` — Expanded Tool Matrix
+### 1. `references/mcp-tools.md` — Expanded Tool Matrix
 
 - **Purpose**: Single source of truth for all 52 tool contracts; workflows reference it instead of duplicating tool details.
-- **Location**: `skills/massa-th0th/references/th0th-tools.md`
+- **Location**: `skills/massa-ai/references/mcp-tools.md`
 - **Changes**:
   - Rename all `th0th_*` → un-prefixed in the existing MCP Capability Matrix.
   - Expand the matrix from ~20 rows to all 52 tools, grouped by category (Indexing & Search, Symbol Graph, Memory & Lifecycle, Synapse, Passive Capture, Handoffs, Checkpoints, Proposals, Code Execution, Bootstrap, Fetch).
   - Add rows for: `read_file`, `symbol_snippet`, `get_architecture`, `memory_update`, `memory_delete`, `create_checkpoint`, `list_checkpoints`, `restore_checkpoint`, `compact_snapshot`, `bootstrap`, `handoff_begin`, `handoff_accept`, `handoff_cancel`, `handoff_list_pending`, `list_proposals`, `approve_proposal`, `reject_proposal`, `execute`, `execute_file`, `batch_execute`, `fetch_and_index`, `synapse_get`, `synapse_update`, `synapse_end`, `synapse_prefetch`, `synapse_list`, `synapse_task_begin`, `synapse_task_end`, `rename_project`, `merge_projects`.
   - Update the Retrieval Order to include `read_file`, `symbol_snippet`, `trace_path`, `impact_analysis`, `get_architecture`.
-  - Keep the file name `th0th-tools.md` for backward-compat (validator anchors reference it).
+  - Keep the file name `mcp-tools.md` for backward-compat (validator anchors reference it).
 
 ### 1a. Full `references/` Tree — Canonical Naming Rename
 
-- **Purpose**: All reference files (not just `th0th-tools.md`) use canonical un-prefixed tool names.
-- **Location**: `skills/massa-th0th/references/**/*.md` (~30 files including `synapse-policy.md`, `decision-engine.md`, `codebase-investigation.md`, etc.)
+- **Purpose**: All reference files (not just `mcp-tools.md`) use canonical un-prefixed tool names.
+- **Location**: `skills/massa-ai/references/**/*.md` (~30 files including `synapse-policy.md`, `decision-engine.md`, `codebase-investigation.md`, etc.)
 - **Changes**: Replace every `th0th_<tool>` reference with the canonical un-prefixed name. This is part of the T1 rename sweep (Pre-mortem F1 mitigation).
 
 ### 2. Workflows — Tool Adoption Map
 
 - **Purpose**: Each workflow adopts the new tools that materially benefit its flow.
-- **Location**: `skills/massa-th0th/workflows/`
+- **Location**: `skills/massa-ai/workflows/`
 - **Adoption map** (tool → workflow → where in the flow):
 
 | Tool(s) | Workflow | Insertion point | Rationale |
@@ -87,7 +87,7 @@ graph TD
 | `synapse_task_begin` / `synapse_task_end` | `spec-driven.md` | Execute: multi-search investigation | Task envelope within Synapse session |
 | `synapse_task_begin` / `synapse_task_end` | `feature.md` | Multi-search investigation | Task envelope within Synapse session |
 | `synapse_prefetch` | `spec-driven.md`, `feature.md`, `debug.md` | After opening a file for deep investigation | Warm Synapse buffer before next search |
-| `read_file` | All workflows that read files | Replace native Read references where symbol metadata is useful | massa-th0th tool with symbol metadata + imports (priority 14 per meta-skill) |
+| `read_file` | All workflows that read files | Replace native Read references where symbol metadata is useful | massa-ai tool with symbol metadata + imports (priority 14 per meta-skill) |
 | `symbol_snippet` | All workflows that need raw code by line range | Where line-range snippets are needed | Raw code snippet by file + line range |
 | `memory_update` | `general.md`, `debug.md`, `long-session.md` | When a memory is stale/needs correction | Re-embeds on content change |
 | `memory_delete` | `general.md`, `long-session.md` | When a memory is obsolete | Hard-delete with graph-edge severing |
@@ -97,13 +97,13 @@ graph TD
 ### 3. `SKILL.md` Router — Core Contract + Retrieval
 
 - **Purpose**: Router reflects the full tool surface with canonical names.
-- **Location**: `skills/massa-th0th/SKILL.md`
+- **Location**: `skills/massa-ai/SKILL.md`
 - **Changes**:
-  - Core Contract: rename `th0th_recall` → `recall`, `th0th_search` → `search`; add note that the tool surface includes checkpoints, handoffs, bootstrap, compact_snapshot, trace_path, impact_analysis, code execution, full Synapse, read_file, symbol_snippet.
+  - Core Contract: rename `recall` → `recall`, `search` → `search`; add note that the tool surface includes checkpoints, handoffs, bootstrap, compact_snapshot, trace_path, impact_analysis, code execution, full Synapse, read_file, symbol_snippet.
   - Retrieval And Synapse: rename all `th0th_*` → un-prefixed; add `read_file`, `symbol_snippet`, `trace_path`, `impact_analysis`, `synapse_prefetch` to the retrieval order.
-  - Session And Project: rename `th0th_recall` → `recall`.
+  - Session And Project: rename `recall` → `recall`.
   - Persistence: no `th0th_` references remain.
-  - Graceful Degradation: rename `th0th_recall` → `recall`, `th0th_search` → `search`; add rows for checkpoint/handoff/bootstrap/compact_snapshot/execution unavailability.
+  - Graceful Degradation: rename `recall` → `recall`, `search` → `search`; add rows for checkpoint/handoff/bootstrap/compact_snapshot/execution unavailability.
 
 ---
 
@@ -113,20 +113,20 @@ Every `th0th_<tool>` reference becomes `<tool>`:
 
 | Old (th0th_-prefixed) | New (canonical) |
 | --- | --- |
-| `th0th_recall` | `recall` |
+| `recall` | `recall` |
 | `th0th_remember` | `remember` |
-| `th0th_search` | `search` |
+| `search` | `search` |
 | `th0th_optimized_context` | `optimized_context` |
 | `th0th_compress` | `compress` |
 | `th0th_list_projects` | `list_projects` |
 | `th0th_project_map` | `project_map` |
-| `th0th_index` | `index` |
-| `th0th_index_status` | `index_status` |
+| `index` | `index` |
+| `index_status` | `index_status` |
 | `th0th_reindex` | `reindex` |
-| `th0th_search_definitions` | `search_definitions` |
+| `search_definitions` | `search_definitions` |
 | `th0th_get_references` | `get_references` |
 | `th0th_go_to_definition` | `go_to_definition` |
-| `th0th_read_file` | `read_file` |
+| `read_file` | `read_file` |
 | `th0th_symbol_snippet` | `symbol_snippet` |
 | `th0th_memory_list` | `memory_list` |
 | `th0th_analytics` | `analytics` |
@@ -166,9 +166,9 @@ Every `th0th_<tool>` reference becomes `<tool>`:
 
 | Concern | Location (file:line) | Impact | Mitigation |
 | --- | --- | --- | --- |
-| R1: `th0th_` prefix missed in some file | Any workflow/reference/SKILL.md | Inconsistent naming; tool reference may not resolve | Deterministic sensor: `rg 'th0th_' skills/massa-th0th/` (full tree, not just workflows) must return zero (WTA-01); T1 covers `skills/massa-th0th/**/*.md` (Pre-mortem F1 mitigation) |
+| R1: `th0th_` prefix missed in some file | Any workflow/reference/SKILL.md | Inconsistent naming; tool reference may not resolve | Deterministic sensor: `rg 'th0th_' skills/massa-ai/` (full tree, not just workflows) must return zero (WTA-01); T1 covers `skills/massa-ai/**/*.md` (Pre-mortem F1 mitigation) |
 | R2: New tool reference breaks graceful degradation | Any workflow adopting a new tool | Workflow hard-fails when tool is absent | Every new tool reference keeps "if unavailable, continue with fallback" pattern (WTA edge cases) |
-| R3: `th0th-tools.md` matrix drift from `tool-definitions.ts` | `references/th0th-tools.md` | Workflows reference a stale tool contract | Matrix is built from CANONICAL_ORDER; verification reads `tool-definitions.ts` and compares (WTA-02) |
+| R3: `mcp-tools.md` matrix drift from `tool-definitions.ts` | `references/mcp-tools.md` | Workflows reference a stale tool contract | Matrix is built from CANONICAL_ORDER; verification reads `tool-definitions.ts` and compares (WTA-02) |
 | R4: Behavior drift — tool adoption changes routing/memory/Evidence Gate | Any rewritten workflow | Workflow contracts change | Tool adoption adds steps or replaces prose; routing/memory/Evidence Gate/failure-handling contracts preserved (WTA-13..15 equivalent) |
 | R5: `get_architecture` adopted but tool has different contract than `project_map` | `architecture-audit.md` | Wrong tool usage | `get_architecture` is architecture-specific (packages, routes, hotspots, communities, cycles); `project_map` is general overview; design names both explicitly and T8 instructs the workflow to distinguish them |
 | R6: `synapse_task_begin/end` requires an existing `synapse_session` id | `spec-driven.md`, `feature.md` | Task envelope fails if no session | Workflow instructs creating `synapse_session` first (existing pattern); task_begin/end are optional enhancements |
@@ -181,10 +181,10 @@ Every `th0th_<tool>` reference becomes `<tool>`:
 
 | Decision | Choice | Rationale |
 | --- | --- | --- |
-| Canonical naming = un-prefixed | Remove `th0th_` prefix everywhere | Matches `tool-definitions.ts` CANONICAL_ORDER, OpenCode plugin, and `massa-th0th-memory` meta-skill |
-| `th0th-tools.md` file name kept | No rename | Validator anchors reference it; backward-compat |
+| Canonical naming = un-prefixed | Remove `th0th_` prefix everywhere | Matches `tool-definitions.ts` CANONICAL_ORDER, OpenCode plugin, and `massa-ai-memory` meta-skill |
+| `mcp-tools.md` file name kept | No rename | Validator anchors reference it; backward-compat |
 | Selective adoption, not blanket | Only adopt tools that materially benefit a workflow | Avoids bloating workflows with irrelevant tool references (minimum-code guideline) |
-| `read_file` preferred over native Read | Where symbol metadata is useful | `massa-th0th-memory` priority rule (priority 14) |
+| `read_file` preferred over native Read | Where symbol metadata is useful | `massa-ai-memory` priority rule (priority 14) |
 | Checkpoints adopted in spec-driven/long-session/restart-save | Those workflows describe long-running task save/resume | Checkpoints are the first-class tool for exactly this |
 | `trace_path` in debug, not in architecture-audit | Debug needs call-path tracing for root cause; architecture-audit uses `impact_analysis` + `get_architecture` | Each graph tool maps to its strongest workflow fit |
 | Approach A (single-pass) over Approach B (two-phase) | Single-pass rename + adoption | Same edit surface; splitting doubles touch count |
@@ -197,19 +197,19 @@ Every `th0th_<tool>` reference becomes `<tool>`:
 
 | Requirement | Verification |
 | --- | --- |
-| WTA-01 (no `th0th_` prefix) | `rg 'th0th_' skills/massa-th0th/` returns zero matches |
-| WTA-02 (expanded matrix) | `references/th0th-tools.md` contains all 52 tools from CANONICAL_ORDER; grep each tool name |
-| WTA-03 (SKILL.md canonical) | `rg 'th0th_' skills/massa-th0th/SKILL.md` returns zero |
-| WTA-04..07 (checkpoints) | `rg 'create_checkpoint\|list_checkpoints\|restore_checkpoint' skills/massa-th0th/workflows/` returns matches in spec-driven.md, long-session.md, restart-save.md |
-| WTA-08..10 (handoffs) | `rg 'handoff_begin\|handoff_accept\|handoff_list_pending\|handoff_cancel' skills/massa-th0th/workflows/` returns matches in agent-handoff.md, restart-load.md |
-| WTA-11..12 (bootstrap) | `rg 'bootstrap' skills/massa-th0th/workflows/onboarding.md` returns a match |
-| WTA-13..14 (compact_snapshot) | `rg 'compact_snapshot' skills/massa-th0th/workflows/long-session.md` returns a match |
-| WTA-15..17 (trace_path/impact_analysis) | `rg 'trace_path' skills/massa-th0th/workflows/debug.md` + `rg 'impact_analysis' skills/massa-th0th/workflows/architecture/ skills/massa-th0th/workflows/refactor.md` return matches |
-| WTA-18..19 (code execution) | `rg 'execute_file\|execute\|batch_execute' skills/massa-th0th/workflows/debug.md skills/massa-th0th/workflows/general.md` return matches |
-| WTA-20..22 (full Synapse) | `rg 'synapse_task_begin\|synapse_task_end\|synapse_prefetch' skills/massa-th0th/workflows/` return matches in spec-driven.md, feature.md |
-| WTA-23..24 (read_file/symbol_snippet) | `rg 'read_file\|symbol_snippet' skills/massa-th0th/workflows/` return matches |
-| WTA-25..27 (memory_update/delete/analytics) | `rg 'memory_update\|memory_delete\|analytics' skills/massa-th0th/workflows/` return matches |
-| WTA-28..29 (SKILL.md router) | `rg 'checkpoint\|handoff_begin\|bootstrap\|compact_snapshot\|trace_path\|impact_analysis\|execute_file\|synapse_prefetch\|read_file\|symbol_snippet' skills/massa-th0th/SKILL.md` returns matches |
+| WTA-01 (no `th0th_` prefix) | `rg 'th0th_' skills/massa-ai/` returns zero matches |
+| WTA-02 (expanded matrix) | `references/mcp-tools.md` contains all 52 tools from CANONICAL_ORDER; grep each tool name |
+| WTA-03 (SKILL.md canonical) | `rg 'th0th_' skills/massa-ai/SKILL.md` returns zero |
+| WTA-04..07 (checkpoints) | `rg 'create_checkpoint\|list_checkpoints\|restore_checkpoint' skills/massa-ai/workflows/` returns matches in spec-driven.md, long-session.md, restart-save.md |
+| WTA-08..10 (handoffs) | `rg 'handoff_begin\|handoff_accept\|handoff_list_pending\|handoff_cancel' skills/massa-ai/workflows/` returns matches in agent-handoff.md, restart-load.md |
+| WTA-11..12 (bootstrap) | `rg 'bootstrap' skills/massa-ai/workflows/onboarding.md` returns a match |
+| WTA-13..14 (compact_snapshot) | `rg 'compact_snapshot' skills/massa-ai/workflows/long-session.md` returns a match |
+| WTA-15..17 (trace_path/impact_analysis) | `rg 'trace_path' skills/massa-ai/workflows/debug.md` + `rg 'impact_analysis' skills/massa-ai/workflows/architecture/ skills/massa-ai/workflows/refactor.md` return matches |
+| WTA-18..19 (code execution) | `rg 'execute_file\|execute\|batch_execute' skills/massa-ai/workflows/debug.md skills/massa-ai/workflows/general.md` return matches |
+| WTA-20..22 (full Synapse) | `rg 'synapse_task_begin\|synapse_task_end\|synapse_prefetch' skills/massa-ai/workflows/` return matches in spec-driven.md, feature.md |
+| WTA-23..24 (read_file/symbol_snippet) | `rg 'read_file\|symbol_snippet' skills/massa-ai/workflows/` return matches |
+| WTA-25..27 (memory_update/delete/analytics) | `rg 'memory_update\|memory_delete\|analytics' skills/massa-ai/workflows/` return matches |
+| WTA-28..29 (SKILL.md router) | `rg 'checkpoint\|handoff_begin\|bootstrap\|compact_snapshot\|trace_path\|impact_analysis\|execute_file\|synapse_prefetch\|read_file\|symbol_snippet' skills/massa-ai/SKILL.md` returns matches |
 | Behavior preservation | Diff each rewritten workflow: routing header, workflowSessionId rule, reference-load list, recall step, persistence tags, Evidence Gate step unchanged in meaning |
 
 **Discrimination sensor**: inject a `th0th_`-prefixed reference into a scratch copy of one workflow; confirm `rg 'th0th_'` catches it (sensor kills the mutation).
@@ -221,7 +221,7 @@ Every `th0th_<tool>` reference becomes `<tool>`:
 | Requirement ID | Design Component |
 | --- | --- |
 | WTA-01 | Canonical Naming Rename Map + all components |
-| WTA-02 | Component 1: `th0th-tools.md` expanded matrix |
+| WTA-02 | Component 1: `mcp-tools.md` expanded matrix |
 | WTA-03 | Component 3: SKILL.md Core Contract |
 | WTA-04..07 | Component 2: checkpoints in spec-driven/long-session/restart-save |
 | WTA-08..10 | Component 2: handoff tools in agent-handoff/restart-load |

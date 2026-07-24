@@ -10,7 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { config, MemoryType } from "@massa-th0th/shared";
+import { config, MemoryType } from "@massa-ai/shared";
 import {
   SalienceJudge,
   SalienceSchema,

@@ -34,7 +34,7 @@ If a reference and current Jira metadata conflict, current Jira metadata wins fo
 
 ## Bounded Code Exploration
 
-Run the massa-th0th exploration workflow as a read-only child pass when ticket quality depends on current implementation context, reusable utilities, ownership boundaries, or likely affected modules.
+Run the massa-ai exploration workflow as a read-only child pass when ticket quality depends on current implementation context, reusable utilities, ownership boundaries, or likely affected modules.
 
 Skip exploration when:
 

@@ -20,11 +20,11 @@
  *   - Increasing accessCount (recency fixed) never decreases the access term.
  *   - Scores below `coldThreshold` flag the memory as a prune candidate.
  *
- * This module has NO runtime dependencies beyond `@massa-th0th/shared`'s
+ * This module has NO runtime dependencies beyond `@massa-ai/shared`'s
  * `DecayParams` type — it is safe to unit-test without a database.
  */
 
-import type { DecayParams } from "@massa-th0th/shared";
+import type { DecayParams } from "@massa-ai/shared";
 
 /** Minimal memory shape consumed by `decayScore` — decoupled from the row type. */
 export interface DecayMemory {

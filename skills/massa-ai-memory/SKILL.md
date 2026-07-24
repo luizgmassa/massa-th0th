@@ -1,15 +1,15 @@
 ---
-name: massa-th0th-memory
-description: Mandatory rules for using massa-th0th semantic search, compression, memory, and symbol graph tools. Prioritize massa-th0th tools over native tools (Glob, Grep, Read) to explore and understand code. Triggers on tasks involving code search, context compression, storing decisions, symbol navigation, or retrieving project knowledge.
+name: massa-ai-memory
+description: Mandatory rules for using massa-ai semantic search, compression, memory, and symbol graph tools. Prioritize massa-ai tools over native tools (Glob, Grep, Read) to explore and understand code. Triggers on tasks involving code search, context compression, storing decisions, symbol navigation, or retrieving project knowledge.
 license: MIT
 metadata:
   author: S1LV4, luizgmassa
   version: "2.0.0"
 ---
 
-# massa-th0th-memory Skill
+# massa-ai-memory Skill
 
-Mandatory rules for using massa-th0th tools. Prioritize semantic search, compression, memory, and symbol graph tools over native tools (Glob, Grep, Read) to explore and understand code.
+Mandatory rules for using massa-ai tools. Prioritize semantic search, compression, memory, and symbol graph tools over native tools (Glob, Grep, Read) to explore and understand code.
 
 ## When to Apply
 
@@ -48,7 +48,7 @@ Reference these guidelines when:
 | 19 | `symbol_snippet` | Get raw code snippet by file + line range |
 | 20 | `memory_list` | Browse memories by type/importance without a query (audit mode) |
 | 21 | `reindex` | Force full reindex (when autoReindex/50-file limit is insufficient) |
-| 22 | Glob/Grep/Read | Only when massa-th0th doesn't find what you need |
+| 22 | Glob/Grep/Read | Only when massa-ai doesn't find what you need |
 
 ## Tool Reference
 
@@ -82,11 +82,11 @@ Never call `index_status` in a tight loop. Choose one strategy:
 
 **Strategy A — single Bash sleep loop (preferred for normal tasks):**
 ```bash
-# MASSA_TH0TH_API_URL is set by the MCP server environment; falls back to localhost:3333
-MASSA_TH0TH_API_URL="${MASSA_TH0TH_API_URL:-http://localhost:3333}"
+# MASSA_AI_API_URL is set by the MCP server environment; falls back to localhost:3333
+MASSA_AI_API_URL="${MASSA_AI_API_URL:-http://localhost:3333}"
 
 for i in $(seq 1 40); do
-  result=$(curl -s "$MASSA_TH0TH_API_URL/api/v1/project/index/status/JOB_ID")
+  result=$(curl -s "$MASSA_AI_API_URL/api/v1/project/index/status/JOB_ID")
   status=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data']['status'])")
   progress=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'].get('progress',0))")
   echo "[$i] status=$status progress=$progress%"
@@ -97,7 +97,7 @@ done
 
 **Strategy B — ScheduleWakeup (only inside /loop mode):**
 ```
-ScheduleWakeup({ delaySeconds: 30, reason: "waiting for massa-th0th indexing job JOB_ID", prompt: "<<autonomous-loop-dynamic>>" })
+ScheduleWakeup({ delaySeconds: 30, reason: "waiting for massa-ai indexing job JOB_ID", prompt: "<<autonomous-loop-dynamic>>" })
 ```
 Then on the next wake-up call `index_status` once and repeat or finish.
 
@@ -342,12 +342,12 @@ Need a clean slate before reindexing?
 ### One-command (recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-th0th/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-ai/main/install.sh | bash
 ```
 
-Supports three modes (select interactively or override with `MASSA_TH0TH_MODE`):
+Supports three modes (select interactively or override with `MASSA_AI_MODE`):
 
-| Mode | `MASSA_TH0TH_MODE` | Requirements | Best for |
+| Mode | `MASSA_AI_MODE` | Requirements | Best for |
 |------|--------------|--------------|---------|
 | Docker | `docker` | Docker | Production, quick start (~5GB RAM, Docker/colima) |
 | Docker build | `build` | Docker + Git | Custom builds, local changes (~5GB RAM, Docker/colima) |
@@ -356,13 +356,13 @@ Supports three modes (select interactively or override with `MASSA_TH0TH_MODE`):
 Non-interactive example:
 
 ```bash
-MASSA_TH0TH_MODE=docker MASSA_TH0TH_API_PORT=4000 MASSA_TH0TH_NO_START=1 \
-  curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-th0th/main/install.sh | bash
+MASSA_AI_MODE=docker MASSA_AI_API_PORT=4000 MASSA_AI_NO_START=1 \
+  curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-ai/main/install.sh | bash
 ```
 
 ## Configuration
 
-Config file: `~/.config/massa-th0th/config.json` (auto-created on first run)
+Config file: `~/.config/massa-ai/config.json` (auto-created on first run)
 
 ### Embedding Providers
 
@@ -376,13 +376,13 @@ Config file: `~/.config/massa-th0th/config.json` (auto-created on first run)
 ### Quick Config Commands
 
 ```bash
-npx @massa-th0th/mcp-client --config-show                          # print current config
-npx @massa-th0th/mcp-client --config-path                          # show config file path
-npx @massa-th0th/mcp-client --config-init                          # init with Ollama defaults
-npx @massa-th0th/mcp-client --config-init --mistral YOUR_KEY       # init with Mistral
-npx @massa-th0th/mcp-client --config-init --openai YOUR_KEY        # init with OpenAI
-npx @massa-th0th/mcp-client --config-init --ollama-model qwen3-embedding:8b    # switch Ollama model
-npx @massa-th0th/mcp-client --config-set embedding.dimensions 4096 # set specific value
+npx @massa-ai/mcp-client --config-show                          # print current config
+npx @massa-ai/mcp-client --config-path                          # show config file path
+npx @massa-ai/mcp-client --config-init                          # init with Ollama defaults
+npx @massa-ai/mcp-client --config-init --mistral YOUR_KEY       # init with Mistral
+npx @massa-ai/mcp-client --config-init --openai YOUR_KEY        # init with OpenAI
+npx @massa-ai/mcp-client --config-init --ollama-model qwen3-embedding:8b    # switch Ollama model
+npx @massa-ai/mcp-client --config-set embedding.dimensions 4096 # set specific value
 ```
 
 ### Validate Stack

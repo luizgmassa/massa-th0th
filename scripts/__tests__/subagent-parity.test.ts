@@ -4,7 +4,7 @@
  * Asserts the 12 specialist agent files shipped across 4 hosts are byte-identical
  * to generator output (drift gate), correctly pinned per spec (model + effort +
  * permission), collision-free against host built-ins, exactly 12 per host, and
- * that Codex TOML parses with the # massa-th0th-owned marker. FEATURES.md table
+ * that Codex TOML parses with the # massa-ai-owned marker. FEATURES.md table
  * parity (DOC-06) is gated on the subagent section existing (lands in T10).
  *
  * Spec: .specs/features/subagent-skills-plugin-parity/spec.md
@@ -110,14 +110,14 @@ function parseMdFrontmatter(raw: string): Record<string, string> {
 
 async function readAgentMd(hostDir: string, name: SpecialistName): Promise<string> {
   return fs.readFile(
-    path.join(REPO_ROOT, "apps", hostDir, "agents", `massa-th0th-${name}.md`),
+    path.join(REPO_ROOT, "apps", hostDir, "agents", `massa-ai-${name}.md`),
     "utf8",
   );
 }
 
 async function readAgentToml(name: SpecialistName): Promise<string> {
   return fs.readFile(
-    path.join(REPO_ROOT, "apps/codex-plugin/agents", `massa-th0th-${name}.toml`),
+    path.join(REPO_ROOT, "apps/codex-plugin/agents", `massa-ai-${name}.toml`),
     "utf8",
   );
 }
@@ -140,36 +140,36 @@ describe("subagent parity — exact 12 names per host (CLA-09/CRS-07/OPC-09)", (
   test("claude: exactly 12 specialist .md files with the registry names", async () => {
     const dir = path.join(REPO_ROOT, "apps/claude-plugin/agents");
     const files = (await fs.readdir(dir)).filter(
-      (f) => f.startsWith("massa-th0th-") && f.endsWith(".md") && !f.includes("navigator"),
+      (f) => f.startsWith("massa-ai-") && f.endsWith(".md") && !f.includes("navigator"),
     );
     expect(files.length).toBe(12);
-    const names = files.map((f) => f.replace(/^massa-th0th-/, "").replace(/\.md$/, ""));
+    const names = files.map((f) => f.replace(/^massa-ai-/, "").replace(/\.md$/, ""));
     expect(names.sort()).toEqual([...SPECIALIST_NAMES].sort());
   });
 
   test("codex: exactly 12 specialist .toml files with the registry names", async () => {
     const dir = path.join(REPO_ROOT, "apps/codex-plugin/agents");
-    const files = (await fs.readdir(dir)).filter((f) => f.startsWith("massa-th0th-") && f.endsWith(".toml"));
+    const files = (await fs.readdir(dir)).filter((f) => f.startsWith("massa-ai-") && f.endsWith(".toml"));
     expect(files.length).toBe(12);
-    const names = files.map((f) => f.replace(/^massa-th0th-/, "").replace(/\.toml$/, ""));
+    const names = files.map((f) => f.replace(/^massa-ai-/, "").replace(/\.toml$/, ""));
     expect(names.sort()).toEqual([...SPECIALIST_NAMES].sort());
   });
 
   test("cursor: exactly 12 specialist .md files (navigator excluded)", async () => {
     const dir = path.join(REPO_ROOT, "apps/cursor-plugin/agents");
     const files = (await fs.readdir(dir)).filter(
-      (f) => f.startsWith("massa-th0th-") && f.endsWith(".md") && !f.includes("navigator"),
+      (f) => f.startsWith("massa-ai-") && f.endsWith(".md") && !f.includes("navigator"),
     );
     expect(files.length).toBe(12);
-    const names = files.map((f) => f.replace(/^massa-th0th-/, "").replace(/\.md$/, ""));
+    const names = files.map((f) => f.replace(/^massa-ai-/, "").replace(/\.md$/, ""));
     expect(names.sort()).toEqual([...SPECIALIST_NAMES].sort());
   });
 
   test("opencode: exactly 12 specialist .md files", async () => {
     const dir = path.join(REPO_ROOT, "apps/opencode-plugin/agents");
-    const files = (await fs.readdir(dir)).filter((f) => f.startsWith("massa-th0th-") && f.endsWith(".md"));
+    const files = (await fs.readdir(dir)).filter((f) => f.startsWith("massa-ai-") && f.endsWith(".md"));
     expect(files.length).toBe(12);
-    const names = files.map((f) => f.replace(/^massa-th0th-/, "").replace(/\.md$/, ""));
+    const names = files.map((f) => f.replace(/^massa-ai-/, "").replace(/\.md$/, ""));
     expect(names.sort()).toEqual([...SPECIALIST_NAMES].sort());
   });
 });
@@ -178,10 +178,10 @@ describe("subagent parity — name collision (CLA-08/CDX-09/OPC-09)", () => {
   test("no shipped agent name collides with host built-ins", async () => {
     for (const [host, builtins] of Object.entries(HOST_BUILTINS)) {
       for (const name of SPECIALIST_NAMES) {
-        // The shipped name is massa-th0th-<name>; the registry name is <name>.
+        // The shipped name is massa-ai-<name>; the registry name is <name>.
         // Collision check is against the registry name (spec AC: "name fields").
         expect(builtins.has(name)).toBe(false);
-        expect(builtins.has(`massa-th0th-${name}`)).toBe(false);
+        expect(builtins.has(`massa-ai-${name}`)).toBe(false);
       }
     }
   });
@@ -252,15 +252,15 @@ describe("subagent parity — Codex permission boundary (CDX-02/CDX-03)", () => 
 });
 
 describe("subagent parity — Codex TOML round-trip + owned marker (CDX-07)", () => {
-  test("each Codex TOML parses without error + first line is # massa-th0th-owned", async () => {
+  test("each Codex TOML parses without error + first line is # massa-ai-owned", async () => {
     for (const name of SPECIALIST_NAMES) {
       const raw = await readAgentToml(name);
       // First line is the ownership marker
       const firstLine = raw.split(/\r?\n/)[0] ?? "";
-      expect(firstLine).toBe("# massa-th0th-owned");
+      expect(firstLine).toBe("# massa-ai-owned");
       // Parses cleanly (round-trip)
       const parsed = toml.parse(raw) as Record<string, unknown>;
-      expect(parsed.name).toBe(`massa-th0th-${name}`);
+      expect(parsed.name).toBe(`massa-ai-${name}`);
       expect(typeof parsed.developer_instructions).toBe("string");
       expect((parsed.developer_instructions as string).length).toBeGreaterThan(0);
     }
@@ -296,7 +296,7 @@ describe("subagent parity — OpenCode permission + owned marker (OPC-07)", () =
       const fm = parseMdFrontmatter(raw);
       expect(fm.mode).toBe("subagent");
       // Owned marker
-      expect(fm.metadata).toContain("massa-th0th-owned: true");
+      expect(fm.metadata).toContain("massa-ai-owned: true");
       const perm = fm.permission ?? "";
       if (WRITE_AGENTS.has(name)) {
         expect(perm).toContain("edit: allow");

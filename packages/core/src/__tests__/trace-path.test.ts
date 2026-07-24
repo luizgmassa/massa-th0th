@@ -25,7 +25,7 @@ import { getSymbolRepository } from "../data/symbol/symbol-repository-factory.js
 const TEST_PROJECT = "p4d2-trace-path";
 
 async function makeTempProject(files: Record<string, string>): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-d2-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-d2-"));
   await Promise.all(
     Object.entries(files).map(async ([rel, content]) => {
       const fp = path.join(dir, rel);

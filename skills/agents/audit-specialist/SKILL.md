@@ -64,7 +64,7 @@ All lenses share `references/audit-scope.md` (scope rules) and `references/audit
 - No concrete target exists to audit.
 - The lens is ambiguous (ask the user to pick one).
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: summarize the audit scope; return findings, not raw source dumps.
 - Verification Ladder: static checks per lens; no behavioral changes (findings-only).
 - Th0th Memory: suggest durable audit-pattern memories only when a lens reveals a recurring issue class; main agent persists.

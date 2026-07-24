@@ -1,6 +1,6 @@
 # Conversation Feedback
 
-Use this reference when a massa-th0th workflow needs chat-visible status updates for routing, loading, memory, NotebookLM, subagents, divergences, errors, verification, or completion.
+Use this reference when a massa-ai workflow needs chat-visible status updates for routing, loading, memory, NotebookLM, subagents, divergences, errors, verification, or completion.
 
 ## Principle
 
@@ -20,11 +20,11 @@ Each status update must be 1-2 lines. Use an emoji, a capitalized label in squar
 Do:
 
 ```md
-🔵 [Start] Planning visual feedback for massa-th0th. Workflow: Spec Driven. Session: Visual Feedback.
-🔄 [Loading] Reading AGENTS.md and massa-th0th router guidance before planning.
+🔵 [Start] Planning visual feedback for massa-ai. Workflow: Spec Driven. Session: Visual Feedback.
+🔄 [Loading] Reading AGENTS.md and massa-ai router guidance before planning.
 🧠 [Context] Found 8 relevant th0th memories and queried the requested NotebookLM source.
 🤖 [Agent Running] Plan Critic is checking failure modes for the proposed design.
-⚠️ [Divergence] Expected the legacy router path, but this checkout uses skills/massa-th0th/SKILL.md.
+⚠️ [Divergence] Expected the legacy router path, but this checkout uses skills/massa-ai/SKILL.md.
 ✅ [Verified] Stale-reference checks and skill validation passed.
 🏁 [Finished] Plan complete. Changed files: none. Remaining risk: none found.
 ```
@@ -86,7 +86,7 @@ When a subagent is used, the main agent reports only the role, scope, permission
 Examples:
 
 ```md
-🤖 [Agent Started] Verifier is checking the docs-only change set. Scope: massa-th0th references and README.
+🤖 [Agent Started] Verifier is checking the docs-only change set. Scope: massa-ai references and README.
 🤖 [Agent Done] Verifier found no stale references. Skipped checks: none.
 ```
 

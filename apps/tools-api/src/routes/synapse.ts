@@ -21,8 +21,8 @@ import {
   DEFAULT_PREFETCH_CONFIG,
   type PrefetchEntry,
   TaskEnvelopeService,
-} from "@massa-th0th/core/services";
-import { SearchSource } from "@massa-th0th/shared";
+} from "@massa-ai/core/services";
+import { SearchSource } from "@massa-ai/shared";
 import { Elysia, t } from "elysia";
 
 const SessionInfoSchema = t.Object({

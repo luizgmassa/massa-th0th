@@ -29,7 +29,7 @@ The same range also contains a SymbolGraph cache side-finding fix and an Ollama-
 - `70504b2` — `fix: cap read_file caches (LRU 512) + write back metadata` (T3).
 - `67a60e7` — `feat(etl): cross-file D1 callee resolve + include_tests` (T2); `28c0f04` marks T2/T4 TODO items completed.
 - `2315f3c` — `fix(checkpoint): make restore async, real PG memory check` (T4).
-- `da4c60f` — `fix(config): reconcile MassaTh0thConfig + drop compression.llm` (T5); `091dbea` — `fix(deps): align mcp-client @types/node + shared dotenv` (T6); `be1fa3a` marks T5/T6 items completed.
+- `da4c60f` — `fix(config): reconcile MassaAiConfig + drop compression.llm` (T5); `091dbea` — `fix(deps): align mcp-client @types/node + shared dotenv` (T6); `be1fa3a` marks T5/T6 items completed.
 - `51ce05c` — `test: drop redundant Phase-4 Dx:SKIP env guards` (T7); `03aa888` — `fix(test): align PG-integration gates to DB_AVAILABLE` (T8); `382b902` marks T7/T8 done.
 
 ### Benchmark, docs, and E2E additions

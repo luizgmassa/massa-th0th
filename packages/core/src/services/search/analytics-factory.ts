@@ -5,7 +5,7 @@
  */
 
 import { SearchAnalyticsPg } from "./search-analytics-pg.js";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 let cachedAnalytics: SearchAnalyticsPg | null = null;
 

@@ -1,7 +1,7 @@
 /**
  * Unit tests for the opencode-plugin observation emitter (SG-7 / #21).
  *
- * These run fully in isolation — no network, no massa-th0th server, no PG.
+ * These run fully in isolation — no network, no massa-ai server, no PG.
  * The EmitterDeps are faked (post/log/timers), so the tests are deterministic
  * and fast. They cover:
  *  - payload builders → correct shape (server classifier reads snake_case keys)

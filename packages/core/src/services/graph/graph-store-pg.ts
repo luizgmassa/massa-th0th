@@ -14,7 +14,7 @@ import {
   MemoryEdge,
   MemoryRelationType,
   logger,
-} from "@massa-th0th/shared";
+} from "@massa-ai/shared";
 import { Prisma } from "../../generated/prisma/index.js";
 import type { PrismaClient } from "../../generated/prisma/index.js";
 import type { EdgeCreateInput, EdgeFilter, IGraphStore } from "./types.js";

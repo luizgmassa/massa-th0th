@@ -31,7 +31,7 @@ Use `workflows/restart-save.md` instead when the primary goal is preserving cano
 ```md
 Session Guide
 workflowSessionId: spec-billing-workflow
-projectId: massa-th0th
+projectId: massa-ai
 Last request: continue the approved spec-driven billing implementation.
 Current state: requirements and design approved; T3 verification is pending.
 Pending tasks: run T3 Full gate, commit T3, update traceability, then start T4.

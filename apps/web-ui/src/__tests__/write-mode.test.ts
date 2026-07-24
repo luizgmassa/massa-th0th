@@ -134,28 +134,28 @@ describe("markdown rendering (marked + DOMPurify)", () => {
 });
 
 describe("write mode gating", () => {
-  const originalWriteMode = (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE;
+  const originalWriteMode = (globalThis as any).MASSA_AI_WEB_WRITE_MODE;
 
   afterEach(() => {
     if (originalWriteMode !== undefined) {
-      (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE = originalWriteMode;
+      (globalThis as any).MASSA_AI_WEB_WRITE_MODE = originalWriteMode;
     } else {
-      delete (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE;
+      delete (globalThis as any).MASSA_AI_WEB_WRITE_MODE;
     }
   });
 
   it("isWriteModeEnabled returns false by default", () => {
-    delete (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE;
+    delete (globalThis as any).MASSA_AI_WEB_WRITE_MODE;
     expect(isWriteModeEnabled()).toBe(false);
   });
 
-  it("isWriteModeEnabled returns true when MASSA_TH0TH_WEB_WRITE_MODE=true", () => {
-    (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE = true;
+  it("isWriteModeEnabled returns true when MASSA_AI_WEB_WRITE_MODE=true", () => {
+    (globalThis as any).MASSA_AI_WEB_WRITE_MODE = true;
     expect(isWriteModeEnabled()).toBe(true);
   });
 
   it("renderMemoryBrowser hides edit/delete buttons when write mode off", () => {
-    delete (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE;
+    delete (globalThis as any).MASSA_AI_WEB_WRITE_MODE;
     const data = { data: { memories: [{ id: "mem-1", type: "code", level: 1, importance: 0.8, content: "test" }], total: 1, limit: 50, offset: 0 } };
     const html = renderMemoryBrowser(data, { filters: {} });
     expect(html).not.toContain('data-action="memory-edit"');
@@ -164,7 +164,7 @@ describe("write mode gating", () => {
   });
 
   it("renderMemoryBrowser shows edit/delete buttons when write mode on", () => {
-    (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE = true;
+    (globalThis as any).MASSA_AI_WEB_WRITE_MODE = true;
     const data = { data: { memories: [{ id: "mem-1", type: "code", level: 1, importance: 0.8, content: "test" }], total: 1, limit: 50, offset: 0 } };
     const html = renderMemoryBrowser(data, { filters: {} });
     expect(html).toContain('data-action="memory-edit"');
@@ -173,7 +173,7 @@ describe("write mode gating", () => {
   });
 
   it("renderProposals shows approve/reject buttons when write mode on", () => {
-    (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE = true;
+    (globalThis as any).MASSA_AI_WEB_WRITE_MODE = true;
     const data = { data: { proposals: [{ id: "prop-1", type: "edit", status: "pending", description: "test proposal" }] } };
     const html = renderProposals(data, { project: "test-project" });
     expect(html).toContain('data-action="proposal-approve"');
@@ -182,7 +182,7 @@ describe("write mode gating", () => {
   });
 
   it("renderProposals hides approve/reject buttons when write mode off", () => {
-    delete (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE;
+    delete (globalThis as any).MASSA_AI_WEB_WRITE_MODE;
     const data = { data: { proposals: [{ id: "prop-1", type: "edit", status: "pending", description: "test proposal" }] } };
     const html = renderProposals(data, { project: "test-project" });
     expect(html).not.toContain('data-action="proposal-approve"');

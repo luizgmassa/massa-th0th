@@ -1,8 +1,8 @@
-import type { ParserReadinessSnapshot } from "@massa-th0th/core/services";
+import type { ParserReadinessSnapshot } from "@massa-ai/core/services";
 
 export interface ToolsApiHealthResponse {
   status: "ok";
-  service: "massa-th0th-tools-api";
+  service: "massa-ai-tools-api";
   version: "1.0.0";
   timestamp: string;
   parser: ParserReadinessSnapshot;
@@ -15,7 +15,7 @@ export function buildHealthResponse(
 ): ToolsApiHealthResponse {
   return {
     status: "ok",
-    service: "massa-th0th-tools-api",
+    service: "massa-ai-tools-api",
     version: "1.0.0",
     timestamp: now.toISOString(),
     parser,

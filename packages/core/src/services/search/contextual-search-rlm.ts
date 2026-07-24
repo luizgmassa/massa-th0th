@@ -21,9 +21,9 @@
 import {
   SearchResult,
   VectorDocument,
-} from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
-import { config } from "@massa-th0th/shared";
+} from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
+import { config } from "@massa-ai/shared";
 import { IndexManager } from "./index-manager.js";
 import { SearchAnalytics } from "./search-analytics.js";
 import type { SearchAnalyticsPg } from "./search-analytics-pg.js";

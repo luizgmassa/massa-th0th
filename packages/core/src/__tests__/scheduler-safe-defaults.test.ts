@@ -1,7 +1,7 @@
 /**
  * Scheduler safe-defaults preset — Wave 6 T29 / N29.
  *
- * Tests the `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true` preset wiring inside
+ * Tests the `MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true` preset wiring inside
  * `registerDefaultJobs`.
  *
  * CRITICAL (pre-mortem F5): the preset is applied INSIDE
@@ -48,14 +48,14 @@ function makeInMemoryStore(): ScheduledJobStore & {
 }
 
 const ENV_KEYS = [
-  "MASSA_TH0TH_SCHEDULER_ENABLED",
-  "MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS",
-  "MASSA_TH0TH_SCHEDULER_CONSOLIDATION_ENABLED",
-  "MASSA_TH0TH_SCHEDULER_DECAY_ENABLED",
-  "MASSA_TH0TH_SCHEDULER_AUTO_IMPROVE_ENABLED",
-  "MASSA_TH0TH_SCHEDULER_OBSERVATION_BRIDGE_ENABLED",
-  "MASSA_TH0TH_SCHEDULER_CONSOLIDATION_INTERVAL_MS",
-  "MASSA_TH0TH_SCHEDULER_DECAY_INTERVAL_MS",
+  "MASSA_AI_SCHEDULER_ENABLED",
+  "MASSA_AI_SCHEDULER_SAFE_DEFAULTS",
+  "MASSA_AI_SCHEDULER_CONSOLIDATION_ENABLED",
+  "MASSA_AI_SCHEDULER_DECAY_ENABLED",
+  "MASSA_AI_SCHEDULER_AUTO_IMPROVE_ENABLED",
+  "MASSA_AI_SCHEDULER_OBSERVATION_BRIDGE_ENABLED",
+  "MASSA_AI_SCHEDULER_CONSOLIDATION_INTERVAL_MS",
+  "MASSA_AI_SCHEDULER_DECAY_INTERVAL_MS",
 ];
 
 const savedEnv: Record<string, string | undefined> = {};
@@ -87,7 +87,7 @@ function jobByName(scheduler: Scheduler): Record<string, ScheduledJob> {
 
 describe("T29: Scheduler safe-defaults preset", () => {
   test("preset without master → no jobs enabled", () => {
-    process.env.MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS = "true";
+    process.env.MASSA_AI_SCHEDULER_SAFE_DEFAULTS = "true";
     // Master switch NOT set → scheduler.enabled=false, but jobs are still
     // registered. The preset should enable consolidation+decay defaultEnabled,
     // but without the master switch the scheduler won't run. The test checks
@@ -104,8 +104,8 @@ describe("T29: Scheduler safe-defaults preset", () => {
   });
 
   test("preset + master → consolidation + decay enabled, auto-improve NOT enabled", () => {
-    process.env.MASSA_TH0TH_SCHEDULER_ENABLED = "true";
-    process.env.MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS = "true";
+    process.env.MASSA_AI_SCHEDULER_ENABLED = "true";
+    process.env.MASSA_AI_SCHEDULER_SAFE_DEFAULTS = "true";
     const store = makeInMemoryStore();
     const scheduler = new Scheduler({ store, enabled: true });
     registerDefaultJobs(scheduler);
@@ -119,9 +119,9 @@ describe("T29: Scheduler safe-defaults preset", () => {
   });
 
   test("preset + master + auto-improve env → all three (consolidation+decay+auto-improve)", () => {
-    process.env.MASSA_TH0TH_SCHEDULER_ENABLED = "true";
-    process.env.MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS = "true";
-    process.env.MASSA_TH0TH_SCHEDULER_AUTO_IMPROVE_ENABLED = "true";
+    process.env.MASSA_AI_SCHEDULER_ENABLED = "true";
+    process.env.MASSA_AI_SCHEDULER_SAFE_DEFAULTS = "true";
+    process.env.MASSA_AI_SCHEDULER_AUTO_IMPROVE_ENABLED = "true";
     const store = makeInMemoryStore();
     const scheduler = new Scheduler({ store, enabled: true });
     registerDefaultJobs(scheduler);
@@ -138,8 +138,8 @@ describe("T29: Scheduler safe-defaults preset", () => {
     // just function logic. If applySafeDefaults were a separate export that
     // callers must invoke, this test would fail (consolidation would be
     // defaultEnabled=false because no env overrides it).
-    process.env.MASSA_TH0TH_SCHEDULER_ENABLED = "true";
-    process.env.MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS = "true";
+    process.env.MASSA_AI_SCHEDULER_ENABLED = "true";
+    process.env.MASSA_AI_SCHEDULER_SAFE_DEFAULTS = "true";
     // NO per-kind env vars set
     const store = makeInMemoryStore();
     const scheduler = new Scheduler({ store, enabled: true });
@@ -150,7 +150,7 @@ describe("T29: Scheduler safe-defaults preset", () => {
   });
 
   test("preset not set → behavior unchanged (all jobs disabled)", () => {
-    process.env.MASSA_TH0TH_SCHEDULER_ENABLED = "true";
+    process.env.MASSA_AI_SCHEDULER_ENABLED = "true";
     // Preset NOT set
     const store = makeInMemoryStore();
     const scheduler = new Scheduler({ store, enabled: true });
@@ -163,10 +163,10 @@ describe("T29: Scheduler safe-defaults preset", () => {
   });
 
   test("individual env overrides preset (consolidation disabled via env)", () => {
-    process.env.MASSA_TH0TH_SCHEDULER_ENABLED = "true";
-    process.env.MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS = "true";
+    process.env.MASSA_AI_SCHEDULER_ENABLED = "true";
+    process.env.MASSA_AI_SCHEDULER_SAFE_DEFAULTS = "true";
     // Explicitly disable consolidation via env → overrides preset
-    process.env.MASSA_TH0TH_SCHEDULER_CONSOLIDATION_ENABLED = "false";
+    process.env.MASSA_AI_SCHEDULER_CONSOLIDATION_ENABLED = "false";
     const store = makeInMemoryStore();
     const scheduler = new Scheduler({ store, enabled: true });
     registerDefaultJobs(scheduler);

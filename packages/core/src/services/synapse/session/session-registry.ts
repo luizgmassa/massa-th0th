@@ -12,7 +12,7 @@ import {
   type WorkingMemoryBufferConfig,
 } from "../buffer/working-memory-buffer.js";
 import type { SessionStore } from "./session-store.js";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 const TOKEN_RE = /[a-z0-9_]{2,}/g;
 

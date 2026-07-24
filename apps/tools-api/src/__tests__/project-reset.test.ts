@@ -11,7 +11,7 @@ const calls = {
   audit: [] as Record<string, unknown>[],
 };
 
-mock.module("@massa-th0th/core", () => ({
+mock.module("@massa-ai/core", () => ({
   IndexProjectTool: class { handle() {} },
   GetIndexStatusTool: class { handle() {} },
   getVectorStore: async () => ({

@@ -1,7 +1,7 @@
 # Phase 5 — Auto-improvement loop (G7): Specification
 
 Slug: `phase-5-auto-improve`. Workflow: `spec-driven` (TLC v3). Project:
-`massa-th0th`. Branch: `main`. Plan anchor: `i-want-to-understand-virtual-lantern.md`
+`massa-ai`. Branch: `main`. Plan anchor: `i-want-to-understand-virtual-lantern.md`
 §"Phase 5 — Auto-improvement loop [G7]" + cross-cutting §1–5.
 
 ## Goal

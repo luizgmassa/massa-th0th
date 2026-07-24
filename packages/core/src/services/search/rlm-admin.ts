@@ -5,7 +5,7 @@
  * byte-preserved: bodies moved verbatim with `this` → `rlm`.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { SearchAnalytics } from "./search-analytics.js";
 import type { SearchAnalyticsPg } from "./search-analytics-pg.js";
 import type { ContextualSearchRLM } from "./contextual-search-rlm.js";

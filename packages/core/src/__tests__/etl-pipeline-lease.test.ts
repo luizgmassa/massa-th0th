@@ -198,7 +198,7 @@ describe.skipIf(!DB_AVAILABLE)("EtlPipeline managed_runs lease (T13 / AC-7)", ()
     await cleanupProject(currentProjectId);
   });
 
-  test("concurrent th0th_index: first acquires (202+runId), second sees 409 busy", async () => {
+  test("concurrent index: first acquires (202+runId), second sees 409 busy", async () => {
     const repo = ManagedRunRepositoryPg.getInstance();
     const eventIdA = `evt-concurrent-a-${randomUUID()}`;
     const eventIdB = `evt-concurrent-b-${randomUUID()}`;

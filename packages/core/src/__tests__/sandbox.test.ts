@@ -4,8 +4,8 @@
  * Tests derive from spec ACs:
  *   1. macOS: wraps spawn in sandbox-exec with seatbelt profile
  *   2. Linux: wraps spawn in docker run --rm --read-only --tmpfs --network none
- *   3. MASSA_TH0TH_EXECUTOR_SANDBOX=none forces best-effort (no sandbox)
- *   4. MASSA_TH0TH_EXECUTOR_SANDBOX=on errors when sandbox unavailable
+ *   3. MASSA_AI_EXECUTOR_SANDBOX=none forces best-effort (no sandbox)
+ *   4. MASSA_AI_EXECUTOR_SANDBOX=on errors when sandbox unavailable
  *   5. auto mode falls back when Docker/seatbelt unavailable
  *
  * F1 mitigation: default auto (not on)
@@ -36,33 +36,33 @@ import {
   type SandboxMode,
 } from "../services/executor/sandbox.js";
 
-const origEnv = process.env.MASSA_TH0TH_EXECUTOR_SANDBOX;
+const origEnv = process.env.MASSA_AI_EXECUTOR_SANDBOX;
 const origPlatform = process.platform;
 
 beforeEach(() => {
   _resetSandboxAvailabilityCache();
   _execFileResult = null;
-  delete process.env.MASSA_TH0TH_EXECUTOR_SANDBOX;
+  delete process.env.MASSA_AI_EXECUTOR_SANDBOX;
 });
 
 afterEach(() => {
   _resetSandboxAvailabilityCache();
   if (origEnv !== undefined) {
-    process.env.MASSA_TH0TH_EXECUTOR_SANDBOX = origEnv;
+    process.env.MASSA_AI_EXECUTOR_SANDBOX = origEnv;
   } else {
-    delete process.env.MASSA_TH0TH_EXECUTOR_SANDBOX;
+    delete process.env.MASSA_AI_EXECUTOR_SANDBOX;
   }
 });
 
 describe("sandbox wrapper (W7-08)", () => {
   describe("getSandboxMode", () => {
-    test("MASSA_TH0TH_EXECUTOR_SANDBOX=none returns none", () => {
-      process.env.MASSA_TH0TH_EXECUTOR_SANDBOX = "none";
+    test("MASSA_AI_EXECUTOR_SANDBOX=none returns none", () => {
+      process.env.MASSA_AI_EXECUTOR_SANDBOX = "none";
       expect(getSandboxMode()).toBe("none");
     });
 
-    test("MASSA_TH0TH_EXECUTOR_SANDBOX=on throws when sandbox unavailable", () => {
-      process.env.MASSA_TH0TH_EXECUTOR_SANDBOX = "on";
+    test("MASSA_AI_EXECUTOR_SANDBOX=on throws when sandbox unavailable", () => {
+      process.env.MASSA_AI_EXECUTOR_SANDBOX = "on";
       _execFileResult = new Error("not found");
       _resetSandboxAvailabilityCache();
       expect(() => getSandboxMode()).toThrow(/Sandbox forced.*no sandbox tool available/);

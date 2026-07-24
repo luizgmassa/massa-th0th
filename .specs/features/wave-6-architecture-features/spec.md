@@ -2,17 +2,17 @@
 
 ## Problem Statement
 
-massa-th0th accumulated structural debt across three axes: god-file modules exceeding 900–2100 LOC, operational coupling between MCP client and REST server (forcing two processes for single-user local-first), and shell-based hook scripts with no typed payload or testable attribution. Additionally, test execution is sequential with turbo caching disabled (live DB), the web UI lacks observability surfaces, the scheduler has no safe-defaults preset, and there is no formal harness contribution protocol or deterministic acceptance script separate from CI. Several carryover items from the cbm/ai improvement plan (N42 path recovery, M25 name resolution, M26 JSON extraction, M62 tree-sitter GLR verification) remain open.
+massa-ai accumulated structural debt across three axes: god-file modules exceeding 900–2100 LOC, operational coupling between MCP client and REST server (forcing two processes for single-user local-first), and shell-based hook scripts with no typed payload or testable attribution. Additionally, test execution is sequential with turbo caching disabled (live DB), the web UI lacks observability surfaces, the scheduler has no safe-defaults preset, and there is no formal harness contribution protocol or deterministic acceptance script separate from CI. Several carryover items from the cbm/ai improvement plan (N42 path recovery, M25 name resolution, M26 JSON extraction, M62 tree-sitter GLR verification) remain open.
 
 ## Goals
 
 - [ ] Decompose 4 god-files behind byte-identical facades with characterization tests first (M14 precedent)
 - [ ] Add embedded MCP mode so single-user local-first runs one process instead of two
-- [ ] Replace 7 shell hook scripts with one typed `massa-th0th-hook` Bun binary
+- [ ] Replace 7 shell hook scripts with one typed `massa-ai-hook` Bun binary
 - [ ] Add parallel test runner with ZERO-LOSS union guard
 - [ ] Add test-seam coupling to live response shape for consumer parsers
 - [ ] Add `/dashboard` observability route with scheduler health, job history, hook lag, Synapse count
-- [ ] Add scheduler safe-defaults preset (`MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true`)
+- [ ] Add scheduler safe-defaults preset (`MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true`)
 - [ ] Add managed-harness contribution protocol template (7-step acceptance gates)
 - [ ] Add deterministic acceptance script (`_DETERMINISTIC_ONLY=1`) separate from CI
 - [ ] Fresh-install admin access preservation (four-rung auth ladder) if auth grows
@@ -39,7 +39,7 @@ massa-th0th accumulated structural debt across three axes: god-file modules exce
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --------------------- | --------------- | --------- | ---------- |
 | Branch strategy | `wave-6` off `main` (post-Wave-5 merge `389461b`) | User confirmed Wave 5 merged, checkout main, branch off | y |
-| N19 auth scope | Four-rung ladder: no users → admin open until first user. Logic only, no full auth. | Plan says "if massa-th0th grows auth" — implement preservation logic, not auth system | y |
+| N19 auth scope | Four-rung ladder: no users → admin open until first user. Logic only, no full auth. | Plan says "if massa-ai grows auth" — implement preservation logic, not auth system | y |
 | N42 path recovery | Document + offer `--recover` via explicit `projectId` (alias-chain from M16/M17 already exists) | Plan says "document + offer" — not a full fix | y |
 | M62 GLR verification | Read-only verification probe, not a production change | Plan says "Verify" — audit, then fix only if defect found | y |
 | N31 split target LOC | No module > ~600 LOC (M14 precedent REQ-GF-3) | Consistent with prior decomposition | y |
@@ -48,7 +48,7 @@ massa-th0th accumulated structural debt across three axes: god-file modules exce
 | N20 parallel runner | `--list-suites` from macro table; UNION GUARD fails if result-set ≠ list; serial tail for deadline-sensitive | Plan explicit | y |
 | N21 test-seam | Feed real tool responses to consumer parsers (Synapse, hook layer) so format drift breaks locally | Plan explicit | y |
 | N28 dashboard | `/dashboard` route, read-only, sources from existing `/api/v1/system/metrics` + `/api/v1/synapse/sessions` + new scheduler route | Plan explicit | y |
-| N29 preset | `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true` enables consolidation+decay at conservative intervals; auto-improve stays opt-in | Plan explicit | y |
+| N29 preset | `MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true` enables consolidation+decay at conservative intervals; auto-improve stays opt-in | Plan explicit | y |
 | N17 protocol | Template for adding new MCP clients/indexing backends with 7 acceptance gates | Plan explicit | y |
 | N18 deterministic script | `_DETERMINISTIC_ONLY=1` separate from CI; real-grammar phase opt-in | Plan explicit | y |
 | M25 name resolution | Resolve project by unique name tail (not just projectId/path) | Plan: cbm carryover | y |
@@ -81,38 +81,38 @@ massa-th0th accumulated structural debt across three axes: god-file modules exce
 
 ### P1: N32 Embedded MCP Mode ⭐ MVP
 
-**User Story**: As a single-user local-first operator, I want to run massa-th0th as one process (embedded MCP) instead of two (MCP client + REST server) so that resource overhead is reduced and setup is simpler.
+**User Story**: As a single-user local-first operator, I want to run massa-ai as one process (embedded MCP) instead of two (MCP client + REST server) so that resource overhead is reduced and setup is simpler.
 
 **Why P1**: Plan says "M32 decision → implement"; ApiClient abstraction already exists; reduces process overhead for local-first.
 
 **Acceptance Criteria**:
 
-1. WHEN `MASSA_TH0TH_EMBEDDED=true` THEN the MCP server SHALL route tool calls directly to core services (no HTTP hop) and SHALL NOT require the REST tools-api server to be running
+1. WHEN `MASSA_AI_EMBEDDED=true` THEN the MCP server SHALL route tool calls directly to core services (no HTTP hop) and SHALL NOT require the REST tools-api server to be running
 2. WHEN embedded mode is active THEN `proxyCallTool` SHALL use an in-process dispatcher instead of `ApiClient` HTTP calls
-3. WHEN embedded mode is active THEN health check SHALL report `mode: "embedded"` and the REST server SHALL be optional (start only if `MASSA_TH0TH_API_PORT` is set)
+3. WHEN embedded mode is active THEN health check SHALL report `mode: "embedded"` and the REST server SHALL be optional (start only if `MASSA_AI_API_PORT` is set)
 4. WHEN a tool call fails in embedded mode THEN the error SHALL be identical to the HTTP-mode error shape (same `ToolError` structure)
 5. WHEN embedded and HTTP modes are both available THEN a single config flag SHALL switch between them with no code changes
 
-**Independent Test**: Start MCP server with `MASSA_TH0TH_EMBEDDED=true` (no REST server running) → call `search` tool → get results.
+**Independent Test**: Start MCP server with `MASSA_AI_EMBEDDED=true` (no REST server running) → call `search` tool → get results.
 
 ---
 
 ### P1: N30 Hook Scripts → Single Bun Binary ⭐ MVP
 
-**User Story**: As a hook consumer, I want one typed `massa-th0th-hook` Bun binary replacing 7 shell scripts so that payloads are typed, attribution is testable, and jq/sed/mktemp dependencies are eliminated.
+**User Story**: As a hook consumer, I want one typed `massa-ai-hook` Bun binary replacing 7 shell scripts so that payloads are typed, attribution is testable, and jq/sed/mktemp dependencies are eliminated.
 
 **Why P1**: Plan explicit; shell scripts are fragile (jq-optional, sed fallback, mktemp patterns); typed payloads enable testing.
 
 **Acceptance Criteria**:
 
-1. WHEN `massa-th0th-hook` is invoked with an event type and stdin payload THEN it SHALL POST to `/api/v1/hook` with the same fire-and-forget semantics (2s timeout, exit 0 always)
+1. WHEN `massa-ai-hook` is invoked with an event type and stdin payload THEN it SHALL POST to `/api/v1/hook` with the same fire-and-forget semantics (2s timeout, exit 0 always)
 2. WHEN the binary is installed THEN it SHALL replace all 7 shell scripts (`_pin.sh`, `_post.sh`, `pre-compact.sh`, `post-tool-use.sh`, `session-start.sh`, `stop.sh`, `user-prompt-submit.sh`) and `.claude/settings.json` SHALL reference the binary
-3. WHEN project-id pinning runs THEN it SHALL use the same resolution order (existing pin → `MASSA_TH0TH_PROJECT_ID` env → git toplevel basename → cwd basename) and the same silent-degrade behavior
+3. WHEN project-id pinning runs THEN it SHALL use the same resolution order (existing pin → `MASSA_AI_PROJECT_ID` env → git toplevel basename → cwd basename) and the same silent-degrade behavior
 4. WHEN stdin is a terminal (no pipe) THEN it SHALL exit 0 with no POST (same as shell behavior)
 5. WHEN `jq` is absent THEN the binary SHALL still parse JSON (TS-native, no jq dependency)
 6. WHEN attribution is resolved THEN it SHALL match the existing `AttributionResolver` behavior (explicit→sticky→containment→verbatim, fail-open)
 
-**Independent Test**: Run `massa-th0th-hook session-start < payload.json` → verify POST received by hook endpoint → verify exit 0.
+**Independent Test**: Run `massa-ai-hook session-start < payload.json` → verify POST received by hook endpoint → verify exit 0.
 
 ---
 
@@ -172,19 +172,19 @@ massa-th0th accumulated structural debt across three axes: god-file modules exce
 
 ### P1: N29 Scheduler Safe-Defaults Preset ⭐ MVP
 
-**User Story**: As an operator, I want `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true` to enable consolidation + decay at conservative intervals with auto-improve staying opt-in so that safe maintenance is one env var away.
+**User Story**: As an operator, I want `MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true` to enable consolidation + decay at conservative intervals with auto-improve staying opt-in so that safe maintenance is one env var away.
 
 **Why P1**: Plan: "Enables safe consolidation/decay sweeps (currently default-disabled)"; reduces friction for safe operation.
 
 **Acceptance Criteria**:
 
-1. WHEN `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true` THEN consolidation SHALL be enabled at a conservative interval (≥30 min) and decay SHALL be enabled at a conservative interval (≥60 min)
+1. WHEN `MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true` THEN consolidation SHALL be enabled at a conservative interval (≥30 min) and decay SHALL be enabled at a conservative interval (≥60 min)
 2. WHEN the preset is active THEN auto-improve SHALL remain opt-in (NOT enabled by the preset)
-3. WHEN the preset is active THEN the master switch `MASSA_TH0TH_SCHEDULER_ENABLED` SHALL still be required (preset does not override master switch)
+3. WHEN the preset is active THEN the master switch `MASSA_AI_SCHEDULER_ENABLED` SHALL still be required (preset does not override master switch)
 4. WHEN individual job envs conflict with the preset THEN individual envs SHALL take precedence (explicit override)
 5. WHEN the preset is not set THEN behavior SHALL be unchanged (all jobs default-disabled as today)
 
-**Independent Test**: Set `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true` + `MASSA_TH0TH_SCHEDULER_ENABLED=true` → verify consolidation+decay enabled, auto-improve NOT enabled → set `MASSA_TH0TH_SCHEDULER_AUTO_IMPROVE_ENABLED=true` → verify auto-improve now enabled.
+**Independent Test**: Set `MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true` + `MASSA_AI_SCHEDULER_ENABLED=true` → verify consolidation+decay enabled, auto-improve NOT enabled → set `MASSA_AI_SCHEDULER_AUTO_IMPROVE_ENABLED=true` → verify auto-improve now enabled.
 
 ---
 
@@ -224,7 +224,7 @@ massa-th0th accumulated structural debt across three axes: god-file modules exce
 
 **User Story**: As a fresh installer, I want admin access open until the first user is created so that initial setup is not locked out.
 
-**Why P2**: Plan: "if massa-th0th grows auth" — preservation logic only.
+**Why P2**: Plan: "if massa-ai grows auth" — preservation logic only.
 
 **Acceptance Criteria**:
 
@@ -292,7 +292,7 @@ massa-th0th accumulated structural debt across three axes: god-file modules exce
 
 **Acceptance Criteria**:
 
-1. WHEN the GLR stack-merge depth is probed THEN the verifier SHALL document the current cap (if any) and whether it affects massa-th0th's grammars
+1. WHEN the GLR stack-merge depth is probed THEN the verifier SHALL document the current cap (if any) and whether it affects massa-ai's grammars
 2. WHEN a defect is found THEN it SHALL be reported with a fix proposal (not silently fixed)
 3. WHEN no defect is found THEN the verification SHALL be documented in `docs/` or `.specs/`
 
@@ -356,7 +356,7 @@ massa-th0th accumulated structural debt across three axes: god-file modules exce
 
 - [ ] All 4 god-files decomposed, no module > 600 LOC, characterization tests green
 - [ ] Embedded MCP mode works with one process (no REST server required)
-- [ ] Single `massa-th0th-hook` binary replaces 7 shell scripts, typed payloads, exit 0 always
+- [ ] Single `massa-ai-hook` binary replaces 7 shell scripts, typed payloads, exit 0 always
 - [ ] Parallel test runner with ZERO-LOSS union guard reduces wall-clock
 - [ ] Test-seam catches format drift locally before CI
 - [ ] `/dashboard` shows scheduler, hook lag, Synapse sessions

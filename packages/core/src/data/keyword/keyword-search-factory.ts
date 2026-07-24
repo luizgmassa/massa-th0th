@@ -5,7 +5,7 @@
  */
 
 import { KeywordSearchPg } from "./keyword-search-pg.js";
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 
 let cachedSearch: KeywordSearchPg | null = null;
 

@@ -1,4 +1,4 @@
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import { PgJobStore } from "./index-job-store-pg.js";
 export * from "./index-job-store-contract.js";
 let store: PgJobStore | null = null;

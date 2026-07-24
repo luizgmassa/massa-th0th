@@ -4,7 +4,7 @@
  * Absolute paths must resolve under one of:
  *   1. the project root (workspace lookup for projectId)
  *   2. process.cwd()
- *   3. an entry in MASSA_TH0TH_READ_FILE_ROOTS (colon-separated env)
+ *   3. an entry in MASSA_AI_READ_FILE_ROOTS (colon-separated env)
  *
  * Outside → teaching error listing valid roots only (no host path
  * enumeration). Project root + cwd are ALWAYS allowed. Does not regress
@@ -31,7 +31,7 @@ const indexingStartedListeners = new Set<(payload: IndexingStartedPayload) => vo
 // Workspace root for the "inside project root" case.
 const FAKE_WORKSPACE_ROOT = path.join(
   os.tmpdir(),
-  `massa-th0th-readfile-containment-ws-${process.pid}`,
+  `massa-ai-readfile-containment-ws-${process.pid}`,
 );
 
 beforeEach(() => {
@@ -71,7 +71,7 @@ describe("ReadFileTool — path containment (T17 / FR-12 / AC-10)", () => {
     // A directory OUTSIDE both the fake workspace root and cwd. We use a
     // sibling temp dir that is neither under FAKE_WORKSPACE_ROOT nor under
     // process.cwd().
-    tmpOutside = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-containment-out-"));
+    tmpOutside = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-containment-out-"));
     tmpInsideProject = path.join(FAKE_WORKSPACE_ROOT, "nested-containment");
     fs.mkdirSync(tmpInsideProject, { recursive: true });
     // insideCwd: create a file directly under process.cwd() (the repo root).
@@ -173,12 +173,12 @@ describe("ReadFileTool — path containment (T17 / FR-12 / AC-10)", () => {
     }
   });
 
-  test("MASSA_TH0TH_READ_FILE_ROOTS env adds an extra allowed root", async () => {
+  test("MASSA_AI_READ_FILE_ROOTS env adds an extra allowed root", async () => {
     // Set the env to include tmpOutside as an extra root, then read the
     // outside file → should now succeed. The tool reads the env at call
     // time (not config-load time) so this works without restarting.
-    const prev = process.env.MASSA_TH0TH_READ_FILE_ROOTS;
-    process.env.MASSA_TH0TH_READ_FILE_ROOTS = tmpOutside;
+    const prev = process.env.MASSA_AI_READ_FILE_ROOTS;
+    process.env.MASSA_AI_READ_FILE_ROOTS = tmpOutside;
     try {
       const tool = new ReadFileTool();
       const res = await tool.handle({ filePath: outsideFile });
@@ -193,14 +193,14 @@ describe("ReadFileTool — path containment (T17 / FR-12 / AC-10)", () => {
         expect(data.content).toContain("host-secret");
       }
     } finally {
-      if (prev === undefined) delete process.env.MASSA_TH0TH_READ_FILE_ROOTS;
-      else process.env.MASSA_TH0TH_READ_FILE_ROOTS = prev;
+      if (prev === undefined) delete process.env.MASSA_AI_READ_FILE_ROOTS;
+      else process.env.MASSA_AI_READ_FILE_ROOTS = prev;
     }
   });
 
   test("does not regress 500-line cap (N9) — long file inside project root is clipped", async () => {
     // Create a 600-line file inside the project root. The containment check
-    // passes; the N9 cap (MASSA_TH0TH_READ_FILE_MAX_LINES, default 500)
+    // passes; the N9 cap (MASSA_AI_READ_FILE_MAX_LINES, default 500)
     // applies and source_clipped=true. compress:false avoids an LLM call
     // (auto-compress kicks in >100 lines with compress:true by default).
     const longFile = path.join(tmpInsideProject, "long.txt");

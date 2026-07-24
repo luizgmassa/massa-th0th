@@ -1,7 +1,7 @@
 {
-  "name": "massa-th0th",
+  "name": "massa-ai",
   "version": "1.0.0",
-  "description": "massa-th0th — semantic code search, memory, and context compression for Codex",
+  "description": "massa-ai — semantic code search, memory, and context compression for Codex",
   "skills": ["skills/"],
   "mcp": ".mcp.json",
   "hooks": "hooks/hooks.json"

@@ -45,29 +45,29 @@ Hooks are subprocess + JSON stdio (not in-process JS callbacks). This feature wi
 
 ### 6. Hook config auto-write vs print
 
-**User selected "Full parity" scope** → auto-write. The existing `install.sh:print_hooks_guide` prints (never writes) to avoid clobbering user config. This feature's per-plugin `install.sh` will auto-write with the same safety conventions as `install-agents.ts`: backup (`.massa-th0th.bak-<ts>`), ownership marker (`_massaTh0thOwned`), and home-write consent gate.
+**User selected "Full parity" scope** → auto-write. The existing `install.sh:print_hooks_guide` prints (never writes) to avoid clobbering user config. This feature's per-plugin `install.sh` will auto-write with the same safety conventions as `install-agents.ts`: backup (`.massa-ai.bak-<ts>`), ownership marker (`_massaAiOwned`), and home-write consent gate.
 
 ## Existing Plugin Patterns (from codebase exploration)
 
 ### apps/claude-plugin (script-copy, NOT npm)
 
 - No `package.json`/`tsconfig.json`. Versioned by repo/git.
-- `install.sh --user` (→ `~/.claude`) or `--project` (→ `./.claude`). Copies `commands/*.md` (prefixed `massa-th0th-`) + `agents/massa-th0th-navigator.md`. Does NOT copy hooks (wired via `settings.json.template` merge).
-- Hooks: 5 shell scripts + `massa-th0th-hook.ts` binary (Wave 6 N30). `EVENT_MAP` maps subcommands → 5 lifecycle kinds. Pin resolution: existing pin → `MASSA_TH0TH_PROJECT_ID` → git toplevel basename → cwd basename. pre-compact does dual-POST (3s observation + 5s snapshot). Always exit 0.
+- `install.sh --user` (→ `~/.claude`) or `--project` (→ `./.claude`). Copies `commands/*.md` (prefixed `massa-ai-`) + `agents/massa-ai-navigator.md`. Does NOT copy hooks (wired via `settings.json.template` merge).
+- Hooks: 5 shell scripts + `massa-ai-hook.ts` binary (Wave 6 N30). `EVENT_MAP` maps subcommands → 5 lifecycle kinds. Pin resolution: existing pin → `MASSA_AI_PROJECT_ID` → git toplevel basename → cwd basename. pre-compact does dual-POST (3s observation + 5s snapshot). Always exit 0.
 - `settings.json.template` is a ready-to-merge hooks block with `${CLAUDE_PLUGIN_ROOT}` placeholder.
 
 ### apps/opencode-plugin (npm package)
 
-- `@massa-th0th/opencode-plugin@1.1.0`, `main: dist/index.js`, deps `@opencode-ai/plugin` + `@opencode-ai/sdk`.
-- Exports `MassaTh0thPlugin: Plugin` returning `{ tool: {13 tools}, session.created, tool.execute.after, experimental.session.compacting, shell.env, event, dispose }`.
+- `@massa-ai/opencode-plugin@1.1.0`, `main: dist/index.js`, deps `@opencode-ai/plugin` + `@opencode-ai/sdk`.
+- Exports `MassaAiPlugin: Plugin` returning `{ tool: {13 tools}, session.created, tool.execute.after, experimental.session.compacting, shell.env, event, dispose }`.
 - `ObservationEmitter` batches `HookEvent` objects → `POST /api/v1/hook/batch`.
 - `SessionProjectPin` keeps a stable projectId per session.
 
 ### scripts/install-agents.ts (MCP installer, NOT hooks)
 
 - `AgentName = "claude-code" | "claude-desktop" | "codex" | "cursor" | "opencode"`.
-- Codex: writes `~/.codex/config.toml` `[mcp_servers.massa-th0th]` (hand-rolled TOML, ownership marker).
-- Cursor: writes `~/.cursor/mcp.json` `mcpServers.massa-th0th` (JSON, same as claude-code).
+- Codex: writes `~/.codex/config.toml` `[mcp_servers.massa-ai]` (hand-rolled TOML, ownership marker).
+- Cursor: writes `~/.cursor/mcp.json` `mcpServers.massa-ai` (JSON, same as claude-code).
 - **Does NOT write hooks** — those are printed by the root `install.sh:print_hooks_guide` to `~/.codex/hooks.json` and `~/.cursor/hooks.json`.
 - **Key divergence**: MCP config path ≠ hooks config path for both Codex and Cursor. The new plugins must not collide with `install-agents.ts`'s MCP files.
 
@@ -89,7 +89,7 @@ Ran full The Fool in pre-mortem mode (escalated by lite gate: spec-driven + >5 f
 - Cursor extension API: `cursor.com/docs/extension-api.md` (`vscode.cursor.mcp`, `vscode.cursor.plugins`)
 - Cursor hooks (18+ events): `cursor.com/docs/hooks.md`
 - Cursor skills: `cursor.com/docs/skills.md`, `cursor.com/docs/reference/plugins.md`
-- Codebase: `apps/claude-plugin/install.sh:1-59`, `apps/claude-plugin/hooks/massa-th0th-hook.ts:36-42,61-111,249-274`, `apps/opencode-plugin/package.json:1-47`, `apps/opencode-plugin/src/index.ts:118-770`, `scripts/install-agents.ts:45-50,296-324,391-465,482-488`, root `install.sh:484-577`
+- Codebase: `apps/claude-plugin/install.sh:1-59`, `apps/claude-plugin/hooks/massa-ai-hook.ts:36-42,61-111,249-274`, `apps/opencode-plugin/package.json:1-47`, `apps/opencode-plugin/src/index.ts:118-770`, `scripts/install-agents.ts:45-50,296-324,391-465,482-488`, root `install.sh:484-577`
 
 ## Phase 4 Extension — Four-Plugin Installer Parity
 
@@ -105,19 +105,19 @@ User requested extending the feature to wire Claude Code and OpenCode into the r
 
 **Claude Code `settings.json` shape**: the hooks block uses a nested matcher-group + `hooks[]` form (different from Codex's flat array and Cursor's `{version, hooks}` wrapper). The merge must:
 1. Read existing `~/.claude/settings.json` (if exists)
-2. Back up (`.massa-th0th.bak-<timestamp>`)
-3. Merge the `hooks` key: for each of the 5 Claude events (SessionStart, UserPromptSubmit, PostToolUse, PreCompact, Stop), append the massa-th0th hook entry to the matcher-group array if no owned entry exists
-4. Write back with `_massaTh0thOwned: true` marker on each owned entry
+2. Back up (`.massa-ai.bak-<timestamp>`)
+3. Merge the `hooks` key: for each of the 5 Claude events (SessionStart, UserPromptSubmit, PostToolUse, PreCompact, Stop), append the massa-ai hook entry to the matcher-group array if no owned entry exists
+4. Write back with `_massaAiOwned: true` marker on each owned entry
 
-The command path uses `bun run "${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts" <subcommand>` where `CLAUDE_PLUGIN_ROOT` is resolved to the installed plugin directory at install time.
+The command path uses `bun run "${CLAUDE_PLUGIN_ROOT}/hooks/massa-ai-hook.ts" <subcommand>` where `CLAUDE_PLUGIN_ROOT` is resolved to the installed plugin directory at install time.
 
 **Decision**: Extend `apps/claude-plugin/install.sh` to auto-write hooks into `settings.json` (in addition to the existing command/agent copy). Keep the `settings.json.template` as documentation but the installer now writes directly.
 
 #### 2. OpenCode plugin install path
 
-**OpenCode is an npm plugin (`@massa-th0th/opencode-plugin`), not a script-copy bundle.** It has no `install.sh`. The plugin is installed via `npm install @massa-th0th/opencode-plugin` (or `bun add`) and configured in `~/.config/opencode/opencode.json` under the `plugin` array. From source, it's `bun run apps/opencode-plugin/src/index.ts` linked via the opencode config.
+**OpenCode is an npm plugin (`@massa-ai/opencode-plugin`), not a script-copy bundle.** It has no `install.sh`. The plugin is installed via `npm install @massa-ai/opencode-plugin` (or `bun add`) and configured in `~/.config/opencode/opencode.json` under the `plugin` array. From source, it's `bun run apps/opencode-plugin/src/index.ts` linked via the opencode config.
 
-**OpenCode hooks are in-process** — the `MassaTh0thPlugin` function registers lifecycle handlers (`session.created`, `tool.execute.after`, `experimental.session.compacting`, `shell.env`, `event`, `dispose`) directly in the plugin's return object. There is NO external `hooks.json` file to auto-write. The hooks fire when the plugin is loaded by OpenCode.
+**OpenCode hooks are in-process** — the `MassaAiPlugin` function registers lifecycle handlers (`session.created`, `tool.execute.after`, `experimental.session.compacting`, `shell.env`, `event`, `dispose`) directly in the plugin's return object. There is NO external `hooks.json` file to auto-write. The hooks fire when the plugin is loaded by OpenCode.
 
 **Decision**: The root menu OpenCode option invokes the npm install (or source build + config snippet print). No hooks.json auto-write is needed for OpenCode — the hooks are built into the plugin code itself. The menu prints the `opencode.json` config snippet the user needs to add.
 
@@ -130,6 +130,6 @@ The existing `install_plugins_menu()` (from Phase 3, T12) offers: 1) Codex, 2) C
 - Claude Code `settings.json` hooks shape: `apps/claude-plugin/settings.json.template:1-68` (nested matcher-group + `hooks[]` form)
 - Claude Code install.sh (current, no hooks auto-write): `apps/claude-plugin/install.sh:1-59`
 - OpenCode plugin entry point: `apps/opencode-plugin/src/index.ts:118-770` (in-process hooks via Plugin return object)
-- OpenCode package.json: `apps/opencode-plugin/package.json:1-47` (`@massa-th0th/opencode-plugin@1.1.0`)
+- OpenCode package.json: `apps/opencode-plugin/package.json:1-47` (`@massa-ai/opencode-plugin@1.1.0`)
 - Root install.sh `install_plugins_menu()`: added in Phase 3 T12 (current menu has Codex/Cursor/Both)
 - `install-agents.ts` ClaudeCodeWriter: `scripts/install-agents.ts:296-301` (JSON MCP writer, extends JsonMcpWriter)

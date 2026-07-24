@@ -28,7 +28,7 @@ import fs from "fs";
 import path from "path";
 import { spawn } from "child_process";
 import { z } from "zod";
-import { config, logger, MemoryLevel, MemoryType } from "@massa-th0th/shared";
+import { config, logger, MemoryLevel, MemoryType } from "@massa-ai/shared";
 import { getMemoryRepository } from "../../data/memory/memory-repository-factory.js";
 import type { InsertMemoryInput } from "../../data/memory/memory-repository.js";
 import { eventBus } from "../events/event-bus.js";

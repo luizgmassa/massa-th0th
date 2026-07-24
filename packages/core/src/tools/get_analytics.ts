@@ -4,10 +4,10 @@
  * Retrieves search analytics and performance metrics
  */
 
-import { IToolHandler } from "@massa-th0th/shared";
-import { ToolResponse } from "@massa-th0th/shared";
+import { IToolHandler } from "@massa-ai/shared";
+import { ToolResponse } from "@massa-ai/shared";
 import { getSearchAnalytics } from "../services/search/analytics-factory.js";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { validateEnum } from "./enum-validation.js";
 
 interface GetAnalyticsParams {

@@ -12,7 +12,7 @@ Plan claimed to make local setup and installer configuration regeneration explic
 
 Verified commit evidence shows the planned three-file change landed. `setup-local-first.sh` gained `backup_if_exists` and now regenerates its `.env` and config file after creating adjacent `.bak` copies; the existing `sed -i.bak` `DATABASE_URL` update branch was removed. `install.sh` now backs up and rewrites an existing generated `.env`, presents From source as menu option 1/default, and resolves a source-mode clone path through `prompt_install_dir`. `.gitignore` ignores `*.bak`.
 
-`prompt_install_dir` honors `MASSA_TH0TH_DIR`, otherwise reads from `/dev/tty`, normalizes tilde, trailing slash, and relative paths, requires a writable existing parent, and asks before accepting an existing non-empty non-git directory. `main` invokes it only for source mode.
+`prompt_install_dir` honors `MASSA_AI_DIR`, otherwise reads from `/dev/tty`, normalizes tilde, trailing slash, and relative paths, requires a writable existing parent, and asks before accepting an existing non-empty non-git directory. `main` invokes it only for source mode.
 
 ## Commit evidence
 
@@ -31,14 +31,14 @@ No other commit in `c1d37b8120025a69e2de0e5fd054ca8177e205de..81d33606fb6826e175
 
 - Existing local setup `.env` and config files are backed up as `<file>.bak` before regeneration; the config path remains the configured `CONFIG_FILE` under the user configuration directory.
 - `install.sh`'s generated `.env` is backed up as `${env_file}.bak` before it is rewritten.
-- Source is interactive default. `MASSA_TH0TH_DIR` retains non-interactive precedence for source mode.
+- Source is interactive default. `MASSA_AI_DIR` retains non-interactive precedence for source mode.
 - Path validation accepts an existing non-empty Git directory, requires confirmation for a non-empty non-Git directory, and rejects a missing or non-writable parent.
 - Docker/build mode was not wired to the new prompt; it continues using prior install-directory behavior.
 
 ## Deviations or unresolved gaps
 
 - Commit evidence supports the code changes but contains no recorded `shellcheck`, repeated setup run, interactive installer scenario, or `write_env` smoke-test result. Do not infer the source plan’s runtime verification checklist passed.
-- The source plan described a compact `Clone path [~/.massa-th0th]:` prompt. Implemented code uses a two-line explanatory prompt followed by `Path [<default>]:`; behavior matches the stated default/path-selection intent, but wording differs.
+- The source plan described a compact `Clone path [~/.massa-ai]:` prompt. Implemented code uses a two-line explanatory prompt followed by `Path [<default>]:`; behavior matches the stated default/path-selection intent, but wording differs.
 - This record maps the specified commit range and does not execute installer flows or inspect user-home backup artifacts.
 
 ## Cross-references to existing specs

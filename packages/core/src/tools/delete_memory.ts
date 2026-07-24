@@ -6,8 +6,8 @@
  * Phase 1 concern (needs a deleted_at column + recall filtering).
  */
 
-import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse } from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
 import { MemoryController } from "../controllers/memory-controller.js";
 import { serializeToolResponse } from "./serialize.js";
 

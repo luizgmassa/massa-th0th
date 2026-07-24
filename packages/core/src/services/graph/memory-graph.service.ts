@@ -20,7 +20,7 @@ import {
   GraphQueryOptions,
   ContradictionPair,
   logger,
-} from "@massa-th0th/shared";
+} from "@massa-ai/shared";
 import { getGraphStore } from "./graph-store-factory.js";
 import { RelationExtractor } from "./relation-extractor.js";
 import { GraphQueries } from "./graph-queries.js";

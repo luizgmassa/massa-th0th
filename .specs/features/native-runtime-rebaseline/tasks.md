@@ -2,7 +2,7 @@
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
-Implement these tasks with the `massa-th0th` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
+Implement these tasks with the `massa-ai` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
 
 **If the skill cannot be activated, STOP and tell the user — do not proceed without it.**
 
@@ -162,12 +162,12 @@ T6
 
 **Tools**:
 - MCP: NONE
-- Skill: `massa-th0th` (for the classification ledger discipline + `th0th_recall` for prior bugs)
+- Skill: `massa-ai` (for the classification ledger discipline + `recall` for prior bugs)
 
 **Done when**:
 - [ ] Each group run solo 3×: `bun test <file>` ×3 — record pass/fail count + failure messages per run
 - [ ] Each group run in-suite context if solo passes (to confirm isolation gap): inspect the colliding test if process-global
-- [ ] Prior memory cross-check: `th0th_recall` for trace-path callerFqn bug, scheduler resume bug; confirm whether wave-3 (post-merge) includes their fixes
+- [ ] Prior memory cross-check: `recall` for trace-path callerFqn bug, scheduler resume bug; confirm whether wave-3 (post-merge) includes their fixes
 - [ ] Classification ledger (appended to this task's commit message + `validation.md` in T6) records per-group: 3× solo results, suite result, failure mode, root cause, verdict (FIX / DOCUMENTED-ACCEPT / FLAKY-TIMEOUT), fix commit if FIX
 - [ ] `auto-improve-job` classified as FLAKY-TIMEOUT (2 flaky 5s timeouts, fails solo) — NOT isolation gap; either fix the timeout or document non-determinism (never weaken)
 - [ ] Real bugs fixed in-task (one sub-commit per fix within this task's scope); groups pass solo 3× after fix
@@ -252,7 +252,7 @@ T6
 
 **Tools**:
 - MCP: NONE
-- Skill: `massa-th0th` (evidence-gate + validation)
+- Skill: `massa-ai` (evidence-gate + validation)
 
 **Done when**:
 - [ ] STATE.md Decisions table has AD-004/005/006 amendment rows citing: wave-3 absorbed main's Bun `1.3.14` bump via merge (`e12c4e4`); Node `25.9.0` unchanged; ABI `137` unchanged; patch SHA `e79aec7b...` unchanged; evidence = `verify:tree-sitter-native` PASS on macOS arm64 + Codespace under 1.3.14
@@ -262,7 +262,7 @@ T6
 - [ ] Independent verifier (author ≠ verifier) runs the full gate matrix + discrimination sensors and confirms PASS
 
 **Tests**: artifact check (validation.md + STATE.md inspection)
-**Gate**: build (final validation gate; `massa-th0th` evidence-gate)
+**Gate**: build (final validation gate; `massa-ai` evidence-gate)
 
 **Commit**: `docs(specs): validate native runtime rebaseline and record ad amendment`
 

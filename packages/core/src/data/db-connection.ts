@@ -1,8 +1,8 @@
 /** PostgreSQL connection pool shared by persistence services. */
 
 import { Pool, type PoolConfig } from "pg";
-import { logger } from "@massa-th0th/shared";
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { logger } from "@massa-ai/shared";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 
 export interface DbConfig {
   connectionString: string;

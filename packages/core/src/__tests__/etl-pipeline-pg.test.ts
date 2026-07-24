@@ -14,7 +14,7 @@ describe.skipIf(!DB_AVAILABLE)("ETL fingerprint parity on PostgreSQL", () => {
   let prisma: any;
 
   beforeAll(async () => {
-    projectPath = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-etl-pg-"));
+    projectPath = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-etl-pg-"));
     const { getPrismaClient } = await import("../services/query/prisma-client.js");
     prisma = getPrismaClient();
     const repo = getSymbolRepository();

@@ -5,8 +5,8 @@
  * All business logic lives in controllers/search-controller.ts.
  */
 
-import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse } from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
 import { SearchController } from "../controllers/search-controller.js";
 import { serializeToolResponse } from "./serialize.js";
 import { SearchServiceError } from "../services/search/search-diagnostics.js";

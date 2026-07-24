@@ -1,8 +1,8 @@
-# Contributing to massa-th0th — Managed Harness Protocol
+# Contributing to massa-ai — Managed Harness Protocol
 
 This document defines the 7-step managed-harness contribution protocol for
 adding or modifying agent harness components (skills, workflows, references,
-agents, subagents, plugins, MCP servers, permission rules) in massa-th0th.
+agents, subagents, plugins, MCP servers, permission rules) in massa-ai.
 
 Every contribution MUST complete all 7 steps in order. Each step has a
 concrete acceptance gate.

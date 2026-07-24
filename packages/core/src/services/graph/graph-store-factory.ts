@@ -9,7 +9,7 @@
 
 import { GraphStorePg } from "./graph-store-pg.js";
 import type { IGraphStore } from "./types.js";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 let cachedStore: IGraphStore | null = null;
 

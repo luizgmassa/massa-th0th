@@ -14,7 +14,7 @@
  * bounded to `maxMemories` to keep wall-time reasonable.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { getPrismaClient } from "../query/prisma-client.js";
 import type { MemoryRowWithEmbedding } from "../graph/types.js";
 

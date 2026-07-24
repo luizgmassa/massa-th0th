@@ -27,8 +27,8 @@ not score equality across sequential calls.
 
 ## PostgreSQL Invariants
 
-- Exact maintenance DB guard: `test:test@127.0.0.1:5433/massa_th0th_test` plus
-  `MASSA_TH0TH_DEDICATED=1`.
+- Exact maintenance DB guard: `test:test@127.0.0.1:5433/massa_ai_test` plus
+  `MASSA_AI_DEDICATED=1`.
 - Fourteen migrations apply from scratch; latest adds handoff/proposal tables.
 - PG handoff/proposal terminal transitions are conditional atomic updates; only one
   concurrent terminal decision wins.

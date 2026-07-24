@@ -41,7 +41,7 @@ dotenvConfig({ path: envPath });
  * API keys, embedding key) while keeping `.env` overrides authoritative.
  *
  * Deferred via require() to avoid a circular static import: config-loader ->
- * massa-th0th-config -> (this module's consumers). The require happens at
+ * massa-ai-config -> (this module's consumers). The require happens at
  * module-eval time (still before any config/index.ts consumer reads env),
  * which is what matters for Prisma/LLM clients that read process.env lazily.
  */

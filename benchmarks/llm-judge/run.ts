@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * LLM-judge benchmark harness for massa-th0th (qwen2.5 swap).
+ * LLM-judge benchmark harness for massa-ai (qwen2.5 swap).
  *
  * Drives the REAL local Ollama LLM surface (qwen2.5:7b-instruct + coder) through
  * three judge paths, against curated known-duplicate / known-distinct fixtures:
@@ -36,13 +36,13 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { z } from "zod";
-// Shared bits via the built dist (avoids a direct `@massa-th0th/shared` import
+// Shared bits via the built dist (avoids a direct `@massa-ai/shared` import
 // at repo root, which Bun does not resolve — mirrors the needles harness, which
 // sidesteps the package import entirely).
 import { config, logger, SearchSource } from "../../packages/shared/dist/index.js";
 import type { SearchResult } from "../../packages/shared/dist/types/index.js";
 // Core judge services via relative .ts paths (these transitively resolve
-// `@massa-th0th/shared` via their own package context, as proven at runtime).
+// `@massa-ai/shared` via their own package context, as proven at runtime).
 import {
   llmObject,
   isLlmEnabled,

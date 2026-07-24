@@ -7,7 +7,7 @@
  * the knob, so the caller opts in via `{ allowZero }`:
  *
  *  - `{ allowZero: true }`  → honor an explicit `0` (e.g. proxy "disable
- *    timeout"). Used for `MASSA_TH0TH_PROXY_TIMEOUT_MS`.
+ *    timeout"). Used for `MASSA_AI_PROXY_TIMEOUT_MS`.
  *  - `{ allowZero: false }` (default) → treat `0`/negative/NaN/garbage/unset
  *    as the default (sane floor). Used for reaper interval knobs, where `0`
  *    would be catastrophic (tight loop / instant reap).

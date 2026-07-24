@@ -3,8 +3,8 @@
  *
  * Verifies the install.sh behavior against the spec acceptance criteria
  * (CPX-01, CPX-02, CPX-07) and the F5 array-append merge mitigation:
- * - user-scope install creates ~/.codex/plugins/massa-th0th/ + merges hooks.json
- * - project-scope install creates ./.codex/plugins/massa-th0th/
+ * - user-scope install creates ~/.codex/plugins/massa-ai/ + merges hooks.json
+ * - project-scope install creates ./.codex/plugins/massa-ai/
  * - array-append merge preserves pre-existing user hooks
  * - uninstall removes only owned entries; user hooks survive
  * - idempotent re-run is a no-op
@@ -73,11 +73,11 @@ async function pathExists(p: string): Promise<boolean> {
 }
 
 describe("codex-plugin install.sh (T5 / CPX-01,02,07 + F5)", () => {
-  test("user-scope install creates ~/.codex/plugins/massa-th0th/ + merges hooks.json with 6 events", async () => {
+  test("user-scope install creates ~/.codex/plugins/massa-ai/ + merges hooks.json with 6 events", async () => {
     const res = runInstall(["--user"], { HOME: tmp });
     expect(res.exitCode).toBe(0);
 
-    const pluginDir = path.join(tmp, ".codex/plugins/massa-th0th");
+    const pluginDir = path.join(tmp, ".codex/plugins/massa-ai");
     expect(await pathExists(path.join(pluginDir, ".codex-plugin/plugin.json"))).toBe(true);
 
     const hooks = await readJson(path.join(tmp, ".codex/hooks.json"));
@@ -92,16 +92,16 @@ describe("codex-plugin install.sh (T5 / CPX-01,02,07 + F5)", () => {
     expect(Object.keys(hooks).sort()).toEqual(expectedEvents.sort());
   });
 
-  test("project-scope install creates ./.codex/plugins/massa-th0th/", async () => {
+  test("project-scope install creates ./.codex/plugins/massa-ai/", async () => {
     const res = runInstall(["--project"], { HOME: tmp }, tmp);
     expect(res.exitCode).toBe(0);
 
-    const pluginDir = path.join(tmp, ".codex/plugins/massa-th0th");
+    const pluginDir = path.join(tmp, ".codex/plugins/massa-ai");
     expect(await pathExists(path.join(pluginDir, ".codex-plugin/plugin.json"))).toBe(true);
     expect(await pathExists(path.join(tmp, ".codex/hooks.json"))).toBe(true);
   });
 
-  test("array-append merge: pre-existing user hook survives alongside massa-th0th entry", async () => {
+  test("array-append merge: pre-existing user hook survives alongside massa-ai entry", async () => {
     // Pre-create hooks.json with a user hook under SessionStart (no marker)
     await fs.mkdir(path.join(tmp, ".codex"), { recursive: true });
     const userHooks = {
@@ -124,9 +124,9 @@ describe("codex-plugin install.sh (T5 / CPX-01,02,07 + F5)", () => {
       (e) => (e.command as string) === "echo user-hook",
     );
     expect(userEntry).toBeDefined();
-    // massa-th0th entry appended
+    // massa-ai entry appended
     const owned = sessionStart.find(
-      (e) => e._massaTh0thOwned === true,
+      (e) => e._massaAiOwned === true,
     );
     expect(owned).toBeDefined();
     // User top-level key preserved
@@ -150,9 +150,9 @@ describe("codex-plugin install.sh (T5 / CPX-01,02,07 + F5)", () => {
 
     const hooks = await readJson(path.join(tmp, ".codex/hooks.json"));
     const sessionStart = hooks.SessionStart as Record<string, unknown>[];
-    // massa-th0th entries gone
+    // massa-ai entries gone
     expect(
-      sessionStart.find((e) => e._massaTh0thOwned === true),
+      sessionStart.find((e) => e._massaAiOwned === true),
     ).toBeUndefined();
     // User hook survives
     expect(
@@ -161,7 +161,7 @@ describe("codex-plugin install.sh (T5 / CPX-01,02,07 + F5)", () => {
     expect(hooks.model).toBe("gpt-5");
     // Plugin dir removed
     expect(
-      await pathExists(path.join(tmp, ".codex/plugins/massa-th0th")),
+      await pathExists(path.join(tmp, ".codex/plugins/massa-ai")),
     ).toBe(false);
   });
 
@@ -213,11 +213,11 @@ describe("codex-plugin install.sh (T5 / CPX-01,02,07 + F5)", () => {
     const res = runInstall(["--user"], { HOME: tmp });
     expect(res.exitCode).toBe(0);
 
-    // 12 TOML files at ~/.codex/agents/massa-th0th-<name>.toml (OUTSIDE plugin dir)
+    // 12 TOML files at ~/.codex/agents/massa-ai-<name>.toml (OUTSIDE plugin dir)
     const agentsDir = path.join(tmp, ".codex/agents");
     for (const name of SPECIALIST_NAMES) {
       expect(
-        await pathExists(path.join(agentsDir, `massa-th0th-${name}.toml`)),
+        await pathExists(path.join(agentsDir, `massa-ai-${name}.toml`)),
       ).toBe(true);
     }
     // Agents dir is OUTSIDE the plugin dir
@@ -227,15 +227,15 @@ describe("codex-plugin install.sh (T5 / CPX-01,02,07 + F5)", () => {
     expect(res.stdout).toContain("12 subagent specialists");
   });
 
-  test("CDX-07: each TOML has # massa-th0th-owned top comment", async () => {
+  test("CDX-07: each TOML has # massa-ai-owned top comment", async () => {
     runInstall(["--user"], { HOME: tmp });
     for (const name of SPECIALIST_NAMES) {
       const content = await fs.readFile(
-        path.join(tmp, `.codex/agents/massa-th0th-${name}.toml`),
+        path.join(tmp, `.codex/agents/massa-ai-${name}.toml`),
         "utf8",
       );
       const firstLine = content.split(/\r?\n/)[0] ?? "";
-      expect(firstLine).toBe("# massa-th0th-owned");
+      expect(firstLine).toBe("# massa-ai-owned");
     }
   });
 
@@ -252,10 +252,10 @@ describe("codex-plugin install.sh (T5 / CPX-01,02,07 + F5)", () => {
     const res = runInstall(["--uninstall"], { HOME: tmp });
     expect(res.exitCode).toBe(0);
 
-    // 12 massa-th0th-owned TOML files removed
+    // 12 massa-ai-owned TOML files removed
     for (const name of SPECIALIST_NAMES) {
       expect(
-        await pathExists(path.join(agentsDir, `massa-th0th-${name}.toml`)),
+        await pathExists(path.join(agentsDir, `massa-ai-${name}.toml`)),
       ).toBe(false);
     }
     // User agent survives (R3: no ownership marker)
@@ -268,7 +268,7 @@ describe("codex-plugin install.sh (T5 / CPX-01,02,07 + F5)", () => {
       const out: Record<string, string> = {};
       for (const name of SPECIALIST_NAMES) {
         out[name] = await fs.readFile(
-          path.join(tmp, `.codex/agents/massa-th0th-${name}.toml`),
+          path.join(tmp, `.codex/agents/massa-ai-${name}.toml`),
           "utf8",
         );
       }

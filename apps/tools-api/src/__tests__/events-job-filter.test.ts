@@ -13,7 +13,7 @@
 
 import { describe, expect, test } from "bun:test";
 import { Elysia } from "elysia";
-import { eventBus } from "@massa-th0th/core";
+import { eventBus } from "@massa-ai/core";
 import { eventsRoutes } from "../routes/events.js";
 
 const app = new Elysia().use(eventsRoutes);

@@ -4,7 +4,7 @@
  * Tracks search query analytics using PostgreSQL.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { getPgPool } from "../../data/db-connection.js";
 import { installGuardOnTable } from "../project-identity/identity-guard-installer.js";
 import type { Pool } from "pg";

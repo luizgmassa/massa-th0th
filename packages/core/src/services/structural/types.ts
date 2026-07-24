@@ -2,8 +2,8 @@
 export {
   STRUCTURAL_SYMBOL_KINDS,
   type StructuralSymbolKind,
-} from "@massa-th0th/shared";
-import type { StructuralSymbolKind } from "@massa-th0th/shared";
+} from "@massa-ai/shared";
+import type { StructuralSymbolKind } from "@massa-ai/shared";
 
 /** Canonical structural edge taxonomy. Additive changes require a version bump. */
 export const STRUCTURAL_EDGE_KINDS = [

@@ -20,7 +20,7 @@
  */
 
 import { describe, test, expect, beforeEach, mock, afterEach } from "bun:test";
-import { SearchSource, type SearchResult } from "@massa-th0th/shared";
+import { SearchSource, type SearchResult } from "@massa-ai/shared";
 import { describeNative } from "./_helpers/native-skip.js";
 import {
   resetParserReadinessForTests,
@@ -60,8 +60,8 @@ mock.module("../services/search/file-filter-cache.js", () => ({
     invalidateProject() {}
   },
 }));
-mock.module("@massa-th0th/shared", () => {
-  const actual = require("@massa-th0th/shared");
+mock.module("@massa-ai/shared", () => {
+  const actual = require("@massa-ai/shared");
   return {
     ...actual,
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },

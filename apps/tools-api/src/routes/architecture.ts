@@ -11,7 +11,7 @@
  *   - fields: comma-separated projection (dotted paths)
  */
 
-import { GetArchitectureTool, VALID_ARCHITECTURE_ASPECTS } from "@massa-th0th/core";
+import { GetArchitectureTool, VALID_ARCHITECTURE_ASPECTS } from "@massa-ai/core";
 import { Elysia, t } from "elysia";
 
 let getArchitectureTool: GetArchitectureTool | null = null;

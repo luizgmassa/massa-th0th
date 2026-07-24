@@ -24,7 +24,7 @@ Independent verifier (author ≠ verifier) ran the full gate matrix + discrimina
 | NVR-012 | Real bugs fixed; fixed groups pass solo (never weakened/skipped/deleted) | PASS | 2 FIX commits: `e866ea5` (auto-improve), `17eedfd` (qwen re-lock). Both pass solo 3× stable |
 | NVR-013 | Test-isolation gaps documented with specific root cause in validation.md | PASS | 4 DOCUMENTED-ACCEPT groups with root cause below |
 | NVR-014 | Flaky timeout distinguished from isolation gap; timeout fixed or documented non-determinism | PASS | auto-improve-job classified FLAKY-TIMEOUT (real test-isolation defect, not environmental); fixed via `e866ea5` |
-| NVR-015 | Prior memory cross-check for known bugs (trace-path callerFqn, scheduler resume) | PASS | `th0th_recall` confirmed: scheduler resume bug FIXED in `75b7394` (present in wave-3); trace-path callerFqn has client-side workaround in trace_path (present); neither is the cause of current failures |
+| NVR-015 | Prior memory cross-check for known bugs (trace-path callerFqn, scheduler resume) | PASS | `recall` confirmed: scheduler resume bug FIXED in `75b7394` (present in wave-3); trace-path callerFqn has client-side workaround in trace_path (present); neither is the cause of current failures |
 | NVR-016 | Full suite `bun run test` after classification: fixed groups pass; accepted/flaky may still fail in-suite (documented) | PASS | Fixed groups (auto-improve, qwen) pass solo + in-suite; 4 DOCUMENTED-ACCEPT groups still fail in-suite (shared-DB, documented) |
 | NVR-017 | `bun --version` returns 1.3.14 on Codespace post-install | PASS | Codespace: `1.3.14` |
 | NVR-018 | `bun -e 'console.log(process.versions.modules)'` returns 137 on Codespace (ABI gate) | PASS | Codespace: `137` |
@@ -45,7 +45,7 @@ Independent verifier (author ≠ verifier) ran the full gate matrix + discrimina
 
 ## Six-Suite Classification Ledger
 
-Each group run solo 3× (per plan-critic finding #4) to distinguish FLAKY-TIMEOUT from isolation gap from real bug. Prior memory cross-checked via `th0th_recall`.
+Each group run solo 3× (per plan-critic finding #4) to distinguish FLAKY-TIMEOUT from isolation gap from real bug. Prior memory cross-checked via `recall`.
 
 ### 1. auto-improve-job.test.ts
 
@@ -70,7 +70,7 @@ Each group run solo 3× (per plan-critic finding #4) to distinguish FLAKY-TIMEOU
 | Solo 3 | 0 pass / 1 fail | Same |
 
 - **Failure mode**: `lockWorkspace` throws `graph_generation_workspace_missing:cache-project` (graph-generation-repository-pg.ts:113)
-- **Root cause**: Test uses `projectId="cache-project"` but no `workspaces` row exists in the shared DB (`massa_th0th` from `~/.config/massa-th0th/config.json`). No `.env` in worktree, so `DATABASE_URL` is not set → `DB_AVAILABLE=true` via config fallback → test runs against shared DB → shared DB has no `cache-project` workspace row. Test assumes an isolated DB with workspace rows pre-created.
+- **Root cause**: Test uses `projectId="cache-project"` but no `workspaces` row exists in the shared DB (`massa_ai` from `~/.config/massa-ai/config.json`). No `.env` in worktree, so `DATABASE_URL` is not set → `DB_AVAILABLE=true` via config fallback → test runs against shared DB → shared DB has no `cache-project` workspace row. Test assumes an isolated DB with workspace rows pre-created.
 - **Verdict**: DOCUMENTED-ACCEPT (category 2 — shared-DB fixture gap). Not fixed.
 - **Prior memory cross-check**: no prior memory for this specific gap. Environmental, not a code bug.
 
@@ -110,7 +110,7 @@ Each group run solo 3× (per plan-critic finding #4) to distinguish FLAKY-TIMEOU
 | Solo 3 | 4 pass / 1 fail | Same |
 
 - **Failure mode**: `expect(storeB.listAll().map((entry) => entry.id)).toEqual([cronId, intervalId])` fails — received has 4 extra rows: `scheduled-auto-improve`, `scheduled-observation-bridge`, `scheduled-memory-consolidation`, `scheduled-decay-sweep`
-- **Root cause**: Test cleanup (`afterEach(cleanup)`) only deletes `pg-scheduler-test-*` rows (TEST_PREFIX). The shared DB (`massa_th0th` from config.json) has real `scheduled-*` rows from the production scheduler. `PgScheduledJobStore.hydrate` loads ALL rows on instantiation → `storeB.listAll()` returns the 2 test rows + 4 real rows. Test assumes an isolated DB with no production rows.
+- **Root cause**: Test cleanup (`afterEach(cleanup)`) only deletes `pg-scheduler-test-*` rows (TEST_PREFIX). The shared DB (`massa_ai` from config.json) has real `scheduled-*` rows from the production scheduler. `PgScheduledJobStore.hydrate` loads ALL rows on instantiation → `storeB.listAll()` returns the 2 test rows + 4 real rows. Test assumes an isolated DB with no production rows.
 - **Verdict**: DOCUMENTED-ACCEPT (category 2 — shared-DB pollution). Not fixed.
 - **Prior memory cross-check**: `dec_1783808565314` (scheduler resume bug FIXED in `75b7394`) confirmed present in wave-3. The resume bug fix is NOT the cause — the failure is environmental (shared DB pollution), not the resume logic.
 
@@ -161,7 +161,7 @@ Range: `b6aa4a4^..HEAD` (T6 commit). 6 commits total. No test weakened, skipped,
 
 ## Residual Risk
 
-1. **Shared-DB fixture gaps (4 DOCUMENTED-ACCEPT groups)**: etl-cache-invalidation, etl-pipeline-queue, scheduler-store-pg, trace-path fail in-suite against the shared `massa_th0th` DB because they assume isolated workspaces/clean scheduled_jobs. Root cause: no `.env` in worktree → `DATABASE_URL` falls back to config.json shared DB. Mitigation: run these tests against an owned dedicated DB (e.g., `DATABASE_URL=postgresql://...:5433/massa_th0th_test bun test <file>`) or add workspace-row fixtures. Out of scope for this feature (contract: "never chase failures outside this set"; "document isolation gaps with root cause, not papered over").
+1. **Shared-DB fixture gaps (4 DOCUMENTED-ACCEPT groups)**: etl-cache-invalidation, etl-pipeline-queue, scheduler-store-pg, trace-path fail in-suite against the shared `massa_ai` DB because they assume isolated workspaces/clean scheduled_jobs. Root cause: no `.env` in worktree → `DATABASE_URL` falls back to config.json shared DB. Mitigation: run these tests against an owned dedicated DB (e.g., `DATABASE_URL=postgresql://...:5433/massa_ai_test bun test <file>`) or add workspace-row fixtures. Out of scope for this feature (contract: "never chase failures outside this set"; "document isolation gaps with root cause, not papered over").
 
 2. **Codespace parse-long-class cold-start timeout**: First run of native-structural unit tests on Codespace had 1 timeout (parse-long-class: 19038ms > 5000ms Bun default) due to cold native grammar loading. Second run: 152/152 in 5.18s. Not a code bug — cold-start overhead. Mitigation: warm-up run or increase Bun test timeout for cold-start scenarios.
 
@@ -192,6 +192,6 @@ bun test packages/core/src/__tests__/scheduler-store-pg.test.ts     # 4/1 (DOCUM
 bun test packages/core/src/__tests__/trace-path.test.ts             # 14/4 (DOCUMENTED-ACCEPT)
 
 # Codespace (Ubuntu 24.04.4 LTS x86_64, Bun 1.3.14 installed, ABI 137)
-gh codespace ssh -c wave3-debian-gate-wv567j4g9j35x76 -- 'cd /workspaces/massa-th0th && export PATH=$HOME/.bun/bin:$PATH && bun run verify:tree-sitter-native'  # exit 0
-gh codespace ssh -c wave3-debian-gate-wv567j4g9j35x76 -- 'cd /workspaces/massa-th0th/packages/core && export PATH=$HOME/.bun/bin:$PATH && bun scripts/run-tests-isolated.ts --unit --filter="structural|parse-long-class"'  # 152/152
+gh codespace ssh -c wave3-debian-gate-wv567j4g9j35x76 -- 'cd /workspaces/massa-ai && export PATH=$HOME/.bun/bin:$PATH && bun run verify:tree-sitter-native'  # exit 0
+gh codespace ssh -c wave3-debian-gate-wv567j4g9j35x76 -- 'cd /workspaces/massa-ai/packages/core && export PATH=$HOME/.bun/bin:$PATH && bun scripts/run-tests-isolated.ts --unit --filter="structural|parse-long-class"'  # 152/152
 ```

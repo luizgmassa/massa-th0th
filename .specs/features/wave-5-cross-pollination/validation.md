@@ -58,7 +58,7 @@ All mutations reverted. Tree clean after each isolation run.
 | `apps/mcp-client/src/moonshot-flavor.ts` (NEW) | Yes — 106 lines, pure schema strip | Yes — transport-only, shallow clone, no mutation of original | No |
 | `apps/mcp-client/src/index.ts` | Yes — 2 lines in ListTools handler `:143-144` | Yes — additive in existing handler | No |
 | `apps/tools-api/src/routes/synapse.ts` | Yes — `/task/begin` `:327` + `/task/:id/end` `:367` | Yes — same Elysia route pattern | No |
-| `packages/shared/src/config/index.ts` | Yes — `MASSA_TH0TH_READ_FILE_ROOTS` `:754` + `MAX_FILTER_PATTERNS` `:763` | Yes — same `envString`/`envNum` pattern | No |
+| `packages/shared/src/config/index.ts` | Yes — `MASSA_AI_READ_FILE_ROOTS` `:754` + `MAX_FILTER_PATTERNS` `:763` | Yes — same `envString`/`envNum` pattern | No |
 | `apps/mcp-client/src/tool-definitions.ts` | Yes — `synapse_task_begin` + `synapse_task_end` defs added | Yes — matches existing synapse tool def shape | No |
 | Migration `20260722130000` | Yes — 4 additive columns, `IF NOT EXISTS` | Yes — matches AD-W5-007 additive-nullable pattern | No |
 
@@ -81,7 +81,7 @@ All mutations reverted. Tree clean after each isolation run.
 ## Edge cases
 
 - T17: relative-path `../` traversal is sanitized via `sanitizeFilePath` before resolution — test `:154-174` proves traversal is contained (ENOENT under project root, not host-secret read).
-- T17: env allowlist `MASSA_TH0TH_READ_FILE_ROOTS` read at call time (not config-load) — test `:176-199` sets env mid-test and succeeds.
+- T17: env allowlist `MASSA_AI_READ_FILE_ROOTS` read at call time (not config-load) — test `:176-199` sets env mid-test and succeeds.
 - T17: N9 500-line cap not regressed — test `:201-230` asserts `source_clipped: true` on 600-line file.
 - T18: empty-string pattern rejected as invalid glob (`:62-65`) — catches minimatch v9 literal-fallback gap.
 - T18: boundary case 32 patterns passes (`:31-38`); 33 rejected — exact spec boundary.

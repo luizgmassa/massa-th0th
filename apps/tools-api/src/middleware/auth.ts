@@ -14,7 +14,7 @@
  */
 
 import { Elysia } from "elysia";
-import type { ActorContext } from "@massa-th0th/core";
+import type { ActorContext } from "@massa-ai/core";
 
 const PUBLIC_PATHS = ["/health", "/swagger", "/swagger/json"];
 
@@ -47,7 +47,7 @@ export const authMiddleware = new Elysia({ name: "auth" })
         return;
       }
 
-      const apiKey = process.env.MASSA_TH0TH_API_KEY;
+      const apiKey = process.env.MASSA_AI_API_KEY;
 
       // If no API key configured, allow all requests (dev mode)
       if (!apiKey) {

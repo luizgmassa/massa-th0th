@@ -9,7 +9,7 @@
  *
  * Coverage GAPS (features with NO testable MCP/HTTP black-box surface —
  * reported, not worked around):
- *   - in-process scheduler (c051468): gated by MASSA_TH0TH_SCHEDULER_ENABLED
+ *   - in-process scheduler (c051468): gated by MASSA_AI_SCHEDULER_ENABLED
  *     at server boot and has NO HTTP route / MCP tool to list/register jobs
  *     from outside. The scheduler is observable only via its side-effects
  *     (consolidation/decay/auto-improve jobs firing on a clock), which are
@@ -540,7 +540,7 @@ describe.skipIf(!READY)("T11c coverage-gap probes (scheduler, offline embeddings
           `routeHits=${schedulerRouteHits} toolAdvertised=${schedulerToolAdvertised}`,
       );
       // COVERAGE GAP (c051468): the in-process scheduler is boot-gated by
-      // MASSA_TH0TH_SCHEDULER_ENABLED and has no external surface. Its jobs
+      // MASSA_AI_SCHEDULER_ENABLED and has no external surface. Its jobs
       // (memory-consolidation, decay, auto-improve, observation-bridge) fire
       // on a clock and are only observable via their side-effects, which are
       // neither deterministic nor safe to wait for on a shared stack.

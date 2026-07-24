@@ -38,7 +38,7 @@ Do not execute from chat summaries, screenshots alone, remembered findings, or a
    - Modify tracked Maestro flows only when the selected finding explicitly identifies the flow as incorrect or missing and the user-approved scope includes that change.
 9. Verify after each coherent finding group:
    - If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:
-     `python3 skills/massa-th0th/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
+     `python3 skills/massa-ai/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
    - Apply the Mandatory Verification Fix Gate from `references/verification-ladder.md`: run the report's Verification Suggestion or an equivalent deterministic command/artifact check for each selected `MFM-*` finding or coherent group.
    - A finding cannot be marked `fixed` when a target-relevant command, render sensor, comparison artifact, or Maestro reproduction exists but was not attempted; if verification cannot run, mark it `blocked`, `deferred`, or `skipped` with an allowed skipped-check reason.
    - Re-resolve every affected comparison row, not only the previous mismatch.

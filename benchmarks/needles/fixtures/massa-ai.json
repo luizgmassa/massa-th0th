@@ -1,7 +1,7 @@
 {
-  "projectId": "massa-th0th",
+  "projectId": "massa-ai",
   "version": "1.2.0",
-  "description": "Needles validated against the massa-th0th codebase itself (dogfooding). Each needle targets a non-obvious heuristic, magic constant, or scoring rule that pure keyword search would miss. Line spans refreshed 2026-07-13.",
+  "description": "Needles validated against the massa-ai codebase itself (dogfooding). Each needle targets a non-obvious heuristic, magic constant, or scoring rule that pure keyword search would miss. Line spans refreshed 2026-07-13.",
   "scoring": {
     "topK": 10,
     "hitAtK": [

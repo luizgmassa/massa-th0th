@@ -1,6 +1,6 @@
 /**
  * ObservationEmitter — batches lifecycle observations and POSTs them to the
- * massa-th0th hook ingest endpoint (`POST /api/v1/hook/batch`).
+ * massa-ai hook ingest endpoint (`POST /api/v1/hook/batch`).
  *
  * This mirrors the claude-plugin hook scripts (see apps/claude-plugin/hooks/):
  * the plugin emits raw host events with a `event` kind + a verbatim `payload`,

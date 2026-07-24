@@ -3,7 +3,7 @@
  * Create a memory of our PostgreSQL migration progress
  */
 
-import { logger, MemoryType } from "@massa-th0th/shared";
+import { logger, MemoryType } from "@massa-ai/shared";
 import { getPrismaClient, disconnectPrisma } from "./src/services/query/prisma-client.js";
 import { randomUUID } from "crypto";
 
@@ -12,7 +12,7 @@ async function createProgressMemory() {
     const prisma = getPrismaClient();
     
     const memoryContent = `
-# Migração PostgreSQL massa-th0th - Status Completo
+# Migração PostgreSQL massa-ai - Status Completo
 
 ## ✅ CONCLUÍDO COM SUCESSO
 
@@ -122,7 +122,7 @@ Testado e validado em: ${new Date().toISOString()}
         content: memoryContent,
         type: MemoryType.DECISION,
         level: 3,
-        projectId: "massa-th0th",
+        projectId: "massa-ai",
         importance: 1.0,
         tags: JSON.stringify([
           "postgresql",

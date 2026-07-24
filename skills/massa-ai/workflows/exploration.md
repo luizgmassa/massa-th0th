@@ -88,7 +88,7 @@ Step 5: Flag as uncertain → "I'm not certain about X — here's my reasoning, 
    - **Note-worthiness trigger:** when understanding touches 3+ files or a non-trivial flow, persist a note to the th0th memory layer. Below that threshold, decide per-finding.
    - Three-way note decision: **create** (new durable finding), **update** (existing non-stale note for the same entity), or **skip** (trivial, one-off, already captured). The Debrief records what was verified against source, not just what was read.
    - Use `remember` with required tags and the correct memory tier.
-   - Keep `th0th` as the canonical memory layer for massa-th0th workflows. Do not introduce `.notebook/`, generated state files, or copied-code notes as default persistence.
+   - Keep `th0th` as the canonical memory layer for massa-ai workflows. Do not introduce `.notebook/`, generated state files, or copied-code notes as default persistence.
    - Skip memory for trivial observations, one-off facts, raw logs, copied source, screenshots, customer data, tokens, device IDs, and facts already captured in current non-stale memories.
 10. Complete the Evidence Gate from `references/evidence-gate.md`.
 
@@ -98,7 +98,7 @@ Step 5: Flag as uncertain → "I'm not certain about X — here's my reasoning, 
 - Dumping raw logs, browser snapshots, generated reports, long diffs, or whole files into context.
 - Treating stale or superseded memories as current source truth.
 - Implementing fixes or refactors inside Exploration.
-- Creating a new persistence system or duplicating CodeNavi-style local notebooks inside massa-th0th workflows.
+- Creating a new persistence system or duplicating CodeNavi-style local notebooks inside massa-ai workflows.
 - Asking the user where code lives before searching current sources.
 
 ## Output Contract

@@ -87,7 +87,7 @@ green. One atomic commit per task. Never batch, never `git push`.
 
 ## Task — Validation + ledger
 
-- [ ] `bun run --filter @massa-th0th/core test` (no regression vs 822).
+- [ ] `bun run --filter @massa-ai/core test` (no regression vs 822).
 - [ ] `bun run type-check` (5/5 clean).
 - [ ] Write `validation.md` (verdict, per-AC evidence table, discrimination
       sensor result, gate output, same-author caveat).

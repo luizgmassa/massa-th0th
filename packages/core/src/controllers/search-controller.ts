@@ -6,7 +6,7 @@
  * coordination from the SearchProjectTool.
  */
 
-import { logger, config } from "@massa-th0th/shared";
+import { logger, config } from "@massa-ai/shared";
 import { ContextualSearchRLM } from "../services/search/contextual-search-rlm.js";
 import { eventBus } from "../services/events/event-bus.js";
 import { LLMJudgeReranker } from "../services/search/reranker.js";

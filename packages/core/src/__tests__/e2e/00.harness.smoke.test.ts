@@ -5,7 +5,7 @@
  *   3. Matrix machinery holds for a read-only tool (list_projects).
  *
  * Skipped unless RUN_E2E=1, the API is up, the MCP dist is built, and the
- * massa-th0th config exists (stdout-corruption precondition).
+ * massa-ai config exists (stdout-corruption precondition).
  */
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import {
@@ -57,7 +57,7 @@ describe.skipIf(!READY)("T1 harness smoke", () => {
   test("HTTP /health reports ok", async () => {
     const res = await httpGet<any>("/health");
     expect(res.status).toBe("ok");
-    expect(res.service).toBe("massa-th0th-tools-api");
+    expect(res.service).toBe("massa-ai-tools-api");
   }, 10_000);
 
   test("MCP advertises all 47 tools", async () => {

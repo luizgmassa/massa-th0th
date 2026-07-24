@@ -1,6 +1,6 @@
 # ADR Authoring
 
-Use this reference from `workflows/adr.md`. It defines how massa-th0th creates Architecture Decision Records without delegating orchestration to another ADR skill.
+Use this reference from `workflows/adr.md`. It defines how massa-ai creates Architecture Decision Records without delegating orchestration to another ADR skill.
 
 ## Core Rule
 

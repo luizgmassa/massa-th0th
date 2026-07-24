@@ -1,6 +1,6 @@
-# massa-th0th RFC Workflow
+# massa-ai RFC Workflow
 
-Human-facing guide for RFC authoring built directly into `massa-th0th`. Canonical agent instructions live in [`workflows/rfc.md`](../../skills/massa-th0th/workflows/rfc.md) and its [`references/rfc/`](../../skills/massa-th0th/references/rfc/) contracts.
+Human-facing guide for RFC authoring built directly into `massa-ai`. Canonical agent instructions live in [`workflows/rfc.md`](../../skills/massa-ai/workflows/rfc.md) and its [`references/rfc/`](../../skills/massa-ai/references/rfc/) contracts.
 
 ## Purpose
 

@@ -9,7 +9,7 @@
  * Prevents hitting API rate limits by tracking requests and enforcing delays.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 interface RateLimitConfig {
   requestsPerMinute?: number;

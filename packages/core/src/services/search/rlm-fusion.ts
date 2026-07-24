@@ -7,7 +7,7 @@
  * verbatim with `this` → `rlm`.
  */
 
-import { SearchResult, logger } from "@massa-th0th/shared";
+import { SearchResult, logger } from "@massa-ai/shared";
 import type { ContextualSearchRLM } from "./contextual-search-rlm.js";
 
 /**

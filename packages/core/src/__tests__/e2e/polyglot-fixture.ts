@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { DEFAULT_ALLOWED_EXTENSIONS } from "@massa-th0th/shared";
+import { DEFAULT_ALLOWED_EXTENSIONS } from "@massa-ai/shared";
 import { LANGUAGE_MANIFEST } from "../../services/structural/language-manifest.js";
 import { POLY_FIXTURE_PATH } from "./_helpers.js";
 

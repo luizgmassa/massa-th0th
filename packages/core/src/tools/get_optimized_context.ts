@@ -5,8 +5,8 @@
  * All business logic lives in controllers/context-controller.ts.
  */
 
-import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse } from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
 import { ContextController } from "../controllers/context-controller.js";
 import { serializeToolResponse } from "./serialize.js";
 

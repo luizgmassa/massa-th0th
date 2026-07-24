@@ -11,7 +11,7 @@
  *     return activatedGraphGenerationId (AC 7 — search_code is excluded)
  *
  * Mock strategy: the routes call getActiveGeneration + assertGenerationNotStale
- * (standalone functions imported from @massa-th0th/core). These are captured in
+ * (standalone functions imported from @massa-ai/core). These are captured in
  * the route module's closure at import time, so we mock the underlying
  * symbol-repository-factory BEFORE the route module loads. The mock returns
  * a controllable activeScope so getActiveGeneration returns a fixed generation
@@ -29,12 +29,12 @@ import { Elysia } from "elysia";
 
 // ── Mock the symbol repository factory so getActiveGeneration works without a DB ──
 // getActiveGeneration(projectId) calls getSymbolRepository().getActiveGenerationScope(projectId).
-// We mock the @massa-th0th/core export of getActiveGeneration BEFORE importing the
+// We mock the @massa-ai/core export of getActiveGeneration BEFORE importing the
 // route module so the route's closure captures the mocked function. The mock
 // returns a controllable generation id (or null) without hitting the DB.
 let activeScope: { projectId: string; generationId: string } | null = null;
-mock.module("@massa-th0th/core", () => {
-  const actual = require("@massa-th0th/core");
+mock.module("@massa-ai/core", () => {
+  const actual = require("@massa-ai/core");
   return {
     ...actual,
     getActiveGeneration: async (_projectId: string) => activeScope?.generationId ?? null,
@@ -54,8 +54,8 @@ mock.module("@massa-th0th/core", () => {
 // Import AFTER the mock is set up so the route module captures the mocked export.
 // Use require for values (mock replaces the module) + a type-only import for the
 // DefinitionLookupResult type (types are erased at compile time, unaffected by mock).
-import type { DefinitionLookupResult } from "@massa-th0th/core";
-const { GraphController, symbolGraphService } = require("@massa-th0th/core");
+import type { DefinitionLookupResult } from "@massa-ai/core";
+const { GraphController, symbolGraphService } = require("@massa-ai/core");
 import { workspaceRoutes } from "../routes/workspace.js";
 import { searchRoutes } from "../routes/search.js";
 

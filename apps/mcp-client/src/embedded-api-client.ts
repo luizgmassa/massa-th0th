@@ -5,7 +5,7 @@
  * but routes get/post/patch/delete directly to core service/controller/tool
  * calls instead of serializing through a REST round-trip. This lets the MCP
  * server run fully embedded (no separate tools-api process) when
- * `MASSA_TH0TH_EMBEDDED=true`.
+ * `MASSA_AI_EMBEDDED=true`.
  *
  * Endpoint mapping mirrors the tools-api REST routes exactly so a tool call
  * yields the same result shape in both modes (parity contract, T19).
@@ -58,13 +58,13 @@ import {
   getVectorStore,
   getKeywordSearch,
   getMemoryRepository,
-} from "@massa-th0th/core";
-import type { PrefetchEntry } from "@massa-th0th/core/services";
-import { SearchSource, logger } from "@massa-th0th/shared";
-import { WebController } from "@massa-th0th/core";
+} from "@massa-ai/core";
+import type { PrefetchEntry } from "@massa-ai/core/services";
+import { SearchSource, logger } from "@massa-ai/shared";
+import { WebController } from "@massa-ai/core";
 import fs from "fs/promises";
 import path from "path";
-import { getGlobalDataDir } from "@massa-th0th/shared";
+import { getGlobalDataDir } from "@massa-ai/shared";
 
 // ── Lazy singletons (mirror the REST route lazy-init pattern) ────────────────
 
@@ -344,7 +344,7 @@ export class EmbeddedApiClient implements ToolProxyApiClient {
         if (!workspace) return { success: false, error: `Workspace '${projectId}' not found` };
         const start = boundedInt(qs(q.lineStart), 1, 1, 1_000_000);
         const MAX_SNIPPET_LINES = (() => {
-          const v = Number(process.env.MASSA_TH0TH_READ_FILE_MAX_LINES);
+          const v = Number(process.env.MASSA_AI_READ_FILE_MAX_LINES);
           return Number.isFinite(v) && v > 0 ? Math.floor(v) : 500;
         })();
         const cappedEndMax = start + MAX_SNIPPET_LINES - 1;
@@ -671,7 +671,7 @@ export class EmbeddedApiClient implements ToolProxyApiClient {
       "default";
     const finalProjectId = rawBase.replace(/[^a-zA-Z0-9_.-]/g, "_").slice(0, 128);
 
-    const uploadRoot = process.env.MASSA_TH0TH_UPLOAD_DIR || path.join(getGlobalDataDir(), "uploads");
+    const uploadRoot = process.env.MASSA_AI_UPLOAD_DIR || path.join(getGlobalDataDir(), "uploads");
     const stagingDir = path.resolve(uploadRoot, finalProjectId);
 
     await fs.rm(stagingDir, { recursive: true, force: true });
@@ -795,7 +795,7 @@ export class EmbeddedApiClient implements ToolProxyApiClient {
     mode: "rename" | "merge",
     body: Record<string, unknown>,
   ): Promise<unknown> {
-    const { createProjectIdentityService, ProjectIdentityError } = await import("@massa-th0th/core");
+    const { createProjectIdentityService, ProjectIdentityError } = await import("@massa-ai/core");
     const service = createProjectIdentityService();
     const dryRun = body.dryRun !== false;
     try {
@@ -831,7 +831,7 @@ export class EmbeddedApiClient implements ToolProxyApiClient {
       const ids = await service.ingestBatch(body.events as any[]);
       return { status: 202, ids };
     } catch (e: any) {
-      const { QueueSaturatedError, ValidationError } = await import("@massa-th0th/core");
+      const { QueueSaturatedError, ValidationError } = await import("@massa-ai/core");
       if (e instanceof QueueSaturatedError) {
         throw httpError(429, "writer queue saturated");
       }

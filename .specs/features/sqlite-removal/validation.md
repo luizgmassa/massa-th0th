@@ -40,4 +40,4 @@ Status: PASS WITH FOLLOW-UP — implementation, local deterministic gates, and i
 
 ## Owned Resource Cleanup
 
-The verifier removed its PostgreSQL/API/Ollama processes and `/private/tmp/massa-th0th-*` resources. Ports `5433`, `3334`, and `11435` were free afterward; shared `:3333` remained healthy.
+The verifier removed its PostgreSQL/API/Ollama processes and `/private/tmp/massa-ai-*` resources. Ports `5433`, `3334`, and `11435` were free afterward; shared `:3333` remained healthy.

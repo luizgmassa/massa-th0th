@@ -14,7 +14,7 @@
  * `compaction-snapshots` so it is available for future sessions.
  */
 
-import { IToolHandler, ToolResponse, logger } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse, logger } from "@massa-ai/shared";
 import {
   getObservationStore,
   newObservationId,

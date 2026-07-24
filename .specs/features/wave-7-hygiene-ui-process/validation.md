@@ -41,8 +41,8 @@ All 15 tasks committed. Phase 1 + 2 + 3 complete.
 | Criterion (WHEN X THEN Y) | Spec-defined outcome | `file:line` + assertion | Result |
 | ------------------------- | -------------------- | ---------------------- | ------ |
 | WHEN agent starts in repo THEN repo root SHALL contain AGENTS.md with routing guidance (projectId resolution, indexing exclusions, plan-challenge policy, conversation-feedback policy) | AGENTS.md exists with projectId, exclusions, plan-challenge + conversation-feedback policies | `AGENTS.md:5` (projectId), `AGENTS.md:31-76` (exclusions), `AGENTS.md:78-89` (plan-challenge), `AGENTS.md:93-103` (conversation-feedback); artifact check `test -f AGENTS.md` | ✅ PASS |
-| WHEN AGENTS.md read THEN it SHALL reference STATE.md, FEATURES.json, repo-local skills | references to `.specs/project/STATE.md`, `.specs/project/FEATURES.json`, `massa-th0th-memory/`, `synapse-usage/` | `AGENTS.md:24-29` (STATE.md, FEATURES.json, features/); `AGENTS.md:17-20` (skills under `skills/` dir) | ✅ PASS |
-| WHEN AGENTS.md read THEN it SHALL NOT reference non-existent repo paths | no `skills/massa-th0th/SKILL.md` repo-local refs | `AGENTS.md:107` references `skills/massa-th0th/SKILL.md` as GLOBAL (correct, not repo-local); repo-local skills live in `skills/massa-th0th-memory/` + `synapse-usage/` confirmed via `ls skills/` | ✅ PASS |
+| WHEN AGENTS.md read THEN it SHALL reference STATE.md, FEATURES.json, repo-local skills | references to `.specs/project/STATE.md`, `.specs/project/FEATURES.json`, `massa-ai-memory/`, `synapse-usage/` | `AGENTS.md:24-29` (STATE.md, FEATURES.json, features/); `AGENTS.md:17-20` (skills under `skills/` dir) | ✅ PASS |
+| WHEN AGENTS.md read THEN it SHALL NOT reference non-existent repo paths | no `skills/massa-ai/SKILL.md` repo-local refs | `AGENTS.md:107` references `skills/massa-ai/SKILL.md` as GLOBAL (correct, not repo-local); repo-local skills live in `skills/massa-ai-memory/` + `synapse-usage/` confirmed via `ls skills/` | ✅ PASS |
 
 **Status**: ✅ Covered
 
@@ -61,8 +61,8 @@ All 15 tasks committed. Phase 1 + 2 + 3 complete.
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ---------------------- | ------ |
 | WHEN health-checker checks embedding THEN SHALL use same default as `config.embedding.model` (not hardcoded `nomic-embed-text:latest`) | reads `config.get`/`getAll` embedding model | `local-health-checker.ts:43` `process.env.OLLAMA_EMBEDDING_MODEL \|\| (config.getAll() as any)?.embedding?.model \|\| "nomic-embed-text:latest"`; `health-checker-config.test.ts:36-49` `expect(result.details?.embeddingModel).toBe("qwen3-embedding:8b")` | ⚠️ Spec-precision gap: the last-resort fallback literal is STILL `nomic-embed-text:latest`, which is the config default — but AC1 says "not a hardcoded `nomic-embed-text:latest`". The health-checker reads config FIRST (✅ primary behavior tested), so AC1's intent (config-first) is met, but the literal remains as the tail fallback. Borderline pass on intent. |
-| WHEN README documents default models THEN SHALL list exact same defaults as `DEFAULT_LLM_MODEL`, `DEFAULT_LLM_CODE_MODEL`, `massa-th0th-config.ts embedding.model` | README LLM defaults match config | `README.md:655` `qwen2.5:7b-instruct` matches `index.ts:25` `DEFAULT_LLM_MODEL`; `README.md:656` `qwen2.5-coder:7b` matches `index.ts:32`. **BUT** `massa-th0th-config.ts:199` `embedding.model = "nomic-embed-text:latest"` while `README.md:48,394,434,735` document `qwen3-embedding:8b` as the embedding model | ❌ GAP: README embedding default (`qwen3-embedding:8b`) does NOT match `massa-th0th-config.ts:199` (`nomic-embed-text:latest`). |
-| WHEN `config.embedding.model` read THEN SHALL be consistent with health-checker's expected model | both derive from same source | `massa-th0th-config.ts:199` default `nomic-embed-text:latest`; health-checker fallback also `nomic-embed-text:latest` — consistent (when env unset and config unset) | ✅ PASS (internal consistency holds) |
+| WHEN README documents default models THEN SHALL list exact same defaults as `DEFAULT_LLM_MODEL`, `DEFAULT_LLM_CODE_MODEL`, `massa-ai-config.ts embedding.model` | README LLM defaults match config | `README.md:655` `qwen2.5:7b-instruct` matches `index.ts:25` `DEFAULT_LLM_MODEL`; `README.md:656` `qwen2.5-coder:7b` matches `index.ts:32`. **BUT** `massa-ai-config.ts:199` `embedding.model = "nomic-embed-text:latest"` while `README.md:48,394,434,735` document `qwen3-embedding:8b` as the embedding model | ❌ GAP: README embedding default (`qwen3-embedding:8b`) does NOT match `massa-ai-config.ts:199` (`nomic-embed-text:latest`). |
+| WHEN `config.embedding.model` read THEN SHALL be consistent with health-checker's expected model | both derive from same source | `massa-ai-config.ts:199` default `nomic-embed-text:latest`; health-checker fallback also `nomic-embed-text:latest` — consistent (when env unset and config unset) | ✅ PASS (internal consistency holds) |
 
 **Status**: ❌ 1 GAP (README embedding default mismatches config embedding default) + ⚠️ 1 spec-precision gap (health-checker fallback literal remains)
 
@@ -92,14 +92,14 @@ All 15 tasks committed. Phase 1 + 2 + 3 complete.
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ---------------------- | ------ |
-| WHEN user opens web UI THEN shows memory list with edit/delete buttons (gated by `MASSA_TH0TH_WEB_WRITE_MODE=true`, default off) | buttons present iff write mode | `app.js:303,310-314` `writeMode ? ...data-action="memory-edit"...`; `write-mode.test.ts:166-173` `expect(html).toContain('data-action="memory-edit"')` (writeMode on), `write-mode.test.ts:157-164` `expect(html).not.toContain('data-action="memory-edit"')` (off) | ✅ PASS |
+| WHEN user opens web UI THEN shows memory list with edit/delete buttons (gated by `MASSA_AI_WEB_WRITE_MODE=true`, default off) | buttons present iff write mode | `app.js:303,310-314` `writeMode ? ...data-action="memory-edit"...`; `write-mode.test.ts:166-173` `expect(html).toContain('data-action="memory-edit"')` (writeMode on), `write-mode.test.ts:157-164` `expect(html).not.toContain('data-action="memory-edit"')` (off) | ✅ PASS |
 | WHEN user edits memory THEN change persists via `PUT /api/v1/memory/:id` + list updates in-place | PUT call wired + render() | `app.js:786-790` `api.request("/api/v1/memory/" + encodeURIComponent(id), { method: "PUT", body: { content } })` + `render()` | ⚠️ Spec-precision gap: no test asserts the PUT path is invoked (handler tested only at render-gating level). Implementation exists; assertion maps to AC1 gating, not the PUT call itself. |
 | WHEN user deletes memory THEN DELETE persists with confirmation dialog | DELETE + confirm() | `app.js:748-753` `if (confirm("Delete this memory?...")) handleMemoryDelete(id)`; `app.js:797-801` DELETE call + render() | ⚠️ Spec-precision gap: confirm() + DELETE wired; no test asserts the confirm-gated DELETE path executes. |
 | WHEN user views proposals THEN shows approve/reject buttons | approve/reject buttons when writeMode | `app.js:463-467` `writeMode ? ...data-action="proposal-approve"...`; `write-mode.test.ts:175-182` `expect(html).toContain('data-action="proposal-approve"')` | ✅ PASS |
 | WHEN index_status job updates THEN dashboard receives real-time SSE push (Wave 6 N27 — verify still works) | EventSource wiring | `app.js:847` `new EventSource(sseBase + "/api/v1/events")`; `app.js:848-853` onmessage triggers render() on `index_status`/`observation`; Wave 6 SSE endpoint tested in `events-job-filter.test.ts` + `index-job-tracker-events.test.ts` | ⚠️ Spec-precision gap: SSE wiring exists in `startApp` (browser-only, skipped under bun:test). No unit test asserts the EventSource subscription. The Wave 6 SSE endpoint itself is tested (existing suites pass). |
 | WHEN web UI renders markdown THEN renders tables, code blocks w/ syntax highlighting, inline code | marked tables + code + inline | `app.js:91` `markedLib.parse(text)` + `purifyLib.sanitize`; `write-mode.test.ts:103-118` table render `expect(html).toContain("<table>")`; `:26-36` inline code + fenced block; `index.html:8-9` marked+DOMPurify CDN | ✅ PASS |
 
-**Edge case**: "WHEN `MASSA_TH0TH_WEB_WRITE_MODE` unset THEN buttons hidden (default off)" — `write-mode.test.ts:147-149` `isWriteModeEnabled()` returns false by default; `:157-164` buttons hidden when off ✅
+**Edge case**: "WHEN `MASSA_AI_WEB_WRITE_MODE` unset THEN buttons hidden (default off)" — `write-mode.test.ts:147-149` `isWriteModeEnabled()` returns false by default; `:157-164` buttons hidden when off ✅
 
 **Status**: ✅ Covered (with 3 ⚠️ spec-precision gaps on write-path assertion depth — handlers wired but not call-asserted)
 
@@ -124,8 +124,8 @@ All 15 tasks committed. Phase 1 + 2 + 3 complete.
 | --------- | -------------------- | ---------------------- | ------ |
 | WHEN `execute` runs on macOS THEN child wrapped in `sandbox-exec` with seatbelt profile restricting writes to tmpdir + read-only project root | `sandbox-exec -p <profile>` prefix | `sandbox.ts:165-168` `["sandbox-exec", "-p", profile, "--", ...cmd]`; `sandbox.test.ts:99-108` `expect(result[0]).toBe("sandbox-exec")`, `expect(result[2]).toContain("(version 1)")` | ✅ PASS |
 | WHEN `execute` runs on Linux THEN wrapped in `docker run --rm --read-only --tmpfs /tmp -v project:ro --network none` | docker prefix | `sandbox.ts:180-195` docker args; `sandbox.test.ts:138-154` `expect(result[0]).toBe("docker")`, `--rm`, `--read-only`, `--tmpfs`, `--network none`, `/project:/project:ro` | ✅ PASS |
-| WHEN `MASSA_TH0TH_EXECUTOR_SANDBOX=none` THEN falls back to best-effort | cmd unchanged | `sandbox.ts:80` `if (env === "none") return "none"`; `sandbox.ts:163` `if (mode === "none") return cmd`; `sandbox.test.ts:59-62, 91-95` | ✅ PASS |
-| WHEN sandbox fails to start THEN errors with teaching message, NOT silent fallback | teaching error on `on` + unavailable | `sandbox.ts:88-91` `throw new Error("Sandbox forced...Set MASSA_TH0TH_EXECUTOR_SANDBOX=none to disable.")`; `sandbox.test.ts:64-69` `expect(() => getSandboxMode()).toThrow(/Sandbox forced.*no sandbox tool available/)` | ✅ PASS |
+| WHEN `MASSA_AI_EXECUTOR_SANDBOX=none` THEN falls back to best-effort | cmd unchanged | `sandbox.ts:80` `if (env === "none") return "none"`; `sandbox.ts:163` `if (mode === "none") return cmd`; `sandbox.test.ts:59-62, 91-95` | ✅ PASS |
+| WHEN sandbox fails to start THEN errors with teaching message, NOT silent fallback | teaching error on `on` + unavailable | `sandbox.ts:88-91` `throw new Error("Sandbox forced...Set MASSA_AI_EXECUTOR_SANDBOX=none to disable.")`; `sandbox.test.ts:64-69` `expect(() => getSandboxMode()).toThrow(/Sandbox forced.*no sandbox tool available/)` | ✅ PASS |
 | WHEN `execute_file` runs THEN file read confined to project boundary + deny-glob (existing preserved, sandbox on top) | existing boundary check + sandbox wrap | `executor.ts:328-376` executeFile boundary + deny-glob preserved; `executor.ts:453-454` `#spawn` wraps via `getSandboxMode()` + `wrapSpawn` | ✅ PASS (existing executor tests pass; sandbox wraps on top) |
 | WHEN sandbox active THEN env denylist + timeout + cwd restrictions still apply (defense-in-depth) | buildSafeEnv + timeout preserved | `executor.ts:459` `env: buildSafeEnv(sandboxTmpDir)`, `:472` `setTimeout(..., timeout)`, `:456` `cwd` | ✅ PASS |
 
@@ -176,8 +176,8 @@ All 15 tasks committed. Phase 1 + 2 + 3 complete.
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ---------------------- | ------ |
-| WHEN hook POST takes > 80% of deadline THEN logs breadcrumb (timestamp, elapsed ms, hook type) to stderr | breadcrumb JSON line when pct>80 | `massa-th0th-hook.ts:166-178` `if (pct > 80) { process.stderr.write(JSON.stringify({type:"breadcrumb", hook, elapsed, deadline, pct})) }`; `hook-breadcrumb.test.ts:158-174` `expect(breadcrumb).toBeDefined()`, `expect(breadcrumb!.pct).toBeGreaterThan(80)`, `expect(breadcrumb!.hook).toBe("post-tool-use")` | ✅ PASS |
-| WHEN POST times out THEN logs "deadline-on-fire" breadcrumb with elapsed + AbortSignal reason | deadline-on-fire on timeout | `massa-th0th-hook.ts:183-197` `if (isTimeout) { stderr.write(JSON.stringify({type:"deadline-on-fire", reason:"timeout"})) }`; `hook-breadcrumb.test.ts:177-193` `expect(deadlineOnFire).toBeDefined()`, `expect(deadlineOnFire!.reason).toBe("timeout")` | ✅ PASS |
+| WHEN hook POST takes > 80% of deadline THEN logs breadcrumb (timestamp, elapsed ms, hook type) to stderr | breadcrumb JSON line when pct>80 | `massa-ai-hook.ts:166-178` `if (pct > 80) { process.stderr.write(JSON.stringify({type:"breadcrumb", hook, elapsed, deadline, pct})) }`; `hook-breadcrumb.test.ts:158-174` `expect(breadcrumb).toBeDefined()`, `expect(breadcrumb!.pct).toBeGreaterThan(80)`, `expect(breadcrumb!.hook).toBe("post-tool-use")` | ✅ PASS |
+| WHEN POST times out THEN logs "deadline-on-fire" breadcrumb with elapsed + AbortSignal reason | deadline-on-fire on timeout | `massa-ai-hook.ts:183-197` `if (isTimeout) { stderr.write(JSON.stringify({type:"deadline-on-fire", reason:"timeout"})) }`; `hook-breadcrumb.test.ts:177-193` `expect(deadlineOnFire).toBeDefined()`, `expect(deadlineOnFire!.reason).toBe("timeout")` | ✅ PASS |
 | WHEN breadcrumb logged THEN parseable (JSON line or key=value) | JSON.parse succeeds | `hook-breadcrumb.test.ts:146-155` `parseBreadcrumbs` uses `JSON.parse(l)`; tests assert `.find(b => b.type === ...)` works | ✅ PASS |
 
 **Edge case**: fast response (<80%) → no breadcrumb — `hook-breadcrumb.test.ts:196-211` `expect(breadcrumb).toBeUndefined()` ✅
@@ -188,12 +188,12 @@ All 15 tasks committed. Phase 1 + 2 + 3 complete.
 
 ## Edge Cases (from spec)
 
-- [x] `MASSA_TH0TH_WEB_WRITE_MODE` unset → buttons hidden (default off) — `write-mode.test.ts:147-149, 157-164` ✅
-- [x] Docker not installed on Linux → executor sandbox errors "Docker not found; set MASSA_TH0TH_EXECUTOR_SANDBOX=none" (not silent) — `sandbox.ts:88-91`, `sandbox.test.ts:64-69` ✅
+- [x] `MASSA_AI_WEB_WRITE_MODE` unset → buttons hidden (default off) — `write-mode.test.ts:147-149, 157-164` ✅
+- [x] Docker not installed on Linux → executor sandbox errors "Docker not found; set MASSA_AI_EXECUTOR_SANDBOX=none" (not silent) — `sandbox.ts:88-91`, `sandbox.test.ts:64-69` ✅
 - [x] `mise.toml` + `.tool-versions` conflict → `.tool-versions` precedence (mise reads first) — both files match exactly, no conflict possible ✅
 - [x] Ollama version < 0.5.0 → llm-client uses reasoning-channel fallback — `llm-client.ts:89`, `llm-client-json-schema.test.ts:113-126` ✅
 - [x] CHANGELOG no `[Unreleased]` → CI fails with "Add [Unreleased] section" message — `ci.yml:83` ✅
-- [x] AGENTS.md references non-existent skill path → startup warns but doesn't crash — `AGENTS.md` references only verified paths (`skills/massa-th0th-memory/`, `skills/synapse-usage/` exist); global `skills/massa-th0th/SKILL.md` referenced as global (not repo-local) ✅
+- [x] AGENTS.md references non-existent skill path → startup warns but doesn't crash — `AGENTS.md` references only verified paths (`skills/massa-ai-memory/`, `skills/synapse-usage/` exist); global `skills/massa-ai/SKILL.md` referenced as global (not repo-local) ✅
 
 ---
 
@@ -207,7 +207,7 @@ All 15 tasks committed. Phase 1 + 2 + 3 complete.
 | - | -------- | --------- | ----------- | ------- |
 | 1 | json_schema version gate | `llm-client.ts:89` `minor >= 5` → `minor >= 99` | Forces `_checkJsonSchemaSupport` to return false for 0.5.x. Tests use `_setJsonSchemaSupportedForTesting(true)` seam, bypassing the version check entirely → json_schema path still taken → `schemaName: "response"` assertion still passes | ❌ **SURVIVED** |
 | 2 | sandbox seatbelt wrap | `sandbox.ts:165-168` return `cmd` unchanged (skip `sandbox-exec` prefix) | Disables macOS sandbox wrapping. Test asserting `result[0] === "sandbox-exec"` fails | ✅ **KILLED** (1 fail) |
-| 3 | hook breadcrumb threshold | `massa-th0th-hook.ts:168` `pct > 80` → `pct > 99` | 85%-delay no longer triggers breadcrumb. Test asserting `breadcrumb` defined fails | ✅ **KILLED** (1 fail) |
+| 3 | hook breadcrumb threshold | `massa-ai-hook.ts:168` `pct > 80` → `pct > 99` | 85%-delay no longer triggers breadcrumb. Test asserting `breadcrumb` defined fails | ✅ **KILLED** (1 fail) |
 
 **Result**: 2/3 killed, 1 survived
 
@@ -225,7 +225,7 @@ All 15 tasks committed. Phase 1 + 2 + 3 complete.
 - **Build**: ✅ 5/5 packages passing (`Tasks: 5 successful, 5 total`)
 - **Focused tests**: 103 pass, 3 skip, 0 fail across 8 test files (`277 expect() calls`)
 - **Test count before feature**: baseline pre-Wave-7 (focused suites)
-- **Test count after feature**: 103 pass (8 new test files added: sandbox, llm-client-json-schema, health-checker-config, write-mode, hook-breadcrumb + existing llm-client, executor, massa-th0th-hook)
+- **Test count after feature**: 103 pass (8 new test files added: sandbox, llm-client-json-schema, health-checker-config, write-mode, hook-breadcrumb + existing llm-client, executor, massa-ai-hook)
 - **Delta**: +5 new test files (sandbox 13, llm-client-json-schema 7, health-checker-config 3, write-mode 19, hook-breadcrumb 3 = 45 new tests)
 - **Skipped tests** (justified):
   - `sandbox.test.ts` 1 skip: platform-conditional (`test.skipIf(origPlatform !== "darwin")` seatbelt, `!== "linux"` docker) — only the host platform's branch runs; intentional cross-platform guard
@@ -268,11 +268,11 @@ All 15 tasks committed. Phase 1 + 2 + 3 complete.
 
 ### Fix 2: README embedding default mismatches config (W7-03 AC2)
 
-- **Root cause**: T3 aligned the health-checker to read config (✅ primary fix), but the README still documents `qwen3-embedding:8b` as the embedding model in the setup script + embeddings table, while `massa-th0th-config.ts:199` defaults `embedding.model` to `nomic-embed-text:latest`. AC2 requires README defaults to match `massa-th0th-config.ts embedding.model` exactly.
+- **Root cause**: T3 aligned the health-checker to read config (✅ primary fix), but the README still documents `qwen3-embedding:8b` as the embedding model in the setup script + embeddings table, while `massa-ai-config.ts:199` defaults `embedding.model` to `nomic-embed-text:latest`. AC2 requires README defaults to match `massa-ai-config.ts embedding.model` exactly.
 - **Fix task**:
-  - **What**: Reconcile README embedding documentation with `massa-th0th-config.ts:199` default (`nomic-embed-text:latest`). Either (a) update README:48,394,434,735,751 to show `nomic-embed-text:latest` as the config default + note `qwen3-embedding:8b` as the setup-script recommended pull, or (b) align the config default to `qwen3-embedding:8b` if that's the intended production default (requires config change + migration note). Option (a) is the surgical fix matching the spec's intent ("README documents the config default").
+  - **What**: Reconcile README embedding documentation with `massa-ai-config.ts:199` default (`nomic-embed-text:latest`). Either (a) update README:48,394,434,735,751 to show `nomic-embed-text:latest` as the config default + note `qwen3-embedding:8b` as the setup-script recommended pull, or (b) align the config default to `qwen3-embedding:8b` if that's the intended production default (requires config change + migration note). Option (a) is the surgical fix matching the spec's intent ("README documents the config default").
   - **Where**: `README.md:48,394,434,735,751`
-  - **Verify**: README embedding default string matches `massa-th0th-config.ts:199` `embedding.model` value
+  - **Verify**: README embedding default string matches `massa-ai-config.ts:199` `embedding.model` value
   - **Done when**: README + config embedding default are consistent (AC2 met)
 - **Priority**: Minor (documentation consistency; health-checker behavior already correct via config-first read)
 

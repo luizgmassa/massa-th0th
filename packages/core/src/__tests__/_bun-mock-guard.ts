@@ -6,7 +6,7 @@
  *   reset between test files run in one `bun test` process (oven-sh/bun#12823,
  *   oven-sh/bun#31316). Several sibling suites (`concurrent-indexing.test.ts`,
  *   `search-controller.test.ts`, and others) mock shared infrastructure —
- *   `@massa-th0th/shared` (replacing `config` with a stub missing `.set`),
+ *   `@massa-ai/shared` (replacing `config` with a stub missing `.set`),
  *   `data/symbol/symbol-repository-factory.js` (stub repo with no
  *   `clearProject`), and `services/search/ignore-patterns.js`
  *   (`loadProjectIgnore → null`) — to load `ContextualSearchRLM` without real
@@ -39,7 +39,7 @@ const _config: any =
   (() => {
     try {
       // Lazy import to avoid a hard dep cycle in consumers that also import it.
-      return require("@massa-th0th/shared").config;
+      return require("@massa-ai/shared").config;
     } catch {
       return undefined;
     }

@@ -57,7 +57,7 @@ rg -q 'investigator' AGENTS.md && rg -q 'mobile-specialist' AGENTS.md && echo "O
 git diff --name-only | rg -v '^(skills/|AGENTS\.md|\.specs/)' && echo "UNEXPECTED CHANGES" || echo "OK scope"
 
 # Stale-reference scan (AC-13) — includes directory refs
-SKILL_ROOT="/Users/luizmassa/Personal Projects/Useful-Agent-Skills/skills/massa-th0th"
+SKILL_ROOT="/Users/luizmassa/Personal Projects/Useful-Agent-Skills/skills/massa-ai"
 for ref in $(rg -o 'references/[a-zA-Z0-9./_-]+(\.md|/)' skills/*/SKILL.md | sort -u | cut -d: -f2); do
   base=$(echo "$ref" | sed 's:/$::')
   test -e "$SKILL_ROOT/$base" && echo "OK $ref" || echo "STALE $ref"

@@ -8,7 +8,7 @@ source "${PROJECT_ROOT}/scripts/lib/installer-env-transaction.sh"
 
 PASS=0
 FAIL=0
-TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/massa-th0th-installer-race.XXXXXX")"
+TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/massa-ai-installer-race.XXXXXX")"
 trap 'rm -rf "$TEST_ROOT"' EXIT
 
 ok() { printf '  ok - %s\n' "$*"; PASS=$((PASS + 1)); }
@@ -81,7 +81,7 @@ fi
 # AC2: same-inode edit between snapshot and lock aborts without replacing edit.
 case_dir="${TEST_ROOT}/content-edit"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'original\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
+MASSA_AI_INSTALLER_TEST_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
 ' >/dev/null 2>&1 & pid=$!
 require_barrier "${barrier}/candidate.ready" "$pid"
 printf 'external-edit\n' > "$target"
@@ -96,7 +96,7 @@ fi
 # AC2: inode replacement between snapshot and lock aborts without replacing replacement.
 case_dir="${TEST_ROOT}/inode-edit"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'original\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
+MASSA_AI_INSTALLER_TEST_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
 ' >/dev/null 2>&1 & pid=$!
 require_barrier "${barrier}/candidate.ready" "$pid"
 printf 'replacement\n' > "${case_dir}/replacement"
@@ -136,7 +136,7 @@ fi
 # AC3: target and backup swapped after lock acquisition are rejected.
 case_dir="${TEST_ROOT}/swapped-target"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"; printf 'victim\n' > "${case_dir}/victim"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
+MASSA_AI_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
 ' >/dev/null 2>&1 & pid=$!
 require_barrier "${barrier}/locked.ready" "$pid"
 mv "$target" "${case_dir}/original"; ln -s "${case_dir}/victim" "$target"
@@ -150,7 +150,7 @@ fi
 
 case_dir="${TEST_ROOT}/swapped-backup"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"; printf 'prior\n' > "${target}.bak"; printf 'victim\n' > "${case_dir}/victim"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
+MASSA_AI_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
 ' >/dev/null 2>&1 & pid=$!
 require_barrier "${barrier}/locked.ready" "$pid"
 rm "${target}.bak"; ln -s "${case_dir}/victim" "${target}.bak"
@@ -165,7 +165,7 @@ fi
 # Candidate digest is revalidated while holding the lock.
 case_dir="${TEST_ROOT}/candidate-mutation"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
+MASSA_AI_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
 ' >/dev/null 2>&1 & pid=$!
 require_barrier "${barrier}/locked.ready" "$pid"
 candidate_file="$(find "$case_dir" -maxdepth 1 -name '.env.candidate.*' -print | head -1)"
@@ -180,7 +180,7 @@ fi
 # Ownership metadata is prepared before mkdir; TERM closes the empty-lock gap.
 case_dir="${TEST_ROOT}/acquisition-gap-term"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_MKDIR_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
+MASSA_AI_INSTALLER_TEST_AFTER_MKDIR_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
 ' >/dev/null 2>&1 & publisher_wrapper=$!
 require_barrier "${barrier}/mkdir.ready" "$publisher_wrapper"
 prepared_owner="$(find "$case_dir" -maxdepth 1 -name '.env.owner.*.tmp' -print | head -1)"
@@ -201,13 +201,13 @@ fi
 # An ownerless SIGKILL gap is deliberately unprovable and must time out.
 case_dir="${TEST_ROOT}/acquisition-gap-kill"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_MKDIR_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
+MASSA_AI_INSTALLER_TEST_AFTER_MKDIR_BARRIER_DIR="$barrier" publish_text "$target" 'candidate
 ' >/dev/null 2>&1 & publisher_wrapper=$!
 require_barrier "${barrier}/mkdir.ready" "$publisher_wrapper"
 prepared_owner="$(find "$case_dir" -maxdepth 1 -name '.env.owner.*.tmp' -print | head -1)"
 owner_pid="$(cut -d'|' -f2 "$prepared_owner")"
 kill -KILL "$owner_pid"; wait "$publisher_wrapper" 2>/dev/null
-MASSA_TH0TH_INSTALLER_STALE_LOCK_SECONDS=0 MASSA_TH0TH_INSTALLER_LOCK_TIMEOUT_SECONDS=1 \
+MASSA_AI_INSTALLER_STALE_LOCK_SECONDS=0 MASSA_AI_INSTALLER_LOCK_TIMEOUT_SECONDS=1 \
     publish_text "$target" 'must-not-publish
 ' >/dev/null 2>&1; unknown_rc=$?
 if [ "$unknown_rc" -ne 0 ] && [ -d "${target}.install.lock" ] &&
@@ -222,10 +222,10 @@ rmdir "${target}.install.lock"
 # AC4: live lock cannot be reclaimed, even with zero stale-age threshold.
 case_dir="${TEST_ROOT}/live-lock"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'holder
+MASSA_AI_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'holder
 ' >/dev/null 2>&1 & holder=$!
 require_barrier "${barrier}/locked.ready" "$holder"
-MASSA_TH0TH_INSTALLER_STALE_LOCK_SECONDS=0 MASSA_TH0TH_INSTALLER_LOCK_TIMEOUT_SECONDS=1 \
+MASSA_AI_INSTALLER_STALE_LOCK_SECONDS=0 MASSA_AI_INSTALLER_LOCK_TIMEOUT_SECONDS=1 \
     publish_text "$target" 'contender
 ' >/dev/null 2>&1; contender_rc=$?
 if [ "$contender_rc" -ne 0 ] && [ -d "${target}.install.lock" ]; then
@@ -238,13 +238,13 @@ fi
 # AC4 + AC6: SIGKILL leaves proof-bearing lock; retry reclaims lock and candidate.
 case_dir="${TEST_ROOT}/dead-lock"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'killed
+MASSA_AI_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'killed
 ' >/dev/null 2>&1 & killed=$!
 require_barrier "${barrier}/locked.ready" "$killed"
 owner_pid="$(cut -d'|' -f2 "${target}.install.lock/owner")"
 kill -KILL "$owner_pid"; wait "$killed" 2>/dev/null
 if [ -d "${target}.install.lock" ]; then ok "SIGKILL leaves owner metadata for proof"; else fail "SIGKILL leaves owner metadata for proof"; fi
-MASSA_TH0TH_INSTALLER_STALE_LOCK_SECONDS=0 publish_text "$target" 'recovered
+MASSA_AI_INSTALLER_STALE_LOCK_SECONDS=0 publish_text "$target" 'recovered
 ' >/dev/null 2>&1; retry_rc=$?
 if [ "$retry_rc" -eq 0 ] && cmp -s "$target" <(printf 'recovered\n') &&
     cmp -s "${target}.bak" <(printf 'old\n') && no_transaction_artifacts "$target"; then
@@ -256,7 +256,7 @@ fi
 # SIGKILL after backup-temp creation is recoverable without publishing candidate.
 case_dir="${TEST_ROOT}/dead-backup-temp"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_BACKUP_BARRIER_DIR="$barrier" publish_text "$target" 'killed
+MASSA_AI_INSTALLER_TEST_AFTER_BACKUP_BARRIER_DIR="$barrier" publish_text "$target" 'killed
 ' >/dev/null 2>&1 & killed=$!
 require_barrier "${barrier}/backup.ready" "$killed"
 owner_pid="$(cut -d'|' -f2 "${target}.install.lock/owner")"
@@ -266,7 +266,7 @@ if cmp -s "$target" <(printf 'old\n') && find "$case_dir" -maxdepth 1 -name '.en
 else
     fail "SIGKILL after backup staging leaves env unchanged"
 fi
-MASSA_TH0TH_INSTALLER_STALE_LOCK_SECONDS=0 publish_text "$target" 'recovered
+MASSA_AI_INSTALLER_STALE_LOCK_SECONDS=0 publish_text "$target" 'recovered
 ' >/dev/null 2>&1; retry_rc=$?
 if [ "$retry_rc" -eq 0 ] && cmp -s "$target" <(printf 'recovered\n') &&
     cmp -s "${target}.bak" <(printf 'old\n') && no_transaction_artifacts "$target"; then
@@ -278,7 +278,7 @@ fi
 # SIGKILL after atomic backup publication must leave target and backup exact.
 case_dir="${TEST_ROOT}/dead-after-backup-publish"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_BACKUP_PUBLISH_BARRIER_DIR="$barrier" publish_text "$target" 'killed
+MASSA_AI_INSTALLER_TEST_AFTER_BACKUP_PUBLISH_BARRIER_DIR="$barrier" publish_text "$target" 'killed
 ' >/dev/null 2>&1 & killed=$!
 require_barrier "${barrier}/backup-published.ready" "$killed"
 owner_pid="$(cut -d'|' -f2 "${target}.install.lock/owner")"
@@ -288,7 +288,7 @@ if cmp -s "$target" <(printf 'old\n') && cmp -s "${target}.bak" <(printf 'old\n'
 else
     fail "SIGKILL after backup publication preserves old target and exact backup"
 fi
-MASSA_TH0TH_INSTALLER_STALE_LOCK_SECONDS=0 publish_text "$target" 'recovered
+MASSA_AI_INSTALLER_STALE_LOCK_SECONDS=0 publish_text "$target" 'recovered
 ' >/dev/null 2>&1; retry_rc=$?
 if [ "$retry_rc" -eq 0 ] && cmp -s "$target" <(printf 'recovered\n') &&
     cmp -s "${target}.bak" <(printf 'old\n') && no_transaction_artifacts "$target"; then
@@ -300,7 +300,7 @@ fi
 # AC6: TERM cleans owned files; changed owner token preserves foreign lock.
 case_dir="${TEST_ROOT}/term-cleanup"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'term
+MASSA_AI_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'term
 ' >/dev/null 2>&1 & term_pid=$!
 require_barrier "${barrier}/locked.ready" "$term_pid"
 owner_pid="$(cut -d'|' -f2 "${target}.install.lock/owner")"
@@ -313,7 +313,7 @@ fi
 
 case_dir="${TEST_ROOT}/foreign-lock"; barrier="${case_dir}/barrier"; mkdir -p "$case_dir"
 target="${case_dir}/.env"; printf 'old\n' > "$target"
-MASSA_TH0TH_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'term
+MASSA_AI_INSTALLER_TEST_AFTER_LOCK_BARRIER_DIR="$barrier" publish_text "$target" 'term
 ' >/dev/null 2>&1 & term_pid=$!
 require_barrier "${barrier}/locked.ready" "$term_pid"
 owner="${target}.install.lock/owner"

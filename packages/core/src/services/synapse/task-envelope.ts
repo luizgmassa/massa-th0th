@@ -21,12 +21,12 @@
  * orchestrates the existing primitives in sequence.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { getSessionRegistry } from "../synapse/session/index.js";
 import { DEFAULT_BUFFER_CONFIG } from "../synapse/buffer/index.js";
 import { SearchController } from "../../controllers/search-controller.js";
-import type { SearchSource } from "@massa-th0th/shared";
-import { SearchSource as SearchSourceEnum } from "@massa-th0th/shared";
+import type { SearchSource } from "@massa-ai/shared";
+import { SearchSource as SearchSourceEnum } from "@massa-ai/shared";
 
 /**
  * Input for `synapse_task_begin`.

@@ -15,7 +15,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { CompressionStrategy } from "@massa-th0th/shared";
+import { CompressionStrategy } from "@massa-ai/shared";
 import { CodeCompressor, type CompressLlmComplete } from "../services/compression/code-compressor.js";
 import { _setLlmEnabledForTesting } from "../services/memory/llm-client.js";
 import type { LlmResult } from "../services/memory/llm-client.js";

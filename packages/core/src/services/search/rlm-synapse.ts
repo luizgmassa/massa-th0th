@@ -5,7 +5,7 @@
  * byte-preserved: bodies moved verbatim with `this` → `rlm`.
  */
 
-import { SearchResult, logger } from "@massa-th0th/shared";
+import { SearchResult, logger } from "@massa-ai/shared";
 import { getMemoryRepository } from "../../data/memory/memory-repository-factory.js";
 import { getGraphStore } from "../graph/graph-store-factory.js";
 import { getSessionRegistry } from "../synapse/session/index.js";

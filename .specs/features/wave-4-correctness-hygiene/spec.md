@@ -6,14 +6,14 @@ Wave 3 closed the native runtime re-baseline. The v3 improvement plan surfaced a
 delta of correctness and hygiene issues carried over from cbm (codebase-memory-mcp)
 and ai-memory sibling repos, plus self-reported gaps. These are "audit, then fix if
 present" items: cbm's bugs were cbm-shaped, so each item requires a verify-then-fix
-pass against current massa-th0th source before scoping a fix. Five parallel read-only
+pass against current massa-ai source before scoping a fix. Five parallel read-only
 investigations confirmed the actual shape of every item.
 
 This feature closes Wave 4 by shipping the correctness bundle (N1, N4, N6–N10), the
 shared-DB fixture gap (M35), the spec reconciliation (M29, N25), the dead code sweep
 (N33), and the two residual architecture/process items (N34, N36). N24 (Linux native
 unblock) is already done. N22 (skill/doc mismatch) is deferred until the user finishes
-massa-th0th implementation work and is explicitly out of scope here.
+massa-ai implementation work and is explicitly out of scope here.
 
 ## Goals
 
@@ -38,7 +38,7 @@ massa-th0th implementation work and is explicitly out of scope here.
       `session-registry.ts` silent swallows (N33).
 - [ ] CI asserts grammar integrity pins on PRs touching `structural/` or `bun.lock` (N34).
 - [ ] Shared `xdg.ts` (zero imports) extracted to kill the duplicated-XDP circular-dep
-      workaround between `config-loader.ts` and `massa-th0th-config.ts` (N36).
+      workaround between `config-loader.ts` and `massa-ai-config.ts` (N36).
 - [ ] Regression test added asserting that SQL `IN (...)` placeholder builders stay
       bounded (N10 no-op closure).
 
@@ -49,8 +49,8 @@ Explicitly excluded. Documented to prevent scope creep.
 | Feature | Reason |
 | --- | --- |
 | N24 — Linux native runtime unblock | Already complete (native-runtime-rebaseline PASS). |
-| N22 — Reconcile skill/doc mismatch (global CLAUDE.md vs `skills/massa-th0th/SKILL.md`) | Deferred until user finishes massa-th0th implementation work; user-explicit. |
-| Full `nextCursor` pagination on `search_code`/`search_definitions`/`get_references`/`trace_path`/`impact_analysis` | cbm's bug was about pagination silently re-walking a rebuilt graph. massa-th0th has no paginated graph reads today. Full pagination is Wave 5 N5 (grouped prefix-factored tree). N1 here only surfaces the generation token + opt-in precondition. |
+| N22 — Reconcile skill/doc mismatch (global CLAUDE.md vs `skills/massa-ai/SKILL.md`) | Deferred until user finishes massa-ai implementation work; user-explicit. |
+| Full `nextCursor` pagination on `search_code`/`search_definitions`/`get_references`/`trace_path`/`impact_analysis` | cbm's bug was about pagination silently re-walking a rebuilt graph. massa-ai has no paginated graph reads today. Full pagination is Wave 5 N5 (grouped prefix-factored tree). N1 here only surfaces the generation token + opt-in precondition. |
 | Dedicated test DB / `.env.example` test-DB provisioning | M35 root-cause fix is larger than this feature; accepted mock isolation as permanent for the 4 test groups (consistent with the 3 already fixed). |
 | Converting the 3 bounded placeholder builders (`postgres-vector-store.ts:601`, `symbol-repository-pg.ts:1889`, `keyword-search-pg.ts:210`) to `= ANY($1::text[])` | N10 audit found no cbm-shaped bug; the 3 builders are bounded by construction. Conversion is defensive churn with no behavior change. |
 | Cycle detection (N2), multi-source BFS CTE (N3), grouped tree (N5), lease/idempotent import (N11/N12/N13), persisted scheduler (N14), Synapse UX (N26), SSE push (N27), Moonshot flavor (N15), auth (N19) | Wave 5/6/7 features. |
@@ -67,7 +67,7 @@ Every ambiguity is resolved or recorded here — nothing is left silently unclea
 | --- | --- | --- | --- |
 | N1 scope | Surface `activatedGraphGenerationId` on clamped graph tools + opt-in `ifNoneMatch: <generationId>` param that teaching-errors on stale generation. | No paginated graph reads today → no silent re-walk risk. Cheapest, matches M54 cursor design (fingerprint, not gen token). User confirmed. | y |
 | M35 approach | Test-only isolation fixture for `scheduler-store-pg.test.ts`: inject a filter that excludes `scheduled-*` rows from `listAll()` during the test. | Consistent with the 3 already-fixed test groups (stub grammar/graphGenerations/alias resolver + pre-create workspace). Zero infra change. User confirmed. | y |
-| N9 cap | `MASSA_TH0TH_READ_FILE_MAX_LINES` env override, default 500, emit `source_clipped: true` when cap is hit. Include true total line count so `omitted` is derivable. | Matches cbm contract; env override preserves large-file workflows. User confirmed. | y |
+| N9 cap | `MASSA_AI_READ_FILE_MAX_LINES` env override, default 500, emit `source_clipped: true` when cap is hit. Include true total line count so `omitted` is derivable. | Matches cbm contract; env override preserves large-file workflows. User confirmed. | y |
 | N10 action | Close as no-op; add one regression test asserting the 3 bounded placeholder builders stay bounded (Phase 2 rerank ≤200, ref_kind enum ≤9, vocabulary VALUES chunked at 5000). | Audit found zero cbm-shaped bug. Test guards against regression. User confirmed. | y |
 | N7 diff source selection | `scope=unstaged` (default) merges unstaged + untracked-new. `scope=staged` merges staged + untracked-new. `scope=committed` stays single-source (committed only). Add `scope=all` that merges committed + unstaged + untracked-new. | Matches cbm: untracked new files invisible to `git diff`. Preserves existing single-source semantics for committed; new `all` is the union. | y (derived from cbm evidence; no ambiguity) |
 | N8 validation rule | Reject `base_branch`/`since` matching `/^--/` (git arg-injection) or `/[\r\n;|&$<>(){}\\]/` (shell metacharacters). Error lists valid pattern: alphanumeric, `-`, `/`, `.`, `_`, `+`. | cbm pattern. `execFileSync` already prevents shell injection; this prevents git arg-injection (`--upload-pack` etc.). | y (derived from cbm evidence) |
@@ -75,7 +75,7 @@ Every ambiguity is resolved or recorded here — nothing is left silently unclea
 | N4 fields | `<list>_total`, `<list>_shown`, `<list>_omitted` on every clamped list. Reuse existing `total`/`shown` where present (get_references, memory_list). Add `omitted` everywhere. | cbm invariant. `omitted = total - shown` is derivable but explicit is clearer. | y (derived from cbm evidence) |
 | N1 precondition param name | `ifNoneMatch` (HTTP ETag convention). | Matches HTTP conditional-request semantics. Stale → 412-style teaching error with current generationId. | y (convention) |
 | N34 CI gate | Add `verify:tree-sitter-native` step to the main `build` job in `ci.yml` ONLY when the PR touches `packages/core/src/services/structural/**` or `bun.lock` or `package.json`. Use `dorny/paths-filter@v3` or `tj-actions/changed-files` to detect. | Avoids running the heavy native gate on every PR; matches N34's "on PRs touching structural/ or bun.lock" wording. | y (matches plan wording) |
-| N36 xdg.ts shape | Pure module, zero imports, exports `xdgConfigHome()`, `xdgDataHome()`, `xdgCacheHome()`, `xdgRuntimeDir()`, `xdgStateHome()`, `configDir(app)`, `dataDir(app)`, `cacheDir(app)`. Both `config-loader.ts` and `massa-th0th-config.ts` import from it. | Matches M6 residual: "extract shared xdg.ts (no imports) to kill the duplicated-XDP circular-dep workaround." | y (matches plan wording) |
+| N36 xdg.ts shape | Pure module, zero imports, exports `xdgConfigHome()`, `xdgDataHome()`, `xdgCacheHome()`, `xdgRuntimeDir()`, `xdgStateHome()`, `configDir(app)`, `dataDir(app)`, `cacheDir(app)`. Both `config-loader.ts` and `massa-ai-config.ts` import from it. | Matches M6 residual: "extract shared xdg.ts (no imports) to kill the duplicated-XDP circular-dep workaround." | y (matches plan wording) |
 | N25 reconciliation depth | Update the 3 `validation.md` files' "Accepted assumption" rows to reflect that PG parity is no longer deferred — migrations + Prisma models exist. Add a note that runtime store classes may still be deferred but schema parity is done. | Minimal doc fix; no code change. | y (doc reconciliation) |
 | M29 close | Flip `sqlite-removal` status to `complete` in `FEATURES.json` and add a `sqlite-removal-followup` feature for the 3 non-gating fixture/e2e follow-ups (legacy Prisma migration probe, qwen fixture rebuild, aggregate test capture). | Matches M29 wording: "Either flip to complete or split the 3 fixture follow-ups into sqlite-removal-followup." User chose split. | y (matches plan wording) |
 | N33 `"deprecated"` literal in `relation-extractor.ts:44` | Keep. | Audit confirmed it is functional keyword data inside `CONTRADICTION_SIGNALS`, not a deprecation marker. | y (audit finding) |
@@ -97,7 +97,7 @@ Every ambiguity is resolved or recorded here — nothing is left silently unclea
 
 ### P1: Correctness bundle — clamped lists, enum teaching errors, three-source diff, shell-arg guard, read_file cap ⭐ MVP
 
-**User Story**: As an agent consuming massa-th0th tool output, I want every clamped
+**User Story**: As an agent consuming massa-ai tool output, I want every clamped
 list to report its true total and omitted count, every invalid enum to teach me the
 valid values, the impact diff to include untracked new files, shell-args to be
 validated, and read_file to cap at a known limit — so that I never silently lose data
@@ -151,12 +151,12 @@ signal-to-cost items in Wave 4.
     the tool SHALL throw `ToolError("Invalid <param> value: <received>. Valid pattern:
     alphanumeric, -, /, ., _, +.")` before running git. (N8)
 11. WHEN `read_file` is called with a range or whole-file read exceeding
-    `MASSA_TH0TH_READ_FILE_MAX_LINES` (default 500) THEN the response SHALL cap the
+    `MASSA_AI_READ_FILE_MAX_LINES` (default 500) THEN the response SHALL cap the
     returned lines at the limit, include `source_clipped: true`, and include the true
     total line count so `omitted` is derivable. (N9)
 12. WHEN `read_file` is called with a range smaller than the cap THEN `source_clipped`
     SHALL be `false` and the full range SHALL be returned. (N9)
-13. WHEN `MASSA_TH0TH_READ_FILE_MAX_LINES` is unset or invalid THEN the cap SHALL default
+13. WHEN `MASSA_AI_READ_FILE_MAX_LINES` is unset or invalid THEN the cap SHALL default
     to `500`. (N9)
 14. WHEN `symbol_snippet` HTTP endpoint is called with a range exceeding the cap THEN the
     response SHALL cap and emit `source_clipped`. (N9)
@@ -349,13 +349,13 @@ path-filtered.
 ### P2: Unify two config systems (N36)
 
 **User Story**: As a contributor, I want a single `xdg.ts` module (zero imports) that
-both `config-loader.ts` and `massa-th0th-config.ts` import — so that the duplicated
+both `config-loader.ts` and `massa-ai-config.ts` import — so that the duplicated
 XDG path logic and the circular-dep workaround comment are gone.
 
 **Why P2**: M6 residual. The audit confirmed `xdg.ts` does NOT exist and the
 `XDG_CONFIG_HOME` resolution is duplicated byte-for-byte at `config-loader.ts:6-9` and
-`massa-th0th-config.ts:8-11` with a circular-dep workaround comment at
-`massa-th0th-config.ts:4-7`.
+`massa-ai-config.ts:8-11` with a circular-dep workaround comment at
+`massa-ai-config.ts:4-7`.
 
 **Acceptance Criteria**:
 
@@ -365,8 +365,8 @@ XDG path logic and the circular-dep workaround comment are gone.
    imports (pure, no `import` statements). (N36)
 2. WHEN `config-loader.ts` is read THEN the `XDG_CONFIG_HOME` resolution (lines 6-9)
    SHALL be replaced with `import { xdgConfigHome, configDir } from "./xdg.js"` and a
-   call to `configDir("massa-th0th")`. (N36)
-3. WHEN `massa-th0th-config.ts` is read THEN the duplicated `XDG_CONFIG_HOME` (lines
+   call to `configDir("massa-ai")`. (N36)
+3. WHEN `massa-ai-config.ts` is read THEN the duplicated `XDG_CONFIG_HOME` (lines
    8-11) and the circular-dep workaround comment (lines 4-7) SHALL be replaced with
    the same import. (N36)
 4. WHEN the workspace is type-checked and built THEN `bun run typecheck` and `bun run
@@ -406,7 +406,7 @@ Discrimination: remove the Phase 1 `LIMIT 200` → test 1 fails.
 
 ## Edge Cases
 
-- WHEN `MASSA_TH0TH_READ_FILE_MAX_LINES=0` or negative THEN the cap SHALL default to
+- WHEN `MASSA_AI_READ_FILE_MAX_LINES=0` or negative THEN the cap SHALL default to
   `500` (treat invalid as unset).
 - WHEN `ifNoneMatch` is an empty string THEN the tool SHALL ignore it (treat as
   omitted).

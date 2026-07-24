@@ -2,7 +2,7 @@
 
 ## Source Plan
 
-`/Users/luizmassa/.claude/plans/i-want-to-understand-virtual-lantern.md` — “massa-th0th Improvement Plan”.
+`/Users/luizmassa/.claude/plans/i-want-to-understand-virtual-lantern.md` — “massa-ai Improvement Plan”.
 
 ## Intent and Scope
 

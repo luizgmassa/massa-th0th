@@ -86,15 +86,15 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
     const res = runInstall(["--user"], { HOME: tmp });
     expect(res.exitCode).toBe(0);
 
-    // Commands copied to ~/.claude/commands/ (prefixed massa-th0th-)
+    // Commands copied to ~/.claude/commands/ (prefixed massa-ai-)
     const commandsDir = path.join(tmp, ".claude/commands");
     const files = await fs.readdir(commandsDir);
-    const mtFiles = files.filter((f) => f.startsWith("massa-th0th-"));
+    const mtFiles = files.filter((f) => f.startsWith("massa-ai-"));
     expect(mtFiles.length).toBeGreaterThan(0);
 
     // Navigator agent copied
     expect(
-      await pathExists(path.join(tmp, ".claude/agents/massa-th0th-navigator.md")),
+      await pathExists(path.join(tmp, ".claude/agents/massa-ai-navigator.md")),
     ).toBe(true);
 
     // Hooks merged into settings.json with all 5 events
@@ -106,16 +106,16 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
     // Each owned entry has the matcher-group + hooks[] shape
     for (const evt of EXPECTED_EVENTS) {
       const arr = hooks[evt] as Record<string, unknown>[];
-      const owned = arr.find((e) => e._massaTh0thOwned === true);
+      const owned = arr.find((e) => e._massaAiOwned === true);
       expect(owned).toBeDefined();
       expect(owned!.hooks).toBeDefined();
       const inner = (owned!.hooks as Record<string, unknown>[])[0];
       expect(inner.type).toBe("command");
-      expect(inner.command as string).toContain("massa-th0th-hook.ts");
+      expect(inner.command as string).toContain("massa-ai-hook.ts");
     }
   });
 
-  test("array-append merge: pre-existing user matcher-group entry survives alongside massa-th0th entry", async () => {
+  test("array-append merge: pre-existing user matcher-group entry survives alongside massa-ai entry", async () => {
     // Pre-create settings.json with a user hook under SessionStart (no marker)
     await fs.mkdir(path.join(tmp, ".claude"), { recursive: true });
     const userSettings = {
@@ -148,8 +148,8 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
           "echo user-hook",
     );
     expect(userEntry).toBeDefined();
-    // massa-th0th owned entry appended
-    const owned = sessionStart.find((e) => e._massaTh0thOwned === true);
+    // massa-ai owned entry appended
+    const owned = sessionStart.find((e) => e._massaAiOwned === true);
     expect(owned).toBeDefined();
     // User top-level key preserved
     expect(cfg.someUserKey).toBe(true);
@@ -182,9 +182,9 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
       string,
       unknown
     >[];
-    // massa-th0th owned entry gone
+    // massa-ai owned entry gone
     expect(
-      sessionStart.find((e) => e._massaTh0thOwned === true),
+      sessionStart.find((e) => e._massaAiOwned === true),
     ).toBeUndefined();
     // User matcher-group entry survives
     expect(
@@ -201,11 +201,11 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
     const commandsDir = path.join(tmp, ".claude/commands");
     if (await pathExists(commandsDir)) {
       const files = await fs.readdir(commandsDir);
-      expect(files.filter((f) => f.startsWith("massa-th0th-"))).toHaveLength(0);
+      expect(files.filter((f) => f.startsWith("massa-ai-"))).toHaveLength(0);
     }
     // Navigator agent preserved on uninstall (CLA-05/R1: excluded by name)
     expect(
-      await pathExists(path.join(tmp, ".claude/agents/massa-th0th-navigator.md")),
+      await pathExists(path.join(tmp, ".claude/agents/massa-ai-navigator.md")),
     ).toBe(true);
   });
 
@@ -243,15 +243,15 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
     const res = runInstall(["--user"], { HOME: tmp });
     expect(res.exitCode).toBe(0);
 
-    // 12 specialist agent files at ~/.claude/agents/massa-th0th-<name>.md
+    // 12 specialist agent files at ~/.claude/agents/massa-ai-<name>.md
     for (const name of SPECIALIST_NAMES) {
       expect(
-        await pathExists(path.join(tmp, `.claude/agents/massa-th0th-${name}.md`)),
+        await pathExists(path.join(tmp, `.claude/agents/massa-ai-${name}.md`)),
       ).toBe(true);
     }
     // Navigator also present (preserved, additive)
     expect(
-      await pathExists(path.join(tmp, ".claude/agents/massa-th0th-navigator.md")),
+      await pathExists(path.join(tmp, ".claude/agents/massa-ai-navigator.md")),
     ).toBe(true);
 
     // Install output mentions the 12 subagent specialists (DOC-01)
@@ -267,7 +267,7 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
 
     for (const name of readOnlyAgents) {
       const content = await fs.readFile(
-        path.join(tmp, `.claude/agents/massa-th0th-${name}.md`),
+        path.join(tmp, `.claude/agents/massa-ai-${name}.md`),
         "utf8",
       );
       const toolsLine = content.split("\n").find((l) => l.startsWith("tools:")) ?? "";
@@ -276,7 +276,7 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
     }
     for (const name of writeAgents) {
       const content = await fs.readFile(
-        path.join(tmp, `.claude/agents/massa-th0th-${name}.md`),
+        path.join(tmp, `.claude/agents/massa-ai-${name}.md`),
         "utf8",
       );
       const toolsLine = content.split("\n").find((l) => l.startsWith("tools:")) ?? "";
@@ -290,11 +290,11 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
     // Sanity: 12 specialists + navigator present before uninstall
     for (const name of SPECIALIST_NAMES) {
       expect(
-        await pathExists(path.join(tmp, `.claude/agents/massa-th0th-${name}.md`)),
+        await pathExists(path.join(tmp, `.claude/agents/massa-ai-${name}.md`)),
       ).toBe(true);
     }
     expect(
-      await pathExists(path.join(tmp, ".claude/agents/massa-th0th-navigator.md")),
+      await pathExists(path.join(tmp, ".claude/agents/massa-ai-navigator.md")),
     ).toBe(true);
 
     const res = runInstall(["--uninstall"], { HOME: tmp });
@@ -303,12 +303,12 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
     // 12 specialists removed
     for (const name of SPECIALIST_NAMES) {
       expect(
-        await pathExists(path.join(tmp, `.claude/agents/massa-th0th-${name}.md`)),
+        await pathExists(path.join(tmp, `.claude/agents/massa-ai-${name}.md`)),
       ).toBe(false);
     }
     // Navigator survives (R1: excluded by name in the uninstall loop)
     expect(
-      await pathExists(path.join(tmp, ".claude/agents/massa-th0th-navigator.md")),
+      await pathExists(path.join(tmp, ".claude/agents/massa-ai-navigator.md")),
     ).toBe(true);
   });
 
@@ -318,7 +318,7 @@ describe("claude-plugin install.sh (T16 / INS-08,09 + F5)", () => {
       const out: Record<string, string> = {};
       for (const name of SPECIALIST_NAMES) {
         out[name] = await fs.readFile(
-          path.join(tmp, `.claude/agents/massa-th0th-${name}.md`),
+          path.join(tmp, `.claude/agents/massa-ai-${name}.md`),
           "utf8",
         );
       }

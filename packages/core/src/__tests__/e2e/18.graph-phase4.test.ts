@@ -13,7 +13,7 @@
  * diff that never touches the working tree), and every other call is a pure
  * graph read. assertE2ePrefix() guards the one projectId we reference.
  *
- * Reuses the shared index `e2e-th0th-shared` (indexed ONCE across the whole
+ * Reuses the shared index `e2e-ai-shared` (indexed ONCE across the whole
  * E2E suite via ensureSharedIndex). Never resets SHARED_PID.
  *
  * Surface choice (all five Phase-4 tools are MCP-exposed per
@@ -56,7 +56,7 @@ const READY = await (async () => {
 // Defensive: assert the shared project id is in the e2e prefix before any call.
 assertE2ePrefix(SHARED_PID);
 
-// Known symbols in the massa-th0th repo (shared index). These are stable
+// Known symbols in the massa-ai repo (shared index). These are stable
 // exports used as trace seeds — chosen for being widely referenced so the BFS
 // has real edges to follow.
 const TRACE_SEED = "ContextualSearchRLM"; // exported class, services/search/

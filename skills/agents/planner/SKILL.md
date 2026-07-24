@@ -47,9 +47,9 @@ Transform an engineering request into a structured implementation plan.
 ### Do not use when
 - The work is a single obvious step (inline execution is cheaper).
 - User intent is unresolved.
-- The plan would duplicate an existing massa-th0th workflow phase (use the workflow instead).
+- The plan would duplicate an existing massa-ai workflow phase (use the workflow instead).
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: summarize any source reads; return the plan, not raw code.
 - Verification Ladder: plan references expected sensors; does not run them.
 - Th0th Memory: suggest durable decision memories only when the plan locks a strategy; main agent persists.
@@ -62,7 +62,7 @@ GLM-5.2 (advisory). Fallback to the workflow's configured default model if unava
 ## Validation Sensors
 - Every step in the plan references a concrete file, module, or task.
 - Every risk has a mitigation or accepted-risk note.
-- The plan does not duplicate an existing massa-th0th workflow phase.
+- The plan does not duplicate an existing massa-ai workflow phase.
 
 ## Memory Boundary
 Suggest durable memories only when the plan locks an architectural or strategy decision. The main agent persists. Do not persist the plan itself as memory (it lives in `.specs/`).

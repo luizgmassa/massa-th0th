@@ -34,38 +34,38 @@ describe("commit-locked qwen E2E fixture", () => {
   test("explicit fixture path is selected only for a fully owned dedicated run", () => {
     const fallback = "/repository/default";
     expect(resolveE2EProjectPath(fallback, {
-      MASSA_TH0TH_DEDICATED: "1",
-      MASSA_TH0TH_E2E_PROJECT_PATH: "/tmp/explicit-fixture",
+      MASSA_AI_DEDICATED: "1",
+      MASSA_AI_E2E_PROJECT_PATH: "/tmp/explicit-fixture",
     })).toBe(fallback);
     expect(resolveE2EProjectPath(fallback, {
-      MASSA_TH0TH_DEDICATED: "0",
-      MASSA_TH0TH_E2E_PROJECT_PATH: "/tmp/ignored-fixture",
+      MASSA_AI_DEDICATED: "0",
+      MASSA_AI_E2E_PROJECT_PATH: "/tmp/ignored-fixture",
     })).toBe(fallback);
     expect(resolveE2EProjectPath(fallback, {
-      MASSA_TH0TH_DEDICATED: "1",
+      MASSA_AI_DEDICATED: "1",
     })).toBe(fallback);
     expect(resolveE2EProjectPath(fallback, {
-      MASSA_TH0TH_DEDICATED: "1",
-      MASSA_TH0TH_E2E_PROJECT_PATH: "/tmp/explicit-fixture",
-      MASSA_TH0TH_API_URL: "http://127.0.0.1:3334",
-      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_th0th_test",
-      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_th0th_test",
-      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_th0th_test",
+      MASSA_AI_DEDICATED: "1",
+      MASSA_AI_E2E_PROJECT_PATH: "/tmp/explicit-fixture",
+      MASSA_AI_API_URL: "http://127.0.0.1:3334",
+      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_ai_test",
+      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_ai_test",
+      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_ai_test",
     })).toBe("/tmp/explicit-fixture");
   });
 
   test("destructive fixture behavior requires explicit owned API and PostgreSQL targets", () => {
     const complete = {
-      MASSA_TH0TH_DEDICATED: "1",
-      MASSA_TH0TH_E2E_PROJECT_PATH: "/tmp/explicit-fixture",
-      MASSA_TH0TH_API_URL: "http://127.0.0.1:3334",
-      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_th0th_test",
-      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_th0th_test",
-      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_th0th_test",
+      MASSA_AI_DEDICATED: "1",
+      MASSA_AI_E2E_PROJECT_PATH: "/tmp/explicit-fixture",
+      MASSA_AI_API_URL: "http://127.0.0.1:3334",
+      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_ai_test",
+      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_ai_test",
+      DATABASE_URL: "postgresql://test:test@127.0.0.1:5433/massa_ai_test",
     };
     expect(isOwnedDedicatedE2eEnvironment(complete)).toBe(true);
     for (const key of [
-      "MASSA_TH0TH_API_URL",
+      "MASSA_AI_API_URL",
       "DATABASE_URL",
       "DATABASE_URL",
       "DATABASE_URL",
@@ -74,11 +74,11 @@ describe("commit-locked qwen E2E fixture", () => {
     }
     expect(isOwnedDedicatedE2eEnvironment({
       ...complete,
-      MASSA_TH0TH_API_URL: "http://127.0.0.1:3333",
+      MASSA_AI_API_URL: "http://127.0.0.1:3333",
     })).toBe(false);
     expect(isOwnedDedicatedE2eEnvironment({
       ...complete,
-      DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/massa_th0th_test",
+      DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/massa_ai_test",
     })).toBe(false);
   });
 
@@ -91,8 +91,8 @@ describe("commit-locked qwen E2E fixture", () => {
     }) as typeof fetch;
     try {
       expect(() => ensureSharedIndex({
-        MASSA_TH0TH_DEDICATED: "1",
-        MASSA_TH0TH_E2E_PROJECT_PATH: "/tmp/explicit-fixture",
+        MASSA_AI_DEDICATED: "1",
+        MASSA_AI_E2E_PROJECT_PATH: "/tmp/explicit-fixture",
       })).toThrow("Refusing incomplete dedicated E2E environment");
       expect(fetchCalls).toBe(0);
     } finally {
@@ -127,7 +127,7 @@ describe("commit-locked qwen E2E fixture", () => {
 
   test("wrong-root warm identity rebuilds only for a dedicated guarded project", () => {
     const common = {
-      projectId: "e2e-th0th-shared-profile",
+      projectId: "e2e-ai-shared-profile",
       expectedCanonicalPath: "/fixture/expected",
       storedCanonicalPath: "/fixture/wrong",
     };

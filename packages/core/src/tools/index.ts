@@ -1,5 +1,5 @@
 /**
- * @massa-th0th/core - Tools Export
+ * @massa-ai/core - Tools Export
  */
 
 export { IndexProjectTool } from "./index_project.js";

@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from "crypto";
-import { MemoryLevel, MemoryType } from "@massa-th0th/shared";
+import { MemoryLevel, MemoryType } from "@massa-ai/shared";
 import type { InsertMemoryInput, MemoryRow, UpdateMemoryPatch } from "../../data/memory/memory-repository.js";
 import type { ProposalRecord } from "../../data/proposal/proposal-repository.js";
 import type { AutoImproveJob, MemoryApplySeam } from "./auto-improve-job.js";

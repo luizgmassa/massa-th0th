@@ -2,7 +2,7 @@
 
 ## Source plan
 
-`/Users/luizmassa/.claude/plans/i-want-to-understand-eager-hummingbird.md` — “massa-th0th Improvement Roadmap — Native TS Rebuild.”
+`/Users/luizmassa/.claude/plans/i-want-to-understand-eager-hummingbird.md` — “massa-ai Improvement Roadmap — Native TS Rebuild.”
 
 ## Intent/scope
 
@@ -69,7 +69,7 @@ These are commit/diff facts, not a claim that every manual or runtime verificati
 - `70504b2` — `fix: cap read_file caches (LRU 512) + write back metadata`
 - `9379bde` / `28c0f04` / `be1fa3a` / `382b902` / `ac66ab0` / `07739a1` — `docs(todo):` follow-up closure/status updates
 - `2315f3c` — `fix(checkpoint): make restore async, real PG memory check`
-- `da4c60f` — `fix(config): reconcile MassaTh0thConfig + drop compression.llm`
+- `da4c60f` — `fix(config): reconcile MassaAiConfig + drop compression.llm`
 - `091dbea` — `fix(deps): align mcp-client @types/node + shared dotenv`
 - `51ce05c` — `test: drop redundant Phase-4 Dx:SKIP env guards`
 - `03aa888` — `fix(test): align PG-integration gates to DB_AVAILABLE`

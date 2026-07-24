@@ -30,6 +30,6 @@
 ## Gate Commands
 
 - Focused: `bun test apps/mcp-client/src/api-client.test.ts apps/mcp-client/src/call-tool-proxy.test.ts apps/mcp-client/src/tool-definitions-synapse.test.ts apps/mcp-client/src/tool-discovery.test.ts`
-- Type: `bun run --filter @massa-th0th/mcp-client type-check`
-- Build: `bun run --filter @massa-th0th/mcp-client build`
+- Type: `bun run --filter @massa-ai/mcp-client type-check`
+- Build: `bun run --filter @massa-ai/mcp-client build`
 - Live: owned-stack `packages/core/src/__tests__/e2e/10.synapse.test.ts` and `00.harness.smoke.test.ts` when available.

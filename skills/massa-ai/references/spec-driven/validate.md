@@ -207,7 +207,7 @@ After all checks complete, the Verifier MUST:
 This is the closing action of validation — not a separate phase. Immediately after the report is written, turn its grounded failures into reusable, project-local guidance by following [references/lessons.md](../lessons.md) and the stub at [references/spec-driven/lessons.md](lessons.md). In short: for each surviving mutant, spec-precision gap, failed/uncovered AC, or `// SPEC_DEVIATION`, record one terse general lesson via:
 
 ```bash
-python3 skills/massa-th0th/scripts/lessons.py --root . add --feature <slug> --signal "<signal>" --source "<source>" --text "<lesson>" --scope "<scope>"
+python3 skills/massa-ai/scripts/lessons.py --root . add --feature <slug> --signal "<signal>" --source "<source>" --text "<lesson>" --scope "<scope>"
 ```
 
 The script enforces grounding (mandatory `--source`) and owns all bookkeeping. A clean PASS with no signal → record nothing. Run the self-check: if there was signal but no lesson was recorded, say so in chat. See [references/lessons.md](../lessons.md) for the exact commands, phrasing rules, scope discipline, and the no-script fallback.
@@ -393,5 +393,5 @@ Update `.specs/features/<slug>/spec.md` requirement statuses and reflect verifie
 - **Max 3 diagnostic iterations** — Prevents infinite investigation loops
 - **Update traceability** — Every verified requirement updates spec.md status and the FEATURES.json registry
 - **Always write the report file** — `.specs/features/<slug>/validation.md` is the persisted evidence artifact
-- **Distill after writing** — turn grounded failures into lessons via `python3 skills/massa-th0th/scripts/lessons.py` ([references/lessons.md](../lessons.md)); clean PASS → no lesson
+- **Distill after writing** — turn grounded failures into lessons via `python3 skills/massa-ai/scripts/lessons.py` ([references/lessons.md](../lessons.md)); clean PASS → no lesson
 - **Independence first** — prefer a fresh read-only verifier; the author never verifies their own work when tooling allows

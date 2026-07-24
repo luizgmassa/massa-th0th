@@ -13,7 +13,7 @@
  *             centrality boost and graph-file boosting applied.
  */
 
-import { logger, estimateTokens } from "@massa-th0th/shared";
+import { logger, estimateTokens } from "@massa-ai/shared";
 import { SearchController } from "./search-controller.js";
 import { MemoryController } from "./memory-controller.js";
 import { CompressContextTool } from "../tools/compress_context.js";

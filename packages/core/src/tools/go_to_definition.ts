@@ -5,7 +5,7 @@
  * Returns file path, line range, doc comment, and code snippet.
  */
 
-import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse } from "@massa-ai/shared";
 import { symbolGraphService } from "../services/symbol/symbol-graph.service.js";
 
 interface GoToDefinitionParams {

@@ -100,8 +100,8 @@ mock.module("../services/query/prisma-client.ts", () => {
 // factory closure can reference it (TDZ-safe: factory runs lazily on import).
 const STUB = makeStub();
 
-mock.module("@massa-th0th/shared", () => {
-  const actual = require("@massa-th0th/shared");
+mock.module("@massa-ai/shared", () => {
+  const actual = require("@massa-ai/shared");
   return {
     ...actual,
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },

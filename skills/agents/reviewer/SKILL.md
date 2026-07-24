@@ -50,7 +50,7 @@ Review implementation quality by analyzing the diff and flagging bugs, regressio
 - The work needs architectural evaluation (route to architecture-specialist).
 - The task needs verification-gate logic (route to verification-agent).
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: summarize the diff; return findings, not the raw diff.
 - Verification Ladder: static checks (lint, typecheck) as supporting evidence; behavioral checks belong to verification-agent.
 - Th0th Memory: suggest durable code-quality memories only when a review reveals a reusable pattern; main agent persists.

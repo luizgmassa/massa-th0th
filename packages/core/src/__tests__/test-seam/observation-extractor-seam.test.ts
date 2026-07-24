@@ -104,7 +104,7 @@ describe("ObservationExtractor seam (T26)", () => {
 
     const category = extractCategory("pre-compact", payload);
     // classifyToolCall runs before classifyPreCompact in the pipeline.
-    // "search" → "th0th_search" → "searches" matches first.
+    // "search" → "search" → "searches" matches first.
     expect(category).toBe("searches");
   });
 

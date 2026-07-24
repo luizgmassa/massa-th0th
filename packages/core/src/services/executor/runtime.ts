@@ -5,7 +5,7 @@
  * can pick the right interpreter/compiler per language. Rewritten fresh in TS
  * (approach ported from context-mode `runtime.ts`); no code copied.
  *
- * Trust model: massa-th0th is a LOCAL-DEV tool that runs user-supplied code on
+ * Trust model: massa-ai is a LOCAL-DEV tool that runs user-supplied code on
  * the host. Runtime detection here is best-effort and never escalates
  * privilege — it only reports what `command -v` / `where` + a `--version`
  * probe can see on PATH.

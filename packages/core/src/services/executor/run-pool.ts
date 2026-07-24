@@ -14,7 +14,7 @@
  *     `os.cpus().length` for memory-pressure safety.
  *   - Clamped to job count: requesting concurrency 8 for 3 jobs runs 3.
  *   - STANDALONE: imports only `node:os`. Must NOT depend on executor or any
- *     other massa-th0th service so it stays a clean reusable export.
+ *     other massa-ai service so it stays a clean reusable export.
  */
 
 import { cpus } from "node:os";

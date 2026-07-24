@@ -7,7 +7,7 @@
  * timeout kills the whole process group on expiry.
  *
  * SECURITY / TRUST MODEL (read before extending):
- *   massa-th0th is a LOCAL-DEV tool. `execute` / `execute_file` run
+ *   massa-ai is a LOCAL-DEV tool. `execute` / `execute_file` run
  *   USER-SUPPLIED code ON THE HOST — there is no OS-level sandbox (no
  *   seccomp, no namespaces, no cgroups). Containment is BEST-EFFORT:
  *     - default `cwd` is the caller's project root (so relative paths resolve
@@ -144,9 +144,9 @@ function sandboxTmpDir(): string {
   // Prefer the OS real temp dir; fall back to os.tmpdir() (may be overridden
   // by TMPDIR but still outside the project in practice).
   try {
-    return mkdtempSync(join(tmpdir(), ".massa-th0th-exec-"));
+    return mkdtempSync(join(tmpdir(), ".massa-ai-exec-"));
   } catch {
-    return mkdtempSync(join("/tmp", ".massa-th0th-exec-"));
+    return mkdtempSync(join("/tmp", ".massa-ai-exec-"));
   }
 }
 
@@ -434,7 +434,7 @@ export class PolyglotExecutor {
     } finally {
       // Always clean up the sandbox tmpDir (source + binary) regardless of
       // compile success, compile failure, or runtime outcome. Without this,
-      // every Rust run leaked a `.massa-th0th-exec-*` dir under /tmp.
+      // every Rust run leaked a `.massa-ai-exec-*` dir under /tmp.
       cleanupTmpDir(cwd);
     }
   }

@@ -109,7 +109,7 @@ const gitAvailable =
 
 describe("gitToplevelSafe", () => {
   it.skipIf(!gitAvailable)("returns the toplevel inside a real repo, undefined outside one", () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-git-"));
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-git-"));
     const repo = path.join(root, "repo");
     fs.mkdirSync(repo);
     expect(spawnSync("git", ["init", repo], { stdio: "ignore" }).status).toBe(0);
@@ -121,7 +121,7 @@ describe("gitToplevelSafe", () => {
 
   it("never throws on a missing directory", () => {
     expect(
-      gitToplevelSafe(path.join(os.tmpdir(), "massa-th0th-does-not-exist-xyz")),
+      gitToplevelSafe(path.join(os.tmpdir(), "massa-ai-does-not-exist-xyz")),
     ).toBeUndefined();
   });
 });

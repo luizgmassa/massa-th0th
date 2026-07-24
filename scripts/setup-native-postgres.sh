@@ -1,13 +1,13 @@
 #!/bin/bash
 # ============================================
-# massa-th0th - Native PostgreSQL setup (macOS / Homebrew)
+# massa-ai - Native PostgreSQL setup (macOS / Homebrew)
 # ============================================
-# Boots a local PostgreSQL + pgvector for massa-th0th WITHOUT Docker/colima
+# Boots a local PostgreSQL + pgvector for massa-ai WITHOUT Docker/colima
 # (~100MB RAM vs ~5GB for the Docker path). Idempotent and detect-first: if a
 # PostgreSQL is already reachable, it is reused instead of reinstalled.
 #
 # Emits the resolved connection string on the last line:
-#     DATABASE_URL=postgresql://massa_th0th:...@localhost:5432/massa_th0th
+#     DATABASE_URL=postgresql://massa_ai:...@localhost:5432/massa_ai
 #
 # Invoked by scripts/setup-local-first.sh (DB backend option 1) and documented
 # in the README for manual use. macOS-only — on Linux/WSL install postgresql +
@@ -29,11 +29,11 @@ done
 export PATH
 
 # ── Config (env-overridable) ──────────────────────────────────
-PG_VERSION="${MASSA_TH0TH_PG_VERSION:-postgresql@17}"
-PG_ROLE="${MASSA_TH0TH_PG_ROLE:-massa_th0th}"
-PG_PASSWORD="${POSTGRES_PASSWORD:-massa_th0th_password}"
-PG_DB="${MASSA_TH0TH_PG_DB:-massa_th0th}"
-PG_PORT="${MASSA_TH0TH_POSTGRES_PORT:-5432}"
+PG_VERSION="${MASSA_AI_PG_VERSION:-postgresql@17}"
+PG_ROLE="${MASSA_AI_PG_ROLE:-massa_ai}"
+PG_PASSWORD="${POSTGRES_PASSWORD:-massa_ai_password}"
+PG_DB="${MASSA_AI_PG_DB:-massa_ai}"
+PG_PORT="${MASSA_AI_POSTGRES_PORT:-5432}"
 
 # ── Colours / helpers ─────────────────────────────────────────
 GREEN='\033[0;32m'; YELLOW='\033[0;33m'; RED='\033[0;31m'; BOLD='\033[1m'; NC='\033[0m'
@@ -83,7 +83,7 @@ if [ "$REUSE" = "false" ]; then
   # Refuse to install/start on top of an unknown process already holding the port.
   if (exec 3<>/dev/tcp/localhost/"${PG_PORT}") 2>/dev/null; then
     exec 3>&- 3<&- 2>/dev/null || true
-    die "Something is already listening on port ${PG_PORT}, but no psql/pg_isready was found on PATH or Homebrew. Reuse it by adding its bin to PATH (and re-run), or set MASSA_TH0TH_POSTGRES_PORT to a free port. Aborting (will not install ${PG_VERSION} on top of it)."
+    die "Something is already listening on port ${PG_PORT}, but no psql/pg_isready was found on PATH or Homebrew. Reuse it by adding its bin to PATH (and re-run), or set MASSA_AI_POSTGRES_PORT to a free port. Aborting (will not install ${PG_VERSION} on top of it)."
   fi
   info "Installing ${PG_VERSION} + pgvector via Homebrew (skips if already installed)..."
   brew install "${PG_VERSION}" pgvector

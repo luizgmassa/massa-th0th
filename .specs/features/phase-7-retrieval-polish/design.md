@@ -195,7 +195,7 @@ to its caller. This matches the Phase-1–6 contract.
 
 ## 7. Test-isolation (extends Phase-1..6 rule)
 
-- 7e/7a/7b/7c/7d tests do NOT `mock.module("@massa-th0th/shared")`. They inject
+- 7e/7a/7b/7c/7d tests do NOT `mock.module("@massa-ai/shared")`. They inject
   fakes via ctor seams (`LLMJudgeReranker`, `SalienceJudge`, the existing
   `_setLlmEnabledForTesting` seam) and use explicit temp `dbPath`s for any DB
   touch.

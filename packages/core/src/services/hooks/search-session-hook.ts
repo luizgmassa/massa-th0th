@@ -15,7 +15,7 @@
  *  - Prunes the dedup map when it grows beyond MAX_DEDUP_ENTRIES to avoid leaks.
  */
 
-import { logger, MemoryType } from "@massa-th0th/shared";
+import { logger, MemoryType } from "@massa-ai/shared";
 import { eventBus } from "../events/event-bus.js";
 import type { EventMap } from "../events/event-bus.js";
 import { MemoryController } from "../../controllers/memory-controller.js";

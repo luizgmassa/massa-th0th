@@ -2,7 +2,7 @@
 
 ## The Problem
 
-When you rename a project directory on disk, the massa-th0th index still
+When you rename a project directory on disk, the massa-ai index still
 references the old path. The `Workspace.projectPath` column stores the
 filesystem path at indexing time. After a rename:
 
@@ -14,14 +14,14 @@ filesystem path at indexing time. After a rename:
 
 ## The Solution: `--recover`
 
-The `massa-th0th-config recover` command re-associates an existing index with
+The `massa-ai-config recover` command re-associates an existing index with
 a new filesystem path. It does NOT re-index — it updates the `projectPath`
 column so future indexing operations target the new directory.
 
 ### Usage
 
 ```bash
-massa-th0th-config recover <projectId> --path <newPath>
+massa-ai-config recover <projectId> --path <newPath>
 ```
 
 ### Example
@@ -30,7 +30,7 @@ massa-th0th-config recover <projectId> --path <newPath>
 # Before: project was indexed at /home/user/old-project-name
 # After: directory renamed to /home/user/new-project-name
 
-massa-th0th-config recover my-project --path /home/user/new-project-name
+massa-ai-config recover my-project --path /home/user/new-project-name
 ```
 
 ### How It Works
@@ -64,7 +64,7 @@ chains at write-time so writes to a retired ID reach the canonical ID.
 | Scenario | Use |
 |----------|-----|
 | Directory renamed on disk, `projectId` unchanged | `--recover` |
-| Project renamed in massa-th0th (projectId changes, alias chain created) | Rename API (`/api/v1/project/rename`) |
+| Project renamed in massa-ai (projectId changes, alias chain created) | Rename API (`/api/v1/project/rename`) |
 | Merging two projects into one | Merge API (`/api/v1/project/merge`) |
 
 `--recover` is for filesystem-level path changes. The Rename/Merge APIs are

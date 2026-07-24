@@ -1,5 +1,5 @@
 {
-  "name": "@massa-th0th/core",
+  "name": "@massa-ai/core",
   "version": "1.1.0",
   "author": "luizgmassa",
   "type": "module",
@@ -48,7 +48,7 @@
     "@ai-sdk/google": "^3.0.19",
     "@ai-sdk/mistral": "^3.0.17",
     "@ai-sdk/openai": "^3.0.24",
-    "@massa-th0th/shared": "1.1.0",
+    "@massa-ai/shared": "1.1.0",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "@prisma/client-runtime-utils": "^7.3.0",

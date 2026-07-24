@@ -7,8 +7,8 @@ import {
   loadConfig,
   saveConfig,
   initConfig,
-  defaultMassaTh0thConfig,
-} from "@massa-th0th/shared/config";
+  defaultMassaAiConfig,
+} from "@massa-ai/shared/config";
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
@@ -21,13 +21,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function help() {
   console.log(`
-massa-th0th-config - Configuration manager for massa-th0th
+massa-ai-config - Configuration manager for massa-ai
 
 Usage:
-  massa-th0th-config <command> [options]
+  massa-ai-config <command> [options]
 
 Commands:
-  init              Initialize massa-th0th configuration
+  init              Initialize massa-ai configuration
     --ollama          Use Ollama (local, default)
     --mistral <key>   Use Mistral with API key
     --openai <key>    Use OpenAI with API key
@@ -42,15 +42,15 @@ Commands:
 
   agents            Manage the 12 subagent specialist definitions
     agents install [--user|--project]   Write 12 agent .md files
-    agents uninstall [--user|--project] Remove only massa-th0th-owned agents
+    agents uninstall [--user|--project] Remove only massa-ai-owned agents
 
 Examples:
-  massa-th0th-config init
-  massa-th0th-config init --mistral your-api-key
-  massa-th0th-config use ollama --model nomic-embed-text:latest
-  massa-th0th-config use mistral --api-key your-key
-  massa-th0th-config set embedding.dimensions 1024
-  massa-th0th-config agents install --user
+  massa-ai-config init
+  massa-ai-config init --mistral your-api-key
+  massa-ai-config use ollama --model nomic-embed-text:latest
+  massa-ai-config use mistral --api-key your-key
+  massa-ai-config set embedding.dimensions 1024
+  massa-ai-config agents install --user
 `);
 }
 
@@ -116,9 +116,9 @@ switch (command) {
 
   case "show": {
     if (!configExists()) {
-      console.log("No config file found. Run `massa-th0th-config init` to create one.");
+      console.log("No config file found. Run `massa-ai-config init` to create one.");
       console.log("\nUsing defaults:");
-      console.log(JSON.stringify(defaultMassaTh0thConfig, null, 2));
+      console.log(JSON.stringify(defaultMassaAiConfig, null, 2));
       process.exit(0);
     }
     
@@ -132,7 +132,7 @@ switch (command) {
     const value = args[2];
     
     if (!key || !value) {
-      console.error("Usage: massa-th0th-config set <key> <value>");
+      console.error("Usage: massa-ai-config set <key> <value>");
       process.exit(1);
     }
     
@@ -201,7 +201,7 @@ switch (command) {
   case "agents": {
     const subcommand = args[1];
     if (subcommand !== "install" && subcommand !== "uninstall") {
-      console.error("Usage: massa-th0th-config agents <install|uninstall> [--user|--project]");
+      console.error("Usage: massa-ai-config agents <install|uninstall> [--user|--project]");
       process.exit(1);
     }
     const scope = typeof options.project === "boolean" ? "project" : "user";
@@ -226,7 +226,7 @@ switch (command) {
       let count = 0;
       const entries = await fs.readdir(sourceAgentsDir);
       for (const entry of entries) {
-        if (!entry.startsWith("massa-th0th-") || !entry.endsWith(".md")) continue;
+        if (!entry.startsWith("massa-ai-") || !entry.endsWith(".md")) continue;
         const src = path.join(sourceAgentsDir, entry);
         const dest = path.join(agentsDir, entry);
         await fs.copyFile(src, dest);
@@ -237,15 +237,15 @@ switch (command) {
       );
       console.log(`  written to: ${agentsDir}`);
     } else {
-      // uninstall: remove only files with metadata: { massa-th0th-owned: true }
+      // uninstall: remove only files with metadata: { massa-ai-owned: true }
       let removed = 0;
       try {
         const entries = await fs.readdir(agentsDir);
         for (const entry of entries) {
-          if (!entry.startsWith("massa-th0th-") || !entry.endsWith(".md")) continue;
+          if (!entry.startsWith("massa-ai-") || !entry.endsWith(".md")) continue;
           const filePath = path.join(agentsDir, entry);
           const content = await fs.readFile(filePath, "utf8");
-          if (content.includes("massa-th0th-owned: true")) {
+          if (content.includes("massa-ai-owned: true")) {
             await fs.unlink(filePath);
             removed++;
           }
@@ -253,7 +253,7 @@ switch (command) {
       } catch (e: unknown) {
         if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
       }
-      console.log(`- removed ${removed} massa-th0th-owned agent files from ${agentsDir}`);
+      console.log(`- removed ${removed} massa-ai-owned agent files from ${agentsDir}`);
       console.log("  User agents preserved.");
     }
     break;

@@ -45,7 +45,7 @@ proof the committed pins are real, not fabricated.
 - Gate: `if (loader === loadNativeGrammarSet)` — the integrity check runs only
   on the production loader path. Tests that stub the loader (e.g. the
   readiness test's fake-parser cases) are exempt and stay isolated.
-- Default: ON. `MASSA_TH0TH_SKIP_GRAMMAR_INTEGRITY=1` skips (intended for
+- Default: ON. `MASSA_AI_SKIP_GRAMMAR_INTEGRITY=1` skips (intended for
   local dev where grammars are intentionally patched/swapped). Production and
   CI default to verifying.
 - Memoization: module-level `integrityVerified` flag; the check runs at most

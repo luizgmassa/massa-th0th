@@ -1,12 +1,12 @@
 /**
  * MCP transport driver for E2E tests.
  *
- * Spawns the REAL massa-th0th MCP server (built dist) as a subprocess and
+ * Spawns the REAL massa-ai MCP server (built dist) as a subprocess and
  * drives it via the @modelcontextprotocol/sdk Client over StdioClientTransport.
  * Zero source changes — true black-box, matches how OpenCode/Claude connect.
  *
  * Precondition enforced by the caller (see _helpers.probeAvailability):
- *   - ~/.config/massa-th0th/config.json must exist (else the MCP entrypoint
+ *   - ~/.config/massa-ai/config.json must exist (else the MCP entrypoint
  *     prints an init banner to stdout and corrupts the JSON-RPC stream).
  *   - Tools API /health must be up (else the MCP entrypoint prints a warning
  *     to stdout on boot — same corruption risk).
@@ -27,14 +27,14 @@ export interface McpHandle {
 export async function startMcp(extraEnv: Record<string, string> = {}): Promise<McpHandle> {
   const env: Record<string, string> = {
     ...process.env as Record<string, string>,
-    MASSA_TH0TH_API_URL: API,
+    MASSA_AI_API_URL: API,
     ...extraEnv,
   };
-  if (API_KEY) env.MASSA_TH0TH_API_KEY = API_KEY;
+  if (API_KEY) env.MASSA_AI_API_KEY = API_KEY;
   // Deterministic MCP proxy timeout budget (finding #12). Default 120s; overridable
   // via env. NOTE: do NOT set "0" — api-client.ts does `Number(env)||120000`, and
   // Number("0")===0 (falsy) silently collapses to 120s.
-  env.MASSA_TH0TH_PROXY_TIMEOUT_MS = process.env.MASSA_TH0TH_PROXY_TIMEOUT_MS ?? "120000";
+  env.MASSA_AI_PROXY_TIMEOUT_MS = process.env.MASSA_AI_PROXY_TIMEOUT_MS ?? "120000";
 
   const transport = new StdioClientTransport({
     command: "bun",
@@ -70,18 +70,18 @@ export async function startMcp(extraEnv: Record<string, string> = {}): Promise<M
  * Per-request timeout passed to the MCP SDK `Client.callTool`.
  *
  * The SDK's DEFAULT_REQUEST_TIMEOUT_MSEC is 60s (see
- * @modelcontextprotocol/sdk shared/protocol.js). Several massa-th0th tools
+ * @modelcontextprotocol/sdk shared/protocol.js). Several massa-ai tools
  * legitimately exceed that — notably `bootstrap`, whose underlying
  * /api/v1/bootstrap handler runs an LLM-seed step that can hit its own 90s
  * internal timeout before degrading to rule-based (the MCP bootstrap matrix
  * regressed as -32001: Request timed out at exactly 60s for this reason;
  * finding #12). The client timeout MUST be at least as long as the proxy's
- * budget (MASSA_TH0TH_PROXY_TIMEOUT_MS) or the client kills the call before
+ * budget (MASSA_AI_PROXY_TIMEOUT_MS) or the client kills the call before
  * the proxy can return. We add a 30s margin so proxy-side errors surface
  * rather than masquerading as client timeouts.
  */
 const MCP_CLIENT_TIMEOUT_MS =
-  Number(process.env.MASSA_TH0TH_PROXY_TIMEOUT_MS ?? "120000") + 30_000;
+  Number(process.env.MASSA_AI_PROXY_TIMEOUT_MS ?? "120000") + 30_000;
 
 /**
  * Call an MCP tool and parse the response. Returns parsed JSON when the proxy

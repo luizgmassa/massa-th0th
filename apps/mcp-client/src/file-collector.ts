@@ -3,7 +3,7 @@ import path from "path";
 import {
   config,
   DEFAULT_ALLOWED_EXTENSIONS,
-} from "@massa-th0th/shared/config";
+} from "@massa-ai/shared/config";
 
 export interface CollectedFile {
   relativePath: string;

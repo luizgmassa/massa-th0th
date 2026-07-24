@@ -322,7 +322,7 @@ Notes:
   bridge (`observation-consolidation-job.ts:225`).
 - The `bootstrap:<projectId>` tag is the **idempotency marker** (R3) —
   `hasBootstrapMarker` queries it.
-- `MemoryType`/`MemoryLevel` enums are in `@massa-th0th/shared`.
+- `MemoryType`/`MemoryLevel` enums are in `@massa-ai/shared`.
 
 ## 8. EventBus event — `bootstrap:completed` (R4)
 
@@ -429,8 +429,8 @@ Dispatch is the generic POST path (`apps/mcp-client/src/index.ts:169`) →
 **API route** (`apps/tools-api/src/routes/bootstrap.ts`, mirroring
 `routes/hooks.ts`):
 ```ts
-import { getBootstrapService } from "@massa-th0th/core";
-import { config, logger } from "@massa-th0th/shared";
+import { getBootstrapService } from "@massa-ai/core";
+import { config, logger } from "@massa-ai/shared";
 import { Elysia, t } from "elysia";
 
 let cached: ReturnType<typeof getBootstrapService> | null = null;
@@ -472,7 +472,7 @@ Registered in `apps/tools-api/src/index.ts`:
 ## 11. Test-isolation strategy (load-bearing)
 
 Mirrors Phase-3 exactly (`observation-consolidation-job.test.ts`):
-- Do NOT `mock.module("@massa-th0th/shared")` (process-wide collision).
+- Do NOT `mock.module("@massa-ai/shared")` (process-wide collision).
 - Inject a **fake `MemoryRepoSeam`** that captures inserts + controls
   `hasBootstrapMarker` — avoids the closed-`MemoryRepository` singleton
   landmine.

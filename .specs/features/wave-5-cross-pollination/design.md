@@ -94,7 +94,7 @@ MCP CallTool get_architecture
 ### Data flow — `impact_analysis` with BFS CTE (FR-05)
 
 ```
-MASSA_TH0TH_IMPACT_BFS_CTE=true
+MASSA_AI_IMPACT_BFS_CTE=true
   → ImpactAnalysisService.analyze
       if cfg.bfsCte:
         changedFiles = diffRunner.run()
@@ -118,7 +118,7 @@ MASSA_TH0TH_IMPACT_BFS_CTE=true
 ### Data flow — `managed_runs` lease (FR-08, FR-09)
 
 ```
-th0th_index(projectId)
+index(projectId)
   → ManagedRunRepository.begin(projectId, run_kind='indexing')
       INSERT INTO managed_runs (..., lease_token, lease_expires_at=now()+90s, status='active')
       ON CONFLICT DO NOTHING
@@ -182,10 +182,10 @@ GET /api/v1/events?jobId=<id>
 |---|---|---|
 | AD-W5-001 | Tarjan SCC implementation is **iterative** (explicit heap-allocated stack), not recursive | Avoids JS stack overflow on deep CALL graphs; matches cbm pattern; Wave 3 RSS guard < 16 MiB |
 | AD-W5-002 | `callEdges` added to `ArchitectureInput` (not a separate snapshot) | Existing snapshotter already reads `symbol_references`; adding a `ref_kind='call'` filter is the minimal change; preserves Wave 3 graph-generation fingerprint invariants |
-| AD-W5-003 | BFS CTE is **additive behind `MASSA_TH0TH_IMPACT_BFS_CTE=true`** | TS path has passing tests today; flag allows production parity observation before flip; characterization test is the gate |
+| AD-W5-003 | BFS CTE is **additive behind `MASSA_AI_IMPACT_BFS_CTE=true`** | TS path has passing tests today; flag allows production parity observation before flip; characterization test is the gate |
 | AD-W5-004 | `managed_runs` is a new table, not a reuse of `graph_generations` | Graph lease is bound to an immutable snapshot row; indexing lease is a process-writer concept — different lifecycle. Reuse would couple unrelated invariants |
 | AD-W5-005 | Capture policy is a **pure module** with config-driven policy; no DB persistence in v1 | Allows unit testing without DB; existing `DEFAULT_IGNORES` migrate to default policy JSON; `denyUnknownFields` enforces at config load |
-| AD-W5-006 | `read_file` path containment uses **allowlist**: project root + cwd + `MASSA_TH0TH_READ_FILE_ROOTS` env | Strictest defensible default; teaching error exposes valid roots only (no path enumeration of host) |
+| AD-W5-006 | `read_file` path containment uses **allowlist**: project root + cwd + `MASSA_AI_READ_FILE_ROOTS` env | Strictest defensible default; teaching error exposes valid roots only (no path enumeration of host) |
 | AD-W5-007 | Scheduler `last_success_at` columns are **additive nullable** | Existing rows survive; NULL = "never run successfully"; behavior change is "update on success only" — failure updates `last_failure_at` + `consecutive_failures` instead |
 | AD-W5-008 | `synapse_task_begin` is **5 moves in one MCP call**, not a new REST endpoint | MCP call → envelope service calls 5 existing REST endpoints server-side; cuts 4 network round-trips for the client; failures leave the session created |
 | AD-W5-009 | SSE extends `/api/v1/events?jobId=` rather than a new endpoint | Existing infra (heartbeat, auto-close, filter pattern) is proven; jobId already in payloads; one stream endpoint to maintain |
@@ -294,9 +294,9 @@ Decision: **skip in v1**. No audit log; cycles aspect is computed on demand. Mig
 
 | Change | File | Risk |
 |---|---|---|
-| +`capturePolicy` block | `packages/shared/src/config/massa-th0th-config.ts` | optional; absent → default policy |
-| +`MASSA_TH0TH_IMPACT_BFS_CTE` env | `packages/shared/src/config/index.ts` | default false |
-| +`MASSA_TH0TH_READ_FILE_ROOTS` env | `packages/shared/src/config/index.ts` | default empty |
+| +`capturePolicy` block | `packages/shared/src/config/massa-ai-config.ts` | optional; absent → default policy |
+| +`MASSA_AI_IMPACT_BFS_CTE` env | `packages/shared/src/config/index.ts` | default false |
+| +`MASSA_AI_READ_FILE_ROOTS` env | `packages/shared/src/config/index.ts` | default empty |
 | +`MAX_FILTER_PATTERNS` env (or config) | `packages/shared/src/config/index.ts` | default 32 |
 
 ### Behavioral changes (teaching-error tightenings)

@@ -49,7 +49,7 @@ Generate engineering documentation artifacts (README, ADR, RFC, changelog, KDoc,
 - No decision or context exists to document.
 - The task needs implementation (route to builder).
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: summarize source reads; return the doc draft, not raw source.
 - Verification Ladder: static (doc-lint, stale-reference, link check); no behavioral sensors.
 - Th0th Memory: suggest durable doc-format memories only when a documentation convention is established; main agent persists.

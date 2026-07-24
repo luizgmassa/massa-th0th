@@ -6,7 +6,7 @@
  * Repair-migration coverage (HAR-08) is added in T7.
  *
  * Gate: runs only with HOOK_ATTRIBUTION_ACCEPTANCE_DATABASE_URL pointing at an
- * OWNED database (`massa_th0th_hook_attribution`) with all migrations applied.
+ * OWNED database (`massa_ai_hook_attribution`) with all migrations applied.
  * Skipped otherwise — recorded in validation.md, never weakened. The suite
  * points the shared pg/prisma singletons at the owned URL via process.env so
  * the real PgObservationStore + AttributionResolver exercise true integration.

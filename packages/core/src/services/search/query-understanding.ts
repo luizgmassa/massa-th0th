@@ -20,8 +20,8 @@
  */
 
 import { z } from "zod";
-import { config, logger } from "@massa-th0th/shared";
-import { sanitizeFTS5Query } from "@massa-th0th/shared";
+import { config, logger } from "@massa-ai/shared";
+import { sanitizeFTS5Query } from "@massa-ai/shared";
 import { llm as llmHandle } from "../memory/llm-client.js";
 import { EmbeddingService } from "../embeddings/index.js";
 
@@ -348,7 +348,7 @@ function getEmbeddingSingleton(): EmbeddingService {
 }
 
 // ─── Defensive config readers ─────────────────────────────────────────────────
-// `bun mock.module("@massa-th0th/shared")` is process-wide (Phase-1 finding) and
+// `bun mock.module("@massa-ai/shared")` is process-wide (Phase-1 finding) and
 // some test files' mock omits the queryUnderstanding block. These readers fall
 // back to the spec defaults so the constructor never throws under a mock.
 function readQueryUnderstandingConfig() {

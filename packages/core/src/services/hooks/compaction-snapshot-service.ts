@@ -24,7 +24,7 @@
  * payloads — it follows the references to fetch full detail on demand.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import {
   getObservationStore,
   type ObservationStore,

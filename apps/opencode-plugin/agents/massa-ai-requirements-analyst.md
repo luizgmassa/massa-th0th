@@ -1,11 +1,11 @@
 ---
-name: massa-th0th-requirements-analyst
+name: massa-ai-requirements-analyst
 description: Read-only requirements analysis agent. Detect ambiguity, missing requirements, contradictions, implicit requirements, and uncovered scenarios before implementation. Triggers during the Specify phase when gray areas, persistence, external calls, auth, payments, concurrency, or state transitions affect behavior. Never implements.
 mode: subagent
 model: DeepSeek V4 Pro
 reasoningEffort: max
 permission: { edit: deny, bash: deny }
-metadata: { massa-th0th-owned: true }
+metadata: { massa-ai-owned: true }
 ---
 # Requirements Analyst Agent Skill
 
@@ -46,7 +46,7 @@ Analyze requirements before implementation to surface ambiguity, gaps, contradic
 - Requirements are already closed and accepted.
 - The work is a trivial fix with no requirement surface.
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: return findings, not raw spec text.
 - Verification Ladder: static (spec citation) only; no behavioral sensors.
 - Th0th Memory: suggest durable requirement-decision memories only when an implicit requirement is accepted as an assumption; main agent persists.

@@ -14,7 +14,7 @@
  *    task_succeeded) have no emitter in the current system.
  *  - No decay job — out of scope for MVP; edges are bounded by the
  *    saturation cap instead.
- *  - Opt-in via MASSA_TH0TH_CO_RETRIEVAL_HOOK=true — safe rollout.
+ *  - Opt-in via MASSA_AI_CO_RETRIEVAL_HOOK=true — safe rollout.
  *
  * Timing:
  *  SearchSessionHook stores Memory(B), then emits "memory:session-stored".
@@ -22,7 +22,7 @@
  *  event, queries recent session memories → finds Memory(A), links A↔B.
  */
 
-import { logger, MemoryRelationType } from "@massa-th0th/shared";
+import { logger, MemoryRelationType } from "@massa-ai/shared";
 import { eventBus } from "../events/event-bus.js";
 import type { EventMap } from "../events/event-bus.js";
 import { getGraphStore } from "../graph/graph-store-factory.js";
@@ -110,7 +110,7 @@ export class CoRetrievalHook {
     payload: EventMap["memory:session-stored"],
   ): Promise<void> {
     // Feature flag — opt-in only; any value other than "true" keeps it off
-    if (process.env.MASSA_TH0TH_CO_RETRIEVAL_HOOK !== "true") return;
+    if (process.env.MASSA_AI_CO_RETRIEVAL_HOOK !== "true") return;
 
     const { memoryId, projectId, sessionId } = payload;
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { SearchServiceError } from "@massa-th0th/core";
+import { SearchServiceError } from "@massa-ai/core";
 import { Elysia } from "elysia";
 import { errorHandler } from "../middleware/error.js";
 import { rethrowCanonicalHandoffError } from "../routes/handoff.js";

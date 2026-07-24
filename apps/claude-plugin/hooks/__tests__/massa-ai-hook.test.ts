@@ -1,5 +1,5 @@
 /**
- * massa-th0th-hook — unit tests (Wave 6 N30, T21)
+ * massa-ai-hook — unit tests (Wave 6 N30, T21)
  *
  * Verifies the hook binary behavior:
  * - Malformed JSON → exit 0, no POST
@@ -19,7 +19,7 @@ import path from "path";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 
-const HOOK_SCRIPT = path.resolve(import.meta.dir, "../massa-th0th-hook.ts");
+const HOOK_SCRIPT = path.resolve(import.meta.dir, "../massa-ai-hook.ts");
 
 interface RunResult {
   exitCode: number | null;
@@ -37,7 +37,7 @@ interface CapturedPost {
 /**
  * Start a local HTTP capture server that records every POST it receives.
  * Returns the base URL and a function to read+clear captured posts.
- * The hook binary is configured (via MASSA_TH0TH_API_BASE) to POST here
+ * The hook binary is configured (via MASSA_AI_API_BASE) to POST here
  * instead of the unreachable default, so we can assert endpoint/body/count.
  *
  * NOTE: the hook uses fire-and-forget fetch with AbortSignal timeouts. The
@@ -93,7 +93,7 @@ function runHook(
 ): RunResult {
   const fullEnv = {
     ...process.env,
-    MASSA_TH0TH_API_BASE: "http://127.0.0.1:59999", // unreachable port — POST is fire-and-forget
+    MASSA_AI_API_BASE: "http://127.0.0.1:59999", // unreachable port — POST is fire-and-forget
     ...env,
   };
 
@@ -128,16 +128,16 @@ async function runHookCaptured(
   extraEnv: Record<string, string> = {},
 ): Promise<{ posts: CapturedPost[]; exitCode: number | null }> {
   // Use a fresh TMPDIR per call so the per-session pin file from a prior
-  // test run can't shadow the env MASSA_TH0TH_PROJECT_ID we set here.
+  // test run can't shadow the env MASSA_AI_PROJECT_ID we set here.
   const tmpDir = path.join(
     process.env.TMPDIR || "/tmp",
-    `massa-th0th-hook-cap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    `massa-ai-hook-cap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   );
   mkdirSync(tmpDir, { recursive: true });
   const cap = startCaptureServer();
   try {
     const result = runHook(subcommand, stdinInput, {
-      MASSA_TH0TH_API_BASE: cap.baseUrl,
+      MASSA_AI_API_BASE: cap.baseUrl,
       TMPDIR: tmpDir,
       ...extraEnv,
     });
@@ -149,7 +149,7 @@ async function runHookCaptured(
   }
 }
 
-describe("massa-th0th-hook (T21)", () => {
+describe("massa-ai-hook (T21)", () => {
   test("malformed JSON → exit 0, no POST", () => {
     const result = runHook("session-start", "not valid json {{{");
     expect(result.exitCode).toBe(0);
@@ -196,7 +196,7 @@ describe("massa-th0th-hook (T21)", () => {
     const result = runHook(
       "user-prompt-submit",
       JSON.stringify({ session_id: "pin-test-session", prompt: "hello" }),
-      { MASSA_TH0TH_PROJECT_ID: "test-project-via-env" },
+      { MASSA_AI_PROJECT_ID: "test-project-via-env" },
     );
     expect(result.exitCode).toBe(0);
   });
@@ -207,7 +207,7 @@ describe("massa-th0th-hook (T21)", () => {
     const { posts, exitCode } = await runHookCaptured(
       "pre-compact",
       JSON.stringify({ session_id: "compact-test-session" }),
-      { MASSA_TH0TH_PROJECT_ID: "proj-via-env" },
+      { MASSA_AI_PROJECT_ID: "proj-via-env" },
     );
     expect(exitCode).toBe(0);
     expect(posts.length).toBe(2);
@@ -263,19 +263,19 @@ describe("massa-th0th-hook (T21)", () => {
     expect(result.exitCode).toBe(0);
   });
 
-  test("pin resolution: env MASSA_TH0TH_PROJECT_ID is used when no pin file", () => {
-    const tmpDir = path.join(process.env.TMPDIR || "/tmp", "massa-th0th-hooks-test-" + Date.now());
+  test("pin resolution: env MASSA_AI_PROJECT_ID is used when no pin file", () => {
+    const tmpDir = path.join(process.env.TMPDIR || "/tmp", "massa-ai-hooks-test-" + Date.now());
     const result = runHook(
       "session-start",
       JSON.stringify({ session_id: "env-pin-test" }),
       {
-        MASSA_TH0TH_PROJECT_ID: "env-project-id",
+        MASSA_AI_PROJECT_ID: "env-project-id",
         TMPDIR: tmpDir,
       },
     );
     expect(result.exitCode).toBe(0);
     // The pin file should have been written with the env value
-    const pinFile = path.join(tmpDir, "massa-th0th-hooks", "env-pin-test");
+    const pinFile = path.join(tmpDir, "massa-ai-hooks", "env-pin-test");
     try {
       const pinned = readFileSync(pinFile, "utf8").trim();
       expect(pinned).toBe("env-project-id");
@@ -287,8 +287,8 @@ describe("massa-th0th-hook (T21)", () => {
   });
 
   test("pin resolution: existing pin file wins over env", () => {
-    const tmpDir = path.join(process.env.TMPDIR || "/tmp", "massa-th0th-hooks-test2-" + Date.now());
-    const pinDir = path.join(tmpDir, "massa-th0th-hooks");
+    const tmpDir = path.join(process.env.TMPDIR || "/tmp", "massa-ai-hooks-test2-" + Date.now());
+    const pinDir = path.join(tmpDir, "massa-ai-hooks");
     mkdirSync(pinDir, { recursive: true });
     // Pre-write a pin file
     const pinFile = path.join(pinDir, "existing-pin-session");
@@ -298,7 +298,7 @@ describe("massa-th0th-hook (T21)", () => {
       "session-start",
       JSON.stringify({ session_id: "existing-pin-session" }),
       {
-        MASSA_TH0TH_PROJECT_ID: "env-should-be-ignored",
+        MASSA_AI_PROJECT_ID: "env-should-be-ignored",
         TMPDIR: tmpDir,
       },
     );
@@ -329,7 +329,7 @@ describe("N30 AC6: hook emits attribution fields for server-side resolver", () =
     const { posts } = await runHookCaptured(
       "user-prompt-submit",
       JSON.stringify({ session_id: "attr-test-session", prompt: "hi" }),
-      { MASSA_TH0TH_PROJECT_ID: "caller-proj-1" },
+      { MASSA_AI_PROJECT_ID: "caller-proj-1" },
     );
     expect(posts.length).toBe(1);
     const body = posts[0]!.body;
@@ -349,7 +349,7 @@ describe("N30 AC6: hook emits attribution fields for server-side resolver", () =
     const { posts } = await runHookCaptured(
       "pre-compact",
       JSON.stringify({ session_id: "compact-attr-session" }),
-      { MASSA_TH0TH_PROJECT_ID: "compact-caller-proj" },
+      { MASSA_AI_PROJECT_ID: "compact-caller-proj" },
     );
     const snap = posts.find((p) => p.url === "/api/v1/hook/compact-snapshot");
     expect(snap).toBeDefined();

@@ -1,11 +1,11 @@
 /**
  * OpenCode agents install/uninstall integration tests (T7).
  *
- * Verifies the `massa-th0th-config agents` subcommand against spec ACs
+ * Verifies the `massa-ai-config agents` subcommand against spec ACs
  * (OPC-01,02,05,06,07 + DOC-01):
  * - `agents install --user` writes 12 .md files to ~/.config/opencode/agents/
- * - each file has mode: subagent + metadata: { massa-th0th-owned: true }
- * - `agents uninstall` removes only massa-th0th-owned files (R3: user agents preserved)
+ * - each file has mode: subagent + metadata: { massa-ai-owned: true }
+ * - `agents uninstall` removes only massa-ai-owned files (R3: user agents preserved)
  * - idempotent re-run overwrites with identical content
  * - install prints "+ 12 subagent specialists"
  *
@@ -93,7 +93,7 @@ describe("opencode-plugin config-cli agents subcommand (T7 / OPC-01,02,05,06,07 
     const agentsDir = path.join(xdgConfig, "opencode/agents");
     for (const name of SPECIALIST_NAMES) {
       expect(
-        await pathExists(path.join(agentsDir, `massa-th0th-${name}.md`)),
+        await pathExists(path.join(agentsDir, `massa-ai-${name}.md`)),
       ).toBe(true);
     }
 
@@ -101,7 +101,7 @@ describe("opencode-plugin config-cli agents subcommand (T7 / OPC-01,02,05,06,07 
     expect(res.stdout).toContain("12 subagent specialists");
   });
 
-  test("OPC-07: each installed agent has mode: subagent + metadata massa-th0th-owned: true", async () => {
+  test("OPC-07: each installed agent has mode: subagent + metadata massa-ai-owned: true", async () => {
     runCli(["agents", "install", "--user"], {
       HOME: tmp,
       XDG_CONFIG_HOME: xdgConfig,
@@ -109,11 +109,11 @@ describe("opencode-plugin config-cli agents subcommand (T7 / OPC-01,02,05,06,07 
     const agentsDir = path.join(xdgConfig, "opencode/agents");
     for (const name of SPECIALIST_NAMES) {
       const content = await fs.readFile(
-        path.join(agentsDir, `massa-th0th-${name}.md`),
+        path.join(agentsDir, `massa-ai-${name}.md`),
         "utf8",
       );
       expect(content).toContain("mode: subagent");
-      expect(content).toContain("massa-th0th-owned: true");
+      expect(content).toContain("massa-ai-owned: true");
     }
   });
 
@@ -127,7 +127,7 @@ describe("opencode-plugin config-cli agents subcommand (T7 / OPC-01,02,05,06,07 
 
     for (const name of SPECIALIST_NAMES) {
       const content = await fs.readFile(
-        path.join(agentsDir, `massa-th0th-${name}.md`),
+        path.join(agentsDir, `massa-ai-${name}.md`),
         "utf8",
       );
       const permLine = content.split("\n").find((l) => l.startsWith("permission:")) ?? "";
@@ -158,10 +158,10 @@ describe("opencode-plugin config-cli agents subcommand (T7 / OPC-01,02,05,06,07 
     });
     expect(res.exitCode).toBe(0);
 
-    // 12 massa-th0th-owned files removed
+    // 12 massa-ai-owned files removed
     for (const name of SPECIALIST_NAMES) {
       expect(
-        await pathExists(path.join(agentsDir, `massa-th0th-${name}.md`)),
+        await pathExists(path.join(agentsDir, `massa-ai-${name}.md`)),
       ).toBe(false);
     }
     // User agent survives (R3: no ownership marker)
@@ -178,7 +178,7 @@ describe("opencode-plugin config-cli agents subcommand (T7 / OPC-01,02,05,06,07 
       const out: Record<string, string> = {};
       for (const name of SPECIALIST_NAMES) {
         out[name] = await fs.readFile(
-          path.join(agentsDir, `massa-th0th-${name}.md`),
+          path.join(agentsDir, `massa-ai-${name}.md`),
           "utf8",
         );
       }

@@ -22,7 +22,7 @@ import type { FileCursor, ManagedRunLease } from "../../data/managed-runs/manage
 import type {
   ActiveGraphDiagnostics,
   ParserDiagnosticsSummary,
-} from "@massa-th0th/shared";
+} from "@massa-ai/shared";
 
 // ─── Event types ─────────────────────────────────────────────────────────────
 
@@ -191,4 +191,4 @@ export interface EtlResult extends ActiveGraphDiagnostics<string> {
   stageTimings: Record<EtlStage, number>;
 }
 
-export type { ParserDiagnosticsSummary } from "@massa-th0th/shared";
+export type { ParserDiagnosticsSummary } from "@massa-ai/shared";

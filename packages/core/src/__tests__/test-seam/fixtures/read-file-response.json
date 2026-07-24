@@ -3,7 +3,7 @@
   "data": {
     "filePath": "src/tools/search_project.ts",
     "projectId": "test-project-deterministic",
-    "content": "import { IToolHandler, ToolResponse } from \"@massa-th0th/shared\";\nimport { SearchController } from \"../controllers/search-controller.js\";\nimport { serializeToolResponse } from \"./serialize.js\";\n\ninterface SearchProjectParams {\n  query: string;\n  projectId: string;\n  maxResults?: number;\n  minScore?: number;\n}\n\nexport class SearchProjectTool implements IToolHandler {\n  name = \"search_project\";\n  description = \"Search for code in an indexed project\";\n\n  async handle(params: unknown): Promise<ToolResponse> {\n    const { query, projectId } = params as SearchProjectParams;\n    const controller = new SearchController();\n    const result = await controller.search({ query, projectId });\n    return serializeToolResponse(result);\n  }\n}",
+    "content": "import { IToolHandler, ToolResponse } from \"@massa-ai/shared\";\nimport { SearchController } from \"../controllers/search-controller.js\";\nimport { serializeToolResponse } from \"./serialize.js\";\n\ninterface SearchProjectParams {\n  query: string;\n  projectId: string;\n  maxResults?: number;\n  minScore?: number;\n}\n\nexport class SearchProjectTool implements IToolHandler {\n  name = \"search_project\";\n  description = \"Search for code in an indexed project\";\n\n  async handle(params: unknown): Promise<ToolResponse> {\n    const { query, projectId } = params as SearchProjectParams;\n    const controller = new SearchController();\n    const result = await controller.search({ query, projectId });\n    return serializeToolResponse(result);\n  }\n}",
     "lineCount": 25,
     "startLine": 1,
     "endLine": 25,
@@ -26,7 +26,7 @@
       }
     ],
     "imports": [
-      { "source": "@massa-th0th/shared", "names": ["IToolHandler", "ToolResponse"] },
+      { "source": "@massa-ai/shared", "names": ["IToolHandler", "ToolResponse"] },
       { "source": "../controllers/search-controller.js", "names": ["SearchController"] },
       { "source": "./serialize.js", "names": ["serializeToolResponse"] }
     ],

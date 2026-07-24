@@ -6,7 +6,7 @@
  *
  * Gating: skipped unless RUN_E2E=1, the API is up, AND Ollama is up
  * (embeddings are required for memory tools). All mutations are scoped to an
- * `e2e-th0th-` projectId that is reset in afterAll.
+ * `e2e-ai-` projectId that is reset in afterAll.
  *
  * Embedding note: qwen3-embedding:8b is large; each UNIQUE content/query pays
  * ~60-110s of embedding latency on this host (identical text is cached → ms).
@@ -51,7 +51,7 @@ const READY = await (async () => {
   }
   const a = await probeAvailability();
   if (!a.API_UP) {
-    SKIP_REASON = "Tools API not up at " + (process.env.MASSA_TH0TH_API_URL ?? "http://localhost:3333");
+    SKIP_REASON = "Tools API not up at " + (process.env.MASSA_AI_API_URL ?? "http://localhost:3333");
     return false;
   }
   if (!a.OLLAMA_UP) {
@@ -61,8 +61,8 @@ const READY = await (async () => {
   // Writable probe on a throwaway scoped projectId.
   const probePid = `${PREFIX}mem-probe-${RUN_STAMP}`;
   assertE2ePrefix(probePid);
-  const apiBase = process.env.MASSA_TH0TH_API_URL ?? "http://localhost:3333";
-  const apiKey = process.env.MASSA_TH0TH_API_KEY ?? "";
+  const apiBase = process.env.MASSA_AI_API_URL ?? "http://localhost:3333";
+  const apiKey = process.env.MASSA_AI_API_KEY ?? "";
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 180_000);
@@ -131,9 +131,9 @@ let mcp: McpHandle | null = null;
 // AbortController with a 600s deadline so even pathological spikes survive.
 async function postLong<T = any>(endpoint: string, body?: unknown, timeoutMs = 600_000): Promise<T> {
   const headers: Record<string, string> = { "content-type": "application/json" };
-  const key = process.env.MASSA_TH0TH_API_KEY ?? "";
+  const key = process.env.MASSA_AI_API_KEY ?? "";
   if (key) headers["x-api-key"] = key;
-  const api = process.env.MASSA_TH0TH_API_URL ?? "http://localhost:3333";
+  const api = process.env.MASSA_AI_API_URL ?? "http://localhost:3333";
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {

@@ -8,7 +8,7 @@ Use this workflow for a first session, missing project context, or repo setup wh
    status before indexing.
 4. If indexed, call `project_map` for the first architecture overview. A usable index means status is `indexed`, `project_map` succeeds, file count is >0, and symbol/chunk coverage is nonzero for code-bearing repositories.
 5. If no usable index exists, call `index` with `projectPath` and
-   `projectId`, then poll with the discipline in `references/th0th-tools.md`.
+   `projectId`, then poll with the discipline in `references/mcp-tools.md`.
 6. Full reindex is allowed only when index status is `error`, `project_map` is missing/empty after indexing, or a large tracked-file change touched >50 files or >10% of tracked files since the last index timestamp. Treat `reindex` as compatibility-sensitive; fall back to `index(forceReindex=true)` with the known project path when its adapter contract is unverified.
 7. Honor root `AGENTS.md` ignored paths during context loading; if a tool cannot
    accept excludes, discard ignored-path results instead of loading them.

@@ -1,12 +1,12 @@
-# massa-th0th TDD Workflow
+# massa-ai TDD Workflow
 
-Human-facing guide for the Technical Design Document workflow built directly into `massa-th0th`. Canonical agent instructions live in [`workflows/tdd.md`](../../skills/massa-th0th/workflows/tdd.md) and its [`references/tdd/`](../../skills/massa-th0th/references/tdd/) contracts.
+Human-facing guide for the Technical Design Document workflow built directly into `massa-ai`. Canonical agent instructions live in [`workflows/tdd.md`](../../skills/massa-ai/workflows/tdd.md) and its [`references/tdd/`](../../skills/massa-ai/references/tdd/) contracts.
 
 ## Purpose
 
 Use this workflow after the product direction or RFC is settled and the engineering team needs an evidence-backed implementation design covering architecture, contracts, data, risks, verification, rollout, and recovery.
 
-Use the massa-th0th `rfc` workflow when alternatives still need stakeholder selection. Use `adr` for one finalized architecture decision, or `spec-driven` when the request spans requirements through implementation.
+Use the massa-ai `rfc` workflow when alternatives still need stakeholder selection. Use `adr` for one finalized architecture decision, or `spec-driven` when the request spans requirements through implementation.
 
 ## Quick Start
 

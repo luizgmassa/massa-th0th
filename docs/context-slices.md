@@ -30,7 +30,7 @@ the `AGENTS.md` bootstrap; a slice is an additional, mode-specific layer).
   disclosure; one canonical location per rule).
 - A slice composes with system/developer/project instructions; it never
   overrides them.
-- A slice names the massa-th0th references it activates; it does not re-author
+- A slice names the massa-ai references it activates; it does not re-author
   them.
 - Slices stay small (one screen of mode contract + active references).
 

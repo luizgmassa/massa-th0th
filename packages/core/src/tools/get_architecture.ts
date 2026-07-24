@@ -12,7 +12,7 @@
  *         when `aspects` includes "cycles").
  */
 
-import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse } from "@massa-ai/shared";
 import { symbolGraphService } from "../services/symbol/symbol-graph.service.js";
 import { serializeToolResponse } from "./serialize.js";
 import { ToolError } from "./enum-validation.js";

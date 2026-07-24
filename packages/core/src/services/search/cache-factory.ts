@@ -5,7 +5,7 @@
  */
 
 import { SearchCachePg } from './search-cache-pg.js';
-import { logger } from '@massa-th0th/shared';
+import { logger } from '@massa-ai/shared';
 
 let cachedCache: SearchCachePg | null = null;
 

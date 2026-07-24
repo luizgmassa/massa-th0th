@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# massa-th0th Claude Code plugin installer
+# massa-ai Claude Code plugin installer
 #
-# Copies slash commands and the massa-th0th-navigator subagent into the user's
-# Claude Code config directory AND auto-writes the 5 massa-th0th hook events
+# Copies slash commands and the massa-ai-navigator subagent into the user's
+# Claude Code config directory AND auto-writes the 5 massa-ai hook events
 # into ~/.claude/settings.json (or ./.claude/settings.json) using an
 # array-append merge that preserves existing user hooks. The hooks block uses
 # Claude Code's nested matcher-group + hooks[] form, each owned entry marked
-# with _massaTh0thOwned: true.
+# with _massaAiOwned: true.
 #
 # Idempotent: re-running is a no-op when owned hooks already present.
 # Uninstall removes only ownership-marked hook entries + commands/agents,
@@ -41,7 +41,7 @@ done
 
 # Banner
 source "$SCRIPT_DIR/../../scripts/banner.sh"
-massa_th0th_banner
+massa_ai_banner
 
 if [[ "$SCOPE" == "project" ]]; then
   TARGET="$(pwd)/.claude"
@@ -51,11 +51,11 @@ fi
 SETTINGS_JSON="$TARGET/settings.json"
 # The shared binary lives in the repo (not copied) — settings.json references
 # its absolute path so Claude Code can invoke `bun run <path> <subcommand>`.
-HOOK_BIN="$SCRIPT_DIR/hooks/massa-th0th-hook.ts"
+HOOK_BIN="$SCRIPT_DIR/hooks/massa-ai-hook.ts"
 
 # The 5 Claude Code events → binary subcommands. The matcher-group entry shape:
 #   { "hooks": [{ "type": "command", "command": "bun run \"<HOOK_BIN>\" <sub>" }],
-#     "_massaTh0thOwned": true }
+#     "_massaAiOwned": true }
 # The merge appends one owned matcher-group entry per event array, preserving
 # any pre-existing user matcher-group entries (F5 mitigation).
 merge_settings_hooks() {
@@ -108,7 +108,7 @@ try {
 }
 
 function hasOwned(arr) {
-  return Array.isArray(arr) && arr.some((e) => e && e._massaTh0thOwned === true);
+  return Array.isArray(arr) && arr.some((e) => e && e._massaAiOwned === true);
 }
 
 if (mode === "uninstall") {
@@ -116,7 +116,7 @@ if (mode === "uninstall") {
   if (hooks && typeof hooks === "object" && !Array.isArray(hooks)) {
     for (const [evt] of EVENTS) {
       if (Array.isArray(hooks[evt])) {
-        hooks[evt] = hooks[evt].filter((e) => !(e && e._massaTh0thOwned === true));
+        hooks[evt] = hooks[evt].filter((e) => !(e && e._massaAiOwned === true));
         if (hooks[evt].length === 0) delete hooks[evt];
       }
     }
@@ -125,7 +125,7 @@ if (mode === "uninstall") {
 } else {
   // install: backup before first write if file existed
   if (existed) {
-    const bak = `${file}.massa-th0th.bak-${ts}`;
+    const bak = `${file}.massa-ai.bak-${ts}`;
     fs.copyFileSync(file, bak);
   }
   if (!cfg.hooks || typeof cfg.hooks !== "object" || Array.isArray(cfg.hooks)) {
@@ -141,7 +141,7 @@ if (mode === "uninstall") {
             command: `bun run "${hookBin}" ${sub}`,
           },
         ],
-        _massaTh0thOwned: true,
+        _massaAiOwned: true,
       });
     }
   }
@@ -154,24 +154,24 @@ NODE
 
 # ── Uninstall ───────────────────────────────────────────────────────────────
 if [[ "$UNINSTALL" -eq 1 ]]; then
-  echo "Uninstalling massa-th0th Claude Code plugin (scope: $SCOPE)..."
+  echo "Uninstalling massa-ai Claude Code plugin (scope: $SCOPE)..."
   # Remove owned hook entries (preserves user hooks + user keys)
   if [[ -f "$SETTINGS_JSON" ]]; then
     merge_settings_hooks "$SETTINGS_JSON" "uninstall"
-    echo "  - removed massa-th0th hook entries from $SETTINGS_JSON"
+    echo "  - removed massa-ai hook entries from $SETTINGS_JSON"
   fi
   # Remove owned command files
   if [[ -d "$TARGET/commands" ]]; then
     for src in "$SCRIPT_DIR/commands/"*.md; do
       name="$(basename "$src" .md)"
-      rm -f "$TARGET/commands/massa-th0th-${name}.md"
+      rm -f "$TARGET/commands/massa-ai-${name}.md"
     done
-    echo "  - removed massa-th0th-* commands from $TARGET/commands/"
+    echo "  - removed massa-ai-* commands from $TARGET/commands/"
   fi
   # Remove the 12 subagent specialists (exclude navigator — R1: name-prefix glob
-  # would catch massa-th0th-navigator.md; preserve it per CLA-05).
+  # would catch massa-ai-navigator.md; preserve it per CLA-05).
   if [[ -d "$TARGET/agents" ]]; then
-    for src in "$TARGET/agents/"massa-th0th-*.md; do
+    for src in "$TARGET/agents/"massa-ai-*.md; do
       [[ -f "$src" ]] || continue
       name="$(basename "$src")"
       [[ "$name" == *navigator* ]] && continue
@@ -185,25 +185,25 @@ if [[ "$UNINSTALL" -eq 1 ]]; then
 fi
 
 # ── Install ──────────────────────────────────────────────────────────────────
-echo "Installing massa-th0th Claude Code plugin to: $TARGET"
+echo "Installing massa-ai Claude Code plugin to: $TARGET"
 mkdir -p "$TARGET/commands" "$TARGET/agents"
 
-# Slash commands — prefix with 'massa-th0th-' to avoid collisions with user commands
+# Slash commands — prefix with 'massa-ai-' to avoid collisions with user commands
 for src in "$SCRIPT_DIR/commands/"*.md; do
   name="$(basename "$src" .md)"
-  dest="$TARGET/commands/massa-th0th-${name}.md"
+  dest="$TARGET/commands/massa-ai-${name}.md"
   cp "$src" "$dest"
-  echo "  + /massa-th0th-${name}"
+  echo "  + /massa-ai-${name}"
 done
 
 # Subagent — keep original name
-cp "$SCRIPT_DIR/agents/massa-th0th-navigator.md" "$TARGET/agents/massa-th0th-navigator.md"
-echo "  + agent: massa-th0th-navigator"
+cp "$SCRIPT_DIR/agents/massa-ai-navigator.md" "$TARGET/agents/massa-ai-navigator.md"
+echo "  + agent: massa-ai-navigator"
 
 # 12 subagent specialists (generated from skills/*/SKILL.md). Exclude navigator
 # from the loop (it is copied above and preserved on uninstall per CLA-05/R1).
 specialist_count=0
-for src in "$SCRIPT_DIR/agents/"massa-th0th-*.md; do
+for src in "$SCRIPT_DIR/agents/"massa-ai-*.md; do
   [[ -f "$src" ]] || continue
   name="$(basename "$src")"
   [[ "$name" == *navigator* ]] && continue
@@ -220,13 +220,13 @@ if [[ ! -f "$HOOK_BIN" ]]; then
   echo "    Hooks will not fire until the binary is available." >&2
 fi
 merge_settings_hooks "$SETTINGS_JSON" "install"
-echo "  + 5 massa-th0th hook events wired (array-append, user hooks preserved)"
+echo "  + 5 massa-ai hook events wired (array-append, user hooks preserved)"
 
 echo ""
 echo "Done. Restart Claude Code to pick up the new commands and hooks."
 echo ""
 echo "Next steps:"
-echo "  1. Make sure the massa-th0th MCP server is registered (see apps/mcp-client/README.md)."
-echo "  2. Try: /massa-th0th-status"
-echo "  3. Try: /massa-th0th-map (on an indexed project)"
+echo "  1. Make sure the massa-ai MCP server is registered (see apps/mcp-client/README.md)."
+echo "  2. Try: /massa-ai-status"
+echo "  3. Try: /massa-ai-map (on an indexed project)"
 echo "💡 If you also run install-agents.ts --agent claude-code, skip it — hooks + MCP are already wired by this plugin."

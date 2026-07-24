@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # ============================================================
-#  massa-th0th - Installer
-#  https://github.com/luizgmassa/massa-th0th
+#  massa-ai - Installer
+#  https://github.com/luizgmassa/massa-ai
 #
 #  Usage:
-#    curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-th0th/main/install.sh | bash
+#    curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-ai/main/install.sh | bash
 #
 #  Environment overrides (export before piping):
-#    MASSA_TH0TH_MODE=docker|build|source   Installation mode (default: source)
-#    MASSA_TH0TH_DIR=/path/to/install        Where to install (default: ~/.massa-th0th)
-#    MASSA_TH0TH_API_PORT=3333               API port
-#    MASSA_TH0TH_POSTGRES_PORT=5432          PostgreSQL port
-#    POSTGRES_PASSWORD=<pass>          DB password (default: massa_th0th_password)
+#    MASSA_AI_MODE=docker|build|source   Installation mode (default: source)
+#    MASSA_AI_DIR=/path/to/install        Where to install (default: ~/.massa-ai)
+#    MASSA_AI_API_PORT=3333               API port
+#    MASSA_AI_POSTGRES_PORT=5432          PostgreSQL port
+#    POSTGRES_PASSWORD=<pass>          DB password (default: massa_ai_password)
 #    OLLAMA_BASE_URL=http://...        Override Ollama URL
-#    MASSA_TH0TH_BRANCH=main                 Git branch (source/build mode)
-#    MASSA_TH0TH_NO_START=1                  Skip starting services after install
+#    MASSA_AI_BRANCH=main                 Git branch (source/build mode)
+#    MASSA_AI_NO_START=1                  Skip starting services after install
 # ============================================================
 
 set -e
@@ -32,8 +32,8 @@ die()  { err "$*"; exit 1; }
 # ── Version detection ─────────────────────────────────────────
 # Fetches version from GitHub (non-blocking — shows "latest" on failure).
 # install.sh runs before any local clone exists, so we can't source banner.sh.
-_MASSA_TH0TH_INSTALLER_VERSION="$(curl -fsSL --max-time 3 \
-  "https://raw.githubusercontent.com/${GITHUB_REPO:-luizgmassa/massa-th0th}/main/package.json" \
+_MASSA_AI_INSTALLER_VERSION="$(curl -fsSL --max-time 3 \
+  "https://raw.githubusercontent.com/${GITHUB_REPO:-luizgmassa/massa-ai}/main/package.json" \
   2>/dev/null \
   | grep '"version"' | head -1 \
   | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' \
@@ -52,28 +52,28 @@ cat << EOF
     ███████  ███   ████    ████████     ███████░ ████  ████
      ░████  █████  █████    █████         ████   ████░ █████
 
-   Context, memory and cross-agent management.  v${_MASSA_TH0TH_INSTALLER_VERSION}
-   https://github.com/luizgmassa/massa-th0th
+   Context, memory and cross-agent management.  v${_MASSA_AI_INSTALLER_VERSION}
+   https://github.com/luizgmassa/massa-ai
 
 EOF
 
 # ── Constants ─────────────────────────────────────────────────
-GITHUB_REPO="luizgmassa/massa-th0th"
+GITHUB_REPO="luizgmassa/massa-ai"
 GITHUB_RAW="https://raw.githubusercontent.com/${GITHUB_REPO}"
 GITHUB_URL="https://github.com/${GITHUB_REPO}"
 # Docker Hub org is the lowercase GitHub owner (Docker requires lowercase).
 _DOCKER_ORG=$(echo "${GITHUB_REPO%%/*}" | tr '[:upper:]' '[:lower:]')
-DOCKER_API_IMAGE="${_DOCKER_ORG}/massa-th0th:api-latest"
-DOCKER_MCP_IMAGE="${_DOCKER_ORG}/massa-th0th:mcp-latest"
+DOCKER_API_IMAGE="${_DOCKER_ORG}/massa-ai:api-latest"
+DOCKER_MCP_IMAGE="${_DOCKER_ORG}/massa-ai:mcp-latest"
 
 # ── Config (overridable via env) ──────────────────────────────
-MODE="${MASSA_TH0TH_MODE:-}"
-INSTALL_DIR="${MASSA_TH0TH_DIR:-$HOME/.massa-th0th}"
-API_PORT="${MASSA_TH0TH_API_PORT:-3333}"
-POSTGRES_PORT="${MASSA_TH0TH_POSTGRES_PORT:-5432}"
-DB_PASS="${POSTGRES_PASSWORD:-massa_th0th_password}"
-BRANCH="${MASSA_TH0TH_BRANCH:-main}"
-NO_START="${MASSA_TH0TH_NO_START:-0}"
+MODE="${MASSA_AI_MODE:-}"
+INSTALL_DIR="${MASSA_AI_DIR:-$HOME/.massa-ai}"
+API_PORT="${MASSA_AI_API_PORT:-3333}"
+POSTGRES_PORT="${MASSA_AI_POSTGRES_PORT:-5432}"
+DB_PASS="${POSTGRES_PASSWORD:-massa_ai_password}"
+BRANCH="${MASSA_AI_BRANCH:-main}"
+NO_START="${MASSA_AI_NO_START:-0}"
 OLLAMA_URL="${OLLAMA_BASE_URL:-}"  # auto-detected below if empty
 
 # ── Helpers ───────────────────────────────────────────────────
@@ -167,21 +167,21 @@ select_mode() {
 }
 
 # ── Install directory prompt (source mode) ────────────────────
-# Lets the user pick where massa-th0th is cloned. Honours MASSA_TH0TH_DIR
+# Lets the user pick where massa-ai is cloned. Honours MASSA_AI_DIR
 # (already in $INSTALL_DIR) as a non-interactive override; otherwise prompts
 # with a default and validates the path before proceeding.
 prompt_install_dir() {
-  if [ -n "${MASSA_TH0TH_DIR:-}" ]; then
-    ok "Using install dir from MASSA_TH0TH_DIR: ${INSTALL_DIR}"
+  if [ -n "${MASSA_AI_DIR:-}" ]; then
+    ok "Using install dir from MASSA_AI_DIR: ${INSTALL_DIR}"
     echo "$INSTALL_DIR"
     return
   fi
 
-  local default="$HOME/.massa-th0th"
+  local default="$HOME/.massa-ai"
   local input parent confirm
   while true; do
     echo -e "${BOLD}Clone path:${NC}" >&2
-    echo -e "  ${DIM}Where to clone massa-th0th. Press ENTER for: ${default}${NC}" >&2
+    echo -e "  ${DIM}Where to clone massa-ai. Press ENTER for: ${default}${NC}" >&2
     read -rp "  Path [${default}]: " input <>/dev/tty
     input="${input:-$default}"
 
@@ -246,7 +246,7 @@ check_ollama() {
     return 0
   else
     warn "Ollama not reachable at ${url}"
-    warn "Start Ollama before using massa-th0th, or set OLLAMA_BASE_URL."
+    warn "Start Ollama before using massa-ai, or set OLLAMA_BASE_URL."
     return 1
   fi
 }
@@ -357,18 +357,18 @@ write_env() {
   local rerank_enabled="${SEARCH_RERANK_ENABLED:-false}"
 
   installer_env_publish "$env_file" << ENVEOF
-# massa-th0th - generated by install.sh
+# massa-ai - generated by install.sh
 # Edit this file to customise your installation.
 
 # ── API ──────────────────────────────────────────────────────
-MASSA_TH0TH_API_PORT=${API_PORT}
-MASSA_TH0TH_API_IMAGE=${api_image}
-MASSA_TH0TH_MCP_IMAGE=${mcp_image}
+MASSA_AI_API_PORT=${API_PORT}
+MASSA_AI_API_IMAGE=${api_image}
+MASSA_AI_MCP_IMAGE=${mcp_image}
 NODE_ENV=production
 
 # ── Database ─────────────────────────────────────────────────
 POSTGRES_PASSWORD=${DB_PASS}
-MASSA_TH0TH_POSTGRES_PORT=${POSTGRES_PORT}
+MASSA_AI_POSTGRES_PORT=${POSTGRES_PORT}
 DATABASE_URL=${db_url}
 
 # ── Embeddings (Ollama - local, free) ────────────────────────
@@ -494,8 +494,8 @@ print_hooks_guide() {
   echo ""
   echo -e "${BOLD}Passive-capture hooks (Claude Code · Codex · Cursor)${NC}"
   echo -e "${DIM}Fire-and-forget scripts POST observations to the API with a 2s timeout${NC}"
-  echo -e "${DIM}and always exit 0 — they never block the agent. The shared massa-th0th-hook${NC}"
-  echo -e "${DIM}Bun binary (apps/claude-plugin/hooks/massa-th0th-hook.ts) serves all 3 platforms;${NC}"
+  echo -e "${DIM}and always exit 0 — they never block the agent. The shared massa-ai-hook${NC}"
+  echo -e "${DIM}Bun binary (apps/claude-plugin/hooks/massa-ai-hook.ts) serves all 3 platforms;${NC}"
   echo -e "${DIM}Codex and Cursor symlink to it. Only the host config wrapper differs.${NC}"
   echo ""
 
@@ -508,7 +508,7 @@ print_hooks_guide() {
     done
     echo ""
     echo -e "  ${DIM}Or skip the scripts and POST directly (works from any platform hook):${NC}"
-    echo -e "    curl -X POST ${MASSA_TH0TH_API_BASE:-http://localhost:3333}/api/v1/hook/batch \\"
+    echo -e "    curl -X POST ${MASSA_AI_API_BASE:-http://localhost:3333}/api/v1/hook/batch \\"
     echo -e "      -H 'Content-Type: application/json' \\"
     echo -e "      -d '{\"events\":[{\"event\":\"user-prompt\",\"projectId\":\"my-proj\",\"payload\":{}}]}'"
     echo ""
@@ -564,21 +564,21 @@ print_hooks_guide() {
   echo -e '  {'
   echo -e '    "version": 1,'
   echo -e '    "hooks": {'
-  echo -e "      \"sessionStart\":         [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook session-start\\\"\" }],"
-  echo -e "      \"sessionEnd\":           [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook stop\\\"\" }],"
-  echo -e "      \"beforeSubmitPrompt\":   [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook user-prompt-submit\\\"\" }],"
-  echo -e "      \"preToolUse\":           [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook pre-tool-use\\\"\" }],"
-  echo -e "      \"postToolUse\":          [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook post-tool-use\\\"\" }],"
-  echo -e "      \"preCompact\":           [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook pre-compact\\\"\" }],"
-  echo -e "      \"stop\":                 [{ \"command\": \"\\\"${hooks_dir}/massa-th0th-hook stop\\\"\" }]"
+  echo -e "      \"sessionStart\":         [{ \"command\": \"\\\"${hooks_dir}/massa-ai-hook session-start\\\"\" }],"
+  echo -e "      \"sessionEnd\":           [{ \"command\": \"\\\"${hooks_dir}/massa-ai-hook stop\\\"\" }],"
+  echo -e "      \"beforeSubmitPrompt\":   [{ \"command\": \"\\\"${hooks_dir}/massa-ai-hook user-prompt-submit\\\"\" }],"
+  echo -e "      \"preToolUse\":           [{ \"command\": \"\\\"${hooks_dir}/massa-ai-hook pre-tool-use\\\"\" }],"
+  echo -e "      \"postToolUse\":          [{ \"command\": \"\\\"${hooks_dir}/massa-ai-hook post-tool-use\\\"\" }],"
+  echo -e "      \"preCompact\":           [{ \"command\": \"\\\"${hooks_dir}/massa-ai-hook pre-compact\\\"\" }],"
+  echo -e "      \"stop\":                 [{ \"command\": \"\\\"${hooks_dir}/massa-ai-hook stop\\\"\" }]"
   echo -e '    }'
   echo -e '  }'
   echo ""
 
   echo -e "  ${BOLD}Env vars (set in your shell or .env; all platforms):${NC}"
-  echo -e "    ${CYAN}MASSA_TH0TH_API_BASE${NC}   default http://localhost:3333"
-  echo -e "    ${CYAN}MASSA_TH0TH_API_KEY${NC}    optional (x-api-key header)"
-  echo -e "    ${CYAN}MASSA_TH0TH_PROJECT_ID${NC} optional (defaults to cwd basename)"
+  echo -e "    ${CYAN}MASSA_AI_API_BASE${NC}   default http://localhost:3333"
+  echo -e "    ${CYAN}MASSA_AI_API_KEY${NC}    optional (x-api-key header)"
+  echo -e "    ${CYAN}MASSA_AI_PROJECT_ID${NC} optional (defaults to cwd basename)"
   echo ""
   echo -e "  ${DIM}Observations are stored in PostgreSQL and consolidated into${NC}"
   echo -e "  ${DIM}memories only when RLM_LLM_ENABLED=true (otherwise stored raw).${NC}"
@@ -630,7 +630,7 @@ post_install() {
       echo -e "  ${CYAN}t)${NC} Run integration tests"
     fi
     echo -e "  ${CYAN}c)${NC} Configure passive-capture hooks (Claude Code, Codex, Cursor)"
-    echo -e "  ${CYAN}p)${NC} Install massa-th0th plugins (Claude, Codex, Cursor, OpenCode)"
+    echo -e "  ${CYAN}p)${NC} Install massa-ai plugins (Claude, Codex, Cursor, OpenCode)"
     echo -e "  ${CYAN}s)${NC} Skip (finish)"
     echo ""
 
@@ -657,7 +657,7 @@ post_install() {
   done
 }
 
-# ── massa-th0th plugin installer sub-menu (four-plugin parity) ───────────────
+# ── massa-ai plugin installer sub-menu (four-plugin parity) ───────────────
 # The per-plugin installers source scripts/banner.sh relative to their own
 # location, so invoke them as bash <path> --user. Default to --user because the
 # root install.sh doesn't track whether the user installed at project scope.
@@ -671,7 +671,7 @@ install_plugins_menu() {
 
   while true; do
     echo ""
-    echo -e "${BOLD}Install massa-th0th plugins (skills + hooks + MCP + 12 subagent specialists):${NC}"
+    echo -e "${BOLD}Install massa-ai plugins (skills + hooks + MCP + 12 subagent specialists):${NC}"
     echo -e "  ${CYAN}1)${NC} Claude Code plugin (skills + commands + 12 subagent specialists + hooks auto-write)"
     echo -e "  ${CYAN}2)${NC} Codex plugin (6 skills, 6 hook events, MCP, 12 subagent specialists)"
     echo -e "  ${CYAN}3)${NC} Cursor plugin (6 skills, 7 hook events, MCP, navigator + 12 subagent specialists)"
@@ -729,25 +729,25 @@ install_plugins_menu() {
   done
 }
 
-# OpenCode plugin is an npm package (@massa-th0th/opencode-plugin), not a
+# OpenCode plugin is an npm package (@massa-ai/opencode-plugin), not a
 # script-copy bundle. Print the install command + opencode.json config snippet.
 print_opencode_plugin_instructions() {
   echo ""
   echo -e "${BOLD}OpenCode plugin install (npm package):${NC}"
   echo ""
   echo -e "  1. Install the package:"
-  echo -e "     ${CYAN}npm install @massa-th0th/opencode-plugin${NC}"
-  echo -e "     (or from source: ${CYAN}bun add @massa-th0th/opencode-plugin${NC})"
+  echo -e "     ${CYAN}npm install @massa-ai/opencode-plugin${NC}"
+  echo -e "     (or from source: ${CYAN}bun add @massa-ai/opencode-plugin${NC})"
   echo ""
   echo -e "  2. Add to ~/.config/opencode/opencode.json:"
   echo ""
   echo -e "  {"
-  echo -e '    "plugin": ["@massa-th0th/opencode-plugin"],'
+  echo -e '    "plugin": ["@massa-ai/opencode-plugin"],'
   echo -e '    "mcp": {'
-  echo -e '      "massa-th0th": {'
+  echo -e '      "massa-ai": {'
   echo -e '        "type": "local",'
-  echo -e '        "command": ["bunx", "@massa-th0th/mcp-client"],'
-  echo -e '        "environment": { "MASSA_TH0TH_API_URL": "http://localhost:3333" },'
+  echo -e '        "command": ["bunx", "@massa-ai/mcp-client"],'
+  echo -e '        "environment": { "MASSA_AI_API_URL": "http://localhost:3333" },'
   echo -e '        "enabled": true'
   echo -e '      }'
   echo -e '    }'
@@ -757,8 +757,8 @@ print_opencode_plugin_instructions() {
   echo -e "  Prerequisite: the Tools API must be running (bun run dev:api)."
   echo ""
   echo -e "  ${CYAN}3. Install the 12 subagent specialists:${NC}"
-  echo -e "     ${CYAN}massa-th0th-config agents install --user${NC}"
-  echo -e "     (writes 12 massa-th0th-*.md to ~/.config/opencode/agents/)"
+  echo -e "     ${CYAN}massa-ai-config agents install --user${NC}"
+  echo -e "     (writes 12 massa-ai-*.md to ~/.config/opencode/agents/)"
 }
 
 # ── Show MCP integration instructions ────────────────────────
@@ -769,7 +769,7 @@ show_integration() {
 
   echo ""
   echo -e "${BOLD}╔═══════════════════════════════════════════════════════╗${NC}"
-  echo -e "${BOLD}║              massa-th0th is ready!                          ║${NC}"
+  echo -e "${BOLD}║              massa-ai is ready!                          ║${NC}"
   echo -e "${BOLD}╚═══════════════════════════════════════════════════════╝${NC}"
   echo ""
   echo -e "  ${GREEN}API:${NC}     http://localhost:${api_port}"
@@ -788,7 +788,7 @@ show_integration() {
     echo ""
     echo -e '  {'
     echo -e '    "mcpServers": {'
-    echo -e '      "massa-th0th": {'
+    echo -e '      "massa-ai": {'
     echo -e '        "type": "local",'
     echo -e "        \"command\": [\"docker\", \"compose\", \"-f\", \"${install_dir}/docker-compose.yml\", \"run\", \"--rm\", \"-i\", \"mcp\"],"
     echo -e '        "enabled": true'
@@ -801,10 +801,10 @@ show_integration() {
 
   echo -e '  {'
   echo -e '    "mcpServers": {'
-  echo -e '      "massa-th0th": {'
+  echo -e '      "massa-ai": {'
   echo -e '        "type": "local",'
-  echo -e '        "command": ["npx", "@massa-th0th/mcp-client"],'
-  echo -e "        \"env\": { \"MASSA_TH0TH_API_URL\": \"http://localhost:${api_port}\" },"
+  echo -e '        "command": ["npx", "@massa-ai/mcp-client"],'
+  echo -e "        \"env\": { \"MASSA_AI_API_URL\": \"http://localhost:${api_port}\" },"
   echo -e '        "enabled": true'
   echo -e '      }'
   echo -e '    }'
@@ -843,14 +843,14 @@ install_docker() {
   local ollama_url; ollama_url=$(detect_ollama_url "docker")
   check_ollama "$ollama_url" || true
 
-  local db_url="postgresql://massa_th0th:${DB_PASS}@localhost:${POSTGRES_PORT}/massa_th0th"
+  local db_url="postgresql://massa_ai:${DB_PASS}@localhost:${POSTGRES_PORT}/massa_ai"
   fetch_compose "$INSTALL_DIR"
   write_env "$INSTALL_DIR" "$ollama_url" "$db_url"
   echo ""
 
   echo -e "${BOLD}[3/4] Pulling Docker images...${NC}"
   (cd "$INSTALL_DIR" && \
-    env MASSA_TH0TH_API_PORT="$API_PORT" MASSA_TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
+    env MASSA_AI_API_PORT="$API_PORT" MASSA_AI_POSTGRES_PORT="$POSTGRES_PORT" \
         POSTGRES_PASSWORD="$DB_PASS" OLLAMA_BASE_URL="$ollama_url" \
     docker compose pull)
   ok "Images pulled"
@@ -859,20 +859,20 @@ install_docker() {
   if [ "$NO_START" != "1" ]; then
     echo -e "${BOLD}[4/4] Starting services...${NC}"
     (cd "$INSTALL_DIR" && \
-      env MASSA_TH0TH_API_PORT="$API_PORT" MASSA_TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
+      env MASSA_AI_API_PORT="$API_PORT" MASSA_AI_POSTGRES_PORT="$POSTGRES_PORT" \
           POSTGRES_PASSWORD="$DB_PASS" OLLAMA_BASE_URL="$ollama_url" \
       docker compose up -d postgres)
     ok "PostgreSQL started"
 
     info "Waiting for database to be ready..."
     local tries=0
-    until (cd "$INSTALL_DIR" && docker compose exec -T postgres pg_isready -U massa_th0th &>/dev/null) \
+    until (cd "$INSTALL_DIR" && docker compose exec -T postgres pg_isready -U massa_ai &>/dev/null) \
           || [ $tries -ge 15 ]; do
       sleep 2; tries=$((tries + 1))
     done
 
     (cd "$INSTALL_DIR" && \
-      env MASSA_TH0TH_API_PORT="$API_PORT" MASSA_TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
+      env MASSA_AI_API_PORT="$API_PORT" MASSA_AI_POSTGRES_PORT="$POSTGRES_PORT" \
           POSTGRES_PASSWORD="$DB_PASS" OLLAMA_BASE_URL="$ollama_url" \
       docker compose up -d api)
     ok "API started (migrations run automatically on first boot)"
@@ -906,26 +906,26 @@ install_build() {
   resolve_ports
   local ollama_url; ollama_url=$(detect_ollama_url "docker")
   check_ollama "$ollama_url" || true
-  local db_url="postgresql://massa_th0th:${DB_PASS}@localhost:${POSTGRES_PORT}/massa_th0th"
+  local db_url="postgresql://massa_ai:${DB_PASS}@localhost:${POSTGRES_PORT}/massa_ai"
   # Pass local image names so the .env points at what was actually built,
   # not the Docker Hub constants (which may not exist or be stale).
-  write_env "$INSTALL_DIR" "$ollama_url" "$db_url" "massa-th0th-api:local" "massa-th0th-mcp:local"
+  write_env "$INSTALL_DIR" "$ollama_url" "$db_url" "massa-ai-api:local" "massa-ai-mcp:local"
   echo ""
 
   echo -e "${BOLD}[4/5] Building Docker images...${NC}"
-  (cd "$INSTALL_DIR" && docker build --target api -t massa-th0th-api:local .)
-  (cd "$INSTALL_DIR" && docker build --target mcp -t massa-th0th-mcp:local .)
+  (cd "$INSTALL_DIR" && docker build --target api -t massa-ai-api:local .)
+  (cd "$INSTALL_DIR" && docker build --target mcp -t massa-ai-mcp:local .)
   ok "Images built"
-  export MASSA_TH0TH_API_IMAGE="massa-th0th-api:local"
-  export MASSA_TH0TH_MCP_IMAGE="massa-th0th-mcp:local"
+  export MASSA_AI_API_IMAGE="massa-ai-api:local"
+  export MASSA_AI_MCP_IMAGE="massa-ai-mcp:local"
   echo ""
 
   if [ "$NO_START" != "1" ]; then
     echo -e "${BOLD}[5/5] Starting services...${NC}"
     (cd "$INSTALL_DIR" && \
-      env MASSA_TH0TH_API_PORT="$API_PORT" MASSA_TH0TH_POSTGRES_PORT="$POSTGRES_PORT" \
+      env MASSA_AI_API_PORT="$API_PORT" MASSA_AI_POSTGRES_PORT="$POSTGRES_PORT" \
           POSTGRES_PASSWORD="$DB_PASS" OLLAMA_BASE_URL="$ollama_url" \
-          MASSA_TH0TH_API_IMAGE="massa-th0th-api:local" MASSA_TH0TH_MCP_IMAGE="massa-th0th-mcp:local" \
+          MASSA_AI_API_IMAGE="massa-ai-api:local" MASSA_AI_MCP_IMAGE="massa-ai-mcp:local" \
       docker compose up -d postgres api)
     ok "Services started"
     echo ""

@@ -1,7 +1,7 @@
 /**
  * AutoImproveJob tests (Phase 5 — auto-improvement loop, G7).
  *
- * Test-isolation rule (Phase 1/2/3/4/6): do NOT `mock.module("@massa-th0th/shared")`
+ * Test-isolation rule (Phase 1/2/3/4/6): do NOT `mock.module("@massa-ai/shared")`
  * (process-wide collision — memory-crud.test.ts owns it). Inject a fake
  * ProposalStore (MemoryProposalStore), a fake ObservationStore (MemoryObservationStore
  * pre-loaded with deterministic observations), a fake MemoryApplySeam, and a fake

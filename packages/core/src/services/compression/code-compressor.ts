@@ -5,11 +5,11 @@
  * Strategy: Keep structure, remove implementation details
  */
 
-import { ICompressor } from '@massa-th0th/shared';
-import { CompressedContent, CompressionStrategy } from '@massa-th0th/shared';
+import { ICompressor } from '@massa-ai/shared';
+import { CompressedContent, CompressionStrategy } from '@massa-ai/shared';
 import { CompressedContent as CompressedContentModel } from '../../models/CompressedContent.js';
-import { config, logger } from '@massa-th0th/shared';
-import { MetricsCollector } from '@massa-th0th/shared';
+import { config, logger } from '@massa-ai/shared';
+import { MetricsCollector } from '@massa-ai/shared';
 import { llmComplete, isLlmEnabled, type LlmResult } from '../memory/llm-client.js';
 
 /**

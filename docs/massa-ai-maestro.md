@@ -1,6 +1,6 @@
-# massa-th0th Maestro
+# massa-ai Maestro
 
-Human-facing guide for Maestro mobile E2E workflow support built into `massa-th0th`. Canonical agent instructions live in [`workflows/maestro/`](../../skills/massa-th0th/workflows/maestro/) and the focused reference index at [`references/maestro.md`](../../skills/massa-th0th/references/maestro.md).
+Human-facing guide for Maestro mobile E2E workflow support built into `massa-ai`. Canonical agent instructions live in [`workflows/maestro/`](../../skills/massa-ai/workflows/maestro/) and the focused reference index at [`references/maestro.md`](../../skills/massa-ai/references/maestro.md).
 
 ## Routes
 

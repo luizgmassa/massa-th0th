@@ -17,7 +17,7 @@
 
 import { generateText, generateObject } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { config, logger, DEFAULT_LLM_MODEL } from "@massa-th0th/shared";
+import { config, logger, DEFAULT_LLM_MODEL } from "@massa-ai/shared";
 import { z } from "zod";
 
 /**
@@ -122,7 +122,7 @@ export function isLlmEnabled(): boolean {
 
 /**
  * Test seam: force the enabled flag without touching config (avoids colliding
- * with other test files that mock `@massa-th0th/shared`). Pass `null` to clear.
+ * with other test files that mock `@massa-ai/shared`). Pass `null` to clear.
  * @internal
  */
 let testEnabledOverride: boolean | null = null;

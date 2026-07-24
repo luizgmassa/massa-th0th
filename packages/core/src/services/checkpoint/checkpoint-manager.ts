@@ -1,7 +1,7 @@
 /** Backend-neutral checkpoint facade backed exclusively by PostgreSQL. */
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import { PgCheckpointStore } from "./checkpoint-store-pg.js";
-import type { RestoreResult } from "@massa-th0th/shared";
+import type { RestoreResult } from "@massa-ai/shared";
 export type { CheckpointMetadata } from "./checkpoint-store.js";
 export class CheckpointManager extends PgCheckpointStore {
   private static instance: CheckpointManager | null = null;

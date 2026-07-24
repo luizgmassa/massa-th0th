@@ -5,7 +5,7 @@ Slug: `installer-config-regeneration`. Source: `update-install-setup-local-scrip
 ## Requirements
 
 - Regenerating local setup `.env`, config, or generated installer `.env` first creates an adjacent `.bak` copy.
-- Source installation is the interactive default; `MASSA_TH0TH_DIR` remains non-interactive precedence.
+- Source installation is the interactive default; `MASSA_AI_DIR` remains non-interactive precedence.
 - Source clone paths normalize common input forms, require writable existing parents, accept non-empty Git directories, and require confirmation for non-Git populated directories.
 - Docker/build mode retains its prior install-directory behavior.
 

@@ -99,7 +99,7 @@ index 0000000..27b19c5
 +
 +// Repository-owned install guard for the patched tree-sitter runtime.
 +//
-+// @massa-th0th/core bundles this package together with its prebuilt native
++// @massa-ai/core bundles this package together with its prebuilt native
 +// addon, so a consumer install must NOT trigger an upstream from-source
 +// rebuild (which requires a C++ toolchain, node-gyp, and matching Node
 +// headers). When the generated addon is already present this script no-ops;

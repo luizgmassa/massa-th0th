@@ -1,7 +1,7 @@
 /**
  * Configuration Management
  *
- * Centralized configuration for massa-th0th Server
+ * Centralized configuration for massa-ai Server
  *
  * Architecture:
  * - Global cache with projectId namespace (multi-tenant)
@@ -228,7 +228,7 @@ export interface ServerConfig {
   };
 
   // Synapse — cognitive modulation layer (focus, retention, prioritization, speed).
-  // Mirrored from MassaTh0thConfig so runtime services have a uniform access point.
+  // Mirrored from MassaAiConfig so runtime services have a uniform access point.
   synapse: SynapseRuntimeConfig;
 }
 
@@ -325,7 +325,7 @@ export const MAX_IGNORE_PATTERNS = 1_024;
  *  - any rule with an invalid disposition
  *
  * This mirrors `validatePolicy` in the core pure module but is duplicated here
- * so the shared config loader does not depend on `@massa-th0th/core`. The
+ * so the shared config loader does not depend on `@massa-ai/core`. The
  * pure module's `validatePolicy` remains the authoritative validator for
  * direct callers; this is the config-load-time gate.
  */
@@ -398,18 +398,18 @@ export interface DecayParams {
  * Resolve the global data directory.
  *
  * Precedence (final, per the config-unification contract):
- *   1. `MASSA_TH0TH_DATA_DIR` env var (explicit override)
+ *   1. `MASSA_AI_DATA_DIR` env var (explicit override)
  *   2. `dataDir` from config.json (the runtime middle layer)
- *   3. `~/.config/massa-th0th/data` (literal default)
+ *   3. `~/.config/massa-ai/data` (literal default)
  *
- * The legacy `~/.massa-th0th-data/` location is migrated to (3) once at module
+ * The legacy `~/.massa-ai-data/` location is migrated to (3) once at module
  * load by env.ts -> migrateDataDirOnce(), so a stale config.json pointing at
  * the old path is corrected by the move; if the old dir still exists (e.g.
  * cross-volume rename failed), precedence (2) keeps us reading from wherever
  * config.json says, but the default is the unified XDG location.
  */
 export function getGlobalDataDir(): string {
-  const envOverride = process.env.MASSA_TH0TH_DATA_DIR;
+  const envOverride = process.env.MASSA_AI_DATA_DIR;
   if (envOverride && envOverride.trim()) return envOverride;
 
   const fileConfig = loadConfigSafe();
@@ -419,7 +419,7 @@ export function getGlobalDataDir(): string {
 }
 
 /**
- * Canonical default allow-list of file extensions massa-th0th indexes/searches.
+ * Canonical default allow-list of file extensions massa-ai indexes/searches.
  * Single source of truth — consumed by the indexing pipeline, the search
  * index scanner, and the MCP upload collector so the three never drift.
  * User config (`security.allowedExtensions`) overrides this at runtime.
@@ -481,7 +481,7 @@ const fileCacheL2Bytes = fileConfig.cache?.l2MaxSizeMB
   : undefined;
 
 export const defaultConfig: ServerConfig = {
-  name: "massa-th0th-server",
+  name: "massa-ai-server",
   version: "1.0.0",
 
   dataDir: getGlobalDataDir(),
@@ -729,7 +729,7 @@ export const defaultConfig: ServerConfig = {
     // impact-bfs-parity.test.ts (same FQN set; depths may differ ≤1 hop on
     // cyclic graphs per AD-W5-018).
     bfsCteEnabled: envBool(
-      "MASSA_TH0TH_IMPACT_BFS_CTE",
+      "MASSA_AI_IMPACT_BFS_CTE",
       fileConfig.impact?.bfsCteEnabled ?? false,
     ),
   },
@@ -746,12 +746,12 @@ export const defaultConfig: ServerConfig = {
     : undefined,
 
   // Wave 5 FR-12 / AD-W5-006: read_file path containment allowlist. Env
-  // MASSA_TH0TH_READ_FILE_ROOTS is colon-separated (POSIX-style). Project
+  // MASSA_AI_READ_FILE_ROOTS is colon-separated (POSIX-style). Project
   // root (projectPath arg) and cwd are ALWAYS allowed; this list adds extra
   // roots. Empty/unset → no extra roots. Teaching errors list valid roots
   // only (no host path enumeration).
   readFile: {
-    extraRoots: envString("MASSA_TH0TH_READ_FILE_ROOTS", "")
+    extraRoots: envString("MASSA_AI_READ_FILE_ROOTS", "")
       .split(":")
       .map((s) => s.trim())
       .filter((s) => s.length > 0),
@@ -1025,8 +1025,8 @@ export class Config {
  */
 export const config = new Config();
 
-export type { MassaTh0thConfig } from "./massa-th0th-config";
-export { defaultMassaTh0thConfig } from "./massa-th0th-config";
+export type { MassaAiConfig } from "./massa-ai-config";
+export { defaultMassaAiConfig } from "./massa-ai-config";
 
 export {
   getConfigDir,
@@ -1041,7 +1041,7 @@ export {
 } from "./config-loader";
 
 // DEDICATED-stack DB guard — fails fast if a dedicated-flagged process would
-// bind the shared production DB name (`massa_th0th`). See db-guard.ts.
+// bind the shared production DB name (`massa_ai`). See db-guard.ts.
 export {
   SHARED_DB_NAME,
   getDbName,

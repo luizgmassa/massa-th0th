@@ -21,8 +21,8 @@ class FakeProjectIdentityError extends Error {
   }
 }
 
-mock.module("@massa-th0th/core", () => {
-  const actual = require("@massa-th0th/core");
+mock.module("@massa-ai/core", () => {
+  const actual = require("@massa-ai/core");
   return {
     ...actual,
     ProjectIdentityError: FakeProjectIdentityError,

@@ -8,7 +8,7 @@
  * - update receives the new path so the alias-chain (M16/M17) is preserved
  *   (projectId unchanged, only projectPath changes).
  *
- * The DB layer is mocked via mock.module on "@massa-th0th/core/services" so
+ * The DB layer is mocked via mock.module on "@massa-ai/core/services" so
  * getPrismaClient returns a controllable prisma stub. No live DB needed.
  */
 import { describe, test, expect, mock, beforeEach } from "bun:test";
@@ -32,7 +32,7 @@ const fakePrisma = {
   },
 };
 
-mock.module("@massa-th0th/core/services", () => ({
+mock.module("@massa-ai/core/services", () => ({
   getPrismaClient: () => fakePrisma,
 }));
 

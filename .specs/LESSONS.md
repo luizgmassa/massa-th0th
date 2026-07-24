@@ -1,4 +1,4 @@
-# LESSONS - auto-maintained by skills/massa-th0th/scripts/lessons.py
+# LESSONS - auto-maintained by skills/massa-ai/scripts/lessons.py
 
 > Machine-owned. Do NOT hand-edit. Changes are overwritten on the next `lessons.py` write.
 > Canonical state lives in `.specs/lessons.json`. Edit lessons only via the script.
@@ -23,7 +23,7 @@ Seen once or not yet corroborated. Tracked, not trusted.
 ### L-002 - Hook binary tests assert exit 0 only, never POST body/endpoint/count. Removing second pre-compact POST survived. Add capture-server test verifying 2 POSTs to correct endpoints + body shapes.
 - signal: `surviving_mutant` | recurrence: 1 feature(s) | scope: `test-strength` | harmful: 0 | confidence: 0.62
 - features: wave-6-architecture-features
-- evidence: apps/claude-plugin/hooks/massa-th0th-hook.ts:219-227 + apps/claude-plugin/hooks/__tests__/massa-th0th-hook.test.ts (test-strength)
+- evidence: apps/claude-plugin/hooks/massa-ai-hook.ts:219-227 + apps/claude-plugin/hooks/__tests__/massa-ai-hook.test.ts (test-strength)
 - last seen: 2026-07-22T21:39:38Z
 
 ### L-003 - M25 name-tail resolution has 0 behavior tests. Test only checks method exists. Add tests mocking listWorkspaces asserting unique/ambiguous/not-found paths.

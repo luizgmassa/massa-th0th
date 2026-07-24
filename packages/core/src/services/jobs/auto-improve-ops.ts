@@ -5,7 +5,7 @@
  * functions receive the job instance as first param.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import type { ProposalRecord } from "../../data/proposal/proposal-repository.js";
 import type { Observation } from "../../data/memory/observation-repository.js";
 import { eventBus } from "../events/event-bus.js";

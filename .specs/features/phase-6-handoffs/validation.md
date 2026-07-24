@@ -13,7 +13,7 @@ The cross-session handoff deliverable (`HandoffStore` SQLite-canonical +
 `HandoffService` begin/accept/cancel/listPending with dual-write searchable
 memory + `handoff:accepted` event + auto-injector + 4 MCP tools + API
 route + core barrel re-exports) meets its acceptance criteria. Gate =
-`bun run --filter @massa-th0th/core test` **791 pass / 0 fail / 46 skip**
+`bun run --filter @massa-ai/core test` **791 pass / 0 fail / 46 skip**
 (baseline 754 → +37), `bun run type-check` clean (5/5). The discrimination
 sensor killed its mutant. The state machine (open → accepted | expired,
 both terminal) is proven; every failure mode (missing / non-open /
@@ -68,8 +68,8 @@ memory is proven FTS-searchable; auto-inject surfaces a pending handoff on
 
 | Gate | Command | Result |
 | --- | --- | --- |
-| Full suite (core) | `bun run --filter @massa-th0th/core test` | **791 pass / 0 fail / 46 skip** (baseline 754 → +37). Ran 837 tests across 65 files. |
-| Full suite (mcp-client) | `bun run --filter @massa-th0th/mcp-client test` | **7 pass / 0 fail** (unchanged). |
+| Full suite (core) | `bun run --filter @massa-ai/core test` | **791 pass / 0 fail / 46 skip** (baseline 754 → +37). Ran 837 tests across 65 files. |
+| Full suite (mcp-client) | `bun run --filter @massa-ai/mcp-client test` | **7 pass / 0 fail** (unchanged). |
 | type-check | `bun run type-check` | **clean** (5/5 tasks). |
 | begin happy path | `handoff-service.test.ts` P6-BEGIN-01 | open row + id + memoryId. |
 | accept state transition + event | `handoff-service.test.ts` P6-ACCEPT-01 | status accepted, acceptedAt set, event fired with shape. |

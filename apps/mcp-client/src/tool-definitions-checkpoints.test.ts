@@ -9,7 +9,7 @@ import { TOOL_DEFINITIONS } from "./tool-definitions.js";
 import {
   STRUCTURAL_FQN_DESCRIPTION,
   STRUCTURAL_SYMBOL_KINDS,
-} from "@massa-th0th/shared";
+} from "@massa-ai/shared";
 
 describe("checkpoint MCP exposure", () => {
   test("TOOL_DEFINITIONS exposes the three checkpoint tools with correct endpoints", () => {

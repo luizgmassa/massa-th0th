@@ -14,7 +14,7 @@ describe("root install.sh menu — four-plugin parity (T17)", () => {
 
   test("menu offers the 'p' plugins option", async () => {
     const src = await fs.readFile(ROOT_INSTALL, "utf8");
-    expect(src).toContain("p)${NC} Install massa-th0th plugins");
+    expect(src).toContain("p)${NC} Install massa-ai plugins");
   });
 
   test("case statement routes p|P to install_plugins_menu", async () => {
@@ -56,10 +56,10 @@ describe("root install.sh menu — four-plugin parity (T17)", () => {
 
   test("OpenCode option prints npm install + config instructions", async () => {
     const src = await fs.readFile(ROOT_INSTALL, "utf8");
-    expect(src).toContain("npm install @massa-th0th/opencode-plugin");
-    expect(src).toContain("@massa-th0th/opencode-plugin");
+    expect(src).toContain("npm install @massa-ai/opencode-plugin");
+    expect(src).toContain("@massa-ai/opencode-plugin");
     expect(src).toContain("opencode.json");
-    expect(src).toContain("MASSA_TH0TH_API_URL");
+    expect(src).toContain("MASSA_AI_API_URL");
   });
 
   test("unknown-choice prompt updated to include 'p'", async () => {

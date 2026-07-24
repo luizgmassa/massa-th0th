@@ -22,8 +22,8 @@
  */
 
 import { z } from "zod";
-import { config, logger } from "@massa-th0th/shared";
-import type { SearchResult } from "@massa-th0th/shared";
+import { config, logger } from "@massa-ai/shared";
+import type { SearchResult } from "@massa-ai/shared";
 import type { QueryLlmSurface } from "./query-understanding.js";
 import { llm as defaultLlmHandle } from "../memory/llm-client.js";
 

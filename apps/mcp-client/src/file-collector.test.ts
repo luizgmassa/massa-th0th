@@ -3,13 +3,13 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 
-const NONEXISTENT_DIR = path.join(os.tmpdir(), "__massa_th0th_nonexistent_dir_xyz__");
+const NONEXISTENT_DIR = path.join(os.tmpdir(), "__massa_ai_nonexistent_dir_xyz__");
 import { collectFiles } from "./file-collector.js";
 
 let tmpDir: string;
 
 beforeAll(async () => {
-  tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-collector-test-"));
+  tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-collector-test-"));
 
   // Supported files
   await fs.writeFile(path.join(tmpDir, "index.ts"), 'export const x = 1;');

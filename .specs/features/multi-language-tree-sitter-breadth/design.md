@@ -273,7 +273,7 @@ Incremental hard failure does not delete active definitions/references/imports. 
 - Exact Bun `1.3.0` is the application runtime. Exact Node `22.22.2` arm64 is a build-only helper for native lifecycle compilation; it is not an application runtime dependency.
 - Grammar startup loading is serialized. The loader snapshots the full `process.versions.bun` property descriptor, temporarily removes the configurable marker while upstream `node-gyp-build` fallbacks load, and restores the exact descriptor in `finally` before parsing or concurrent work begins.
 - Source, built `dist`, and packed-package load smokes run independently on macOS arm64.
-- `@massa-th0th/core` declares `@massa-th0th/shared@1.0.0` as publish-safe semver; Bun still links the matching local workspace during repository installs.
+- `@massa-ai/core` declares `@massa-ai/shared@1.0.0` as publish-safe semver; Bun still links the matching local workspace during repository installs.
 - Exact Node `22.22.2`/npm `10.9.7` packs shared then core because Bun `1.3.0` rewrites workspace ranges but omits bundled dependencies. The patch includes the generated addon in `tree-sitter`'s package file set, and the core tarball bundles that exact patched runtime.
 - A clean packed-consumer gate installs both local tarballs, redirects only the unpublished local shared package through an override, then rejects missing, unpatched, hoisted, or alternate loaded runtime-module paths.
 - Docker, Linux, Alpine, and non-arm64 packaging are untouched and outside this design.
@@ -337,4 +337,4 @@ Independent validation mutates at least one query capture, grammar dependency, g
 - Active key: `.specs/features/multi-language-tree-sitter-breadth/design.md`
 - Version: 3 (TASK-001 selected runtime and loader constraint)
 - Checksum: recorded in `gate-manifest.md` after artifact freeze.
-- MCP/skill decision: use `massa-th0th`, `coding-guidelines`, direct repository tools, official Tree-sitter/Bun/npm evidence, phase implementers with disjoint ownership, and an independent verifier. Synapse is unavailable in the current build, so indexed retrieval fell back to stateless search plus current-source confirmation.
+- MCP/skill decision: use `massa-ai`, `coding-guidelines`, direct repository tools, official Tree-sitter/Bun/npm evidence, phase implementers with disjoint ownership, and an independent verifier. Synapse is unavailable in the current build, so indexed retrieval fell back to stateless search plus current-source confirmation.

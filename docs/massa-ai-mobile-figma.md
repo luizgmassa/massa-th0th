@@ -1,4 +1,4 @@
-# massa-th0th Mobile Figma
+# massa-ai Mobile Figma
 
 Use mobile Figma workflows for production UI work backed by a readable Figma node or screenshot context and a concrete Android, iOS, or Kotlin Multiplatform target. Screenshot-only sources are context, not exact Figma parity evidence.
 

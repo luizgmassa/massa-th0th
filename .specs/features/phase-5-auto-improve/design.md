@@ -232,7 +232,7 @@ files that mock shared config process-wide and omit the block don't break.
 
 ## 11. Test-isolation strategy (extends Phase-1..6 rule)
 
-`auto-improve-job.test.ts` does NOT mock `@massa-th0th/shared`. It injects:
+`auto-improve-job.test.ts` does NOT mock `@massa-ai/shared`. It injects:
 - `MemoryProposalStore` (in-memory) for proposal persistence.
 - `MemoryObservationStore` (in-memory) pre-loaded with deterministic
   observations carrying the recurring file/query/fix signals.

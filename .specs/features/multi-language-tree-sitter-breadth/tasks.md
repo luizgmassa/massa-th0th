@@ -2,7 +2,7 @@
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
-Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidelines`, and `caveman full`. One task produces one atomic commit after its gate passes. Never weaken, skip, or delete tests to make a gate pass. Phase workers execute one whole phase sequentially and never spawn nested workers. The main agent updates this file after every phase.
+Implement with the active `massa-ai` Spec Driven Execute flow, `coding-guidelines`, and `caveman full`. One task produces one atomic commit after its gate passes. Never weaken, skip, or delete tests to make a gate pass. Phase workers execute one whole phase sequentially and never spawn nested workers. The main agent updates this file after every phase.
 
 **Design:** `.specs/features/multi-language-tree-sitter-breadth/design.md`  
 **Capability contract:** `.specs/features/multi-language-tree-sitter-breadth/capability-matrix.md`  
@@ -10,7 +10,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 ## Project Testing Guidelines Scan
 
-- Startup/project policy: user-supplied `AGENTS.md` requires `caveman full`, `coding-guidelines`, `massa-th0th`, persona routing, RTK-prefixed shell commands, and evidence-backed completion.
+- Startup/project policy: user-supplied `AGENTS.md` requires `caveman full`, `coding-guidelines`, `massa-ai`, persona routing, RTK-prefixed shell commands, and evidence-backed completion.
 - Package commands: root `package.json` defines `bun run type-check`, `bun run build`, and `bun run test`; `packages/core/package.json` defines isolated `test:unit` and sequential `test:e2e` runners.
 - Test isolation: `packages/core/scripts/run-tests-isolated.ts` groups pure tests but isolates module mocks, PostgreSQL/integration tests, and process-global state. E2E files always run sequentially.
 - CI: `.github/workflows/ci.yml` currently floats Bun `latest`; this feature adds only the macOS arm64 native smoke and leaves other platform jobs unchanged.
@@ -51,7 +51,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 | Gate | When | Command |
 | --- | --- | --- |
 | Focused | After one pure component/query-pack task | `bun test <task-owned test files>` |
-| Core unit | After each phase touching core behavior | `bun run --filter @massa-th0th/core test:unit` |
+| Core unit | After each phase touching core behavior | `bun run --filter @massa-ai/core test:unit` |
 | Type | After every code/config task | `bun run type-check` |
 | Build | After every phase and native packaging change | `bun run build` |
 | Native | TASK-001/TASK-002 and packaging phases | `bun run verify:tree-sitter-native` |
@@ -62,7 +62,7 @@ Implement with the active `massa-th0th` Spec Driven Execute flow, `coding-guidel
 
 ## MCP and Skill Decision
 
-- Selected skills: `caveman full`, `coding-guidelines`, `massa-th0th` Spec Driven, and the routed AI Engineer persona.
+- Selected skills: `caveman full`, `coding-guidelines`, `massa-ai` Spec Driven, and the routed AI Engineer persona.
 - Selected MCP: th0th recall/search for discovery only; current source and `.specs/` remain authoritative. Synapse is unavailable due the current shared `dist` export mismatch, so searches fall back to stateless retrieval.
 - External research: official Tree-sitter, Bun, npm registry, and grammar repositories only when native API/package behavior is not proven locally.
 - Local tools: `rtk`-prefixed shell commands, `apply_patch`, Bun, PostgreSQL, macOS arm64 native linker tools, and macOS CI when needed.

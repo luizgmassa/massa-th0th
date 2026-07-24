@@ -54,7 +54,7 @@ describe.skipIf(!READY)("T15 dedicated shared-index identity and path hygiene", 
 
   beforeAll(async () => {
     manifest = await loadQwenFixtureManifest();
-    temporaryRoot = await mkdtemp(path.join(tmpdir(), "massa-th0th-wrong-root-"));
+    temporaryRoot = await mkdtemp(path.join(tmpdir(), "massa-ai-wrong-root-"));
     const wrongRoot = await buildQwenFixture({
       sourceRoot: PROJECT_PATH,
       destination: path.join(temporaryRoot, "fixture"),
@@ -78,7 +78,7 @@ describe.skipIf(!READY)("T15 dedicated shared-index identity and path hygiene", 
 
   test("warm wrong-root data is reset and rebuilt at the canonical profile root", async () => {
     expect(SHARED_PROFILE_IDENTITY).toMatch(/^[a-f0-9]{16}$/);
-    expect(SHARED_PID).toBe(`e2e-th0th-shared-${SHARED_PROFILE_IDENTITY}`);
+    expect(SHARED_PID).toBe(`e2e-ai-shared-${SHARED_PROFILE_IDENTITY}`);
 
     expect(await ensureSharedIndex()).toBe(SHARED_PID);
     const response = await httpGet<any>("/api/v1/workspace/list");

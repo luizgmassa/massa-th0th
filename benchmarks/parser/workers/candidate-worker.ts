@@ -20,7 +20,7 @@
  *   bun benchmarks/parser/workers/candidate-worker.ts stress
  */
 
-import { structuralRuntime } from "@massa-th0th/core/services";
+import { structuralRuntime } from "@massa-ai/core/services";
 // Reach into the core source for the validated grammar set + manifest. The
 // services barrel does not re-export these internals, and the stress sensor
 // needs the same validated native binding the StructuralRuntime loads.

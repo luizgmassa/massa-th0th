@@ -18,7 +18,7 @@
  * Not thread-safe — designed for the single-process synapse runtime.
  */
 
-import type { SearchResult } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-ai/shared";
 
 const TOKEN_RE = /[a-z0-9_]{2,}/g;
 

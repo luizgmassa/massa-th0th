@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * massa-th0th MCP Client
+ * massa-ai MCP Client
  *
  * Cliente MCP que se conecta ao OpenCode via stdio
  * e faz proxy das tool calls para a Tools API via HTTP.
@@ -26,7 +26,7 @@ import {
   loadConfig,
   getConfigPath,
   getConfigDir
-} from "@massa-th0th/shared/config";
+} from "@massa-ai/shared/config";
 
 // Check for config-related flags before starting MCP server
 const args = process.argv.slice(2);
@@ -65,10 +65,10 @@ if (args.includes("--config-init")) {
 
 if (args.includes("--help") || args.includes("-h")) {
   console.log(`
-massa-th0th MCP Client
+massa-ai MCP Client
 
 Usage:
-  npx @massa-th0th/mcp-client [options]
+  npx @massa-ai/mcp-client [options]
 
 Options:
   --config-show     Show current configuration
@@ -78,11 +78,11 @@ Options:
   --help, -h        Show this help message
 
 For advanced configuration, use the config CLI:
-  npx @massa-th0th/mcp-client massa-th0th-config <command>
+  npx @massa-ai/mcp-client massa-ai-config <command>
 
 Examples:
-  npx @massa-th0th/mcp-client --config-show
-  npx @massa-th0th/mcp-client --config-path
+  npx @massa-ai/mcp-client --config-show
+  npx @massa-ai/mcp-client --config-path
 `);
   process.exit(0);
 }
@@ -110,14 +110,14 @@ type ApiClientLike = ToolProxyApiClient & {
 };
 
 function isEmbeddedMode(): boolean {
-  return process.env.MASSA_TH0TH_EMBEDDED === "true";
+  return process.env.MASSA_AI_EMBEDDED === "true";
 }
 
 // Reject unknown CLI flags (usage error, exit code 2).
 const KNOWN_FLAGS = ["--config-show", "--config-path", "--config-dir", "--config-init", "--help", "-h"];
 const unknown = args.filter((a) => a.startsWith("-") && !KNOWN_FLAGS.includes(a));
 if (unknown.length) {
-  console.error(`Unknown flag: ${unknown[0]}\nRun 'massa-th0th --help' for usage.`);
+  console.error(`Unknown flag: ${unknown[0]}\nRun 'massa-ai --help' for usage.`);
   process.exit(2);
 }
 
@@ -125,10 +125,10 @@ if (unknown.length) {
 if (!configExists()) {
   initConfig();
   console.log(`
-[massa-th0th] Initialized with default configuration
-[massa-th0th] Config: ${getConfigPath()}
-[massa-th0th] Provider: Ollama (local, free)
-[massa-th0th] To change: npx @massa-th0th/mcp-client massa-th0th-config use mistral --api-key YOUR_KEY
+[massa-ai] Initialized with default configuration
+[massa-ai] Config: ${getConfigPath()}
+[massa-ai] Provider: Ollama (local, free)
+[massa-ai] To change: npx @massa-ai/mcp-client massa-ai-config use mistral --api-key YOUR_KEY
 `);
 }
 
@@ -141,7 +141,7 @@ class McpProxyServer {
   constructor() {
     this.server = new Server(
       {
-        name: "massa-th0th",
+        name: "massa-ai",
         version: "1.0.0",
       },
       {
@@ -246,10 +246,10 @@ class McpProxyServer {
     const healthy = await this.apiClient.healthCheck();
     if (!healthy) {
       console.log(
-        `[massa-th0th-mcp] Warning: Tools API is not reachable (mode: ${this.mode}). Requests will fail until API is available.`,
+        `[massa-ai-mcp] Warning: Tools API is not reachable (mode: ${this.mode}). Requests will fail until API is available.`,
       );
     } else {
-      console.log(`[massa-th0th-mcp] Connected (mode: ${this.mode})`);
+      console.log(`[massa-ai-mcp] Connected (mode: ${this.mode})`);
     }
 
     await this.server.connect(this.transport);

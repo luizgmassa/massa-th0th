@@ -16,8 +16,8 @@ const mockLogger = {
   metric: mock(() => {}),
 };
 
-mock.module("@massa-th0th/shared", () => {
-  const actual = require("@massa-th0th/shared");
+mock.module("@massa-ai/shared", () => {
+  const actual = require("@massa-ai/shared");
   return {
     ...actual,
     logger: mockLogger,
@@ -47,7 +47,7 @@ import { eventBus } from "../services/events/event-bus.js";
 function makePayload(overrides: Partial<Parameters<typeof eventBus.publish>[1] & {}> = {}) {
   return {
     query: "damping constant pagerank",
-    projectId: "massa-th0th",
+    projectId: "massa-ai",
     sessionId: "sess-abc",
     results: [
       { filePath: "packages/core/src/services/symbol/centrality.ts", score: 0.9 },
@@ -112,7 +112,7 @@ describe("SearchSessionHook", () => {
       expect(mockStore).toHaveBeenCalledTimes(1);
       const call = mockStore.mock.calls[0][0] as any;
       expect(call.type).toBe("conversation");
-      expect(call.projectId).toBe("massa-th0th");
+      expect(call.projectId).toBe("massa-ai");
       expect(call.sessionId).toBe("sess-abc");
       expect(call.importance).toBe(0.3);
       expect(call.tags).toContain("auto:search-session");
@@ -134,7 +134,7 @@ describe("SearchSessionHook", () => {
       await sleep(10);
 
       const content: string = (mockStore.mock.calls[0][0] as any).content;
-      expect(content).toContain("massa-th0th");
+      expect(content).toContain("massa-ai");
       expect(content).toContain("damping constant pagerank");
       expect(content).toContain("a.ts");
       expect(content).toContain("b.ts");

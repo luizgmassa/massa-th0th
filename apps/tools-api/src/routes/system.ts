@@ -9,8 +9,8 @@
  */
 
 import { Elysia } from "elysia";
-import { config } from "@massa-th0th/shared";
-import { getHealthChecker } from "@massa-th0th/core";
+import { config } from "@massa-ai/shared";
+import { getHealthChecker } from "@massa-ai/core";
 import path from "path";
 import fs from "fs";
 import os from "os";
@@ -62,7 +62,7 @@ export const systemRoutes = new Elysia({ prefix: "/api/v1/system" })
 
       return {
         version: "1.0.0",
-        service: "massa-th0th-tools-api",
+        service: "massa-ai-tools-api",
         node: process.version,
         platform: os.platform(),
         arch: os.arch(),

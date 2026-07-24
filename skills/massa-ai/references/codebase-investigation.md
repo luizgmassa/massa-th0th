@@ -50,7 +50,7 @@ override indexed context, memories, external summaries, and old handoff notes.
 For multi-search investigations, load `references/synapse-policy.md`. Keep the
 durable `workflowSessionId` separate from the ephemeral Synapse session.
 
-th0th remains canonical memory for massa-th0th workflows. Do not introduce `.notebook/` as a default persistence layer.
+th0th remains canonical memory for massa-ai workflows. Do not introduce `.notebook/` as a default persistence layer.
 
 ## Recon Rules
 

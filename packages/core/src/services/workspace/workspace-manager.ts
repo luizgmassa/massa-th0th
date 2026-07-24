@@ -8,7 +8,7 @@
  * Subscribes to EventBus to auto-update status on indexing lifecycle events.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { getSymbolRepository } from "../../data/symbol/symbol-repository-factory.js";
 import type { WorkspaceRow, WorkspaceStatus } from "../../data/symbol/symbol-repository-pg.js";
 import { eventBus } from "../events/event-bus.js";

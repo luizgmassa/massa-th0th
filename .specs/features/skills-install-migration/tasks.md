@@ -6,18 +6,18 @@
 
 **T1: Merge bootstrap contract into skills/AGENTS.md**
 - Read old repo root `AGENTS.md` bootstrap block (lines 1-294)
-- Adapt: `useful-agent-skills` → `massa-th0th`, `UAS_` → `MASSA_TH0TH_`, marker names
+- Adapt: `useful-agent-skills` → `massa-ai`, `UAS_` → `MASSA_AI_`, marker names
 - Remove "Repository Harness" section (hooks/init.sh references — not migrating)
 - Prepend adapted bootstrap block to existing `skills/AGENTS.md` (sub-agent registry)
-- Markers: `<!-- massa-th0th:bootstrap:start -->` / `<!-- massa-th0th:bootstrap:end -->`
+- Markers: `<!-- massa-ai:bootstrap:start -->` / `<!-- massa-ai:bootstrap:end -->`
 - ACs: MIG-11, MIG-12, MIG-13, MIG-14
 - Gate: `rg "useful-agent-skills|UAS_" skills/AGENTS.md --ignore-case` → 0 matches
 - Commit: `feat: merge bootstrap contract into skills/AGENTS.md`
 
 **T2: Migrate docs/skills/ → docs/**
 - Copy 8 files from old `docs/skills/` to new `docs/`
-- Replace `Useful-Agent-Skills` / `useful-agent-skills` references with `massa-th0th`
-- Verify path references point to `skills/massa-th0th/workflows/` (unchanged path)
+- Replace `Useful-Agent-Skills` / `useful-agent-skills` references with `massa-ai`
+- Verify path references point to `skills/massa-ai/workflows/` (unchanged path)
 - ACs: MIG-15, MIG-16, MIG-17
 - Gate: `rg "useful-agent-skills|Useful-Agent-Skills" docs/ --ignore-case` → 0 matches
 - Commit: `docs: migrate workflow guides from old repo`
@@ -25,21 +25,21 @@
 **T3: Migrate persona-router skill**
 - Copy `skills/persona-router/SKILL.md` from old repo to new `skills/persona-router/SKILL.md`
 - Copy `skills/persona-router/references/` if it has content beyond personas
-- Adapt: update library-root resolution to find catalog at `../massa-th0th/personas/catalog.json`
+- Adapt: update library-root resolution to find catalog at `../massa-ai/personas/catalog.json`
 - ACs: MIG-18, MIG-22
 - Gate: `skills/persona-router/SKILL.md` exists and references new persona path
 - Commit: `feat: migrate persona-router skill`
 
-**T4: Migrate personas to skills/massa-th0th/personas/**
-- Create `skills/massa-th0th/personas/` directory
+**T4: Migrate personas to skills/massa-ai/personas/**
+- Create `skills/massa-ai/personas/` directory
 - Copy 5 persona prompt .md files from old `prompts/personas/` (or `skills/persona-router/references/personas/`)
 - Copy `catalog.json`, update `prompt_path` values to filename-only (remove `references/personas/` prefix)
 - ACs: MIG-19, MIG-20, MIG-21
 - Gate: catalog.json parses; all prompt_path resolve to existing files
-- Commit: `feat: migrate persona catalog to skills/massa-th0th/personas/`
+- Commit: `feat: migrate persona catalog to skills/massa-ai/personas/`
 
 **T5: Create prompts/personas/README.md equivalent (optional)**
-- Copy old `prompts/personas/README.md` to `skills/massa-th0th/personas/README.md`
+- Copy old `prompts/personas/README.md` to `skills/massa-ai/personas/README.md`
 - Adapt references to new location
 - Commit: `docs: add personas README`
 
@@ -68,7 +68,7 @@
 - Bootstrap: read tool AGENTS.md (or create), replace/insert marked block
 - Abort on non-symlink conflict at target (MIG-06)
 - Create platform config dir if missing
-- Write state file: `~/.config/massa-th0th/install-state.json` (v2 format)
+- Write state file: `~/.config/massa-ai/install-state.json` (v2 format)
 - ACs: MIG-01, MIG-02, MIG-06, MIG-07, MIG-08
 - Gate: `bun run type-check` passes
 - Commit: `feat: implement install-skills.ts apply logic`
@@ -107,7 +107,7 @@
   - Skill file structure validation (SKILL.md frontmatter, required sections)
   - Workflow file existence (all workflows referenced in SKILL.md exist)
   - Reference path validity (referenced files exist)
-  - massa-th0th router contract checks (retrieval, memory, observability, subagent packet)
+  - massa-ai router contract checks (retrieval, memory, observability, subagent packet)
   - Harness state path checks (adapted to new repo .specs/ paths)
   - Gitignore contract
   - Hook graph structure (adapted — hooks.json may not exist; skip if absent)
@@ -158,7 +158,7 @@
 
 **T16: Update README.md**
 - Add "Skills & Install" section summarizing:
-  - What skills are included (massa-th0th, massa-th0th-memory, synapse-usage, persona-router, 12 sub-agent specialists)
+  - What skills are included (massa-ai, massa-ai-memory, synapse-usage, persona-router, 12 sub-agent specialists)
   - How to install: `bun scripts/install-skills.ts --apply --platform all`
   - Symlink behavior (skills symlinked from repo to tool config dir)
   - Four-tool parity (Claude, Codex, Cursor, OpenCode)

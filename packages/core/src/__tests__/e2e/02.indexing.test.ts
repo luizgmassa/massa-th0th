@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { describeNative } from "../_helpers/native-skip.js";
-import { DEFAULT_ALLOWED_EXTENSIONS } from "@massa-th0th/shared";
+import { DEFAULT_ALLOWED_EXTENSIONS } from "@massa-ai/shared";
 import { cp, mkdtemp, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -86,7 +86,7 @@ describe.skipIf(!READY)("polyglot indexing lifecycle", () => {
   let originalZig: Buffer;
 
   beforeAll(async () => {
-    temporaryRoot = await mkdtemp(path.join(tmpdir(), "massa-th0th-polyglot-e2e-"));
+    temporaryRoot = await mkdtemp(path.join(tmpdir(), "massa-ai-polyglot-e2e-"));
     temporaryFixture = path.join(temporaryRoot, "polyglot");
     await cp(POLY_FIXTURE_PATH, temporaryFixture, { recursive: true });
     originalTypeScript = await readFile(path.join(temporaryFixture, "decorator-heavy.ts"));

@@ -1,4 +1,4 @@
-<!-- massa-th0th:bootstrap:start -->
+<!-- massa-ai:bootstrap:start -->
 # Coding Session Startup Contract
 
 ## Required Coding Bootstrap
@@ -8,34 +8,34 @@ code review, refactoring, or implementation, activate this stack in order:
 
 1. `caveman full`
 2. `coding-guidelines`
-3. `massa-th0th`
+3. `massa-ai`
 4. `persona-router`
 
 Activation means loading and using each available behavior. Load the installed
-`massa-th0th` skill's `SKILL.md` once before substantive work begins. Let it
+`massa-ai` skill's `SKILL.md` once before substantive work begins. Let it
 select the most specific workflow; use `workflows/general.md` only when no
 specialized workflow applies. Recall relevant durable context before work,
 retrieve only source context needed for the goal, remember only verified
 outcomes worth reusing, and compact context only when size reduces execution
-quality. After massa-th0th finishes its initial memory setup, load and run
+quality. After massa-ai finishes its initial memory setup, load and run
 `persona-router` against the first user prompt before substantive work.
 
-For generic non-coding conversations, preserve massa-th0th's exclusion: do not
-load `massa-th0th` solely for persona selection. Run `persona-router` directly
+For generic non-coding conversations, preserve massa-ai's exclusion: do not
+load `massa-ai` solely for persona selection. Run `persona-router` directly
 against the configured policy, persona catalog, workspace documentation, and
 the first user prompt.
 
 ### Dedupe And Lazy-Load Guardrails
 
-Before reading any massa-th0th workflow or reference:
+Before reading any massa-ai workflow or reference:
 
-- First ensure `massa-th0th` has been loaded in the current conversation. If it
+- First ensure `massa-ai` has been loaded in the current conversation. If it
   has not, load it before applying any dedupe rule.
-- After the initial load, reuse already-loaded `massa-th0th`, The Fool, or the
+- After the initial load, reuse already-loaded `massa-ai`, The Fool, or the
   selected workflow/reference context.
-- Do not re-read a massa-th0th skill or reference only because `AGENTS.md` names
+- Do not re-read a massa-ai skill or reference only because `AGENTS.md` names
   it after initial activation is complete.
-- Treat `massa-th0th` as a router, not permission to bulk-load all workflows or
+- Treat `massa-ai` as a router, not permission to bulk-load all workflows or
   references.
 - Load only the missing minimum context required for the current request.
 - Never load all workflows or all references "just in case."
@@ -45,7 +45,7 @@ directly for non-coding conversations. Reuse its selected route across turns;
 do not reload the router or persona prompt unless its rerouting rules apply.
 
 The first load is mandatory in each new coding conversation and must load
-`massa-th0th`. Dedupe applies only after that load and must never skip initial
+`massa-ai`. Dedupe applies only after that load and must never skip initial
 activation.
 
 ### Skill Summary
@@ -54,10 +54,10 @@ activation.
   accuracy; relax compression when clarity or safety requires it.
 - `coding-guidelines`: think before coding, prefer the simplest complete
   solution, and keep edits surgical and goal-driven.
-- `massa-th0th`: use it as the public workflow router and load internal
+- `massa-ai`: use it as the public workflow router and load internal
   workflows or references only on demand.
 - `persona-router`: select one cataloged specialist perspective after
-  massa-th0th context is available, using progressive disclosure and at most
+  massa-ai context is available, using progressive disclosure and at most
   one secondary review lens.
 
 ### Conditional RTK Rules
@@ -92,7 +92,7 @@ user-editable policies, and global indexing/context exclusions.
 
 Runtime workflow routing, project/session handling, retrieval, persistence,
 graceful degradation, and completion behavior are canonical in
-`skills/massa-th0th/SKILL.md`. Do not copy those contracts into this file.
+`skills/massa-ai/SKILL.md`. Do not copy those contracts into this file.
 Persona selection, evidence gathering, route persistence, and persona failure
 handling are canonical in `skills/persona-router/SKILL.md`.
 
@@ -128,13 +128,13 @@ for the current task. Applicable system, developer, and project instructions
 remain higher priority than persona behavior.
 
 Automatic routing must use progressive disclosure: inspect catalog metadata
-first, reuse relevant massa-th0th evidence when available, read only targeted
+first, reuse relevant massa-ai evidence when available, read only targeted
 workspace documentation when needed, and load only the selected persona prompt.
 Ask the user only when the configured edge-case policy requires it.
 
 ## Plan Challenge Policy
 
-This user-editable policy controls whether massa-th0th runs The Fool after
+This user-editable policy controls whether massa-ai runs The Fool after
 constructing a plan. It is a second-pass gate, not the initial workflow router.
 
 ```yaml
@@ -182,7 +182,7 @@ references:
 ## Conversation Feedback Policy
 
 This user-editable policy controls chat-visible status updates for
-`massa-th0th` workflows. It is a progress and observability layer, not a
+`massa-ai` workflows. It is a progress and observability layer, not a
 persistence system.
 
 ```yaml
@@ -202,11 +202,11 @@ Supported labels are `Start`, `Routing`, `Loading`, `Context`, `Decision`,
 Use this shape:
 
 ```md
-🔵 [Start] Planning visual feedback for massa-th0th. Workflow: Spec Driven. Session: Visual Feedback.
-🔄 [Loading] Reading AGENTS.md and massa-th0th router guidance before planning.
+🔵 [Start] Planning visual feedback for massa-ai. Workflow: Spec Driven. Session: Visual Feedback.
+🔄 [Loading] Reading AGENTS.md and massa-ai router guidance before planning.
 🧠 [Context] Found 8 relevant th0th memories and queried the requested NotebookLM source.
 🤖 [Agent Running] Plan Critic is checking failure modes for the proposed design.
-⚠️ [Divergence] Expected the legacy router path, but this checkout uses skills/massa-th0th/SKILL.md.
+⚠️ [Divergence] Expected the legacy router path, but this checkout uses skills/massa-ai/SKILL.md.
 ✅ [Verified] Stale-reference checks and skill validation passed.
 🏁 [Finished] Plan complete. Changed files: none. Remaining risk: none found.
 ```
@@ -218,12 +218,12 @@ Rules:
 - Avoid `=` syntax, tiny abbreviations, and ultra-compressed words.
 - Never expose chain-of-thought, raw tool output, raw logs, secrets, or raw
   subagent prompts.
-- Load `skills/massa-th0th/references/conversation-feedback.md` only when
+- Load `skills/massa-ai/references/conversation-feedback.md` only when
   detailed feedback guidance is needed.
 
 ## Runtime Contract Pointer
 
-After activation, follow `skills/massa-th0th/SKILL.md` for all runtime behavior.
+After activation, follow `skills/massa-ai/SKILL.md` for all runtime behavior.
 Its selected workflows and references define exact tool contracts, memory tags,
 failure handling, and completion evidence.
 
@@ -273,7 +273,7 @@ secrets.json
 .DS_Store
 Thumbs.db
 ```
-<!-- massa-th0th:bootstrap:end -->
+<!-- massa-ai:bootstrap:end -->
 
 # Sub-Agent Registry
 
@@ -294,7 +294,7 @@ Workflow (orchestrator)
   └─ Evidence Gate + persist memory
 ```
 
-Workflows own routing, memory, user-facing synthesis, and the final Evidence Gate. Agents own one bounded capability. Dispatch follows the gates and capability-packet shape in `references/agent-orchestration.md` (symlinked massa-th0th skill).
+Workflows own routing, memory, user-facing synthesis, and the final Evidence Gate. Agents own one bounded capability. Dispatch follows the gates and capability-packet shape in `references/agent-orchestration.md` (symlinked massa-ai skill).
 
 ## Capability Packet (dispatch contract)
 
@@ -345,7 +345,7 @@ Agents summarize verbose output. They never return raw logs, diffs, snapshots, o
 
 ## Mapping — New Agents ↔ Existing Roles
 
-The symlinked massa-th0th skill defines 9 roles in `references/agent-orchestration.md`. This registry maps the 12 new agent skills to those roles:
+The symlinked massa-ai skill defines 9 roles in `references/agent-orchestration.md`. This registry maps the 12 new agent skills to those roles:
 
 | New agent skill | Existing role | Relationship |
 |---|---|---|
@@ -373,9 +373,9 @@ Three existing roles remain in `references/agent-orchestration.md` unchanged: `p
 
 ## Future Integration
 
-This pass adds the agents only. A follow-up feature will update massa-th0th workflows to replace duplicated inline prompt sections with agent invocations where appropriate. That work is tracked separately and will have its own spec-driven validation. Do not rewrite workflows in this pass.
+This pass adds the agents only. A follow-up feature will update massa-ai workflows to replace duplicated inline prompt sections with agent invocations where appropriate. That work is tracked separately and will have its own spec-driven validation. Do not rewrite workflows in this pass.
 
-## massa-th0th Concepts
+## massa-ai Concepts
 
 All agents integrate these concepts (documented per-agent in each charter):
 
@@ -383,7 +383,7 @@ All agents integrate these concepts (documented per-agent in each charter):
 - **Synapse**: repeated-search agents (investigator, context-curator) receive their own ephemeral Synapse session.
 - **Context Firewall**: agents summarize verbose output and never return raw dumps.
 - **Verification Ladder**: agents declare the deterministic sensors they run.
-- **References**: agents point to the relevant massa-th0th reference files by name.
+- **References**: agents point to the relevant massa-ai reference files by name.
 - **Lessons**: agents surface reusable failures for lesson distillation.
 
 <!-- validator anchors: 12 agents | mapping table | capability packet | output contract -->

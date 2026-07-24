@@ -14,7 +14,7 @@
  * + adapter-pg isObjectEnumValue incompatibility. Reuses getPrismaClient().
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { getPrismaClient } from "../query/prisma-client.js";
 import { getProjectIdentityAliasResolver } from "../project-identity/alias-resolver.js";
 import type { PrismaClient } from "../../generated/prisma/index.js";

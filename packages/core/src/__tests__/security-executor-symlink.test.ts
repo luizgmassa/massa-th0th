@@ -52,7 +52,7 @@ function makeProject(): {
   cleanup: () => void;
 } {
   // Two sibling temp dirs: one is the "project root", the other is "outside".
-  const base = mkdtempSync(join(tmpdir(), ".massa-th0th-sec-"));
+  const base = mkdtempSync(join(tmpdir(), ".massa-ai-sec-"));
   const projectRoot = join(base, "project");
   const outsideDir = join(base, "outside");
   mkdirSync(projectRoot, { recursive: true });

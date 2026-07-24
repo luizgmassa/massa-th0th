@@ -6,7 +6,7 @@
  */
 
 import { describe, test, expect, beforeEach, mock } from "bun:test";
-import { MemoryType, MemoryLevel } from "@massa-th0th/shared";
+import { MemoryType, MemoryLevel } from "@massa-ai/shared";
 
 // ── Mock EmbeddingService before importing MemoryService ─────
 mock.module("../services/embeddings/index.js", () => ({

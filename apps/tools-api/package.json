@@ -1,12 +1,12 @@
 {
-  "name": "@massa-th0th/tools-api",
+  "name": "@massa-ai/tools-api",
   "version": "1.1.0",
   "author": "luizgmassa",
-  "description": "massa-th0th REST API server - Semantic code search, memory, and context compression",
+  "description": "massa-ai REST API server - Semantic code search, memory, and context compression",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "massa-th0th-api": "dist/index.js"
+    "massa-ai-api": "dist/index.js"
   },
   "files": [
     "dist"
@@ -21,8 +21,8 @@
     "test": "bun scripts/run-tests-isolated.ts"
   },
   "dependencies": {
-    "@massa-th0th/core": "workspace:*",
-    "@massa-th0th/shared": "workspace:*",
+    "@massa-ai/core": "workspace:*",
+    "@massa-ai/shared": "workspace:*",
     "elysia": "^1.2.25",
     "@elysiajs/swagger": "^1.2.0",
     "@elysiajs/cors": "^1.2.0",
@@ -35,6 +35,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/luizgmassa/massa-th0th"
+    "url": "https://github.com/luizgmassa/massa-ai"
   }
 }

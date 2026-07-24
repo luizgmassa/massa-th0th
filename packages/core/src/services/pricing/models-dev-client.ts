@@ -10,8 +10,8 @@
  * Returns real-time pricing for 1900+ models from multiple providers
  */
 
-import { logger } from "@massa-th0th/shared";
-import { config } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
+import { config } from "@massa-ai/shared";
 import fs from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";

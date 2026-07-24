@@ -21,7 +21,7 @@ function git(dir: string, args: string[], env?: Record<string, string>): string 
 
 describe("defaultDiffRunner committed scope", () => {
   test("resolves an ISO date to a commit before building the diff range", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-impact-git-"));
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-impact-git-"));
     tempDirs.push(dir);
     git(dir, ["init", "-q"]);
     git(dir, ["config", "user.email", "test@example.com"]);
@@ -52,7 +52,7 @@ describe("defaultDiffRunner committed scope", () => {
   });
 
   test("continues to accept a commit ref", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-impact-ref-"));
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-impact-ref-"));
     tempDirs.push(dir);
     git(dir, ["init", "-q"]);
     git(dir, ["config", "user.email", "test@example.com"]);

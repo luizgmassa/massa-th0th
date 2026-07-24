@@ -1,5 +1,5 @@
 /**
- * Monitoring and Metrics System for massa-th0th MCP
+ * Monitoring and Metrics System for massa-ai MCP
  *
  * Tracks:
  * - Embedding usage (calls, tokens, cache hits)
@@ -11,7 +11,7 @@
 
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "fs";
 import { resolve, dirname } from "path";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 
 /**
  * Pricing per provider (per 1M tokens)
@@ -460,7 +460,7 @@ export class MetricsCollector {
   getSummary(): string {
     const m = this.currentMetrics;
 
-    let summary = "\n📊 massa-th0th MCP - Metrics Summary\n";
+    let summary = "\n📊 massa-ai MCP - Metrics Summary\n";
     summary += "=".repeat(60) + "\n\n";
 
     // Period

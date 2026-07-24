@@ -16,7 +16,7 @@ Implement the approved plan as six sequential production/test clusters. Reuse ex
 | Filter underfill | Controller filters after RLM; RLM streams currently fetch `2N`, then filter and slice. |
 | Hidden outage | `ContextualSearchRLM.search` catches the outer retrieval error and returns `[]`. |
 | Root reuse | `IndexProjectTool` derives/reuses project IDs without canonical-root identity enforcement. |
-| E2E gaps | `16.destructive.test.ts` statically skips N1/N3/E25/F88; standard suites reuse literal `e2e-th0th-shared`; `02.indexing` retains 420-second gates. |
+| E2E gaps | `16.destructive.test.ts` statically skips N1/N3/E25/F88; standard suites reuse literal `e2e-ai-shared`; `02.indexing` retains 420-second gates. |
 
 ## Approach Tradeoffs
 

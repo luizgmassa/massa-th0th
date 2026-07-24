@@ -40,7 +40,7 @@ Use this workflow when the user wants to add a new capability, screen, command, 
    - Invoke `workflows/commit.md` for each verified group; do not duplicate commit staging, message, audit-exclusion, or Jira-prefix rules in this workflow.
    - When every group has a confirmed Jira key, follow the reference's optional stacked branch flow: ask whether to create stacked task branches, ask for the base branch and a branch pattern containing `<jira-task-key>` if accepted, create each next branch from the previous task branch, never push, and report branches and commits in push order.
 12. Run the verification recipe and report skipped checks explicitly. If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:
-     `python3 skills/massa-th0th/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
+     `python3 skills/massa-ai/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
 13. At completion, persist (run the scoring rubric from `references/decision-engine.md` for each):
    - Design decisions made via `remember` as scored `decision` memories
    - New patterns introduced via `remember` as scored `pattern` memories

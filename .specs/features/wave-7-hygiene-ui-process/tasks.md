@@ -2,7 +2,7 @@
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
-Implement these tasks with the `massa-th0th` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
+Implement these tasks with the `massa-ai` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
 
 **If the skill cannot be activated, STOP and tell the user — do not proceed without it.**
 
@@ -23,7 +23,7 @@ Scanned: `package.json` scripts, `.github/workflows/ci.yml`, existing test patte
 - Test location: co-located `*.test.ts` alongside source, `__tests__/` dirs for suites
 - CI gates: type-check + build + test on ubuntu-latest + macos-14 + linux structural
 - Existing executor tests: `packages/core/src/__tests__/executor.test.ts`
-- Existing hook tests: `apps/claude-plugin/hooks/__tests__/massa-th0th-hook.test.ts`
+- Existing hook tests: `apps/claude-plugin/hooks/__tests__/massa-ai-hook.test.ts`
 - Existing web UI: no test files (static HTML/JS, served by tools-api)
 - No coverage thresholds found; strong defaults applied per spec ACs
 
@@ -83,7 +83,7 @@ T13 → T14 → T15 → T16 → T17 → T18
 **What**: Create `AGENTS.md` with project-specific routing guidance for the startup contract
 **Where**: `AGENTS.md` (repo root)
 **Depends on**: None
-**Reuses**: Global CLAUDE.md structure, `.specs/project/STATE.md` paths, `massa-th0th-memory/` + `synapse-usage/` skill dirs
+**Reuses**: Global CLAUDE.md structure, `.specs/project/STATE.md` paths, `massa-ai-memory/` + `synapse-usage/` skill dirs
 **Requirement**: W7-01
 
 **Tools**: NONE
@@ -93,7 +93,7 @@ T13 → T14 → T15 → T16 → T17 → T18
 - [ ] Contains projectId resolution section (derive from workspace root)
 - [ ] Contains indexing exclusions (node_modules, .venv, __pycache__, etc.)
 - [ ] References `.specs/project/STATE.md`, `.specs/project/FEATURES.json`
-- [ ] References `massa-th0th-memory/` + `synapse-usage/` (not non-existent `skills/massa-th0th/SKILL.md`)
+- [ ] References `massa-ai-memory/` + `synapse-usage/` (not non-existent `skills/massa-ai/SKILL.md`)
 - [ ] Contains plan-challenge policy + conversation-feedback policy
 
 **Tests**: none
@@ -130,7 +130,7 @@ T13 → T14 → T15 → T16 → T17 → T18
 **What**: Replace hardcoded `nomic-embed-text:latest` in `local-health-checker.ts:43` with `config.get("embedding").model`
 **Where**: `packages/core/src/services/health/local-health-checker.ts:43-44`
 **Depends on**: None
-**Reuses**: `config` from `@massa-th0th/shared`, existing `config.get("embedding")` pattern
+**Reuses**: `config` from `@massa-ai/shared`, existing `config.get("embedding")` pattern
 **Requirement**: W7-03
 
 **Tools**: NONE
@@ -269,7 +269,7 @@ T13 → T14 → T15 → T16 → T17 → T18
 
 ### T9: Web UI — add write mode (memory edit/delete + proposal approve/reject)
 
-**What**: Add memory edit/delete buttons + proposal approve/reject buttons to web UI, gated by `MASSA_TH0TH_WEB_WRITE_MODE=true` (default off). Wire to existing PUT/DELETE memory + POST proposal approve/reject routes.
+**What**: Add memory edit/delete buttons + proposal approve/reject buttons to web UI, gated by `MASSA_AI_WEB_WRITE_MODE=true` (default off). Wire to existing PUT/DELETE memory + POST proposal approve/reject routes.
 **Where**: `apps/web-ui/src/static/app.js`, `apps/web-ui/src/static/index.html`
 **Depends on**: T8 (markdown rendering for edit display)
 **Reuses**: Existing `PUT /api/v1/memory/:id`, `DELETE /api/v1/memory/:id`, `POST /api/v1/proposal/approve`, `POST /api/v1/proposal/reject`
@@ -278,11 +278,11 @@ T13 → T14 → T15 → T16 → T17 → T18
 **Tools**: NONE
 
 **Done when**:
-- [ ] Memory list shows edit/delete buttons when `MASSA_TH0TH_WEB_WRITE_MODE=true`
+- [ ] Memory list shows edit/delete buttons when `MASSA_AI_WEB_WRITE_MODE=true`
 - [ ] Edit button opens inline editor, PUT persists change, list updates in-place
 - [ ] Delete button shows confirmation dialog, DELETE persists, list updates
 - [ ] Proposal list shows approve/reject buttons when write mode on
-- [ ] Buttons hidden when `MASSA_TH0TH_WEB_WRITE_MODE` unset/false
+- [ ] Buttons hidden when `MASSA_AI_WEB_WRITE_MODE` unset/false
 - [ ] E2E test: edit memory, verify persisted; delete with confirm; approve proposal
 - [ ] Unit test: buttons hidden when write mode off
 - [ ] Gate: full (`bun run type-check && bun run build && bun run test`)
@@ -348,7 +348,7 @@ T13 → T14 → T15 → T16 → T17 → T18
 
 ### T12: Add OS-level sandbox wrapper for executor
 
-**What**: Create `packages/core/src/services/executor/sandbox.ts` wrapping the `#spawn` call with macOS seatbelt (`sandbox-exec`) and Linux Docker (`docker run --rm`). Default `auto` (use if available, fallback to best-effort). `MASSA_TH0TH_EXECUTOR_SANDBOX=none` opts out.
+**What**: Create `packages/core/src/services/executor/sandbox.ts` wrapping the `#spawn` call with macOS seatbelt (`sandbox-exec`) and Linux Docker (`docker run --rm`). Default `auto` (use if available, fallback to best-effort). `MASSA_AI_EXECUTOR_SANDBOX=none` opts out.
 **Where**: `packages/core/src/services/executor/sandbox.ts` (new), `packages/core/src/services/executor/executor.ts:441` (wire into `#spawn`)
 **Depends on**: None
 **Reuses**: Existing `buildSafeEnv`, `killTree`, `sandboxTmpDir`, `realpathSync` pattern from `executeFile`
@@ -361,8 +361,8 @@ T13 → T14 → T15 → T16 → T17 → T18
 - [ ] macOS: wraps spawn in `sandbox-exec -p <profile>` with seatbelt profile allowing reads on realpath(project root) + tmpdir, no network, no writes outside tmpdir (F2 mitigation: realpath)
 - [ ] Linux: wraps spawn in `docker run --rm --read-only --tmpfs /tmp -v <project>:/project:ro --network none`
 - [ ] Default mode `auto`: uses sandbox if available, falls back to best-effort if not (F1 mitigation)
-- [ ] `MASSA_TH0TH_EXECUTOR_SANDBOX=none` forces best-effort (current behavior)
-- [ ] `MASSA_TH0TH_EXECUTOR_SANDBOX=on` forces sandbox, errors if unavailable (teaching error, not silent fallback)
+- [ ] `MASSA_AI_EXECUTOR_SANDBOX=none` forces best-effort (current behavior)
+- [ ] `MASSA_AI_EXECUTOR_SANDBOX=on` forces sandbox, errors if unavailable (teaching error, not silent fallback)
 - [ ] Existing env denylist + timeout + cwd restrictions still apply (defense-in-depth)
 - [ ] Unit test: mock sandbox spawn, assert profile/container args
 - [ ] Unit test: auto mode falls back when Docker/seatbelt unavailable
@@ -426,8 +426,8 @@ T13 → T14 → T15 → T16 → T17 → T18
 
 ### T15: Add hook deadline breadcrumb-on-fire
 
-**What**: Add timing measurement inside `postObservation` in `massa-th0th-hook.ts`. Log breadcrumb to stderr when POST takes >80% of deadline or on timeout.
-**Where**: `apps/claude-plugin/hooks/massa-th0th-hook.ts:136-171`
+**What**: Add timing measurement inside `postObservation` in `massa-ai-hook.ts`. Log breadcrumb to stderr when POST takes >80% of deadline or on timeout.
+**Where**: `apps/claude-plugin/hooks/massa-ai-hook.ts:136-171`
 **Depends on**: None
 **Reuses**: Existing `fetch` + `AbortSignal.timeout` pattern
 **Requirement**: W7-13
@@ -446,7 +446,7 @@ T13 → T14 → T15 → T16 → T17 → T18
 **Tests**: unit
 **Gate**: quick
 
-**Commit**: `feat(hooks): add deadline breadcrumb-on-fire observability to massa-th0th-hook`
+**Commit**: `feat(hooks): add deadline breadcrumb-on-fire observability to massa-ai-hook`
 
 ---
 
@@ -528,7 +528,7 @@ Execution is strictly sequential — there is no intra-phase parallelism. A sing
 | T12 | sandbox.ts + executor.ts (service) | unit | unit | ✅ OK |
 | T13 | .specs/archive/ (artifact move) | none | none | ✅ OK |
 | T14 | STATE.md + git branch (state) | none | none | ✅ OK |
-| T15 | massa-th0th-hook.ts (hook) | unit | unit | ✅ OK |
+| T15 | massa-ai-hook.ts (hook) | unit | unit | ✅ OK |
 
 ---
 

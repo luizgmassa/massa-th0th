@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Deterministic bookkeeping for the massa-th0th spec-driven lessons layer.
+Deterministic bookkeeping for the massa-ai spec-driven lessons layer.
 
 The LLM supplies judgment (which failure happened, how to phrase the lesson, what
 signal grounds it). This script owns everything mechanical: IDs, distinct-feature
@@ -50,7 +50,7 @@ SIGNALS = {
 
 DEFAULTS = {"promote_threshold": 2, "window_days": 45, "quarantine_threshold": 2}
 
-# th0th supported memory types (references/th0th-tools.md). `procedural` is a
+# th0th supported memory types (references/mcp-tools.md). `procedural` is a
 # TAG, never a type. Lessons are procedural knowledge -> type `pattern`.
 TH0TH_SUPPORTED_TYPES = ("critical", "conversation", "code", "decision", "pattern")
 TH0TH_LESSON_TYPE = "pattern"
@@ -145,10 +145,10 @@ def _remember_best_effort(root, content, tags, project_id="", session_id=""):
     knowledge); `procedural` is a tag, not a type. Returns True on success,
     False (silent) when unavailable — the file store remains source of truth.
     """
-    api_url = os.environ.get("MASSA_TH0TH_API_URL") or os.environ.get("TH0TH_API_URL")
+    api_url = os.environ.get("MASSA_AI_API_URL") or os.environ.get("TH0TH_API_URL")
     if not api_url:
         return False
-    path = os.environ.get("MASSA_TH0TH_MEMORY_PATH", "/api/v1/memory")
+    path = os.environ.get("MASSA_AI_MEMORY_PATH", "/api/v1/memory")
     url = api_url.rstrip("/") + path
     body = json.dumps({
         "content": content, "type": TH0TH_LESSON_TYPE, "importance": 0.6,
@@ -156,7 +156,7 @@ def _remember_best_effort(root, content, tags, project_id="", session_id=""):
     }).encode("utf-8")
     req = urllib.request.Request(url, data=body, method="POST",
                                  headers={"Content-Type": "application/json"})
-    key = os.environ.get("MASSA_TH0TH_API_KEY") or os.environ.get("TH0TH_API_KEY")
+    key = os.environ.get("MASSA_AI_API_KEY") or os.environ.get("TH0TH_API_KEY")
     if key:
         req.add_header("x-api-key", key)
     try:
@@ -167,7 +167,7 @@ def _remember_best_effort(root, content, tags, project_id="", session_id=""):
 
 
 def _lesson_tags(lesson):
-    """massa-th0th persistence tag contract for a lesson's th0th memory."""
+    """massa-ai persistence tag contract for a lesson's th0th memory."""
     return [
         "project:%s" % lesson.get("project", ""),
         "session:%s" % lesson.get("session", ""),
@@ -219,7 +219,7 @@ def _find(data, signal, text):
 
 def _render(root, data):
     lines = []
-    lines.append("# LESSONS - auto-maintained by skills/massa-th0th/scripts/lessons.py")
+    lines.append("# LESSONS - auto-maintained by skills/massa-ai/scripts/lessons.py")
     lines.append("")
     lines.append("> Machine-owned. Do NOT hand-edit. Changes are overwritten on the next `lessons.py` write.")
     lines.append("> Canonical state lives in `.specs/lessons.json`. Edit lessons only via the script.")
@@ -533,7 +533,7 @@ def cmd_status(root, args):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="lessons.py", description="Deterministic lessons bookkeeping for massa-th0th spec-driven.")
+    p = argparse.ArgumentParser(prog="lessons.py", description="Deterministic lessons bookkeeping for massa-ai spec-driven.")
     p.add_argument("--root", default=".", help="Project root containing .specs/ (default: current dir)")
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -546,10 +546,10 @@ def main(argv=None):
     sp.add_argument("--source", required=True, help="file:line / AC id / mutant id / SPEC_DEVIATION ref")
     sp.add_argument("--text", required=True, help="One terse, actionable sentence")
     sp.add_argument("--scope", default="", help="Optional: path/layer/tag for retrieval filtering")
-    sp.add_argument("--project", default="", help="massa-th0th projectId context")
-    sp.add_argument("--session", default="", help="massa-th0th workflowSessionId context")
-    sp.add_argument("--workflow", default="", help="active massa-th0th workflow type")
-    sp.add_argument("--entity", default="", help="active massa-th0th entity")
+    sp.add_argument("--project", default="", help="massa-ai projectId context")
+    sp.add_argument("--session", default="", help="massa-ai workflowSessionId context")
+    sp.add_argument("--workflow", default="", help="active massa-ai workflow type")
+    sp.add_argument("--entity", default="", help="active massa-ai entity")
     sp.set_defaults(fn=cmd_add)
 
     sp = sub.add_parser("penalize", help="Mark a confirmed lesson as failed-when-applied")

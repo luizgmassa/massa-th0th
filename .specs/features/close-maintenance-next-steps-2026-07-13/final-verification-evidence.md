@@ -6,14 +6,14 @@ run-owned disposable database; no secret or root `.env` value is recorded.
 
 ## Isolation and ownership
 
-- Database: `postgresql://test:test@127.0.0.1:5433/massa_th0th_test` for both
+- Database: `postgresql://test:test@127.0.0.1:5433/massa_ai_test` for both
   `DATABASE_URL` and `POSTGRES_VECTOR_URL`; `VECTOR_STORE_TYPE=postgres`.
 - PostgreSQL: 17.10, pgvector 0.8.4, PID 18151, data directory
-  `/tmp/massa-th0th-g10-review-8YB45s/postgres`.
+  `/tmp/massa-ai-g10-review-8YB45s/postgres`.
 - Ollama: 0.31.2, PID 19055, `127.0.0.1:11435`, model `qwen3-embedding:8b`, 7.6B
   Q4_K_M, embedding dimension 4096.
 - Tools API: PID 19706, `http://127.0.0.1:3334`, scheduler disabled.
-- Fixture: `/tmp/massa-th0th-g10-review-8YB45s/qwen-fixture`, 46 hash-verified files,
+- Fixture: `/tmp/massa-ai-g10-review-8YB45s/qwen-fixture`, 46 hash-verified files,
   HEAD `02b7475fa519ff29be05e6d161390685a0024037`.
 - Developer-owned API: PID 9754, start `2026-07-12 20:39:53 -0300`, command
   `bun src/index.ts`; `/health` returned `status:ok` before and after. It received no request
@@ -29,8 +29,8 @@ rtk ps -p 18151,19055,19706,9754 -o pid=,lstart=,command=
 The fixture command exited 0:
 
 ```bash
-MASSA_TH0TH_DEDICATED=1 \
-MASSA_TH0TH_E2E_PROJECT_PATH=/tmp/massa-th0th-g10-review-8YB45s/qwen-fixture \
+MASSA_AI_DEDICATED=1 \
+MASSA_AI_E2E_PROJECT_PATH=/tmp/massa-ai-g10-review-8YB45s/qwen-fixture \
 bun scripts/prepare-qwen-e2e-fixture.ts
 ```
 
@@ -38,14 +38,14 @@ The API was started from `apps/tools-api` with the following explicit environmen
 `.env` therefore could not select the acceptance database or service:
 
 ```bash
-HOME=/tmp/massa-th0th-g10-review-8YB45s/home \
-XDG_CONFIG_HOME=/tmp/massa-th0th-g10-review-8YB45s/config \
-DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
-POSTGRES_VECTOR_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
-VECTOR_STORE_TYPE=postgres MASSA_TH0TH_DEDICATED=1 \
-MASSA_TH0TH_API_URL=http://127.0.0.1:3334 MASSA_TH0TH_API_PORT=3334 \
-MASSA_TH0TH_API_KEY= MASSA_TH0TH_SCHEDULER_ENABLED=false \
-MASSA_TH0TH_JOB_STALE_MS=300000 MASSA_TH0TH_JOB_REAPER_INTERVAL_MS=60000 \
+HOME=/tmp/massa-ai-g10-review-8YB45s/home \
+XDG_CONFIG_HOME=/tmp/massa-ai-g10-review-8YB45s/config \
+DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test \
+POSTGRES_VECTOR_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test \
+VECTOR_STORE_TYPE=postgres MASSA_AI_DEDICATED=1 \
+MASSA_AI_API_URL=http://127.0.0.1:3334 MASSA_AI_API_PORT=3334 \
+MASSA_AI_API_KEY= MASSA_AI_SCHEDULER_ENABLED=false \
+MASSA_AI_JOB_STALE_MS=300000 MASSA_AI_JOB_REAPER_INTERVAL_MS=60000 \
 OLLAMA_BASE_URL=http://127.0.0.1:11435 OLLAMA_HOST=127.0.0.1:11435 \
 OLLAMA_MODELS=/Users/luizmassa/.ollama/models EMBEDDING_PROVIDER=ollama \
 OLLAMA_EMBEDDING_MODEL=qwen3-embedding:8b OLLAMA_EMBEDDING_DIMENSIONS=4096 \
@@ -57,14 +57,14 @@ RLM_LLM_ENABLED=false /Users/luizmassa/.bun/bin/bun src/index.ts
 From `packages/core`, the following command exited 0 in 781.80 seconds:
 
 ```bash
-HOME=/tmp/massa-th0th-g10-review-8YB45s/home \
-XDG_CONFIG_HOME=/tmp/massa-th0th-g10-review-8YB45s/config RUN_E2E=1 \
-MASSA_TH0TH_DEDICATED=1 \
-MASSA_TH0TH_E2E_PROJECT_PATH=/tmp/massa-th0th-g10-review-8YB45s/qwen-fixture \
-DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
-POSTGRES_VECTOR_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
-VECTOR_STORE_TYPE=postgres MASSA_TH0TH_API_URL=http://127.0.0.1:3334 \
-MASSA_TH0TH_API_PORT=3334 MASSA_TH0TH_API_KEY= MASSA_TH0TH_SCHEDULER_ENABLED=false \
+HOME=/tmp/massa-ai-g10-review-8YB45s/home \
+XDG_CONFIG_HOME=/tmp/massa-ai-g10-review-8YB45s/config RUN_E2E=1 \
+MASSA_AI_DEDICATED=1 \
+MASSA_AI_E2E_PROJECT_PATH=/tmp/massa-ai-g10-review-8YB45s/qwen-fixture \
+DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test \
+POSTGRES_VECTOR_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test \
+VECTOR_STORE_TYPE=postgres MASSA_AI_API_URL=http://127.0.0.1:3334 \
+MASSA_AI_API_PORT=3334 MASSA_AI_API_KEY= MASSA_AI_SCHEDULER_ENABLED=false \
 OLLAMA_BASE_URL=http://127.0.0.1:11435 OLLAMA_HOST=127.0.0.1:11435 \
 OLLAMA_MODELS=/Users/luizmassa/.ollama/models EMBEDDING_PROVIDER=ollama \
 OLLAMA_EMBEDDING_MODEL=qwen3-embedding:8b OLLAMA_EMBEDDING_DIMENSIONS=4096 \
@@ -90,7 +90,7 @@ RLM_LLM_ENABLED=false bun test --max-concurrency 1 \
 
 Result: 243 pass, 6 skip, 0 fail, 1,999 assertions, 17 files. The cold load indexed 34
 discoverable files into 468 chunks and 1,070 symbols in 369.091 seconds. The canonical shared
-ID was `e2e-th0th-shared-b4c0f19595b437ab`.
+ID was `e2e-ai-shared-b4c0f19595b437ab`.
 
 Two identical relevance sweeps measured hit@1 0.643, hit@3 0.786, hit@5 0.929, hit@10
 0.929, and MRR 0.746. The existing floors remained 0.36/0.64/0.47; no query, threshold, or
@@ -120,11 +120,11 @@ bun run build
 bun run type-check
 TURBO_FORCE=true RUN_E2E= RUN_OWNED_DESTRUCTIVE= \
 RUN_E2E_DESTRUCTIVE= RLM_LLM_ENABLED=false \
-DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
-POSTGRES_VECTOR_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
-VECTOR_STORE_TYPE=postgres MASSA_TH0TH_DEDICATED=1 \
-MASSA_TH0TH_API_URL=http://127.0.0.1:3334 MASSA_TH0TH_API_PORT=3334 \
-MASSA_TH0TH_API_KEY= MASSA_TH0TH_SCHEDULER_ENABLED=false \
+DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test \
+POSTGRES_VECTOR_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test \
+VECTOR_STORE_TYPE=postgres MASSA_AI_DEDICATED=1 \
+MASSA_AI_API_URL=http://127.0.0.1:3334 MASSA_AI_API_PORT=3334 \
+MASSA_AI_API_KEY= MASSA_AI_SCHEDULER_ENABLED=false \
 OLLAMA_BASE_URL=http://127.0.0.1:11435 OLLAMA_HOST=127.0.0.1:11435 \
 OLLAMA_MODELS=/Users/luizmassa/.ollama/models EMBEDDING_PROVIDER=ollama \
 OLLAMA_EMBEDDING_MODEL=qwen3-embedding:8b OLLAMA_EMBEDDING_DIMENSIONS=4096 \
@@ -140,9 +140,9 @@ command was:
 
 ```bash
 RUN_E2E= RLM_LLM_ENABLED=false \
-DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
-POSTGRES_VECTOR_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
-VECTOR_STORE_TYPE=postgres MASSA_TH0TH_DEDICATED=1 \
+DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test \
+POSTGRES_VECTOR_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test \
+VECTOR_STORE_TYPE=postgres MASSA_AI_DEDICATED=1 \
 bun test \
   src/__tests__/search-synapse-integration.test.ts \
   src/__tests__/synapse-buffer-integration.test.ts \
@@ -180,19 +180,19 @@ bun test --max-concurrency 1 src/__tests__/e2e/17.cleanup-verify.test.ts
 ```
 
 Result: exit 0; 2 pass, 0 fail, 0 skip, 2 assertions, 29 ms. It found only
-`e2e-th0th-shared-b4c0f19595b437ab` among prefixed workspaces and no non-shared memory leak.
+`e2e-ai-shared-b4c0f19595b437ab` among prefixed workspaces and no non-shared memory leak.
 
 The final read-only PostgreSQL sentinel command exited 0:
 
 ```bash
 /opt/homebrew/opt/postgresql@17/bin/psql \
-  postgresql://test:test@127.0.0.1:5433/massa_th0th_test -Atc \
-  "select 'unexpected_e2e_workspaces', count(*) from workspaces where project_id like 'e2e-th0th-%' and project_id <> 'e2e-th0th-shared-b4c0f19595b437ab';
-   select 'invalid_vector_paths', count(*) from (select distinct metadata->>'filePath' p from vector_documents_4096d where project_id='e2e-th0th-shared-b4c0f19595b437ab') s where p is null or p='' or p like '/%' or p like '%../%' or p like '../%' or p like '%adsads/%' or p like 'qwen-fixture/%';
-   select 'invalid_symbol_paths', count(*) from (select distinct relative_path p from symbol_files where project_id='e2e-th0th-shared-b4c0f19595b437ab') s where p is null or p='' or p like '/%' or p like '%../%' or p like '../%' or p like '%adsads/%' or p like 'qwen-fixture/%';
-   select 'vector_rows', count(*), count(distinct metadata->>'filePath') from vector_documents_4096d where project_id='e2e-th0th-shared-b4c0f19595b437ab';
-   select 'symbol_paths', count(distinct relative_path) from symbol_files where project_id='e2e-th0th-shared-b4c0f19595b437ab';
-   select 'workspace', project_id, project_path, files_count, chunks_count, symbols_count from workspaces where project_id='e2e-th0th-shared-b4c0f19595b437ab';"
+  postgresql://test:test@127.0.0.1:5433/massa_ai_test -Atc \
+  "select 'unexpected_e2e_workspaces', count(*) from workspaces where project_id like 'e2e-ai-%' and project_id <> 'e2e-ai-shared-b4c0f19595b437ab';
+   select 'invalid_vector_paths', count(*) from (select distinct metadata->>'filePath' p from vector_documents_4096d where project_id='e2e-ai-shared-b4c0f19595b437ab') s where p is null or p='' or p like '/%' or p like '%../%' or p like '../%' or p like '%adsads/%' or p like 'qwen-fixture/%';
+   select 'invalid_symbol_paths', count(*) from (select distinct relative_path p from symbol_files where project_id='e2e-ai-shared-b4c0f19595b437ab') s where p is null or p='' or p like '/%' or p like '%../%' or p like '../%' or p like '%adsads/%' or p like 'qwen-fixture/%';
+   select 'vector_rows', count(*), count(distinct metadata->>'filePath') from vector_documents_4096d where project_id='e2e-ai-shared-b4c0f19595b437ab';
+   select 'symbol_paths', count(distinct relative_path) from symbol_files where project_id='e2e-ai-shared-b4c0f19595b437ab';
+   select 'workspace', project_id, project_path, files_count, chunks_count, symbols_count from workspaces where project_id='e2e-ai-shared-b4c0f19595b437ab';"
 ```
 
 Measured rows: unexpected workspaces 0; invalid vector paths 0; invalid symbol paths 0; 468
@@ -207,11 +207,11 @@ SIGINT; PostgreSQL was stopped with:
 
 ```bash
 /opt/homebrew/opt/postgresql@17/bin/pg_ctl \
-  -D /tmp/massa-th0th-g10-review-8YB45s/postgres stop -m fast -w
+  -D /tmp/massa-ai-g10-review-8YB45s/postgres stop -m fast -w
 ```
 
 `lsof` then found no listener on `5433`, `3334`, or `11435`. The run root
-`/tmp/massa-th0th-g10-review-8YB45s` was removed. Shared PID 9754 retained the same start time
+`/tmp/massa-ai-g10-review-8YB45s` was removed. Shared PID 9754 retained the same start time
 and returned healthy afterward.
 
 ## Remote drift exception
@@ -253,7 +253,7 @@ A clean downstream stack was provisioned at commit `2e5ad3d` with PIDs PostgreSQ
 was in cold load (10/34 files) when the user explicitly instructed the orchestrator to skip this
 repeat. The test was interrupted and is not acceptance evidence. API and Ollama were stopped,
 PostgreSQL was stopped with ownership-verified `pg_ctl`, dedicated ports `5433`, `3334`, and
-`11435` were confirmed free, and `/tmp/massa-th0th-g10-final-2e5ad3d` was removed. Shared PID
+`11435` were confirmed free, and `/tmp/massa-ai-g10-final-2e5ad3d` was removed. Shared PID
 9754 retained its start time and healthy status.
 
 ## Evidence retention disclosure
@@ -271,20 +271,20 @@ The captured provisioning sequence, from repository root unless noted, was:
 
 ```bash
 /opt/homebrew/opt/postgresql@17/bin/initdb \
-  -D /tmp/massa-th0th-g10-final-2e5ad3d/postgres \
+  -D /tmp/massa-ai-g10-final-2e5ad3d/postgres \
   -U test --auth=trust --no-locale
 /opt/homebrew/opt/postgresql@17/bin/pg_ctl \
-  -D /tmp/massa-th0th-g10-final-2e5ad3d/postgres \
+  -D /tmp/massa-ai-g10-final-2e5ad3d/postgres \
   -o '-p 5433 -h 127.0.0.1' \
-  -l /tmp/massa-th0th-g10-final-2e5ad3d/postgres.log start -w
+  -l /tmp/massa-ai-g10-final-2e5ad3d/postgres.log start -w
 /opt/homebrew/opt/postgresql@17/bin/createdb \
-  -h 127.0.0.1 -p 5433 -U test massa_th0th_test
+  -h 127.0.0.1 -p 5433 -U test massa_ai_test
 /opt/homebrew/opt/postgresql@17/bin/psql \
-  postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
+  postgresql://test:test@127.0.0.1:5433/massa_ai_test \
   -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS vector;'
 cd packages/core
-DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
-POSTGRES_VECTOR_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test \
+DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test \
+POSTGRES_VECTOR_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test \
 VECTOR_STORE_TYPE=postgres ./node_modules/.bin/prisma migrate deploy
 cd ../..
 OLLAMA_HOST=127.0.0.1:11435 \
@@ -294,6 +294,6 @@ OLLAMA_MODELS=/Users/luizmassa/.ollama/models \
 
 All commands above exited 0 after the sandbox-rejected `initdb` attempt was retried with the
 required host permission. Listener ownership was then recorded with `lsof`, and PostgreSQL
-reported database `massa_th0th_test`, address `127.0.0.1`, port 5433, version 17.10, and pgvector
+reported database `massa_ai_test`, address `127.0.0.1`, port 5433, version 17.10, and pgvector
 0.8.4. The Tools API command is identical to the accepted command above except for the run-root
-suffix and the explicit `MASSA_TH0TH_E2E_PROJECT_PATH` required by `2e5ad3d`.
+suffix and the explicit `MASSA_AI_E2E_PROJECT_PATH` required by `2e5ad3d`.

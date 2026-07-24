@@ -5,7 +5,7 @@
 
 ## Design Summary
 
-Add 12 standalone opencode agent skills under `skills/` in the product repo, each a single-purpose specialist invocable by any massa-th0th workflow. A registry `skills/AGENTS.md` lists all agents and maps them to the 9 existing role charters in `references/agent-orchestration.md`. No workflow or source code is modified.
+Add 12 standalone opencode agent skills under `skills/` in the product repo, each a single-purpose specialist invocable by any massa-ai workflow. A registry `skills/AGENTS.md` lists all agents and maps them to the 9 existing role charters in `references/agent-orchestration.md`. No workflow or source code is modified.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ Add 12 standalone opencode agent skills under `skills/` in the product repo, eac
 ```
 skills/
   AGENTS.md                          # registry + mapping + capability-packet spec
-  massa-th0th-memory/SKILL.md        # existing (unchanged)
+  massa-ai-memory/SKILL.md        # existing (unchanged)
   synapse-usage/SKILL.md             # existing (unchanged)
   investigator/SKILL.md              # new
   planner/SKILL.md                   # new
@@ -117,7 +117,7 @@ metadata:
 ### Do not use when
 <refusal conditions>
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: <how this agent summarizes verbose output>
 - Verification Ladder: <sensors this agent runs>
 - Th0th Memory: <suggest only | never>
@@ -194,7 +194,7 @@ For `audit-specialist`, the packet also includes `lens`: one of `bugs | architec
 - Restrictions: never implement, never review, never plan.
 - Output: a reusable Context Packet consumed by other agents.
 - Synapse: own ephemeral session.
-- References: `references/context-firewall.md`, `references/synapse-policy.md`, `references/th0th-tools.md`.
+- References: `references/context-firewall.md`, `references/synapse-policy.md`, `references/mcp-tools.md`.
 
 ### 6. verification-agent
 - Maps to existing role `verifier`.
@@ -272,7 +272,7 @@ Sections:
 - Frontmatter: every `SKILL.md` has valid YAML with `name`, `description`, `metadata.model_hint`, `metadata.permission`.
 - Section order: every `SKILL.md` has the 11 required sections in order.
 - Registry integrity: every charter path in `skills/AGENTS.md` resolves to an existing file.
-- Stale-reference scan: every massa-th0th reference named in any `SKILL.md` exists in the symlinked skill tree.
+- Stale-reference scan: every massa-ai reference named in any `SKILL.md` exists in the symlinked skill tree.
 - No workflow/source changes: `git diff` confirms only `skills/` and root `AGENTS.md` touched.
 
 ## Decisions

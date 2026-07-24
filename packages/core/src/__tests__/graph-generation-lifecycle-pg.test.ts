@@ -10,7 +10,7 @@ import type {
 
 const expectedAdminUrl = "postgresql://test@127.0.0.1:5433/postgres";
 const integrationRequested = process.env.RUN_GRAPH_GENERATION_LIFECYCLE === "1" &&
-  process.env.MASSA_TH0TH_DEDICATED === "1";
+  process.env.MASSA_AI_DEDICATED === "1";
 const databaseName = `massa_graph_lifecycle_${process.pid}_${randomUUID().replaceAll("-", "")}`;
 const projectId = "lifecycle-project";
 const legacyGenerationId = "legacy-lifecycle";

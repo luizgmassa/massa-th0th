@@ -5,7 +5,7 @@ import type {
   SymbolRepositoryPg,
 } from "../../data/symbol/symbol-repository-pg.js";
 import { parseStructuralFqn } from "../structural/fqn-codec.js";
-import type { SymbolIdentityResolution } from "@massa-th0th/shared";
+import type { SymbolIdentityResolution } from "@massa-ai/shared";
 
 export type DefinitionLookupResult =
   | { readonly status: "resolved"; readonly definition: SymbolDefinition }

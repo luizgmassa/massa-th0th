@@ -1,4 +1,4 @@
-import { DEFAULT_ALLOWED_EXTENSIONS } from "@massa-th0th/shared/config";
+import { DEFAULT_ALLOWED_EXTENSIONS } from "@massa-ai/shared/config";
 import type {
   GrammarArtifact,
   LanguageManifestEntry,

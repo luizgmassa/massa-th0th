@@ -1,11 +1,11 @@
 ---
-name: massa-th0th-architecture-specialist
+name: massa-ai-architecture-specialist
 description: Read-only architecture guidance agent. Evaluate architecture, suggest boundaries, recommend abstractions, evaluate trade-offs, and suggest modularization. Folds the existing domain-mapper, coupling-auditor, and deepening-architect roles into one specialist. Triggers when a workflow needs architectural guidance before or during design. Never implements or rewrites code.
 mode: subagent
 model: MiniMax M3
 reasoningEffort: max
 permission: { edit: deny, bash: deny }
-metadata: { massa-th0th-owned: true }
+metadata: { massa-ai-owned: true }
 ---
 # Architecture Specialist Agent Skill
 
@@ -47,7 +47,7 @@ Provide architectural guidance by evaluating structure, suggesting boundaries, a
 - The task needs a concrete implementation (route to builder).
 - An audit-specific lens is needed (route to audit-specialist with `lens: architecture`).
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: summarize source reads; return findings and metrics, not raw code.
 - Verification Ladder: static (coupling, depth, boundary) checks; no behavioral changes.
 - Th0th Memory: suggest durable architecture-decision memories only when a boundary or abstraction is recommended; main agent persists.

@@ -5,9 +5,9 @@
  */
 
 import { CacheEntry } from '../../models/CacheEntry.js';
-import { CacheLevel } from '@massa-th0th/shared';
-import { config } from '@massa-th0th/shared';
-import { logger } from '@massa-th0th/shared';
+import { CacheLevel } from '@massa-ai/shared';
+import { config } from '@massa-ai/shared';
+import { logger } from '@massa-ai/shared';
 
 /**
  * L1 Memory Cache with LRU eviction

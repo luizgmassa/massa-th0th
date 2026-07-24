@@ -137,7 +137,7 @@ Do not expose raw subagent prompts, raw logs, private reasoning, or full output 
 Example:
 
 ```md
-🤖 [Agent Started] Verifier is checking the docs-only change set. Scope: massa-th0th references and README.
+🤖 [Agent Started] Verifier is checking the docs-only change set. Scope: massa-ai references and README.
 🤖 [Agent Done] Verifier found no stale references. Skipped checks: none.
 ```
 

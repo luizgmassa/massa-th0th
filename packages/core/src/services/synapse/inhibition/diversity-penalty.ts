@@ -8,7 +8,7 @@
  * dependency at this layer.
  */
 
-import type { SearchResult } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-ai/shared";
 
 export interface DiversityPenaltyConfig {
   enabled: boolean;

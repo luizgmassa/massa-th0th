@@ -5,7 +5,7 @@
  * to improve initial search performance.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { SearchAnalytics } from "./search-analytics.js";
 import { ContextualSearchRLM } from "./contextual-search-rlm.js";
 

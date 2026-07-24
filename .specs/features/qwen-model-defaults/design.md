@@ -25,7 +25,7 @@ Commit evidence shows the requested defaults were implemented in two commits. Ru
 ### Installer and documentation surface
 
 - `c7300766d44f2c1293004787a9ca2919912b93b7` — `feat(install): native PostgreSQL option + Docker/colima ~5GB RAM warning`
-  - Updated `.env.example`, `install.sh`, `scripts/setup-local-first.sh`, `README.md`, and `skills/massa-th0th-memory/SKILL.md` to present the Qwen embedding and LLM defaults and the new limits.
+  - Updated `.env.example`, `install.sh`, `scripts/setup-local-first.sh`, `README.md`, and `skills/massa-ai-memory/SKILL.md` to present the Qwen embedding and LLM defaults and the new limits.
   - Updated generated local setup configuration to use `qwen3-embedding:8b` and `4096` dimensions.
   - This commit also introduced native-PostgreSQL installer work outside the source plan's model-swap scope.
 

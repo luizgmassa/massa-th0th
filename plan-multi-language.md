@@ -151,7 +151,7 @@ Feature artifacts will live under .specs/features/multi-language-tree-sitter-bre
 - Source spans: UTF-8 byte offsets, Unicode/emoji, CRLF, BOM, tabs, embedded remapping, dedupe stability, and snippet round trips.
 - Regression gates:
     - Focused tree-sitter/query-pack unit tests.
-    - bun run --filter @massa-th0th/core test:unit
+    - bun run --filter @massa-ai/core test:unit
     - bun run type-check
     - bun run build
     - Owned-stack sequential 02.indexing, 09.symbol-graph, and 15.nfr E2E tests.

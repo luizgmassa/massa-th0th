@@ -1,4 +1,4 @@
-# massa-th0th LLM-judge Benchmark
+# massa-ai LLM-judge Benchmark
 
 Benchmark for the qwen2.5 model swap on the three LLM-judge paths:
 **consolidator merge-decision**, **salience judge**, and **LLM-judge reranker**.

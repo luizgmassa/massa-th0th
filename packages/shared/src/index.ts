@@ -1,5 +1,5 @@
 /**
- * @massa-th0th/shared - Tipos, utilitários e configuração compartilhados
+ * @massa-ai/shared - Tipos, utilitários e configuração compartilhados
  */
 
 // Environment loader
@@ -33,6 +33,6 @@ export {
   initConfig,
   getConfigForEnv,
   migrateDataDirOnce,
-  type MassaTh0thConfig,
-  defaultMassaTh0thConfig,
+  type MassaAiConfig,
+  defaultMassaAiConfig,
 } from "./config/index.js";

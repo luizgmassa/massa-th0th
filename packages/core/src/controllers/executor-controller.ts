@@ -11,8 +11,8 @@
  * guard are best-effort containment, NOT isolation.
  */
 
-import type { ToolResponse } from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
+import type { ToolResponse } from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
 import { cpus } from "node:os";
 import {
   PolyglotExecutor,

@@ -46,7 +46,7 @@ Use this workflow when the user reports broken behavior, failures, regressions, 
 12. Fix the divergence point closest to the root cause
 13. Add regression coverage at the correct seam, or document why no valid regression seam exists
 14. If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:
-     `python3 skills/massa-th0th/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
+     `python3 skills/massa-ai/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
      Rerun the original feedback loop, run the verification recipe, and remove temporary instrumentation unless intentionally retained as observability
 15. Use `references/agent-orchestration.md` only for independent verification or isolated investigation branches
 16. IF fix found:

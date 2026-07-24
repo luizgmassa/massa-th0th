@@ -1,4 +1,4 @@
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import { PgObservationStore } from "./observation-repository-pg.js";
 export * from "./observation-contract.js";
 export { PgObservationStore } from "./observation-repository-pg.js";

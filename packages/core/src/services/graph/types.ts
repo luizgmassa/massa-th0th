@@ -5,7 +5,7 @@
  * and exposed through MemoryGraphService.
  */
 
-import { MemoryEdge, MemoryRelationType } from "@massa-th0th/shared";
+import { MemoryEdge, MemoryRelationType } from "@massa-ai/shared";
 
 /**
  * A row from the memories table (projection without embedding).

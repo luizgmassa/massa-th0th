@@ -1,11 +1,11 @@
 ---
-name: massa-th0th
+name: massa-ai
 description: Default memory-backed workflow router for every coding, planning-before-coding, debugging, code review, refactoring, or implementation conversation. Always load it once per new coding session, select specialized workflows first, and use the general fallback otherwise. Handles th0th recall/search, durable memory, context compaction, handoff, audits, specs, ADR/RFC/TDD, and evidence gates. Do NOT use for generic non-coding chat or bulk-loading every workflow/reference.
 ---
 
-# massa-th0th Router
+# massa-ai Router
 
-Public router for massa-th0th workflows. Keep this file small in context; load
+Public router for massa-ai workflows. Keep this file small in context; load
 workflow/reference details only when the selected request requires them.
 
 This file is the canonical runtime contract for project/session handling,
@@ -15,10 +15,10 @@ Startup activation, user-editable policies, and global ignore paths are owned by
 
 ## Dedupe Guard
 
-Before reading any massa-th0th file:
+Before reading any massa-ai file:
 
 - In a new coding conversation, load this router once before using dedupe.
-- After that initial load, reuse already-loaded `massa-th0th`, workflow,
+- After that initial load, reuse already-loaded `massa-ai`, workflow,
   reference, or The Fool context.
 - Do not re-read a file only because another instruction names it.
 - Load only the missing minimum context needed to act.
@@ -38,9 +38,9 @@ Before reading any massa-th0th file:
   to `references/synapse-policy.md`; pass it only to `search.sessionId`.
   Never pass `workflowSessionId` in that field. Use `synapse_task_begin`/`synapse_task_end`
   for task envelopes and `synapse_prefetch` to warm the buffer on file open.
-- Prefer the shared v2 retrieval order; fall back gracefully if the massa-th0th
+- Prefer the shared v2 retrieval order; fall back gracefully if the massa-ai
   server or Synapse is unavailable. The full tool surface includes 52 tools
-  (see `references/th0th-tools.md`): indexing, search, symbol graph
+  (see `references/mcp-tools.md`): indexing, search, symbol graph
   (`trace_path`, `impact_analysis`, `get_architecture`), memory CRUD
   (`remember`, `recall`, `memory_update`, `memory_delete`), checkpoints
   (`create_checkpoint`/`list_checkpoints`/`restore_checkpoint`), handoffs
@@ -61,9 +61,9 @@ Use internal references only when needed:
 
 | Need | Reference |
 |---|---|
-| MCP/REST schemas, response modes, polling | `references/th0th-tools.md` |
+| MCP/REST schemas, response modes, polling | `references/mcp-tools.md` |
 | Multi-search Synapse lifecycle and fallback | `references/synapse-policy.md` |
-| Install/config/deployment | `references/th0th-installation.md` |
+| Install/config/deployment | `references/installation.md` |
 | Importance scoring, tradeoffs, debugging | `references/decision-engine.md` |
 | Memory tiers/conflict handling | `references/memory-policy.md` |
 | Shared lesson loading/capture lifecycle | `references/lessons.md` |
@@ -152,7 +152,7 @@ match or no match is resolved deterministically without asking.
 
 Deterministic routing precedence, first match wins:
 
-1. **Explicit route:** user names a massa-th0th workflow, report family, saved finding type, restart save/load procedure, or asks for a direct challenge.
+1. **Explicit route:** user names a massa-ai workflow, report family, saved finding type, restart save/load procedure, or asks for a direct challenge.
 2. **Requested artifact:** ADR, RFC, TDD, Jira ticket, commit, handoff, restart state, audit report, implementation audit report, mobile Figma report, or FURPS refinement report.
 3. **Target type:** broken behavior/error -> `debug`; saved audit finding -> matching `*-fix`; implementation scope review -> `implementation-audit`; Maestro E2E/device automation target -> `maestro`, `maestro-audit`, or child-only `maestro-fix` before generic tests workflows; security/privacy/auth finding -> security workflow; tests/flakes/coverage finding -> tests workflow; supplied Figma/screenshot mobile UI design -> `design`; mobile Figma compare/audit -> `mobile-figma-audit`; saved `MFM-*` findings -> `mobile-figma-fix`.
 4. **Primary verb:** save/preserve/prepare clean chat restart state -> `restart-save`; load/resume/continue from saved restart state -> `restart-load`; create/add/implement -> `feature` unless the concrete target is new Maestro flow work, which routes to `maestro`; restructure without behavior change -> `refactor`; inspect/understand only -> `exploration`; record selected decision -> `adr`; compare open options -> `rfc`; design settled implementation -> `tdd`; refine/quality-check an existing PRD or ADR document (not implementation auditing) -> `furps-refinement`.
@@ -215,7 +215,7 @@ Use this default retrieval sequence when it matches the task:
 8. `trace_path` for typed-edge BFS call/data-flow path tracing (fresh index only).
 9. `impact_analysis` for git-diff centrality-ranked impact (fresh index only).
 10. `optimized_context` for compact synthesized context when available.
-11. Focused shell/file fallback when the massa-th0th server is unavailable, stale, incomplete, or misses obvious local truth.
+11. Focused shell/file fallback when the massa-ai server is unavailable, stale, incomplete, or misses obvious local truth.
 
 `project_map`, `get_architecture`, `search`, and `optimized_context` are leads
 until their results are confirmed against current source files read in this session or returned with current freshness evidence. Current repository source
@@ -286,7 +286,7 @@ Load only when a selected workflow asks for them:
 | Failure | Behavior |
 |---|---|
 | `recall` empty | Continue as cold start; do not invent memory. |
-| massa-th0th server unavailable | Fall back to focused shell/file reads; keep session concept. |
+| massa-ai server unavailable | Fall back to focused shell/file reads; keep session concept. |
 | Synapse unavailable | Continue with stateless search. |
 | Synapse prime/access mismatch | Use verified REST fallback or skip that optional step. |
 | index incomplete or stale | Use recall; skip search-dependent steps until ready. Graph tools (`trace_path`, `impact_analysis`, `get_architecture`) fall back to `search`/`get_references`; record reduced retrieval confidence. |

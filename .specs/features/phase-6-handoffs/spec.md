@@ -1,12 +1,12 @@
 # Phase 6 — Cross-session Handoffs (G2): Specification
 
 Slug: `phase-6-handoffs`. Workflow: `spec-driven` (TLC v3). Owner tags:
-`project:massa-th0th`, `session:spec-virtual-lantern-plan`,
+`project:massa-ai`, `session:spec-virtual-lantern-plan`,
 `workflow:spec-driven`, `entity:phase-6-handoffs`.
 
 ## Context
 
-`massa-th0th` is a SQLite-canonical hybrid code-context + agent-memory
+`massa-ai` is a SQLite-canonical hybrid code-context + agent-memory
 MCP server. Phase 3 landed passive lifecycle capture (hook ingestion →
 Observation store + `observation:ingested` event). Phase 4 landed repo
 bootstrap (LLM/rule-based seed memories + `bootstrap:completed` event).
@@ -158,7 +158,7 @@ optional polish — the begin path stores what the caller passed.)
 - **NF3** — LLM local-first default-off + silent degradation
   (cross-cutting §1).
 - **NF4** — Test-isolation: inject a fake store + fake `MemoryRepoSeam`
-  + fake `LlmSurface`; do NOT `mock.module("@massa-th0th/shared")` (the
+  + fake `LlmSurface`; do NOT `mock.module("@massa-ai/shared")` (the
   process-wide landmine). The single P6-SEARCH-01 integration block may
   reset the `MemoryRepository` singleton to a temp dataDir (mirrors
   Phase-4 P4-SEARCH-01).
@@ -172,5 +172,5 @@ optional polish — the begin path stores what the caller passed.)
   LLM-off degradation + the single P6-SEARCH-01 FTS integration block.
 - Discrimination sensor: mutate the status-guard in `accept` so it
   accepts terminal-status rows → P6-FAIL-02 must fail.
-- Gate: `bun run --filter @massa-th0th/core test` no regressions vs 754;
+- Gate: `bun run --filter @massa-ai/core test` no regressions vs 754;
   `bun run type-check` clean.

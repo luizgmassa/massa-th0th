@@ -1,8 +1,8 @@
 /** Backend-neutral vector-store factory backed exclusively by PostgreSQL. */
 
-import type { IVectorStore } from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
-import { parsePositiveIntEnv, requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import type { IVectorStore } from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
+import { parsePositiveIntEnv, requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import { PostgresVectorStore, type PostgresConfig } from "./postgres-vector-store.js";
 
 export interface VectorStoreConfig {

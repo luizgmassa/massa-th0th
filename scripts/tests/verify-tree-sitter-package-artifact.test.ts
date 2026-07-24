@@ -25,17 +25,17 @@ describe("macOS arm64 packed Tree-sitter artifact contract", () => {
   });
 
   test("accepts only semver shared dependencies and one bundled runtime", () => {
-    const shared = { name: "@massa-th0th/shared", version: "1.0.0" };
+    const shared = { name: "@massa-ai/shared", version: "1.0.0" };
     const core = {
-      name: "@massa-th0th/core",
+      name: "@massa-ai/core",
       version: "1.0.0",
-      dependencies: { "@massa-th0th/shared": "1.0.0" },
+      dependencies: { "@massa-ai/shared": "1.0.0" },
       bundledDependencies: ["tree-sitter"],
     };
     expect(() => assertPublishManifests(shared, core)).not.toThrow();
     expect(() => assertPublishManifests(shared, {
       ...core,
-      dependencies: { "@massa-th0th/shared": "workspace:*" },
+      dependencies: { "@massa-ai/shared": "workspace:*" },
     })).toThrow("plain semver");
     expect(() => assertPublishManifests(shared, {
       ...core,
@@ -64,11 +64,11 @@ describe("macOS arm64 packed Tree-sitter artifact contract", () => {
       trustedDependencies: string[];
     };
     expect(manifest.dependencies).toEqual({
-      "@massa-th0th/shared": "file:/tmp/shared.tgz",
-      "@massa-th0th/core": "file:/tmp/core.tgz",
+      "@massa-ai/shared": "file:/tmp/shared.tgz",
+      "@massa-ai/core": "file:/tmp/core.tgz",
     });
     expect(manifest.overrides).toEqual({
-      "@massa-th0th/shared": "file:/tmp/shared.tgz",
+      "@massa-ai/shared": "file:/tmp/shared.tgz",
     });
     expect(manifest.trustedDependencies).toEqual(TRUSTED_NATIVE_PACKAGES);
   });

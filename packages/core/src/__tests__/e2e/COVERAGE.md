@@ -1,4 +1,4 @@
-# massa-th0th E2E Coverage
+# massa-ai E2E Coverage
 
 Current E2E contract for `packages/core/src/__tests__/e2e/`.
 
@@ -8,16 +8,16 @@ Last updated: 2026-07-13. Acceptance backend: PostgreSQL 17 + pgvector 0.8.4.
 
 - Standard E2E runs sequentially against a dedicated Tools API, PostgreSQL database, MCP build,
   and Ollama instance. The shared developer API on `:3333` is never a test target.
-- `MASSA_TH0TH_DEDICATED=1`, explicit `DATABASE_URL`/`DATABASE_URL`, and
+- `MASSA_AI_DEDICATED=1`, explicit `DATABASE_URL`/`DATABASE_URL`, and
   `DATABASE_URL=postgres` are required. Backend attestation must fail closed rather than infer
   PostgreSQL from API-local cache files.
 - Commit-locked fixture recovery additionally requires an explicit fixture path, API origin
   `http://127.0.0.1:3334`, and both database URLs at
-  `127.0.0.1:5433/massa_th0th_test`; a partial dedicated declaration fails closed before
+  `127.0.0.1:5433/massa_ai_test`; a partial dedicated declaration fails closed before
   availability probes, HTTP calls, or shared-index work.
 - All mutable project IDs use the E2E prefix guard. Destructive scenarios run only in the
   dedicated destructive gate.
-- The suite reuses `e2e-th0th-shared` to avoid concurrent full-repository indexing and Ollama OOM.
+- The suite reuses `e2e-ai-shared` to avoid concurrent full-repository indexing and Ollama OOM.
   Cleanup verification stays last and checks for leaked prefixed data.
 - Index readiness requires both stable non-zero document counts and the originating job's
   terminal `completed` status. A failed job aborts immediately with its recorded error.

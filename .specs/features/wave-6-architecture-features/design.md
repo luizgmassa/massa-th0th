@@ -35,7 +35,7 @@ graph TD
         REST --> CORE
     end
     subgraph "N30 Hook Binary"
-        BIN[massa-th0th-hook] --> POST[POST /api/v1/hook]
+        BIN[massa-ai-hook] --> POST[POST /api/v1/hook]
         PIN[project-id pin] --> BIN
     end
 ```
@@ -62,7 +62,7 @@ graph TD
 
 | Approach | Description | Tradeoff |
 | --- | --- | --- |
-| **A. ToolProxyApiClient swap** | `ToolProxyApiClient` interface at `call-tool-proxy.ts:6` already abstracts get/post/patch/delete. Add `EmbeddedApiClient` implementing it via direct core-service calls. MCP server picks based on `MASSA_TH0TH_EMBEDDED` env | Pro: minimal change, interface exists, parity testable. Con: `index` tool special-case needs in-process handler |
+| **A. ToolProxyApiClient swap** | `ToolProxyApiClient` interface at `call-tool-proxy.ts:6` already abstracts get/post/patch/delete. Add `EmbeddedApiClient` implementing it via direct core-service calls. MCP server picks based on `MASSA_AI_EMBEDDED` env | Pro: minimal change, interface exists, parity testable. Con: `index` tool special-case needs in-process handler |
 | B. In-process Elysia | Start tools-api routes in-process without HTTP | Pro: route parity. Con: Elysia overhead, still serializes through HTTP-like middleware, not truly embedded |
 | C. Dual-mode server | MCP server includes REST server as library | Pro: one process. Con: changes tools-api packaging, coupling increases |
 
@@ -175,11 +175,11 @@ graph TD
 - **Reuses**: `ToolProxyApiClient` interface, `proxyCallTool` unchanged for non-index tools
 - **Parity test**: same tool call in both modes → same result shape — **including `index` tool**, not just proxy tools
 
-### N30: massa-th0th-hook Binary
+### N30: massa-ai-hook Binary
 
 - **Purpose**: Single typed Bun binary replacing 7 shell scripts
-- **Location**: `apps/claude-plugin/hooks/massa-th0th-hook.ts` (source) → compiled binary
-- **Interface**: `massa-th0th-hook <event-type>` reads JSON from stdin, POSTs to `/api/v1/hook`
+- **Location**: `apps/claude-plugin/hooks/massa-ai-hook.ts` (source) → compiled binary
+- **Interface**: `massa-ai-hook <event-type>` reads JSON from stdin, POSTs to `/api/v1/hook`
 - **Subcommands**: `session-start`, `user-prompt-submit`, `post-tool-use`, `pre-compact` (SPECIAL: 2 POSTs), `stop`
 - **CRITICAL — `pre-compact` special case**: does TWO POSTs: (1) observation to `/api/v1/hook` (3s timeout, observation body `{event, projectId, sessionId, cwd, payload}`), (2) snapshot to `/api/v1/hook/compact-snapshot` (5s timeout, snapshot body `{sessionId, projectId, persist, cwd}`). All other subcommands are uniform single-POST to `/api/v1/hook` (2s timeout).
 - **Dependencies**: `AttributionResolver` logic, `fetch()` (Bun-native, no curl/jq), core types
@@ -215,7 +215,7 @@ graph TD
 
 - **Purpose**: One env var enables safe maintenance
 - **Location**: `packages/core/src/services/scheduler/scheduler-defaults.ts`
-- **Logic**: when `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true`, set consolidation+decay `defaultEnabled=true` at conservative intervals; auto-improve stays false; individual envs override preset; master switch still required
+- **Logic**: when `MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true`, set consolidation+decay `defaultEnabled=true` at conservative intervals; auto-improve stays false; individual envs override preset; master switch still required
 - **CRITICAL — wiring**: `applySafeDefaults` MUST be called INSIDE `registerDefaultJobs` before the `envBool` loop at L157 reads `defaultEnabled`. NOT a separate export (silent no-op if caller forgets).
 
 ### N17/N18: Protocol + Deterministic Script
@@ -275,7 +275,7 @@ interface HookQueueStatus {
 ```typescript
 // In scheduler-defaults.ts
 function applySafeDefaults(job: DefaultScheduledJob): DefaultScheduledJob {
-  if (envBool("MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS", false)) {
+  if (envBool("MASSA_AI_SCHEDULER_SAFE_DEFAULTS", false)) {
     if (job.jobKind === "memory-consolidation" || job.jobKind === "decay-sweep") {
       return { ...job, defaultEnabled: true };
     }

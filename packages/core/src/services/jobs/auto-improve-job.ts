@@ -12,7 +12,7 @@
  *   - auto-improve-ops.ts — runOnce + approve + reject operations
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import {
   getProposalStore, newProposalId,
   type ProposalKind, type ProposalRecord, type ProposalStore,

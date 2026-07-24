@@ -25,7 +25,7 @@ const url = (() => {
 const DEDICATED_DB =
   url?.hostname === "127.0.0.1" &&
   url.port === "5433" &&
-  url.pathname === "/massa_th0th_test";
+  url.pathname === "/massa_ai_test";
 const PREFIX = "pg-runtime-parity-";
 let prisma: any;
 
@@ -79,7 +79,7 @@ describe.skipIf(!DEDICATED_DB)("handoff/proposal PostgreSQL parity", () => {
       Array<{ database_name: string; server_port: number }>
     >`SELECT current_database() AS database_name, inet_server_port() AS server_port`;
     expect(identity[0]).toEqual({
-      database_name: "massa_th0th_test",
+      database_name: "massa_ai_test",
       server_port: 5433,
     });
     await cleanup();

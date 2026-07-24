@@ -19,7 +19,7 @@
   `requirePostgresDatabaseUrl` (matches the memory-repo factory).
 - **Contract** `operation-log-contract.ts` — `ActorContext`, `UNKNOWN_ACTOR`,
   `OperationResult`, `RecordOperationInput`, `OperationLogRow`,
-  `OperationLogRepository` interface. Exported from `@massa-th0th/core`.
+  `OperationLogRepository` interface. Exported from `@massa-ai/core`.
 - **Actor seam** `apps/tools-api/src/middleware/auth.ts` — `deriveActor`
   reads the optional `x-actor-id` header (non-secret identifier), returns
   `{ actorType: "api_key", actorId: <header>|"unknown" }`. Exposed on every

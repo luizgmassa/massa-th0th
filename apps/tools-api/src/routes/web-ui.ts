@@ -121,7 +121,7 @@ export const webUiRoutes = new Elysia()
         tags: ["webUi"],
         summary: "Web UI shell (read-only memory/search browser)",
         description:
-          "Serves the massa-th0th read-only web UI index.html. The UI consumes /api/v1/* read routes. Disable with WEB_UI_ENABLED=false.",
+          "Serves the massa-ai read-only web UI index.html. The UI consumes /api/v1/* read routes. Disable with WEB_UI_ENABLED=false.",
       },
     },
   )

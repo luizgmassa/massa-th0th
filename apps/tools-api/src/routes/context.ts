@@ -5,7 +5,7 @@
  * POST /api/v1/context/optimized  - Obter contexto otimizado
  */
 
-import { CompressContextTool, GetOptimizedContextTool } from "@massa-th0th/core";
+import { CompressContextTool, GetOptimizedContextTool } from "@massa-ai/core";
 import { Elysia, t } from "elysia";
 
 let compressContextTool: CompressContextTool | null = null;

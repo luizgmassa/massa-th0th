@@ -17,7 +17,7 @@ const execFileAsync = promisify(execFile);
 const ENABLED = process.env.RUN_OWNED_DESTRUCTIVE === "1";
 const REPO = path.resolve(import.meta.dir, "../../../../../");
 const API = "http://127.0.0.1:3334";
-const DATABASE_URL = "postgresql://test:test@127.0.0.1:5433/massa_th0th_test";
+const DATABASE_URL = "postgresql://test:test@127.0.0.1:5433/massa_ai_test";
 const PORTS = { api: 3334, postgres: 5433, ollama: 11435 } as const;
 
 type Child = ReturnType<typeof Bun.spawn>;
@@ -184,13 +184,13 @@ function serviceEnv(): Record<string, string> {
     HOME: home,
     XDG_CONFIG_HOME: configHome,
     DATABASE_URL,
-    MASSA_TH0TH_DEDICATED: "1",
-    MASSA_TH0TH_API_URL: API,
-    MASSA_TH0TH_API_PORT: "3334",
-    MASSA_TH0TH_API_KEY: "",
-    MASSA_TH0TH_SCHEDULER_ENABLED: "false",
-    MASSA_TH0TH_JOB_STALE_MS: "300000",
-    MASSA_TH0TH_JOB_REAPER_INTERVAL_MS: "60000",
+    MASSA_AI_DEDICATED: "1",
+    MASSA_AI_API_URL: API,
+    MASSA_AI_API_PORT: "3334",
+    MASSA_AI_API_KEY: "",
+    MASSA_AI_SCHEDULER_ENABLED: "false",
+    MASSA_AI_JOB_STALE_MS: "300000",
+    MASSA_AI_JOB_REAPER_INTERVAL_MS: "60000",
     OLLAMA_BASE_URL: "http://127.0.0.1:11435",
     OLLAMA_HOST: "127.0.0.1:11435",
     OLLAMA_MODELS: path.join(homedir(), ".ollama", "models"),
@@ -213,7 +213,7 @@ async function startPostgres(initial = false): Promise<void> {
     "postgres",
   );
   if (initial) {
-    await output("/opt/homebrew/bin/createdb", ["-h", "127.0.0.1", "-p", "5433", "-U", "test", "massa_th0th_test"]);
+    await output("/opt/homebrew/bin/createdb", ["-h", "127.0.0.1", "-p", "5433", "-U", "test", "massa_ai_test"]);
     await output("/opt/homebrew/bin/psql", [DATABASE_URL, "-c", "CREATE EXTENSION IF NOT EXISTS vector"]);
     await output(path.join(REPO, "packages/core/node_modules/.bin/prisma"), ["migrate", "deploy"], path.join(REPO, "packages/core"));
   }
@@ -292,14 +292,14 @@ async function createFixture(name: string, files: number): Promise<string> {
 async function hook(statusExpected: number): Promise<void> {
   const single = await json("/api/v1/hook/", {
     event: "user-prompt",
-    projectId: "e2e-th0th-owned-hooks",
+    projectId: "e2e-ai-owned-hooks",
     sessionId: crypto.randomUUID(),
     payload: { owned: true },
   });
   const batch = await json("/api/v1/hook/batch", {
     events: [{
       event: "user-prompt",
-      projectId: "e2e-th0th-owned-hooks",
+      projectId: "e2e-ai-owned-hooks",
       sessionId: crypto.randomUUID(),
       payload: { owned: true },
     }],
@@ -314,11 +314,11 @@ describe.skipIf(!ENABLED)("owned destructive recovery harness", () => {
       if (await listenerPid(port)) throw new Error(`dedicated port ${port} is occupied; refusing ownership`);
     }
     sharedBefore = await sharedSnapshot();
-    root = await mkdtemp(path.join(tmpdir(), "massa-th0th-owned-destructive-"));
+    root = await mkdtemp(path.join(tmpdir(), "massa-ai-owned-destructive-"));
     pgData = path.join(root, "postgres");
     home = path.join(root, "home");
     configHome = path.join(root, "config");
-    configPath = path.join(configHome, "massa-th0th", "config.json");
+    configPath = path.join(configHome, "massa-ai", "config.json");
     await mkdir(home, { recursive: true });
     await writeConfig(true);
     Object.assign(process.env, serviceEnv());
@@ -338,7 +338,7 @@ describe.skipIf(!ENABLED)("owned destructive recovery harness", () => {
     };
     evidence.runtime = {
       backend: "postgresql+pgvector",
-      database: "127.0.0.1:5433/massa_th0th_test",
+      database: "127.0.0.1:5433/massa_ai_test",
       provider: "ollama",
       model: "qwen3-embedding:8b",
       dimensions: 4096,
@@ -375,7 +375,7 @@ describe.skipIf(!ENABLED)("owned destructive recovery harness", () => {
 
   test("N1: uncached search, recall, and remember fail while owned Ollama is down and recover", async () => {
     const fixture = await createFixture("n1", 1);
-    const projectId = "e2e-th0th-owned-n1";
+    const projectId = "e2e-ai-owned-n1";
     await indexProject(fixture, projectId);
     expect((await json("/api/v1/search/project", {
       query: "owned n1 warm operation",
@@ -443,7 +443,7 @@ describe.skipIf(!ENABLED)("owned destructive recovery harness", () => {
     postgres = null;
     const http = await json("/api/v1/search/project", {
       query: `pg outage ${crypto.randomUUID()}`,
-      projectId: "e2e-th0th-owned-n1",
+      projectId: "e2e-ai-owned-n1",
       maxResults: 1,
       format: "json",
     });
@@ -453,7 +453,7 @@ describe.skipIf(!ENABLED)("owned destructive recovery harness", () => {
     try {
       const result = await mcpCall(mcp.client, "search", {
         query: `mcp pg outage ${crypto.randomUUID()}`,
-        projectId: "e2e-th0th-owned-n1",
+        projectId: "e2e-ai-owned-n1",
         maxResults: 1,
         format: "json",
       });
@@ -468,7 +468,7 @@ describe.skipIf(!ENABLED)("owned destructive recovery harness", () => {
     await startApi();
     const recovered = await json("/api/v1/search/project", {
       query: "owned n1 warm operation",
-      projectId: "e2e-th0th-owned-n1",
+      projectId: "e2e-ai-owned-n1",
       maxResults: 1,
       minScore: 0,
       format: "json",
@@ -487,7 +487,7 @@ describe.skipIf(!ENABLED)("owned destructive recovery harness", () => {
     const fixture = await createFixture("e25-long", 12);
     const started = await json("/api/v1/project/index", {
       projectPath: fixture,
-      projectId: "e2e-th0th-owned-e25-old",
+      projectId: "e2e-ai-owned-e25-old",
       forceReindex: true,
     });
     const jobId = started.body?.data?.jobId;
@@ -499,8 +499,8 @@ describe.skipIf(!ENABLED)("owned destructive recovery harness", () => {
     api = null;
     await Bun.sleep(1_300);
     await startApi({
-      MASSA_TH0TH_JOB_STALE_MS: "1000",
-      MASSA_TH0TH_JOB_REAPER_INTERVAL_MS: "250",
+      MASSA_AI_JOB_STALE_MS: "1000",
+      MASSA_AI_JOB_REAPER_INTERVAL_MS: "250",
     });
     await waitFor(async () => {
       const status = await json(`/api/v1/project/index/status/${jobId}`);
@@ -515,7 +515,7 @@ describe.skipIf(!ENABLED)("owned destructive recovery harness", () => {
     const recoveryFixture = await createFixture("e25-recovery", 1);
     const recoveryJob = await indexProject(
       recoveryFixture,
-      "e2e-th0th-owned-e25-new",
+      "e2e-ai-owned-e25-new",
     );
     evidence.E25 = {
       staleJob: jobId,

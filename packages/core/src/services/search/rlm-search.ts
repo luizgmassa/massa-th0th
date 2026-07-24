@@ -6,7 +6,7 @@
  * byte-preserved: bodies moved verbatim with `this` → `rlm`.
  */
 
-import { SearchResult, logger, config } from "@massa-th0th/shared";
+import { SearchResult, logger, config } from "@massa-ai/shared";
 import { minimatch } from "minimatch";
 import { buildRewrittenFTSQuery } from "./query-understanding.js";
 import { applyProximityRerank } from "./lexical-search.js";

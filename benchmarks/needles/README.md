@@ -1,6 +1,6 @@
-# massa-th0th Needles Benchmark
+# massa-ai Needles Benchmark
 
-Needle-in-haystack harness for measuring massa-th0th's semantic search recall against
+Needle-in-haystack harness for measuring massa-ai's semantic search recall against
 real codebases.
 
 ## Layout
@@ -11,7 +11,7 @@ benchmarks/needles/
 ├── scorer.ts            # CLI: reads dataset + harness output, writes report
 ├── fixtures/            # Per-project needle datasets (versioned)
 │   ├── sicad.json       # 12 needles validated against the Sicad codebase
-│   └── massa-th0th.json # 14 needles (dogfood) validated against this repo
+│   └── massa-ai.json # 14 needles (dogfood) validated against this repo
 └── reports/             # Harness outputs and generated reports (gitignored)
 ```
 
@@ -28,7 +28,7 @@ fixtures/<project>.json ──┐
 
 - **E (Extract)** — the harness iterates over `fixtures/<project>.json` and,
   for each needle, calls
-  `mcp__massa-th0th__search(query, projectId=<project>, maxResults=10)`.
+  `mcp__massa-ai__search(query, projectId=<project>, maxResults=10)`.
   Raw responses are accumulated into `reports/<project>-results.json` in the
   format documented at the top of `scorer.ts`.
 - **T (Transform/Load)** — `scorer.ts` computes `hit@1/3/5/10`, `MRR`, and
@@ -69,7 +69,7 @@ The full-stack gate (live API + Postgres + RRF) lives in the E2E suite:
 
 1. Put a fixture at `fixtures/<projectId>.json` following the same shape as
    `sicad.json` (see "Schema" below).
-2. Make sure the project is indexed by massa-th0th (`mcp__massa-th0th__index` with
+2. Make sure the project is indexed by massa-ai (`mcp__massa-ai__index` with
    `projectPath` and `projectId` matching the fixture).
 3. Run the harness (today: a Claude Code session that loops the queries).
 4. Score:

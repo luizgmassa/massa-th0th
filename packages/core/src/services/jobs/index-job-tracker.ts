@@ -9,7 +9,7 @@ import { randomUUID } from "crypto";
 import {
   logger,
   type ActiveGraphDiagnostics,
-} from "@massa-th0th/shared";
+} from "@massa-ai/shared";
 import type { JobStore } from "./index-job-store.js";
 import { eventBus } from "../events/event-bus.js";
 

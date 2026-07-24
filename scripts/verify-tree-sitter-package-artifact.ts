@@ -83,16 +83,16 @@ export function assertPublishManifests(
   shared: PublishManifest,
   core: PublishManifest,
 ): void {
-  invariant(shared.name === "@massa-th0th/shared", "shared publish package name drifted");
-  invariant(core.name === "@massa-th0th/core", "core publish package name drifted");
+  invariant(shared.name === "@massa-ai/shared", "shared publish package name drifted");
+  invariant(core.name === "@massa-ai/core", "core publish package name drifted");
   invariant(isPlainSemver(shared.version), "shared publish version must be plain semver");
   invariant(isPlainSemver(core.version), "core publish version must be plain semver");
   invariant(
-    isPlainSemver(core.dependencies?.["@massa-th0th/shared"]),
-    "core publish dependency on @massa-th0th/shared must be plain semver",
+    isPlainSemver(core.dependencies?.["@massa-ai/shared"]),
+    "core publish dependency on @massa-ai/shared must be plain semver",
   );
   invariant(
-    core.dependencies?.["@massa-th0th/shared"] === shared.version,
+    core.dependencies?.["@massa-ai/shared"] === shared.version,
     "core publish dependency must equal the packed shared version",
   );
   const bundled = core.bundledDependencies ?? core.bundleDependencies;
@@ -126,11 +126,11 @@ export function createPackedConsumerManifest(sharedTarball: string, coreTarball:
     private: true,
     type: "module",
     dependencies: {
-      "@massa-th0th/shared": sharedFile,
-      "@massa-th0th/core": `file:${coreTarball}`,
+      "@massa-ai/shared": sharedFile,
+      "@massa-ai/core": `file:${coreTarball}`,
     },
     overrides: {
-      "@massa-th0th/shared": sharedFile,
+      "@massa-ai/shared": sharedFile,
     },
     trustedDependencies: [...TRUSTED_NATIVE_PACKAGES],
   };
@@ -274,7 +274,7 @@ export function verifyTreeSitterPackageArtifact(): void {
   const contract = verifyPackageArtifactStaticContract();
   const { node, npmCli } = exactBuildTools();
   materializeBundledRuntime();
-  const workspace = mkdtempSync(resolve(tmpdir(), "massa-th0th-tree-sitter-package-"));
+  const workspace = mkdtempSync(resolve(tmpdir(), "massa-ai-tree-sitter-package-"));
   try {
     const artifacts = resolve(workspace, "artifacts");
     const npmCache = resolve(workspace, "npm-cache");
@@ -315,10 +315,10 @@ export function verifyTreeSitterPackageArtifact(): void {
       { cwd: consumer, env: process.env },
     );
 
-    const packedEntry = resolve(consumer, "node_modules/@massa-th0th/core/dist/index.js");
+    const packedEntry = resolve(consumer, "node_modules/@massa-ai/core/dist/index.js");
     const runtimePackage = resolve(
       consumer,
-      "node_modules/@massa-th0th/core/node_modules/tree-sitter",
+      "node_modules/@massa-ai/core/node_modules/tree-sitter",
     );
     invariant(existsSync(packedEntry), "packed core dist entry is missing after install");
     invariant(existsSync(runtimePackage), "packed core nested tree-sitter package is missing");
@@ -344,7 +344,7 @@ export function verifyTreeSitterPackageArtifact(): void {
       npm: EXPECTED_NPM_VERSION,
       sharedVersion: contract.sharedVersion,
       coreVersion: contract.coreVersion,
-      packOrder: ["@massa-th0th/shared", "@massa-th0th/core"],
+      packOrder: ["@massa-ai/shared", "@massa-ai/core"],
       freshNpmCache: true,
       freshBunCache: true,
       publishSemver: true,

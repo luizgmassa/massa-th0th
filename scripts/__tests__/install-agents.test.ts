@@ -9,15 +9,15 @@ import {
   ALL_AGENTS,
   assertHomeWriteConsent,
   ConsentError,
-  MASSA_TH0TH_OWNED_KEY,
+  MASSA_AI_OWNED_KEY,
   type AgentName,
   type McpEntry,
 } from "../install-agents";
 
 const ENTRY: McpEntry = {
   type: "local",
-  command: ["npx", "@massa-th0th/mcp-client"],
-  env: { MASSA_TH0TH_API_URL: "http://localhost:3333" },
+  command: ["npx", "@massa-ai/mcp-client"],
+  env: { MASSA_AI_API_URL: "http://localhost:3333" },
   enabled: true,
 };
 
@@ -48,19 +48,19 @@ for (const agent of [...jsonWriters, ...desktop]) {
       expect(plan.exists).toBe(false);
     });
 
-    test("apply creates file + backup, writes massa-th0th under mcpServers", async () => {
+    test("apply creates file + backup, writes massa-ai under mcpServers", async () => {
       const root = tmp;
       const plan = await WRITERS[agent].plan(root, ENTRY);
       const res = await WRITERS[agent].apply(plan, ENTRY, { dryRun: false });
       expect(res.written).toBe(true);
       expect(res.backupPath).toBeTruthy();
       const cfg = JSON.parse(await fs.readFile(plan.configPath, "utf8"));
-      expect(cfg.mcpServers[MASSA_TH0TH_OWNED_KEY].command).toEqual(["npx", "@massa-th0th/mcp-client"]);
+      expect(cfg.mcpServers[MASSA_AI_OWNED_KEY].command).toEqual(["npx", "@massa-ai/mcp-client"]);
       // backup exists
       expect(await fileExists(res.backupPath!)).toBe(true);
     });
 
-    test("user keys preserved + massa-th0th added on existing config", async () => {
+    test("user keys preserved + massa-ai added on existing config", async () => {
       const root = tmp;
       const cp = WRITERS[agent].configPath(root)!;
       await fs.mkdir(path.dirname(cp), { recursive: true });
@@ -75,7 +75,7 @@ for (const agent of [...jsonWriters, ...desktop]) {
       const cfg = JSON.parse(await fs.readFile(cp, "utf8"));
       expect(cfg.mcpServers["user-tool"]).toEqual({ command: ["echo"] });
       expect(cfg.someUserKey).toEqual({ nested: [1, 2, 3] });
-      expect(cfg.mcpServers[MASSA_TH0TH_OWNED_KEY].command).toEqual(ENTRY.command);
+      expect(cfg.mcpServers[MASSA_AI_OWNED_KEY].command).toEqual(ENTRY.command);
     });
 
     test("idempotent: re-run produces no change", async () => {
@@ -89,7 +89,7 @@ for (const agent of [...jsonWriters, ...desktop]) {
       expect(res2.backupPath).toBeNull();
     });
 
-    test("uninstall removes massa-th0th keys, preserves user keys", async () => {
+    test("uninstall removes massa-ai keys, preserves user keys", async () => {
       const root = tmp;
       const cp = WRITERS[agent].configPath(root)!;
       await fs.mkdir(path.dirname(cp), { recursive: true });
@@ -98,7 +98,7 @@ for (const agent of [...jsonWriters, ...desktop]) {
         JSON.stringify({
           mcpServers: {
             "user-tool": { command: ["echo"] },
-            [MASSA_TH0TH_OWNED_KEY]: { command: ENTRY.command },
+            [MASSA_AI_OWNED_KEY]: { command: ENTRY.command },
           },
           keepMe: true,
         }),
@@ -106,7 +106,7 @@ for (const agent of [...jsonWriters, ...desktop]) {
       const res = await WRITERS[agent].uninstall(root);
       expect(res.written).toBe(true);
       const cfg = JSON.parse(await fs.readFile(cp, "utf8"));
-      expect(cfg.mcpServers[MASSA_TH0TH_OWNED_KEY]).toBeUndefined();
+      expect(cfg.mcpServers[MASSA_AI_OWNED_KEY]).toBeUndefined();
       expect(cfg.mcpServers["user-tool"]).toEqual({ command: ["echo"] });
       expect(cfg.keepMe).toBe(true);
       // mcpServers remains because user-tool is still there
@@ -119,14 +119,14 @@ for (const agent of [...jsonWriters, ...desktop]) {
       await fs.mkdir(path.dirname(cp), { recursive: true });
       await fs.writeFile(
         cp,
-        JSON.stringify({ mcpServers: { [MASSA_TH0TH_OWNED_KEY]: { command: ENTRY.command } } }),
+        JSON.stringify({ mcpServers: { [MASSA_AI_OWNED_KEY]: { command: ENTRY.command } } }),
       );
       await WRITERS[agent].uninstall(root);
       const cfg = JSON.parse(await fs.readFile(cp, "utf8"));
       expect(cfg.mcpServers).toBeUndefined();
     });
 
-    test("uninstall is a no-op when massa-th0th absent", async () => {
+    test("uninstall is a no-op when massa-ai absent", async () => {
       const root = tmp;
       const cp = WRITERS[agent].configPath(root)!;
       await fs.mkdir(path.dirname(cp), { recursive: true });
@@ -154,15 +154,15 @@ for (const agent of [...jsonWriters, ...desktop]) {
 // "env"). These tests assert the OpenCode-specific shape; the shared loop
 // above only covers the mcpServers-based writers.
 describe("opencode writer (mcp key + bunx + environment)", () => {
-  test("plan on empty config → add change under /mcp/massa-th0th", async () => {
+  test("plan on empty config → add change under /mcp/massa-ai", async () => {
     const plan = await WRITERS.opencode.plan(tmp, ENTRY);
     expect(plan.changes).toHaveLength(1);
     expect(plan.changes[0].kind).toBe("add");
-    expect(plan.changes[0].path).toBe("/mcp/massa-th0th");
+    expect(plan.changes[0].path).toBe("/mcp/massa-ai");
     expect(plan.exists).toBe(false);
   });
 
-  test("apply writes massa-th0th under 'mcp' with bunx + environment + type + enabled", async () => {
+  test("apply writes massa-ai under 'mcp' with bunx + environment + type + enabled", async () => {
     const plan = await WRITERS.opencode.plan(tmp, ENTRY);
     const res = await WRITERS.opencode.apply(plan, ENTRY, { dryRun: false });
     expect(res.written).toBe(true);
@@ -171,10 +171,10 @@ describe("opencode writer (mcp key + bunx + environment)", () => {
     // OpenCode nests under "mcp", NOT "mcpServers"
     expect(cfg.mcpServers).toBeUndefined();
     expect(cfg.mcp).toBeDefined();
-    const entry = cfg.mcp[MASSA_TH0TH_OWNED_KEY];
+    const entry = cfg.mcp[MASSA_AI_OWNED_KEY];
     expect(entry.type).toBe("local");
-    expect(entry.command).toEqual(["bunx", "@massa-th0th/mcp-client"]);
-    expect(entry.environment).toEqual({ MASSA_TH0TH_API_URL: "http://localhost:3333" });
+    expect(entry.command).toEqual(["bunx", "@massa-ai/mcp-client"]);
+    expect(entry.environment).toEqual({ MASSA_AI_API_URL: "http://localhost:3333" });
     expect(entry.env).toBeUndefined(); // OpenCode uses "environment", not "env"
     expect(entry.enabled).toBe(true);
   });
@@ -184,7 +184,7 @@ describe("opencode writer (mcp key + bunx + environment)", () => {
     await fs.mkdir(path.dirname(cp), { recursive: true });
     const existing = {
       mcp: { "user-tool": { command: ["echo"] } },
-      plugin: ["@massa-th0th/opencode-plugin"],
+      plugin: ["@massa-ai/opencode-plugin"],
       someUserKey: { nested: [1, 2, 3] },
     };
     await fs.writeFile(cp, JSON.stringify(existing, null, 2));
@@ -193,11 +193,11 @@ describe("opencode writer (mcp key + bunx + environment)", () => {
     expect(res.written).toBe(true);
     const cfg = JSON.parse(await fs.readFile(cp, "utf8"));
     expect(cfg.mcp["user-tool"]).toEqual({ command: ["echo"] });
-    expect(cfg.plugin).toEqual(["@massa-th0th/opencode-plugin"]);
+    expect(cfg.plugin).toEqual(["@massa-ai/opencode-plugin"]);
     expect(cfg.someUserKey).toEqual({ nested: [1, 2, 3] });
-    const entry = cfg.mcp[MASSA_TH0TH_OWNED_KEY];
-    expect(entry.command).toEqual(["bunx", "@massa-th0th/mcp-client"]);
-    expect(entry.environment).toEqual({ MASSA_TH0TH_API_URL: "http://localhost:3333" });
+    const entry = cfg.mcp[MASSA_AI_OWNED_KEY];
+    expect(entry.command).toEqual(["bunx", "@massa-ai/mcp-client"]);
+    expect(entry.environment).toEqual({ MASSA_AI_API_URL: "http://localhost:3333" });
   });
 
   test("idempotent: re-run produces no change", async () => {
@@ -210,7 +210,7 @@ describe("opencode writer (mcp key + bunx + environment)", () => {
     expect(res2.backupPath).toBeNull();
   });
 
-  test("uninstall removes massa-th0th from mcp, preserves user servers", async () => {
+  test("uninstall removes massa-ai from mcp, preserves user servers", async () => {
     const cp = WRITERS.opencode.configPath(tmp)!;
     await fs.mkdir(path.dirname(cp), { recursive: true });
     await fs.writeFile(
@@ -218,7 +218,7 @@ describe("opencode writer (mcp key + bunx + environment)", () => {
       JSON.stringify({
         mcp: {
           "user-tool": { command: ["echo"] },
-          [MASSA_TH0TH_OWNED_KEY]: { command: ["bunx", "@massa-th0th/mcp-client"] },
+          [MASSA_AI_OWNED_KEY]: { command: ["bunx", "@massa-ai/mcp-client"] },
         },
         keepMe: true,
       }),
@@ -226,7 +226,7 @@ describe("opencode writer (mcp key + bunx + environment)", () => {
     const res = await WRITERS.opencode.uninstall(tmp);
     expect(res.written).toBe(true);
     const cfg = JSON.parse(await fs.readFile(cp, "utf8"));
-    expect(cfg.mcp[MASSA_TH0TH_OWNED_KEY]).toBeUndefined();
+    expect(cfg.mcp[MASSA_AI_OWNED_KEY]).toBeUndefined();
     expect(cfg.mcp["user-tool"]).toEqual({ command: ["echo"] });
     expect(cfg.keepMe).toBe(true);
     expect(cfg.mcp).toBeDefined();
@@ -237,7 +237,7 @@ describe("opencode writer (mcp key + bunx + environment)", () => {
     await fs.mkdir(path.dirname(cp), { recursive: true });
     await fs.writeFile(
       cp,
-      JSON.stringify({ mcp: { [MASSA_TH0TH_OWNED_KEY]: { command: ["bunx", "@massa-th0th/mcp-client"] } } }),
+      JSON.stringify({ mcp: { [MASSA_AI_OWNED_KEY]: { command: ["bunx", "@massa-ai/mcp-client"] } } }),
     );
     await WRITERS.opencode.uninstall(tmp);
     const cfg = JSON.parse(await fs.readFile(cp, "utf8"));
@@ -255,7 +255,7 @@ describe("opencode writer (mcp key + bunx + environment)", () => {
 
 // ── Codex TOML writer ──────────────────────────────────────────────────────
 describe("codex writer", () => {
-  test("plan on empty → add [mcp_servers.massa-th0th] table", async () => {
+  test("plan on empty → add [mcp_servers.massa-ai] table", async () => {
     const plan = await WRITERS.codex.plan(tmp, ENTRY);
     expect(plan.changes).toHaveLength(1);
     expect(plan.changes[0].kind).toBe("add");
@@ -286,10 +286,10 @@ describe("codex writer", () => {
     expect(out).toContain("[mcp_servers.user-tool]");
     expect(out).toContain('command = "echo"');
     expect(out).toContain("[user_settings]");
-    expect(out).toContain("[mcp_servers.massa-th0th]");
+    expect(out).toContain("[mcp_servers.massa-ai]");
     expect(out).toContain('command = "npx"');
-    expect(out).toContain('"@massa-th0th/mcp-client"');
-    expect(out).toContain("MASSA_TH0TH_API_URL");
+    expect(out).toContain('"@massa-ai/mcp-client"');
+    expect(out).toContain("MASSA_AI_API_URL");
   });
 
   test("idempotent: re-run produces no change", async () => {
@@ -300,7 +300,7 @@ describe("codex writer", () => {
     expect(p2.changes).toHaveLength(0);
   });
 
-  test("uninstall removes massa-th0th table, preserves others", async () => {
+  test("uninstall removes massa-ai table, preserves others", async () => {
     const cp = WRITERS.codex.configPath(tmp)!;
     await fs.mkdir(path.dirname(cp), { recursive: true });
     await fs.writeFile(
@@ -309,16 +309,16 @@ describe("codex writer", () => {
         "[mcp_servers.user-tool]",
         'command = "echo"',
         "",
-        "[mcp_servers.massa-th0th]",
+        "[mcp_servers.massa-ai]",
         'command = "npx"',
-        'args = ["@massa-th0th/mcp-client"]',
+        'args = ["@massa-ai/mcp-client"]',
         "",
       ].join("\n"),
     );
     const res = await WRITERS.codex.uninstall(tmp);
     expect(res.written).toBe(true);
     const out = await fs.readFile(cp, "utf8");
-    expect(out).not.toContain("[mcp_servers.massa-th0th]");
+    expect(out).not.toContain("[mcp_servers.massa-ai]");
     expect(out).toContain("[mcp_servers.user-tool]");
   });
 });
@@ -353,7 +353,7 @@ describe("runInstall orchestration", () => {
   });
 
   test("--uninstall across all agents preserves user keys", async () => {
-    // Seed every agent with a user key + massa-th0th key.
+    // Seed every agent with a user key + massa-ai key.
     for (const a of ALL_AGENTS) {
       const cp = WRITERS[a].configPath(tmp)!;
       if (!cp) continue;
@@ -365,7 +365,7 @@ describe("runInstall orchestration", () => {
             '[mcp_servers.user-tool]',
             'command = "echo"',
             "",
-            "[mcp_servers.massa-th0th]",
+            "[mcp_servers.massa-ai]",
             'command = "npx"',
             "",
           ].join("\n"),
@@ -377,7 +377,7 @@ describe("runInstall orchestration", () => {
           JSON.stringify({
             mcp: {
               "user-tool": { command: ["echo"] },
-              [MASSA_TH0TH_OWNED_KEY]: { command: ["bunx", "@massa-th0th/mcp-client"] },
+              [MASSA_AI_OWNED_KEY]: { command: ["bunx", "@massa-ai/mcp-client"] },
             },
           }),
         );
@@ -387,7 +387,7 @@ describe("runInstall orchestration", () => {
           JSON.stringify({
             mcpServers: {
               "user-tool": { command: ["echo"] },
-              [MASSA_TH0TH_OWNED_KEY]: { command: ENTRY.command },
+              [MASSA_AI_OWNED_KEY]: { command: ENTRY.command },
             },
           }),
         );
@@ -399,7 +399,7 @@ describe("runInstall orchestration", () => {
       const cp = WRITERS[a].configPath(tmp)!;
       if (!cp) continue;
       const raw = await fs.readFile(cp, "utf8");
-      expect(raw).not.toContain("massa-th0th");
+      expect(raw).not.toContain("massa-ai");
       expect(raw).toContain("user-tool");
     }
   });
@@ -435,7 +435,7 @@ describe("home-write consent gate", () => {
 
 // ── Deconfliction hint (T12) ───────────────────────────────────────────────
 // When install-agents writes the Codex/Cursor MCP entry, it prints a hint
-// reminding the user that the massa-th0th plugin bundle already registers
+// reminding the user that the massa-ai plugin bundle already registers
 // MCP, so the install-agents step can be skipped for that agent.
 describe("plugin deconfliction hint", () => {
   test("codex apply prints plugin/skip hint when written", async () => {
@@ -491,7 +491,7 @@ describe("plugin deconfliction hint", () => {
 
 // ── Deconfliction hint (T18) — Claude + OpenCode ────────────────────────────
 // When install-agents writes the Claude/OpenCode MCP entry, it prints a hint
-// reminding the user that the massa-th0th plugin bundle already wires hooks,
+// reminding the user that the massa-ai plugin bundle already wires hooks,
 // so the install-agents step can be skipped for that agent.
 describe("plugin deconfliction hint (T18 — Claude/OpenCode)", () => {
   test("claude-code apply prints plugin/skip hint when written", async () => {
@@ -546,9 +546,9 @@ describe("plugin deconfliction hint (T18 — Claude/OpenCode)", () => {
 });
 
 // ── Claude Code settings.json coordination (plugin hooks + MCP coexist) ─────
-// install-agents writes mcpServers into ~/.claude/settings.json; the massa-th0th
+// install-agents writes mcpServers into ~/.claude/settings.json; the massa-ai
 // Claude plugin writes a top-level "hooks" block into the same file (each owned
-// hook entry carries _massaTh0thOwned: true). These tests prove the two writers
+// hook entry carries _massaAiOwned: true). These tests prove the two writers
 // coexist: plugin hooks survive an install-agents MCP write, and the writer
 // detects the plugin hooks and confirms coordination in its output.
 describe("claude-code settings.json coordination (plugin hooks + MCP)", () => {
@@ -562,14 +562,14 @@ describe("claude-code settings.json coordination (plugin hooks + MCP)", () => {
       hooks: {
         SessionStart: [
           {
-            hooks: [{ type: "command", command: 'bun run "${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts" session-start' }],
-            _massaTh0thOwned: true,
+            hooks: [{ type: "command", command: 'bun run "${CLAUDE_PLUGIN_ROOT}/hooks/massa-ai-hook.ts" session-start' }],
+            _massaAiOwned: true,
           },
         ],
         PostToolUse: [
           {
-            hooks: [{ type: "command", command: 'bun run "${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts" post-tool-use' }],
-            _massaTh0thOwned: true,
+            hooks: [{ type: "command", command: 'bun run "${CLAUDE_PLUGIN_ROOT}/hooks/massa-ai-hook.ts" post-tool-use' }],
+            _massaAiOwned: true,
           },
         ],
       },
@@ -583,7 +583,7 @@ describe("claude-code settings.json coordination (plugin hooks + MCP)", () => {
 
     const cfg = JSON.parse(await fs.readFile(cp, "utf8"));
     // MCP entry added under mcpServers
-    expect(cfg.mcpServers[MASSA_TH0TH_OWNED_KEY].command).toEqual(["npx", "@massa-th0th/mcp-client"]);
+    expect(cfg.mcpServers[MASSA_AI_OWNED_KEY].command).toEqual(["npx", "@massa-ai/mcp-client"]);
     // Plugin hooks block fully preserved (both events + owned markers intact)
     expect(cfg.hooks).toBeDefined();
     expect(Object.keys(cfg.hooks).sort()).toEqual(["PostToolUse", "SessionStart"]);
@@ -591,7 +591,7 @@ describe("claude-code settings.json coordination (plugin hooks + MCP)", () => {
       const arr = cfg.hooks[evt];
       expect(Array.isArray(arr)).toBe(true);
       expect(arr.length).toBe(1);
-      expect(arr[0]._massaTh0thOwned).toBe(true);
+      expect(arr[0]._massaAiOwned).toBe(true);
       expect(Array.isArray(arr[0].hooks)).toBe(true);
     }
     // User top-level key preserved
@@ -609,8 +609,8 @@ describe("claude-code settings.json coordination (plugin hooks + MCP)", () => {
         hooks: {
           Stop: [
             {
-              hooks: [{ type: "command", command: 'bun run "${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts" stop' }],
-              _massaTh0thOwned: true,
+              hooks: [{ type: "command", command: 'bun run "${CLAUDE_PLUGIN_ROOT}/hooks/massa-ai-hook.ts" stop' }],
+              _massaAiOwned: true,
             },
           ],
         },

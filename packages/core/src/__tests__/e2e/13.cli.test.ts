@@ -1,5 +1,5 @@
 /**
- * T12 — CLI smoke (massa-th0th + massa-th0th-config).
+ * T12 — CLI smoke (massa-ai + massa-ai-config).
  *
  * Runs the built CLI binaries (apps/mcp-client/dist/index.js and
  * dist/config-cli.js) against the live environment. Gated on the dist files
@@ -11,7 +11,7 @@
  *     empty, else falls back to ~/.config). All mutating CLI scenarios now run
  *     against a per-test mkdtempSync temp dir and assert the command reads/
  *     writes under that dir — NOT the real user config.
- *   - `massa-th0th <unknown-flag>` now exits 2 (usage error).
+ *   - `massa-ai <unknown-flag>` now exits 2 (usage error).
  */
 import { describe, test, expect, beforeAll } from "bun:test";
 import { spawn } from "child_process";
@@ -56,7 +56,7 @@ function runBin(bin: string, args: string[], env?: Record<string, string>): Prom
 }
 
 function makeTempXdg(): Promise<string> {
-  return fs.mkdtemp(path.join(os.tmpdir(), "massa-th0th-cli-"));
+  return fs.mkdtemp(path.join(os.tmpdir(), "massa-ai-cli-"));
 }
 
 // dotenvx writes a `◇ injected env (0) from .env // tip: …` banner to stdout
@@ -77,7 +77,7 @@ function extractJson(stdout: string): unknown {
   return JSON.parse(clean.slice(start));
 }
 
-const REAL_CONFIG_MARKER = `${os.homedir()}/.config/massa-th0th`;
+const REAL_CONFIG_MARKER = `${os.homedir()}/.config/massa-ai`;
 
 // ── Suite ───────────────────────────────────────────────────────────────────
 
@@ -110,15 +110,15 @@ describe.skipIf(!READY)("T12 — CLI smoke", () => {
     expect(honored).toBe(true);
   });
 
-  // ── massa-th0th flags ────────────────────────────────────────────────────
+  // ── massa-ai flags ────────────────────────────────────────────────────
 
-  describe("massa-th0th (dist/index.js) flags", () => {
+  describe("massa-ai (dist/index.js) flags", () => {
     test("--help exits 0 and prints usage", async () => {
       const r = await runBin(MASSA_BIN, ["--help"]);
       expect(r.code).toBe(0);
       expect(r.stdout).toContain("Usage");
       expect(r.stdout).toContain("Options");
-      expect(r.stdout.toLowerCase()).toContain("massa-th0th");
+      expect(r.stdout.toLowerCase()).toContain("massa-ai");
     });
 
     test("-h short alias exits 0 and prints usage", async () => {
@@ -167,7 +167,7 @@ describe.skipIf(!READY)("T12 — CLI smoke", () => {
         expect(r.code).toBe(0);
         expect(/Initializ|Configuration initialized/i.test(r.stdout)).toBe(true);
         // The config file must land inside the temp XDG dir, not the real one.
-        const cfgPath = path.join(tmp, "massa-th0th", "config.json");
+        const cfgPath = path.join(tmp, "massa-ai", "config.json");
         const realCfgPath = path.join(REAL_CONFIG_MARKER, "config.json");
         const tmpExists = await fs.stat(cfgPath).then(() => true).catch(() => false);
         expect(tmpExists).toBe(true);
@@ -188,7 +188,7 @@ describe.skipIf(!READY)("T12 — CLI smoke", () => {
         const r2 = await runBin(MASSA_BIN, ["--config-init"], { XDG_CONFIG_HOME: tmp });
         expect(r2.code).toBe(0);
         // Idempotency: second run does not error, config still under temp dir.
-        const cfgPath = path.join(tmp, "massa-th0th", "config.json");
+        const cfgPath = path.join(tmp, "massa-ai", "config.json");
         const exists = await fs.stat(cfgPath).then(() => true).catch(() => false);
         expect(exists).toBe(true);
       } finally {
@@ -205,13 +205,13 @@ describe.skipIf(!READY)("T12 — CLI smoke", () => {
 
   // ── config-cli ───────────────────────────────────────────────────────────
 
-  describe("massa-th0th-config (dist/config-cli.js) commands", () => {
+  describe("massa-ai-config (dist/config-cli.js) commands", () => {
     test("init creates config.json under XDG_CONFIG_HOME", async () => {
       const tmp = await makeTempXdg();
       try {
         const r = await runBin(CONFIG_CLI, ["init"], { XDG_CONFIG_HOME: tmp });
         expect(r.code).toBe(0);
-        const files = await fs.readdir(path.join(tmp, "massa-th0th")).catch(() => [] as string[]);
+        const files = await fs.readdir(path.join(tmp, "massa-ai")).catch(() => [] as string[]);
         expect(files).toContain("config.json");
         // Isolation: never created a config dir at the real user path.
         expect(r.stdout + r.stderr).not.toContain(REAL_CONFIG_MARKER);
@@ -262,7 +262,7 @@ describe.skipIf(!READY)("T12 — CLI smoke", () => {
         expect(cfg.logging?.level).toBe("debug");
         // Isolation: the persisted file lives under temp, never the real path.
         const persisted = await fs
-          .readFile(path.join(tmp, "massa-th0th", "config.json"), "utf-8")
+          .readFile(path.join(tmp, "massa-ai", "config.json"), "utf-8")
           .catch(() => null);
         expect(persisted).not.toBeNull();
         expect(persisted).toContain('"debug"');

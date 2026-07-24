@@ -24,8 +24,8 @@
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { z } from "zod";
-import { config, SearchSource } from "@massa-th0th/shared";
-import type { SearchResult } from "@massa-th0th/shared";
+import { config, SearchSource } from "@massa-ai/shared";
+import type { SearchResult } from "@massa-ai/shared";
 import { llmObject, isLlmEnabled } from "../services/memory/llm-client.js";
 import { LLMJudgeReranker } from "../services/search/reranker.js";
 import { SalienceJudge } from "../services/memory/salience-judge.js";

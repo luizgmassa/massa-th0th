@@ -50,7 +50,7 @@ import {
   GraphQueryOptions,
   GraphPath,
   ContradictionPair,
-} from "@massa-th0th/shared";
+} from "@massa-ai/shared";
 import { getGraphStore } from "./graph-store-factory.js";
 import type { IGraphStore, MemoryRow, RelatedMemory } from "./types.js";
 

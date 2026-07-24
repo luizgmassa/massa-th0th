@@ -4,7 +4,7 @@
  * Asserts the three checkpoint tools appear in the MCP TOOL_DEFINITIONS
  * (AC: MCP lists them) and that POST /api/v1/checkpoints/{list,create,restore}
  * delegate to the existing core tools end-to-end (AC: each call hits the route
- * and delegates). Uses a temp dataDir so no real ~/.massa-th0th-data is touched.
+ * and delegates). Uses a temp dataDir so no real ~/.massa-ai-data is touched.
  */
 
 import { describe, test, expect, beforeAll, afterAll, mock } from "bun:test";
@@ -14,8 +14,8 @@ import path from "path";
 
 let tmpDir = "";
 
-mock.module("@massa-th0th/shared", () => {
-  const actual = require("@massa-th0th/shared");
+mock.module("@massa-ai/shared", () => {
+  const actual = require("@massa-ai/shared");
   return {
     ...actual,
     config: {
@@ -46,7 +46,7 @@ async function post(p: string, body: unknown) {
 
 describe("checkpoint routes delegate to core tools", () => {
   beforeAll(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-chk-routes-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-chk-routes-"));
   });
 
   afterAll(() => {

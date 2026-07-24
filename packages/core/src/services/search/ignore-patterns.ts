@@ -15,7 +15,7 @@
 import fs from "fs/promises";
 import path from "path";
 import ignoreModule, { type Ignore } from "ignore";
-import { logger, config } from "@massa-th0th/shared";
+import { logger, config } from "@massa-ai/shared";
 import { applyPolicy, DEFAULT_POLICY, validatePolicy } from "./capture-policy.js";
 import type { Disposition, Policy } from "./capture-policy-interfaces.js";
 

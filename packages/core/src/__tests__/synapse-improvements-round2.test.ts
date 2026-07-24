@@ -16,8 +16,8 @@ import {
   applyAttentionScore,
   DEFAULT_ATTENTION_CONFIG,
 } from "../services/synapse/scoring/attention-score.js";
-import type { SearchResult } from "@massa-th0th/shared";
-import { SearchSource } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-ai/shared";
+import { SearchSource } from "@massa-ai/shared";
 
 function r(id: string, score: number, content: string = id): SearchResult {
   return { id, content, score, source: SearchSource.VECTOR, metadata: {} };

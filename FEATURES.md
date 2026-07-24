@@ -1,6 +1,6 @@
-# massa-th0th — Feature Reference
+# massa-ai — Feature Reference
 
-Every feature in massa-th0th, what it does, why it exists, and how to use it.
+Every feature in massa-ai, what it does, why it exists, and how to use it.
 
 > For install/setup, see the [README](./README.md). For architecture decisions,
 > see [`docs/adr/`](./docs/adr/). For feature specs and validation evidence, see
@@ -68,7 +68,7 @@ curl -X POST http://localhost:3333/api/v1/search/project \
 
 ## Structural Indexing (Polyglot Native Tree-sitter)
 
-**What:** massa-th0th indexes code with **pinned native Tree-sitter grammars** across all 33 canonical source extensions (TS/JS, Python, Ruby, PHP, Lua, C/C++, Go, Rust, Zig, Java, Kotlin, Scala, C#, Swift, Dart, Elixir, Erlang, Clojure, OCaml, Haskell, Vue, Markdown, JSON, YAML, HTML). Produces a versioned symbol/edge graph with 18 canonical symbol kinds and 9 edge kinds. Each symbol gets a modern full-SHA-256 FQN plus a stable legacy alias, with explicit ambiguity payloads where multiple symbols share a legacy name.
+**What:** massa-ai indexes code with **pinned native Tree-sitter grammars** across all 33 canonical source extensions (TS/JS, Python, Ruby, PHP, Lua, C/C++, Go, Rust, Zig, Java, Kotlin, Scala, C#, Swift, Dart, Elixir, Erlang, Clojure, OCaml, Haskell, Vue, Markdown, JSON, YAML, HTML). Produces a versioned symbol/edge graph with 18 canonical symbol kinds and 9 edge kinds. Each symbol gets a modern full-SHA-256 FQN plus a stable legacy alias, with explicit ambiguity payloads where multiple symbols share a legacy name.
 
 **Why:** Regex-based extraction misses structured relationships (calls, imports, inheritance, data flow). Native Tree-sitter gives a real AST, enabling accurate symbol definitions, references, typed edges, and dependency centrality. The native runtime is pinned and patched for deterministic lifetime safety (no WASM, no runtime downloads).
 
@@ -168,7 +168,7 @@ memory_delete { id: "<id>" }
 
 ## Passive Capture (Hooks)
 
-**What:** Streams agent lifecycle events into massa-th0th as Observations — without any change to how you prompt. Six lifecycle event kinds: `session-start`, `user-prompt`, `pre-tool-use`, `post-tool-use`, `pre-compact`, `session-end`. Observations are stored raw in PostgreSQL and optionally consolidated into structured memories by an LLM bridge (when `RLM_LLM_ENABLED=true`).
+**What:** Streams agent lifecycle events into massa-ai as Observations — without any change to how you prompt. Six lifecycle event kinds: `session-start`, `user-prompt`, `pre-tool-use`, `post-tool-use`, `pre-compact`, `session-end`. Observations are stored raw in PostgreSQL and optionally consolidated into structured memories by an LLM bridge (when `RLM_LLM_ENABLED=true`).
 
 **Why:** Manually telling your agent to "remember this" is tedious and lossy. Passive capture records what the agent did automatically — every prompt, every tool call, every session — so the memory builds itself.
 
@@ -191,9 +191,9 @@ memory_delete { id: "<id>" }
 
 ## Plugins (4-Tool Parity)
 
-**What:** massa-th0th ships native plugin bundles for all four major AI coding tools: Claude Code, Codex, Cursor, and OpenCode. Each plugin bundles skills (slash commands), the MCP server config, and passive-capture hooks — installed in one command.
+**What:** massa-ai ships native plugin bundles for all four major AI coding tools: Claude Code, Codex, Cursor, and OpenCode. Each plugin bundles skills (slash commands), the MCP server config, and passive-capture hooks — installed in one command.
 
-**Why:** Without a plugin, you'd need to manually register the MCP server, manually wire hooks, and have no slash commands. The plugins make massa-th0th feel native in each tool — install once, get everything.
+**Why:** Without a plugin, you'd need to manually register the MCP server, manually wire hooks, and have no slash commands. The plugins make massa-ai feel native in each tool — install once, get everything.
 
 **The three layers (not the same thing):**
 - **Agent** = MCP server registration (`scripts/install-agents.ts` — wires 5 targets: claude-code, claude-desktop, codex, cursor, opencode)
@@ -202,7 +202,7 @@ memory_delete { id: "<id>" }
 
 ### Claude Code plugin (`apps/claude-plugin/`)
 
-**What it bundles:** 6 slash commands (`/massa-th0th-map`, `/massa-th0th-index`, `/massa-th0th-find`, `/massa-th0th-def`, `/massa-th0th-graph`, `/massa-th0th-status`), the `massa-th0th-navigator` subagent, and 5 hook events auto-written into `~/.claude/settings.json`.
+**What it bundles:** 6 slash commands (`/massa-ai-map`, `/massa-ai-index`, `/massa-ai-find`, `/massa-ai-def`, `/massa-ai-graph`, `/massa-ai-status`), the `massa-ai-navigator` subagent, and 5 hook events auto-written into `~/.claude/settings.json`.
 
 **Hook events (5):** `SessionStart`, `UserPromptSubmit`, `PostToolUse`, `PreCompact`, `Stop`.
 
@@ -211,10 +211,10 @@ memory_delete { id: "<id>" }
 ```bash
 bash apps/claude-plugin/install.sh --user      # ~/.claude
 bash apps/claude-plugin/install.sh --project   # ./.claude
-bash apps/claude-plugin/install.sh --uninstall # removes only massa-th0th-owned entries
+bash apps/claude-plugin/install.sh --uninstall # removes only massa-ai-owned entries
 ```
 
-The installer auto-writes hooks into `settings.json` using array-append merge with backup + `_massaTh0thOwned` marker. No manual `settings.json` merge required.
+The installer auto-writes hooks into `settings.json` using array-append merge with backup + `_massaAiOwned` marker. No manual `settings.json` merge required.
 
 ### Codex plugin (`apps/codex-plugin/`)
 
@@ -230,11 +230,11 @@ bash apps/codex-plugin/install.sh --project    # ./.codex
 bash apps/codex-plugin/install.sh --uninstall
 ```
 
-**Trust step (required):** after install, run `/hooks` in Codex to trust massa-th0th hooks — Codex skips non-managed plugin hooks until trusted.
+**Trust step (required):** after install, run `/hooks` in Codex to trust massa-ai hooks — Codex skips non-managed plugin hooks until trusted.
 
 ### Cursor plugin (`apps/cursor-plugin/`)
 
-**What it bundles:** 6 skills, 7 hook events, `mcp.json`, and the `massa-th0th-navigator` agent.
+**What it bundles:** 6 skills, 7 hook events, `mcp.json`, and the `massa-ai-navigator` agent.
 
 **Hook events (7):** `sessionStart`, `sessionEnd`, `beforeSubmitPrompt`, `preToolUse`, `postToolUse`, `preCompact`, `stop`. This closes the historical gap where Cursor was documented as having only 3 events — Cursor now supports 18+ events including `sessionStart` and `preCompact`.
 
@@ -250,26 +250,26 @@ bash apps/cursor-plugin/install.sh --uninstall
 
 ### OpenCode plugin (`apps/opencode-plugin/`)
 
-**What it bundles:** 14 in-process tools (search, remember, recall, index, compress, optimized_context, read, index_status, analytics, list_projects, search_definitions, get_references, go_to_definition) + 6 in-process lifecycle handlers. This is an npm package (`@massa-th0th/opencode-plugin@1.1.0`), not a script-copy bundle.
+**What it bundles:** 14 in-process tools (search, remember, recall, index, compress, optimized_context, read, index_status, analytics, list_projects, search_definitions, get_references, go_to_definition) + 6 in-process lifecycle handlers. This is an npm package (`@massa-ai/opencode-plugin@1.1.0`), not a script-copy bundle.
 
 **Hook events (in-process, 6 lifecycle handlers):** `session.created`, `tool.execute.after`, `experimental.session.compacting`, `shell.env`, `event`, `dispose` — all registered in-process by the plugin. No external hooks file needed.
 
 **Install:**
 
 ```bash
-npm install @massa-th0th/opencode-plugin
+npm install @massa-ai/opencode-plugin
 ```
 
 Add to `~/.config/opencode/opencode.json`:
 
 ```json
 {
-  "plugin": ["@massa-th0th/opencode-plugin"],
+  "plugin": ["@massa-ai/opencode-plugin"],
   "mcp": {
-    "massa-th0th": {
+    "massa-ai": {
       "type": "local",
-      "command": ["bunx", "@massa-th0th/mcp-client"],
-      "environment": { "MASSA_TH0TH_API_URL": "http://localhost:3333" },
+      "command": ["bunx", "@massa-ai/mcp-client"],
+      "environment": { "MASSA_AI_API_URL": "http://localhost:3333" },
       "enabled": true
     }
   }
@@ -288,7 +288,7 @@ All four plugins can be installed from the root `install.sh` post-install menu (
 5) All four (Claude, Codex, Cursor, OpenCode)
 ```
 
-**Shared binary:** all shell-script-based plugins (Claude Code, Codex, Cursor) use the same `massa-th0th-hook.ts` Bun binary from `apps/claude-plugin/hooks/`. Codex and Cursor symlink to it. The binary resolves the project ID via: existing pin → `MASSA_TH0TH_PROJECT_ID` env → git toplevel basename → cwd basename.
+**Shared binary:** all shell-script-based plugins (Claude Code, Codex, Cursor) use the same `massa-ai-hook.ts` Bun binary from `apps/claude-plugin/hooks/`. Codex and Cursor symlink to it. The binary resolves the project ID via: existing pin → `MASSA_AI_PROJECT_ID` env → git toplevel basename → cwd basename.
 
 **MCP deconfliction:** if you install a plugin, the MCP server is already registered via the plugin's `.mcp.json`/`mcp.json`. Skip the `install-agents.ts` MCP step for that tool to avoid double-registration.
 
@@ -298,7 +298,7 @@ All four plugins can be installed from the root `install.sh` post-install menu (
 
 ## Subagent Skills (12 Specialists)
 
-**What:** massa-th0th defines 12 reusable sub-agent specialists in `skills/*/SKILL.md` (charter files). These ship as host-native subagent definitions across all four plugins so the massa-th0th workflow router's delegation model works inside Claude Code, Codex, Cursor, and OpenCode. The 12 specialists are additive to the existing `massa-th0th-navigator` (Claude/Cursor), which is a distinct index-first agent.
+**What:** massa-ai defines 12 reusable sub-agent specialists in `skills/*/SKILL.md` (charter files). These ship as host-native subagent definitions across all four plugins so the massa-ai workflow router's delegation model works inside Claude Code, Codex, Cursor, and OpenCode. The 12 specialists are additive to the existing `massa-ai-navigator` (Claude/Cursor), which is a distinct index-first agent.
 
 **The 12 specialists:** investigator, planner, builder, reviewer, context-curator, verification-agent, requirements-analyst, architecture-specialist, test-engineer, documentation-agent, audit-specialist, mobile-specialist.
 
@@ -308,10 +308,10 @@ All four plugins can be installed from the root `install.sh` post-install menu (
 
 | Host | Location | Format | Ownership marker |
 | --- | --- | --- | --- |
-| Claude Code | `apps/claude-plugin/agents/massa-th0th-*.md` → installed to `~/.claude/agents/` | `.md` (YAML frontmatter: `name`, `description`, `tools`, `model`, `effort`) | Name prefix `massa-th0th-` (uninstall excludes `massa-th0th-navigator.md` by name — R1) |
-| Codex | `apps/codex-plugin/agents/massa-th0th-*.toml` → installed to `~/.codex/agents/` (OUTSIDE plugin dir) | `.toml` (`name`, `description`, `model`, `model_reasoning_effort`, `sandbox_mode`, `developer_instructions`) | `# massa-th0th-owned` top comment |
-| Cursor | `apps/cursor-plugin/agents/massa-th0th-*.md` → bundled in plugin `agents/` dir | `.md` (same shape as Claude) | Name prefix `massa-th0th-` (removed with plugin dir) |
-| OpenCode | `apps/opencode-plugin/agents/massa-th0th-*.md` → installed to `~/.config/opencode/agents/` (OUTSIDE npm package) | `.md` (`description`, `mode: subagent`, `model`, `reasoningEffort`, `permission`, `metadata`) | `metadata: { massa-th0th-owned: true }` frontmatter |
+| Claude Code | `apps/claude-plugin/agents/massa-ai-*.md` → installed to `~/.claude/agents/` | `.md` (YAML frontmatter: `name`, `description`, `tools`, `model`, `effort`) | Name prefix `massa-ai-` (uninstall excludes `massa-ai-navigator.md` by name — R1) |
+| Codex | `apps/codex-plugin/agents/massa-ai-*.toml` → installed to `~/.codex/agents/` (OUTSIDE plugin dir) | `.toml` (`name`, `description`, `model`, `model_reasoning_effort`, `sandbox_mode`, `developer_instructions`) | `# massa-ai-owned` top comment |
+| Cursor | `apps/cursor-plugin/agents/massa-ai-*.md` → bundled in plugin `agents/` dir | `.md` (same shape as Claude) | Name prefix `massa-ai-` (removed with plugin dir) |
+| OpenCode | `apps/opencode-plugin/agents/massa-ai-*.md` → installed to `~/.config/opencode/agents/` (OUTSIDE npm package) | `.md` (`description`, `mode: subagent`, `model`, `reasoningEffort`, `permission`, `metadata`) | `metadata: { massa-ai-owned: true }` frontmatter |
 
 > Codex and OpenCode agents live OUTSIDE the plugin dir / npm package because their host discovery loads agents from a shared config-root directory, not from the plugin bundle. The in-file ownership marker enables scoped uninstall that preserves user agents (R3).
 
@@ -427,11 +427,11 @@ Write-permitted agents: `builder`, `test-engineer`, `documentation-agent`. All o
 
 ## Workflow Tools (52-Tool Adoption)
 
-**What:** The massa-th0th workflow skill (`skills/massa-th0th/`) references the full 52-tool surface from `apps/mcp-client/src/tool-definitions.ts` CANONICAL_ORDER. Every tool name uses the canonical un-prefixed form (e.g. `recall`, not `th0th_recall`), matching what the MCP server and OpenCode plugin actually expose. The tool-contract reference (`references/th0th-tools.md`) contains a complete MCP Capability Matrix for all 52 tools grouped by category, and each workflow adopts the tools that materially benefit its flow.
+**What:** The massa-ai workflow skill (`skills/massa-ai/`) references the full 52-tool surface from `apps/mcp-client/src/tool-definitions.ts` CANONICAL_ORDER. Every tool name uses the canonical un-prefixed form (e.g. `recall`, not `recall`), matching what the MCP server and OpenCode plugin actually expose. The tool-contract reference (`references/mcp-tools.md`) contains a complete MCP Capability Matrix for all 52 tools grouped by category, and each workflow adopts the tools that materially benefit its flow.
 
-**Why:** The workflows previously referenced only ~11 of 52+ shipped tools and used stale `th0th_*`-prefixed names that diverged from the actual MCP tool declarations. Powerful shipped features — checkpoints, cross-session handoffs, bootstrap, compact_snapshot, trace_path, impact_analysis, code execution, the full Synapse lifecycle, read_file, symbol_snippet, memory_update/delete, analytics, fetch_and_index — were unguided by the workflow router. Agents following massa-th0th workflows missed deterministic, first-class tool support for long-running task save/resume, cross-session continuity, code-path tracing, impact analysis, and code execution for analysis.
+**Why:** The workflows previously referenced only ~11 of 52+ shipped tools and used stale `th0th_*`-prefixed names that diverged from the actual MCP tool declarations. Powerful shipped features — checkpoints, cross-session handoffs, bootstrap, compact_snapshot, trace_path, impact_analysis, code execution, the full Synapse lifecycle, read_file, symbol_snippet, memory_update/delete, analytics, fetch_and_index — were unguided by the workflow router. Agents following massa-ai workflows missed deterministic, first-class tool support for long-running task save/resume, cross-session continuity, code-path tracing, impact analysis, and code execution for analysis.
 
-**How to use:** Workflows reference tools inline in their ordered steps. No separate invocation is needed — when you follow a massa-th0th workflow, the tool calls are part of the flow. Key adoption map:
+**How to use:** Workflows reference tools inline in their ordered steps. No separate invocation is needed — when you follow a massa-ai workflow, the tool calls are part of the flow. Key adoption map:
 
 | Tool(s) | Workflow | Where in the flow |
 | --- | --- | --- |
@@ -457,7 +457,7 @@ Write-permitted agents: `builder`, `test-engineer`, `documentation-agent`. All o
 
 **Graceful degradation:** Every new tool reference keeps the existing "if unavailable, continue with fallback" pattern. `create_checkpoint` unavailable → `.specs/` state. `handoff_begin` unavailable (`HANDOFFS_ENABLED=false`) → `remember` + `.specs/`. `bootstrap` unavailable → manual `remember`. `compact_snapshot` unavailable → `compress` + `remember`. Code execution unavailable → load file into context. Graph tools on stale index → `search`/`get_references`.
 
-**Canonical naming:** All tool references in `skills/massa-th0th/` (workflows, references, SKILL.md) use un-prefixed canonical names matching `tool-definitions.ts` CANONICAL_ORDER. No `th0th_*`-prefixed tool names remain.
+**Canonical naming:** All tool references in `skills/massa-ai/` (workflows, references, SKILL.md) use un-prefixed canonical names matching `tool-definitions.ts` CANONICAL_ORDER. No `th0th_*`-prefixed tool names remain.
 
 **Spec:** `.specs/features/workflow-tools-adaptation/`
 
@@ -650,7 +650,7 @@ The `pre-compact` hook subcommand automatically triggers this via a dual-POST (o
 
 **What:** Two read-only surfaces served by the Tools API at `http://localhost:3333/ui`:
 
-- **Web UI** (Phase 8): read-only HTML/CSS/JS browser over memories, FTS5 search, handoffs, checkpoints, and indexed projects. Markdown rendering (`marked` + `DOMPurify` with XSS prevention) + dark-mode toggle. Optional write-mode (`MASSA_TH0TH_WEB_WRITE_MODE=true`) gates edit/delete/approve/reject buttons.
+- **Web UI** (Phase 8): read-only HTML/CSS/JS browser over memories, FTS5 search, handoffs, checkpoints, and indexed projects. Markdown rendering (`marked` + `DOMPurify` with XSS prevention) + dark-mode toggle. Optional write-mode (`MASSA_AI_WEB_WRITE_MODE=true`) gates edit/delete/approve/reject buttons.
 - **Dashboard** (Wave 6 N28): `#/dashboard` hash route rendering scheduler status, hook queue depth, Synapse sessions, and system metrics. Read-only, degrades gracefully.
 
 **Why:** Not every interaction needs to go through an agent. The Web UI lets you browse memories, search code, and inspect handoffs/checkpoints directly. The Dashboard gives you operational visibility into the scheduler and hook queue.
@@ -682,15 +682,15 @@ Disable with `WEB_UI_ENABLED=false`.
 
 ```bash
 # Master switch
-MASSA_TH0TH_SCHEDULER_ENABLED=true
+MASSA_AI_SCHEDULER_ENABLED=true
 
 # Safe-defaults preset (enables consolidation + decay, NOT auto-improve)
-MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true
+MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true
 
 # Per-kind enable
-MASSA_TH0TH_SCHEDULER_CONSOLIDATION_ENABLED=true
-MASSA_TH0TH_SCHEDULER_DECAY_ENABLED=true
-MASSA_TH0TH_SCHEDULER_AUTO_IMPROVE_ENABLED=true
+MASSA_AI_SCHEDULER_CONSOLIDATION_ENABLED=true
+MASSA_AI_SCHEDULER_DECAY_ENABLED=true
+MASSA_AI_SCHEDULER_AUTO_IMPROVE_ENABLED=true
 
 # Dashboard status
 GET /api/v1/scheduler/status → { running, tickIntervalMs, jobs[] }
@@ -807,19 +807,19 @@ fetch_and_index { requests: [{ url: "https://..." }, { url: "https://..." }], co
 
 ## MCP Server (52 Tools)
 
-**What:** A stdio MCP server (`@massa-th0th/mcp-client`) exposing 52 tools across indexing, search, symbol graph, memory, lifecycle, Synapse, passive capture, handoffs, auto-improvement, checkpoints, and code execution. Connects to the Tools API via HTTP. The current roster fits in one MCP `tools/list` page (pagination via `nextCursor` activates over 100 tools).
+**What:** A stdio MCP server (`@massa-ai/mcp-client`) exposing 52 tools across indexing, search, symbol graph, memory, lifecycle, Synapse, passive capture, handoffs, auto-improvement, checkpoints, and code execution. Connects to the Tools API via HTTP. The current roster fits in one MCP `tools/list` page (pagination via `nextCursor` activates over 100 tools).
 
-**Why:** MCP is the standard protocol for connecting AI tools to external services. The MCP server makes massa-th0th's full capability set available to any MCP-compatible client (Claude Code, Codex, Cursor, OpenCode).
+**Why:** MCP is the standard protocol for connecting AI tools to external services. The MCP server makes massa-ai's full capability set available to any MCP-compatible client (Claude Code, Codex, Cursor, OpenCode).
 
 **How to connect:**
 
 ```json
 {
   "mcpServers": {
-    "massa-th0th": {
+    "massa-ai": {
       "type": "local",
-      "command": ["npx", "@massa-th0th/mcp-client"],
-      "env": { "MASSA_TH0TH_API_URL": "http://localhost:3333" },
+      "command": ["npx", "@massa-ai/mcp-client"],
+      "env": { "MASSA_AI_API_URL": "http://localhost:3333" },
       "enabled": true
     }
   }
@@ -943,16 +943,16 @@ Each row lists **Req:** required and **Opt:** optional params.
 **Config CLI:**
 
 ```bash
-npx @massa-th0th/mcp-client --config-show
-npx @massa-th0th/mcp-client --config-init
-npx @massa-th0th/mcp-client --help
+npx @massa-ai/mcp-client --config-show
+npx @massa-ai/mcp-client --config-init
+npx @massa-ai/mcp-client --help
 ```
 
 ---
 
 ## REST API
 
-**What:** A REST API (Elysia, port 3333 by default) serving all massa-th0th functionality — indexing, search, memory CRUD, hooks, handoffs, checkpoints, proposals, bootstrap, Synapse, compression, dashboard, and the Web UI.
+**What:** A REST API (Elysia, port 3333 by default) serving all massa-ai functionality — indexing, search, memory CRUD, hooks, handoffs, checkpoints, proposals, bootstrap, Synapse, compression, dashboard, and the Web UI.
 
 **Why:** Not every client speaks MCP. The REST API enables custom integrations, scripting, and the Web UI. Swagger docs are auto-generated.
 
@@ -971,7 +971,7 @@ See [README §REST API](./README.md#rest-api) for endpoint examples.
 
 ## Configuration
 
-Config file: `~/.config/massa-th0th/config.json` (auto-created on first run).
+Config file: `~/.config/massa-ai/config.json` (auto-created on first run).
 The canonical annotated reference for every environment variable is
 [`.env.example`](./.env.example) — mirror it into `.env` and edit there.
 
@@ -983,9 +983,9 @@ rows default **OFF** and degrade silently when disabled.
 | Key | Env var | Default | State |
 |-----|---------|---------|-------|
 | `database.url` | `DATABASE_URL` | _(required)_ | PostgreSQL connection string (native or Docker) |
-| `database.postgresPassword` | `POSTGRES_PASSWORD` | `massa_th0th_password` | Docker postgres container |
-| `database.port` | `MASSA_TH0TH_POSTGRES_PORT` | `5432` | host port (Docker) |
-| `database.backend` | `MASSA_TH0TH_DB_BACKEND` | _(interactive)_ | installer provisioning: `native`/`docker` |
+| `database.postgresPassword` | `POSTGRES_PASSWORD` | `massa_ai_password` | Docker postgres container |
+| `database.port` | `MASSA_AI_POSTGRES_PORT` | `5432` | host port (Docker) |
+| `database.backend` | `MASSA_AI_DB_BACKEND` | _(interactive)_ | installer provisioning: `native`/`docker` |
 | `llm.enabled` | `RLM_LLM_ENABLED` | `false` | **OFF** |
 | `llm.baseUrl` | `RLM_LLM_BASE_URL` | `http://localhost:11434/v1` | — |
 | `llm.apiKey` | `RLM_LLM_API_KEY` | `ollama` | — |
@@ -1047,15 +1047,15 @@ rows default **OFF** and degrade silently when disabled.
 ### Operational knobs
 
 These are not part of the typed config object — they are read directly from the
-process environment at boot, so they do not appear in `~/.config/massa-th0th/config.json`.
+process environment at boot, so they do not appear in `~/.config/massa-ai/config.json`.
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `MASSA_TH0TH_DEDICATED` | _(unset)_ | When `1`, the dedicated-stack DB guard refuses to bind the shared `massa_th0th` database — a process that expects an isolated, disposable DB fails fast at startup instead of silently corrupting the shared stack. No-op when unset. |
-| `MASSA_TH0TH_JOB_STALE_MS` | `300000` (5 min) | A background index job whose heartbeat hasn't been refreshed within this window is flipped to `failed` by the in-process reaper. |
-| `MASSA_TH0TH_JOB_REAPER_INTERVAL_MS` | `60000` (60 s) | How often the stale-job reaper sweeps. |
-| `MASSA_TH0TH_PROXY_TIMEOUT_MS` | `120000` (120 s) | Per-call timeout for the MCP client proxying a tool call to the Tools API. `0` disables the timeout (infinite wait). |
-| `MASSA_TH0TH_SCHEDULER_ENABLED` | `false` | Master switch for the in-process cron-like scheduler. When `false` no periodic jobs fire. Set `true` to opt in; individual job kinds still need their own enable flags. |
+| `MASSA_AI_DEDICATED` | _(unset)_ | When `1`, the dedicated-stack DB guard refuses to bind the shared `massa_ai` database — a process that expects an isolated, disposable DB fails fast at startup instead of silently corrupting the shared stack. No-op when unset. |
+| `MASSA_AI_JOB_STALE_MS` | `300000` (5 min) | A background index job whose heartbeat hasn't been refreshed within this window is flipped to `failed` by the in-process reaper. |
+| `MASSA_AI_JOB_REAPER_INTERVAL_MS` | `60000` (60 s) | How often the stale-job reaper sweeps. |
+| `MASSA_AI_PROXY_TIMEOUT_MS` | `120000` (120 s) | Per-call timeout for the MCP client proxying a tool call to the Tools API. `0` disables the timeout (infinite wait). |
+| `MASSA_AI_SCHEDULER_ENABLED` | `false` | Master switch for the in-process cron-like scheduler. When `false` no periodic jobs fire. Set `true` to opt in; individual job kinds still need their own enable flags. |
 
 ### Embedding Providers
 
@@ -1069,23 +1069,23 @@ process environment at boot, so they do not appear in `~/.config/massa-th0th/con
 
 ```bash
 # Show current configuration
-npx @massa-th0th/mcp-client --config-show
+npx @massa-ai/mcp-client --config-show
 
 # Show config file path
-npx @massa-th0th/mcp-client --config-path
+npx @massa-ai/mcp-client --config-path
 
 # Initialize configuration
-npx @massa-th0th/mcp-client --config-init
+npx @massa-ai/mcp-client --config-init
 
 # Initialize with specific provider
-npx @massa-th0th/mcp-client --config-init --mistral your-api-key   # Mistral
-npx @massa-th0th/mcp-client --config-init --openai your-api-key    # OpenAI
+npx @massa-ai/mcp-client --config-init --mistral your-api-key   # Mistral
+npx @massa-ai/mcp-client --config-init --openai your-api-key    # OpenAI
 
 # Switch provider
-npx @massa-th0th/mcp-client --config-init --ollama-model qwen3-embedding
+npx @massa-ai/mcp-client --config-init --ollama-model qwen3-embedding
 
 # Set specific configuration values
-npx @massa-th0th/mcp-client --config-set embedding.dimensions 4096
+npx @massa-ai/mcp-client --config-set embedding.dimensions 4096
 ```
 
 ---
@@ -1098,7 +1098,7 @@ The repo ships repo-local skills plus a unified TypeScript installer that symlin
 
 `skills/AGENTS.md` contains two sections:
 
-1. **Bootstrap contract** (top, between `<!-- massa-th0th:bootstrap:start -->` and `<!-- massa-th0th:bootstrap:end -->` markers): the coding session startup contract that activates the skill stack — `caveman full` → `coding-guidelines` → `massa-th0th` → `persona-router`. Includes the persona router policy, plan challenge policy, conversation feedback policy, RTK rules, indexing/context hygiene, and dedupe/lazy-load guardrails.
+1. **Bootstrap contract** (top, between `<!-- massa-ai:bootstrap:start -->` and `<!-- massa-ai:bootstrap:end -->` markers): the coding session startup contract that activates the skill stack — `caveman full` → `coding-guidelines` → `massa-ai` → `persona-router`. Includes the persona router policy, plan challenge policy, conversation feedback policy, RTK rules, indexing/context hygiene, and dedupe/lazy-load guardrails.
 
 2. **Sub-agent registry** (bottom): the 12 reusable sub-agent specialist registry (investigator, planner, builder, reviewer, context-curator, verification-agent, requirements-analyst, architecture-specialist, test-engineer, documentation-agent, audit-specialist, mobile-specialist) with capability packet and output contract definitions.
 
@@ -1108,10 +1108,10 @@ The installer writes the bootstrap block into each tool's `AGENTS.md` using the 
 
 | Skill | Location | Description |
 |-------|----------|-------------|
-| `massa-th0th` | `skills/massa-th0th/` | Default memory-backed workflow router for every coding session. 30+ workflows (spec-driven, debug, feature, refactor, audits, ADR/RFC/TDD, commit, ticket, etc.) and 30+ references (evidence gate, context firewall, verification ladder, agent orchestration, etc.). |
-| `massa-th0th-memory` | `skills/massa-th0th-memory/` | Mandatory rules for using massa-th0th semantic search, compression, memory, and symbol graph tools. Prioritizes th0th tools over native Glob/Grep/Read. |
+| `massa-ai` | `skills/massa-ai/` | Default memory-backed workflow router for every coding session. 30+ workflows (spec-driven, debug, feature, refactor, audits, ADR/RFC/TDD, commit, ticket, etc.) and 30+ references (evidence gate, context firewall, verification ladder, agent orchestration, etc.). |
+| `massa-ai-memory` | `skills/massa-ai-memory/` | Mandatory rules for using massa-ai semantic search, compression, memory, and symbol graph tools. Prioritizes th0th tools over native Glob/Grep/Read. |
 | `synapse-usage` | `skills/synapse-usage/` | Synapse cognitive modulation layer for focused, low-noise retrieval during multi-step coding tasks. Open sessions, prime buffers, pass session IDs. |
-| `persona-router` | `skills/persona-router/` | Automatic persona selection from catalog. Reads `skills/massa-th0th/personas/catalog.json`, routes based on primary deliverable ownership, supports explicit selection, ambiguity policy, and mid-conversation rerouting. |
+| `persona-router` | `skills/persona-router/` | Automatic persona selection from catalog. Reads `skills/massa-ai/personas/catalog.json`, routes based on primary deliverable ownership, supports explicit selection, ambiguity policy, and mid-conversation rerouting. |
 
 ### Unified Skills Installer (`scripts/install-skills.ts`)
 
@@ -1131,7 +1131,7 @@ bun scripts/install-skills.ts --check --platform all            # drift check (e
 | Flag | Description |
 |------|-------------|
 | `--apply` | Install skills (symlinks + bootstrap block) — default action |
-| `--uninstall` | Remove massa-th0th-owned symlinks + bootstrap block |
+| `--uninstall` | Remove massa-ai-owned symlinks + bootstrap block |
 | `--dry-run` | Preview changes, write nothing |
 | `--check` | Report drift (missing/wrong symlinks), exit 1 if found |
 | `--platform <name>` | `claude`, `codex`, `cursor`, `opencode`, or `all` (default: all) |
@@ -1149,14 +1149,14 @@ bun scripts/install-skills.ts --check --platform all            # drift check (e
 | Cursor | `~/.cursor/skills/<name>` | `~/.cursor/AGENTS.md` |
 | OpenCode | `~/.config/opencode/skills/<name>` | `~/.config/opencode/AGENTS.md` |
 
-**State management:** `~/.config/massa-th0th/install-state.json` (v2 format). Records installed platforms, roots, and skill names. v1 state (legacy) auto-migrates to v2. State is used by `--uninstall` to know what to remove and by `--check` to detect stale symlinks.
+**State management:** `~/.config/massa-ai/install-state.json` (v2 format). Records installed platforms, roots, and skill names. v1 state (legacy) auto-migrates to v2. State is used by `--uninstall` to know what to remove and by `--check` to detect stale symlinks.
 
 **Safety:**
 - Aborts on non-symlink conflict at a target path (won't overwrite user files).
 - `--dry-run` writes nothing.
 - Requires `--yes` for real `$HOME` (not test target).
 - Idempotent: re-running `--apply` is a no-op when symlinks already point to the correct targets.
-- Uninstall removes only symlinks pointing into the massa-th0th repo root.
+- Uninstall removes only symlinks pointing into the massa-ai repo root.
 
 **Repo root resolution:** uses `import.meta.url` (script file location), not CWD — so it works regardless of where the command is invoked from. Override with `--repo-root`.
 
@@ -1173,9 +1173,9 @@ bun scripts/install-skills.ts --check --platform all            # drift check (e
 
 Personas are cataloged prompt artifacts for shaping conversation perspective. The router selects one persona based on the primary deliverable, with optional secondary review lens.
 
-**Catalog:** `skills/massa-th0th/personas/catalog.json` (schema_version 1, 5 personas). Each entry has `id`, `display_name`, `prompt_path` (filename-only, relative to the catalog directory), `summary`, `aliases`, `primary_signals`, `negative_signals`, and `secondary_lens_signals`.
+**Catalog:** `skills/massa-ai/personas/catalog.json` (schema_version 1, 5 personas). Each entry has `id`, `display_name`, `prompt_path` (filename-only, relative to the catalog directory), `summary`, `aliases`, `primary_signals`, `negative_signals`, and `secondary_lens_signals`.
 
-**Persona prompt files:** `skills/massa-th0th/personas/`
+**Persona prompt files:** `skills/massa-ai/personas/`
 
 | Persona | File | Use |
 |---------|------|-----|
@@ -1189,17 +1189,17 @@ Personas are cataloged prompt artifacts for shaping conversation perspective. Th
 
 ### Workflow Guides
 
-Documentation for massa-th0th workflows lives in `docs/`:
+Documentation for massa-ai workflows lives in `docs/`:
 
 | Guide | File | Covers |
 |-------|------|--------|
-| Spec-Driven | `docs/massa-th0th-spec-driven.md` | TLC v3 Specify → (Design) → (Tasks) → Execute flow |
-| TDD | `docs/massa-th0th-tdd.md` | Technical design / implementation plan workflow |
-| RFC | `docs/massa-th0th-rfc.md` | Propose a significant change |
-| Commit | `docs/massa-th0th-commit.md` | Safe Conventional Commits with Jira branch prefixes |
-| Ticket | `docs/massa-th0th-ticket.md` | Draft and create Jira Epics/issues through Atlassian MCP |
-| Maestro | `docs/massa-th0th-maestro.md` | Mobile E2E flow implementation |
-| Mobile Figma | `docs/massa-th0th-mobile-figma.md` | Compare mobile UI implementation with Figma design |
+| Spec-Driven | `docs/massa-ai-spec-driven.md` | TLC v3 Specify → (Design) → (Tasks) → Execute flow |
+| TDD | `docs/massa-ai-tdd.md` | Technical design / implementation plan workflow |
+| RFC | `docs/massa-ai-rfc.md` | Propose a significant change |
+| Commit | `docs/massa-ai-commit.md` | Safe Conventional Commits with Jira branch prefixes |
+| Ticket | `docs/massa-ai-ticket.md` | Draft and create Jira Epics/issues through Atlassian MCP |
+| Maestro | `docs/massa-ai-maestro.md` | Mobile E2E flow implementation |
+| Mobile Figma | `docs/massa-ai-mobile-figma.md` | Compare mobile UI implementation with Figma design |
 | Context Slices | `docs/context-slices.md` | Context slicing patterns |
 
 ### Tests
@@ -1219,7 +1219,7 @@ Run: `bun test scripts/__tests__/validate-repository.test.ts scripts/__tests__/i
 
 ## Credits
 
-massa-th0th builds on ideas and inspiration from these open-source projects:
+massa-ai builds on ideas and inspiration from these open-source projects:
 
 - **[th0th](https://github.com/S1LV4/th0th)** — the semantic code-search and memory platform this project is built on
 - **[ai-memory](https://github.com/akitaonrails/ai-memory)** — persistent agent memory concepts

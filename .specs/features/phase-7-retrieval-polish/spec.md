@@ -3,7 +3,7 @@
 Slug: `phase-7-retrieval-polish`. Plan reference:
 `i-want-to-understand-virtual-lantern.md` § "Phase 7" (items 7a–7f) +
 cross-cutting §1–5. Workflow: `spec-driven` (TLC v3). Branch: `main`.
-projectId: `massa-th0th`; workflowSessionId: `spec-virtual-lantern-plan`.
+projectId: `massa-ai`; workflowSessionId: `spec-virtual-lantern-plan`.
 
 ## Goal
 
@@ -222,7 +222,7 @@ The mutant is reverted before commit; the killing test stays.
 
 ## Gate (non-negotiable)
 
-- `bun run --filter @massa-th0th/core test` passes with **no regression vs 822
+- `bun run --filter @massa-ai/core test` passes with **no regression vs 822
   pass / 0 fail / 46 skip** (the pre-Phase-7 baseline). New tests add to the
   pass count; none weakened/skipped/deleted.
 - `bun run type-check` clean (5/5).

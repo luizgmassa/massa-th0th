@@ -47,7 +47,7 @@ describe.skipIf(!READY)("T14 commit-locked qwen fixture discrimination", () => {
     if (!omittedPath) throw new Error("qwen fixture is missing the centrality needle target");
 
     const dataset = JSON.parse(await readFile(
-      path.join(PROJECT_PATH, "benchmarks/needles/fixtures/massa-th0th.json"),
+      path.join(PROJECT_PATH, "benchmarks/needles/fixtures/massa-ai.json"),
       "utf8",
     )) as { needles: Needle[] };
     needle = dataset.needles.find((entry) =>
@@ -57,7 +57,7 @@ describe.skipIf(!READY)("T14 commit-locked qwen fixture discrimination", () => {
       throw new Error("negative qwen sensor no longer maps to the omitted target");
     }
 
-    temporaryRoot = await mkdtemp(path.join(tmpdir(), "massa-th0th-qwen-negative-"));
+    temporaryRoot = await mkdtemp(path.join(tmpdir(), "massa-ai-qwen-negative-"));
     const negative = await buildQwenFixture({
       sourceRoot: PROJECT_PATH,
       destination: path.join(temporaryRoot, "fixture"),

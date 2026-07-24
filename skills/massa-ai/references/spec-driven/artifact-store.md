@@ -66,7 +66,7 @@ Load only what you need. Prefer metadata-only inspection before loading full con
 - **Project state:** `cat .specs/project/STATE.md`
 - **Handoff:** `cat .specs/HANDOFF.md`
 - **Feature spec:** `cat .specs/features/<slug>/spec.md`
-- **Confirmed lessons:** `python3 skills/massa-th0th/scripts/lessons.py --root . list --status confirmed [--scope <relevant>]`
+- **Confirmed lessons:** `python3 skills/massa-ai/scripts/lessons.py --root . list --status confirmed [--scope <relevant>]`
 
 ## Writing Artifacts
 

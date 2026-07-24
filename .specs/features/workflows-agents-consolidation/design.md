@@ -8,17 +8,17 @@
 
 ## Architecture Overview
 
-Consolidate two repos into one tree: move 12 agent charters to `skills/agents/<name>/` and copy the massa-th0th workflow skill to `skills/massa-th0th/` in the product repo, then rewrite all 39 workflows to use named dispatch blocks instead of duplicated inline prompt prose.
+Consolidate two repos into one tree: move 12 agent charters to `skills/agents/<name>/` and copy the massa-ai workflow skill to `skills/massa-ai/` in the product repo, then rewrite all 39 workflows to use named dispatch blocks instead of duplicated inline prompt prose.
 
 ```mermaid
 graph TD
     subgraph "Product repo (cwd) — AFTER"
         SA["skills/agents/<br/>12 charters"]
-        SMT["skills/massa-th0th/<br/>router + 39 workflows<br/>+ references + lessons.py"]
+        SMT["skills/massa-ai/<br/>router + 39 workflows<br/>+ references + lessons.py"]
         GEN["scripts/generate-subagent-artifacts.ts<br/>reads skills/agents/*/SKILL.md"]
         REG["skills/AGENTS.md<br/>registry — Charter column"]
         APPS["apps/*/agents/<br/>48 shipped files (12x4)"]
-        AO["skills/massa-th0th/references/<br/>agent-orchestration.md<br/>role→agent map"]
+        AO["skills/massa-ai/references/<br/>agent-orchestration.md<br/>role→agent map"]
 
         GEN -->|reads| SA
         GEN -->|emits| APPS
@@ -33,7 +33,7 @@ graph TD
 
 **Approach A (RECOMMENDED): Phased copy-then-rewrite**
 - Phase 1: Move 12 charters → `skills/agents/`, update generator path + registry, regenerate, verify drift gate green.
-- Phase 2: Copy massa-th0th skill tree from Useful-Agent-Skills → `skills/massa-th0th/`.
+- Phase 2: Copy massa-ai skill tree from Useful-Agent-Skills → `skills/massa-ai/`.
 - Phase 3: Rewrite all 39 workflows with dispatch blocks.
 - Phase 4: Update agent-orchestration role map + final validation.
 - **Pros**: Each phase leaves the repo buildable + drift gate green; easy to bisect; behavior-preserving rewrites happen after structural moves.
@@ -71,7 +71,7 @@ graph TD
 | --- | --- |
 | Generator → charters | `loadCharter` reads `path.join(SKILLS_DIR, "agents", name, "SKILL.md")` |
 | Workflows → agents | Named dispatch blocks reference `skills/agents/<name>/SKILL.md` |
-| Workflows → references | Relative paths `references/...` still resolve inside `skills/massa-th0th/` after the move |
+| Workflows → references | Relative paths `references/...` still resolve inside `skills/massa-ai/` after the move |
 
 ---
 
@@ -85,13 +85,13 @@ graph TD
 - **Dependencies**: Generator reads them; workflows dispatch them.
 - **Reuses**: Charter content is unchanged (frozen by prior feature).
 
-### skills/massa-th0th/ (workflow skill)
+### skills/massa-ai/ (workflow skill)
 
-- **Purpose**: The massa-th0th router + workflows + references + lessons script, consolidated into the product repo.
-- **Location**: `skills/massa-th0th/SKILL.md`, `skills/massa-th0th/workflows/`, `skills/massa-th0th/references/`, `skills/massa-th0th/scripts/lessons.py`.
+- **Purpose**: The massa-ai router + workflows + references + lessons script, consolidated into the product repo.
+- **Location**: `skills/massa-ai/SKILL.md`, `skills/massa-ai/workflows/`, `skills/massa-ai/references/`, `skills/massa-ai/scripts/lessons.py`.
 - **Interfaces**: Router table in SKILL.md; workflow files; reference files.
 - **Dependencies**: Agent charters at `skills/agents/`; generator + parity test in `scripts/`.
-- **Reuses**: Full tree copied from Useful-Agent-Skills `skills/massa-th0th/`.
+- **Reuses**: Full tree copied from Useful-Agent-Skills `skills/massa-ai/`.
 
 ### scripts/generate-subagent-artifacts.ts (path update)
 
@@ -143,11 +143,11 @@ The 9 required fields are: `trigger`, `scope`, `permissions`, `inputs`, `sensors
 | --- | --- | --- | --- |
 | R1: Generator path change misses a reference | `generate-subagent-artifacts.ts:205` | Drift gate breaks | T2 updates the single `loadCharter` path; parity test confirms 48 files match |
 | R2: Old role names survive in a workflow | Any of the 39 workflow files | Dispatch blocks reference non-existent charters | T15 runs `rg 'implementer\|verifier\|domain-mapper\|coupling-auditor\|deepening-architect'` — must return 0 hits |
-| R3: Internal reference paths break after skill move | `skills/massa-th0th/workflows/*.md` | Workflows can't load references | T3 copies the tree as a unit; relative paths `references/...` still resolve |
+| R3: Internal reference paths break after skill move | `skills/massa-ai/workflows/*.md` | Workflows can't load references | T3 copies the tree as a unit; relative paths `references/...` still resolve |
 | R4: Registry Charter column not updated | `skills/AGENTS.md:56-67` | Generator can't find charters | T2 updates the column in the same task as the generator path |
 | R5: Behavior drift during rewrite | Any rewritten workflow | Routing/memory/Evidence Gate contracts change | T15 verifies routing headers, finding-ID prefixes, severity rules, and Evidence Gate steps unchanged in meaning |
 | R6: architecture-specialist 3-role fold loses sub-mode | Workflows dispatching `architecture-specialist` | Specialist doesn't know which lens (domain/coupling/deepening) to run | Dispatch block `inputs` field names the lens sub-mode explicitly |
-| R7: `lessons.py` relative paths break after move | `skills/massa-th0th/scripts/lessons.py` | Lessons commands fail | T3 copies the script as part of the skill unit; script uses `--root .` not internal paths |
+| R7: `lessons.py` relative paths break after move | `skills/massa-ai/scripts/lessons.py` | Lessons commands fail | T3 copies the script as part of the skill unit; script uses `--root .` not internal paths |
 
 ---
 
@@ -157,8 +157,8 @@ The 9 required fields are: `trigger`, `scope`, `permissions`, `inputs`, `sensors
 | --- | --- | --- |
 | AD-WAC-001: Destination = product repo | cwd | User confirmed |
 | AD-WAC-002: Agent dir = `skills/agents/` | Group 12 charters | User confirmed; separates agents from the workflow skill |
-| AD-WAC-003: Workflow skill path = `skills/massa-th0th/` | Full skill tree | User confirmed |
-| AD-WAC-004: Meta-skills stay at `skills/` top level | `massa-th0th-memory`, `synapse-usage` | Generator already excludes them; moving breaks meta-skill references |
+| AD-WAC-003: Workflow skill path = `skills/massa-ai/` | Full skill tree | User confirmed |
+| AD-WAC-004: Meta-skills stay at `skills/` top level | `massa-ai-memory`, `synapse-usage` | Generator already excludes them; moving breaks meta-skill references |
 | AD-WAC-005: Dispatch block = blockquote fenced format | Compact, scannable, matches capability packet | Reuses `agent-orchestration.md` contract |
 | AD-WAC-006: `plan-critic`/`furps-analyst`/`handoff-writer` stay role-based | No charter exists | Prompt-contract dispatch per `agent-orchestration.md` |
 | AD-WAC-007: Useful-Agent-Skills source left untouched | User decides its lifecycle | This feature copies, doesn't delete |
@@ -173,11 +173,11 @@ The 9 required fields are: `trigger`, `scope`, `permissions`, `inputs`, `sensors
 | --- | --- |
 | WAC-03/04: Drift gate green after path change | `bun run scripts/generate-subagent-artifacts.ts --check` exits 0 |
 | WAC-04: Parity test passes | `bun test scripts/__tests__/subagent-parity.test.ts` — all describes pass |
-| WAC-08: No old role names remain | `rg 'implementer\|verifier\|domain-mapper\|coupling-auditor\|deepening-architect' skills/massa-th0th/workflows/` returns 0 hits |
-| WAC-06/07: Dispatch blocks present | `rg 'Dispatch:' skills/massa-th0th/workflows/{architecture,security,requirements,tests,bugs,code-quality,implementation}/` returns ≥14 hits (7 audit + 7 fix) |
+| WAC-08: No old role names remain | `rg 'implementer\|verifier\|domain-mapper\|coupling-auditor\|deepening-architect' skills/massa-ai/workflows/` returns 0 hits |
+| WAC-06/07: Dispatch blocks present | `rg 'Dispatch:' skills/massa-ai/workflows/{architecture,security,requirements,tests,bugs,code-quality,implementation}/` returns ≥14 hits (7 audit + 7 fix) |
 | WAC-09: Dispatch block field completeness (finding B) | T15 field-completeness grep: every `Dispatch:` block has all 8 listed fields; every `architecture-specialist` dispatch has `lens:` in inputs |
 | WAC-02: Reference copy complete (finding C) | T4 `diff -rq` reference-equality check empty + pinned file count 123 |
-| WAC-02: No stale state files (finding E) | T4 post-copy purge gate: `find skills/massa-th0th -name '*.pyc' -o -name '__pycache__'` returns 0 |
+| WAC-02: No stale state files (finding E) | T4 post-copy purge gate: `find skills/massa-ai -name '*.pyc' -o -name '__pycache__'` returns 0 |
 | WAC-13/14/15: Behavior preservation | Manual diff review: routing headers, finding-ID prefixes, severity rules, Evidence Gate steps unchanged in meaning |
 | Type-check still passes | `bun run type-check` exits 0 (generator is TS) |
 | Isolation checkpoint (structural) | T15 runs parity test to isolate move-blame from rewrite-blame |

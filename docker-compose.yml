@@ -1,5 +1,5 @@
 # ============================================
-# massa-th0th - Docker Compose
+# massa-ai - Docker Compose
 # ============================================
 # Services:
 #   postgres - PostgreSQL database (port 5432)
@@ -22,35 +22,35 @@
 services:
   postgres:
     image: pgvector/pgvector:pg17
-    container_name: massa-th0th-postgres
+    container_name: massa-ai-postgres
     restart: unless-stopped
     ports:
-      - "${MASSA_TH0TH_POSTGRES_PORT:-5432}:5432"
+      - "${MASSA_AI_POSTGRES_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: massa_th0th
+      POSTGRES_USER: massa_ai
       # Set POSTGRES_PASSWORD in .env before production deploys
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-massa_th0th_password}
-      POSTGRES_DB: massa_th0th
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-massa_ai_password}
+      POSTGRES_DB: massa_ai
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U massa_th0th"]
+      test: ["CMD-SHELL", "pg_isready -U massa_ai"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   api:
-    image: ${MASSA_TH0TH_API_IMAGE:-massa/massa-th0th:api-latest}
-    container_name: massa-th0th-api
+    image: ${MASSA_AI_API_IMAGE:-massa/massa-ai:api-latest}
+    container_name: massa-ai-api
     restart: unless-stopped
     ports:
-      - "${MASSA_TH0TH_API_PORT:-3333}:3333"
+      - "${MASSA_AI_API_PORT:-3333}:3333"
     volumes:
-      - massa-th0th-data:/data
+      - massa-ai-data:/data
     environment:
       - NODE_ENV=production
-      - MASSA_TH0TH_API_PORT=3333
-      - DATABASE_URL=postgresql://massa_th0th:${POSTGRES_PASSWORD:-massa_th0th_password}@postgres:5432/massa_th0th
+      - MASSA_AI_API_PORT=3333
+      - DATABASE_URL=postgresql://massa_ai:${POSTGRES_PASSWORD:-massa_ai_password}@postgres:5432/massa_ai
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       - OLLAMA_EMBEDDING_MODEL=${OLLAMA_EMBEDDING_MODEL:-qwen3-embedding:8b}
       - OLLAMA_EMBEDDING_DIMENSIONS=${OLLAMA_EMBEDDING_DIMENSIONS:-4096}
@@ -71,12 +71,12 @@ services:
       retries: 3
 
   mcp:
-    image: ${MASSA_TH0TH_MCP_IMAGE:-massa/massa-th0th:mcp-latest}
-    container_name: massa-th0th-mcp
+    image: ${MASSA_AI_MCP_IMAGE:-massa/massa-ai:mcp-latest}
+    container_name: massa-ai-mcp
     stdin_open: true
     environment:
       - NODE_ENV=production
-      - MASSA_TH0TH_API_URL=http://api:3333
+      - MASSA_AI_API_URL=http://api:3333
     depends_on:
       api:
         condition: service_healthy
@@ -84,5 +84,5 @@ services:
 volumes:
   postgres-data:
     driver: local
-  massa-th0th-data:
+  massa-ai-data:
     driver: local

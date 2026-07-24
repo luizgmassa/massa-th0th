@@ -40,7 +40,7 @@ import {
  * source itself (a real version drift or tampering) fails the check.
  */
 
-const SKIP_ENV_FLAG = "MASSA_TH0TH_SKIP_GRAMMAR_INTEGRITY";
+const SKIP_ENV_FLAG = "MASSA_AI_SKIP_GRAMMAR_INTEGRITY";
 
 /**
  * Carries the pinned and recomputed integrity values so callers can report a
@@ -198,7 +198,7 @@ let integrityVerified = false;
  * check never taxes per-request parse paths.
  *
  * Default behavior is ON (verifies). Set the environment variable
- * `MASSA_TH0TH_SKIP_GRAMMAR_INTEGRITY=1` to skip, which is intended only for
+ * `MASSA_AI_SKIP_GRAMMAR_INTEGRITY=1` to skip, which is intended only for
  * local development iterations where grammar packages are intentionally
  * patched or swapped. Production and CI default to verifying.
  *

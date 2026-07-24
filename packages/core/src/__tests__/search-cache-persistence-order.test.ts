@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { SearchResult } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-ai/shared";
 import { SearchCachePg } from "../services/search/search-cache-pg.js";
 
 const RESULT: SearchResult = {

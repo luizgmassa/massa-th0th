@@ -1,4 +1,4 @@
-# massa-th0th LLM-judge Benchmark Report
+# massa-ai LLM-judge Benchmark Report
 
 - Ran at: `2026-07-12T15:47:09.981Z`
 - Instruction model: `qwen2.5:7b-instruct`

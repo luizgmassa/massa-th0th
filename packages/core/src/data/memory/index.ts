@@ -1,5 +1,5 @@
 /**
- * @massa-th0th/core - Memory Data Layer
+ * @massa-ai/core - Memory Data Layer
  */
 
 export { MemoryRepositoryPg } from "./memory-repository-pg.js";

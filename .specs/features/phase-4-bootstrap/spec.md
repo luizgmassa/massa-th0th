@@ -7,7 +7,7 @@ Slug: `phase-4-bootstrap`. Workflow: `spec-driven` (TLC v3). Plan ref:
 
 ## Problem
 
-A fresh project in massa-th0th starts with an **empty memory store**. An
+A fresh project in massa-ai starts with an **empty memory store**. An
 agent working on it has no pre-loaded context — no understanding of the
 repo's architecture, conventions, key entrypoints, or recent direction.
 Today every useful memory must be created manually via `remember`.

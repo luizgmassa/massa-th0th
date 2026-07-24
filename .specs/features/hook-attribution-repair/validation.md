@@ -1,7 +1,7 @@
 # Hook Attribution Repair — Validation
 
 **Feature**: `hook-attribution-repair` (Wave 3 M45+M47)
-**projectId**: `massa-th0th` · **workflowSessionId**: `spec-wave-3` · **branch**: `wave-3`
+**projectId**: `massa-ai` · **workflowSessionId**: `spec-wave-3` · **branch**: `wave-3`
 **Verdict**: PASS (T1–T8 complete; gates green; independent verifier PASS)
 **Runtime**: Bun `1.3.11` (pinned, AD-004/005), Node `25.9.0` build helper.
 
@@ -35,7 +35,7 @@
 - **Gate**: resolver unit tests; migration seeds would not match `/`.
 
 ### HAR-04 / AC-4,5 — Session stickiness (server pin + emitter pin)
-- **Evidence**: `session-pin-store.ts` (server, T2); `apps/claude-plugin/hooks/_pin.sh` (T5) — pin file `${TMPDIR:-/tmp}/massa-th0th-hooks/<sanitized-session>`; `apps/opencode-plugin/src/session-project-pin.ts` (T6).
+- **Evidence**: `session-pin-store.ts` (server, T2); `apps/claude-plugin/hooks/_pin.sh` (T5) — pin file `${TMPDIR:-/tmp}/massa-ai-hooks/<sanitized-session>`; `apps/opencode-plugin/src/session-project-pin.ts` (T6).
 - **Gates**: `hook-scripts.test.ts` (15 tests, T5: first-event pin, pin-beats-env, no-git fallback, pre-compact, sanitize, degenerate-ids, missing-helper fallback, exit-0-on-API-fail, empty-stdin no-op); `session-project-pin.test.ts` (12 tests, T6: precedence, memo reuse, distinct sessions, no-session bypass, bound eviction, git safe-fail, agentIdOf).
 - **AC-5 (stdin single-read, plan-critic C3)**: T5 "first event from a subdirectory pins; POST body intact" asserts `payload == {session_id, marker:"intact"}` — the pin logic ran AFTER stdin capture.
 
@@ -61,7 +61,7 @@
 
 ### HAR-10 / AC-10 — Feature-owned gates
 - **Evidence**: `hook-attribution-acceptance.test.ts` (env-gated, skips cleanly without `HOOK_ATTRIBUTION_ACCEPTANCE_DATABASE_URL`); `turbo.json` `passThroughEnv` includes the var (T4).
-- **Gates**: owned PG `massa_th0th_hook_attribution` @ 127.0.0.1:5432; focused unit suites; full regression; type-check 6/6; build 5/5.
+- **Gates**: owned PG `massa_ai_hook_attribution` @ 127.0.0.1:5432; focused unit suites; full regression; type-check 6/6; build 5/5.
 
 ## Gate Results (this session, Bun 1.3.11)
 
@@ -93,7 +93,7 @@ No new failure introduced by T5/T6/T7/T8.
 | Finding | Incorp. at |
 | --- | --- |
 | C1 — path-dedup + self-match preference (resolver + migration) | T2 + T7 (`HAVING n=1`, explicit-tier self-match) |
-| C2 — NULL-safe `NOT EXISTS`; `_pre_repair_project_id` preservation; grooming runbook (docs-only) | T7 (never `NOT IN`); design runbook; `e2e-th0th-shared` preserved per ops decision |
+| C2 — NULL-safe `NOT EXISTS`; `_pre_repair_project_id` preservation; grooming runbook (docs-only) | T7 (never `NOT IN`); design runbook; `e2e-ai-shared` preserved per ops decision |
 | C3 — `_pin.sh` runs AFTER stdin capture | T5 (pin call after `$(cat)`; AC-5 body-intact test) |
 | C4 — compact-snapshot optional `cwd` + resolver routing + route test | T3 |
 | C5 — OpenCode populates `agentId`; Claude honestly NULL | T6 (`agentIdOf`); T4 NULL-acceptance |
@@ -139,6 +139,6 @@ Dispatched against the spec AC map + discrimination sensors. Result: **PASS**.
 ## Residual Risk
 
 - **Repair migration residue**: rows with no payload `cwd`, ambiguous shared-path cwd, or multi-id sessions are contract-legal `verbatim` and remain unrepaired (counted via `DO $$` NOTICE). Acceptable per design (unambiguous-only).
-- **Shared dev DB grooming**: runbook in `design.md` is documentation only; execution requires explicit user approval. `e2e-th0th-shared` intentionally preserved.
+- **Shared dev DB grooming**: runbook in `design.md` is documentation only; execution requires explicit user approval. `e2e-ai-shared` intentionally preserved.
 - **In-memory pin store**: process-local, bounded 1000, 24h TTL; loss degrades to containment/verbatim (contract-legal). Repair migration backfills history.
 - **`metadata`/`payload_json` are TEXT**: migration casts `::jsonb` on read and `::text` on write; safe because producers (`HookService`, `ObservationEmitter`) always write valid JSON.

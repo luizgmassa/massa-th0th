@@ -52,7 +52,7 @@ Reject direct use without a saved `audits/maestro/<YYYY-MM-DD maestro-audit.md>`
    - Protect existing flows, subflows, fixtures, snapshots, baselines, report consumers, and CI commands unless the audit finding explicitly scopes them.
 9. Use strict harness sensors:
    - If verification found a reusable signal (`ac_gap`, `surviving_mutant`, `spec_precision_gap`, `spec_deviation`, `gate_fail`), record it via `references/lessons.md`:
-     `python3 skills/massa-th0th/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
+     `python3 skills/massa-ai/scripts/lessons.py --root . add --feature "<slug>" --signal "<signal>" --source "<ref>" --text "<one terse lesson>"`
    - Apply the Mandatory Verification Fix Gate from `references/verification-ladder.md`: run the report's Verification Suggestion or an equivalent deterministic command/artifact check for each selected `MST-*` finding or coherent group.
    - Prefer repository-specific Maestro commands; otherwise run `maestro test --format junit --output <report.xml> --test-output-dir <artifact-dir> <flow-or-directory>`.
    - A finding cannot be marked `fixed` when a target-relevant command or artifact check exists but was not attempted.

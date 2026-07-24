@@ -37,7 +37,7 @@
       "recurrence": 1,
       "harmful": 0,
       "evidence": [
-        "apps/claude-plugin/hooks/massa-th0th-hook.ts:219-227 + apps/claude-plugin/hooks/__tests__/massa-th0th-hook.test.ts (test-strength)"
+        "apps/claude-plugin/hooks/massa-ai-hook.ts:219-227 + apps/claude-plugin/hooks/__tests__/massa-ai-hook.test.ts (test-strength)"
       ],
       "created": "2026-07-22T21:39:38Z",
       "last_seen": "2026-07-22T21:39:38Z",

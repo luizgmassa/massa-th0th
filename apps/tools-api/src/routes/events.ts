@@ -10,7 +10,7 @@
  */
 
 import { Elysia } from "elysia";
-import { eventBus } from "@massa-th0th/core";
+import { eventBus } from "@massa-ai/core";
 
 const HEARTBEAT_MS = 15_000;
 const MAX_DURATION_MS = 10 * 60 * 1000; // 10 minutes

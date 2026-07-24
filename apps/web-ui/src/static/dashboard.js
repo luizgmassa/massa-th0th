@@ -1,5 +1,5 @@
 /**
- * massa-th0th Web UI — dashboard.js (N28 observability).
+ * massa-ai Web UI — dashboard.js (N28 observability).
  *
  * Read-only dashboard rendering: fetches scheduler status, hook queue,
  * Synapse sessions, and system metrics. Renders sections into HTML.

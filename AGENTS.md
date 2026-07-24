@@ -1,14 +1,14 @@
-# massa-th0th — Agent Startup Contract
+# massa-ai — Agent Startup Contract
 
 ## Project Identity
 
-- **projectId**: `massa-th0th`
+- **projectId**: `massa-ai`
 - **Resolve from**: workspace root directory basename (fallback: git toplevel basename)
 - **Session IDs**: `spec-<workflow>-<entity>` (e.g., `spec-wave-7-hygiene-ui-process`)
 
 ## Runtime Routing
 
-This project uses the `massa-th0th` skill workflow router. Load it once per coding session.
+This project uses the `massa-ai` skill workflow router. Load it once per coding session.
 
 ### Active Feature
 
@@ -16,7 +16,7 @@ Check `.specs/project/STATE.md` for the current active feature and `.specs/proje
 
 ### Available Skills (repo-local)
 
-- `massa-th0th-memory/` — memory system usage patterns
+- `massa-ai-memory/` — memory system usage patterns
 - `synapse-usage/` — Synapse cognitive session lifecycle
 - `AGENTS.md` (under `skills/`) — sub-agent registry: 12 reusable specialist agents
 
@@ -120,7 +120,7 @@ conversation_feedback:
 
 ## Runtime Contract
 
-After activation, follow `skills/massa-th0th/SKILL.md` (global, not repo-local) for all runtime behavior. The global skill defines workflow routing, project/session handling, retrieval, persistence, graceful degradation, and completion evidence.
+After activation, follow `skills/massa-ai/SKILL.md` (global, not repo-local) for all runtime behavior. The global skill defines workflow routing, project/session handling, retrieval, persistence, graceful degradation, and completion evidence.
 
 ## Tech Stack
 

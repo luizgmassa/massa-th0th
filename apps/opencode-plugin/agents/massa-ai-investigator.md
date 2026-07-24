@@ -1,11 +1,11 @@
 ---
-name: massa-th0th-investigator
+name: massa-ai-investigator
 description: Read-only codebase investigation agent. Locate implementations, trace execution flow, identify dependencies, estimate change impact, and answer engineering questions. Triggers when a workflow needs to understand existing code before planning or implementing. Never modifies code, never generates implementation, never performs reviews.
 mode: subagent
 model: DeepSeek V4 Pro
 reasoningEffort: max
 permission: { edit: deny, bash: deny }
-metadata: { massa-th0th-owned: true }
+metadata: { massa-ai-owned: true }
 ---
 # Investigator Agent Skill
 
@@ -50,7 +50,7 @@ Read and understand the codebase to answer engineering questions without modifyi
 - The task needs unresolved user intent.
 - The work is tightly coupled without a clear owner.
 
-## massa-th0th Integration
+## massa-ai Integration
 - Context Firewall: summarize search output, logs, and source reads; return only `path:line` pointers and findings.
 - Verification Ladder: static checks (grep, search) and file-integrity; no behavioral changes.
 - Th0th Memory: suggest durable architecture/dependency memories only when useful; main agent persists.

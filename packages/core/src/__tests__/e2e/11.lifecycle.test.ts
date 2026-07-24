@@ -283,7 +283,7 @@ describe.skipIf(!READY)("T8 — Lifecycle", () => {
 
       // Soft timing backstop (finding #12): the MCP bootstrap should stay within
       // the proxy timeout budget + a generous slack margin (LLM/embedding jitter).
-      const proxyBudgetMs = Number(process.env.MASSA_TH0TH_PROXY_TIMEOUT_MS ?? "120000");
+      const proxyBudgetMs = Number(process.env.MASSA_AI_PROXY_TIMEOUT_MS ?? "120000");
       const elapsedMs = Date.now() - t0;
       expect(elapsedMs).toBeLessThanOrEqual(proxyBudgetMs + 60_000);
 

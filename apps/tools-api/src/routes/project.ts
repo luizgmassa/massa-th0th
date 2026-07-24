@@ -20,11 +20,11 @@ import {
   type ActorContext,
   type ProjectIdentityService,
   UNKNOWN_ACTOR,
-} from "@massa-th0th/core";
+} from "@massa-ai/core";
 import { Elysia, t } from "elysia";
 import fs from "fs/promises";
 import path from "path";
-import { getGlobalDataDir } from "@massa-th0th/shared";
+import { getGlobalDataDir } from "@massa-ai/shared";
 import { deriveActor } from "../middleware/auth.js";
 
 let indexProjectTool: IndexProjectTool | null = null;
@@ -335,7 +335,7 @@ export const projectRoutes = new Elysia({ prefix: "/api/v1/project" })
         "default";
       const finalProjectId = rawBase.replace(/[^a-zA-Z0-9_.-]/g, "_").slice(0, 128);
 
-      const uploadRoot = process.env.MASSA_TH0TH_UPLOAD_DIR || path.join(getGlobalDataDir(), "uploads");
+      const uploadRoot = process.env.MASSA_AI_UPLOAD_DIR || path.join(getGlobalDataDir(), "uploads");
       const stagingDir = path.resolve(uploadRoot, finalProjectId);
 
       // Clear stale files from previous uploads so deleted/renamed files don't linger

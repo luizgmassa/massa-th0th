@@ -5,7 +5,7 @@
  * Returns file, line, usage kind, and code context snippets.
  */
 
-import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse } from "@massa-ai/shared";
 import { symbolGraphService } from "../services/symbol/symbol-graph.service.js";
 import { ToolError } from "./enum-validation.js";
 import { serializeToolResponse } from "./serialize.js";

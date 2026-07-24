@@ -6,9 +6,9 @@ Use a persona explicitly by naming it, asking for no persona, pasting its conten
 
 ## Automatic Routing
 
-For every conversation, the startup contract loads `persona-router` after `massa-th0th` when massa-th0th applies. Generic non-coding conversations run the router directly so massa-th0th keeps its coding-only scope. Codex and Cursor receive this contract through SessionStart context; Claude Code and OpenCode receive it through their managed instruction files.
+For every conversation, the startup contract loads `persona-router` after `massa-ai` when massa-ai applies. Generic non-coding conversations run the router directly so massa-ai keeps its coding-only scope. Codex and Cursor receive this contract through SessionStart context; Claude Code and OpenCode receive it through their managed instruction files.
 
-The router waits for the first user prompt before selecting anything. It reads `catalog.json`, honors explicit persona or no-persona requests, reuses valid persona evidence already recalled by massa-th0th, and inspects targeted workspace documentation only when memory is missing or inconclusive. Relevant sources include applicable `AGENTS.md` and `CLAUDE.md` files, the root README, ADRs or decision records, architecture documents, and `.specs` project files.
+The router waits for the first user prompt before selecting anything. It reads `catalog.json`, honors explicit persona or no-persona requests, reuses valid persona evidence already recalled by massa-ai, and inspects targeted workspace documentation only when memory is missing or inconclusive. Relevant sources include applicable `AGENTS.md` and `CLAUDE.md` files, the root README, ADRs or decision records, architecture documents, and `.specs` project files.
 
 Only the selected prompt is loaded. Mixed requests use one primary persona and, when needed, one focused secondary review lens. The selected route remains active for related turns and is reconsidered only under the configured mid-conversation policy.
 

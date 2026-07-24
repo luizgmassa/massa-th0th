@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { DEFAULT_ALLOWED_EXTENSIONS } from "@massa-th0th/shared/config";
+import { DEFAULT_ALLOWED_EXTENSIONS } from "@massa-ai/shared/config";
 import {
   getLanguageManifestEntry,
   inspectLanguageManifest,

@@ -11,8 +11,8 @@
 import { describe, expect, test, beforeAll, afterEach } from "bun:test";
 import { Elysia } from "elysia";
 import { dashboardRoutes } from "../routes/dashboard.js";
-import { resetScheduler } from "@massa-th0th/core/services";
-import { resetHookService } from "@massa-th0th/core";
+import { resetScheduler } from "@massa-ai/core/services";
+import { resetHookService } from "@massa-ai/core";
 
 const app = new Elysia().use(dashboardRoutes);
 

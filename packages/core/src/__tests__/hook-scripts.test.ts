@@ -44,7 +44,7 @@ describe("Claude Code hook scripts (P3-HOOKSCRIPT-01)", () => {
     }
   });
 
-  it("each lifecycle script maps to the correct massa-th0th event kind", () => {
+  it("each lifecycle script maps to the correct massa-ai event kind", () => {
     const cases: Array<[string, string]> = [
       ["session-start.sh", "session-start"],
       ["user-prompt-submit.sh", "user-prompt"],
@@ -63,7 +63,7 @@ describe("Claude Code hook scripts (P3-HOOKSCRIPT-01)", () => {
 command -v curl >/dev/null 2>&1 || { exit 0; }
 exit 7
 `;
-    const tmp = path.join(fs.mkdtempSync(path.join(require("os").tmpdir(), "massa-th0th-hook-")), "probe.sh");
+    const tmp = path.join(fs.mkdtempSync(path.join(require("os").tmpdir(), "massa-ai-hook-")), "probe.sh");
     fs.writeFileSync(tmp, probe);
     fs.chmodSync(tmp, 0o755);
     // Run with a PATH that does NOT contain curl (use /dev/null).
@@ -81,8 +81,8 @@ exit 7
     const content = fs.readFileSync(path.join(HOOKS_DIR, "_post.sh"), "utf8");
     expect(content).toContain("-m 2");
     expect(content).toContain("exit 0");
-    expect(content).toContain("MASSA_TH0TH_API_BASE");
-    expect(content).toContain("MASSA_TH0TH_API_KEY");
+    expect(content).toContain("MASSA_AI_API_BASE");
+    expect(content).toContain("MASSA_AI_API_KEY");
   });
 });
 
@@ -113,7 +113,7 @@ const gitAvailable =
   spawnSync("git", ["--version"], { stdio: "ignore" }).status === 0;
 
 function makeHarness() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "massa-th0th-pin-test-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "massa-ai-pin-test-"));
   const binDir = path.join(root, "bin");
   fs.mkdirSync(binDir);
   const curlPath = path.join(binDir, "curl");
@@ -137,7 +137,7 @@ function runHook(
       PATH: `${harness.binDir}:/usr/bin:/bin`,
       TMPDIR: harness.tmpdir,
       STUB_CURL_LOG: harness.log,
-      MASSA_TH0TH_API_BASE: "http://127.0.0.1:9",
+      MASSA_AI_API_BASE: "http://127.0.0.1:9",
       ...opts.env,
     },
   });
@@ -188,7 +188,7 @@ describe("Claude hook session pinning (T5/HAR-04/AC-5)", () => {
         marker: "intact",
       });
 
-      const pinFile = path.join(h.tmpdir, "massa-th0th-hooks", "sess-1");
+      const pinFile = path.join(h.tmpdir, "massa-ai-hooks", "sess-1");
       expect(fs.readFileSync(pinFile, "utf8")).toBe("proj-root");
     },
   );
@@ -209,7 +209,7 @@ describe("Claude hook session pinning (T5/HAR-04/AC-5)", () => {
       const res = runHook(h, "stop.sh", {
         cwd: sub,
         stdin: JSON.stringify({ session_id: "sess-2" }),
-        env: { MASSA_TH0TH_PROJECT_ID: "env-override" },
+        env: { MASSA_AI_PROJECT_ID: "env-override" },
       });
       expect(res.status).toBe(0);
 
@@ -228,7 +228,7 @@ describe("Claude hook session pinning (T5/HAR-04/AC-5)", () => {
     runHook(h, "session-start.sh", {
       cwd: work,
       stdin: JSON.stringify({ session_id: "sess-3" }),
-      env: { MASSA_TH0TH_PROJECT_ID: "explicit-env" },
+      env: { MASSA_AI_PROJECT_ID: "explicit-env" },
     });
     const res = runHook(h, "user-prompt-submit.sh", {
       cwd: work,
@@ -256,7 +256,7 @@ describe("Claude hook session pinning (T5/HAR-04/AC-5)", () => {
     const calls = readCalls(h);
     expect(calls.length).toBe(1);
     expect(calls[0].body.projectId).toBe("plain-dir");
-    const pinFile = path.join(h.tmpdir, "massa-th0th-hooks", "sess-4");
+    const pinFile = path.join(h.tmpdir, "massa-ai-hooks", "sess-4");
     expect(fs.readFileSync(pinFile, "utf8")).toBe("plain-dir");
   });
 
@@ -302,7 +302,7 @@ describe("Claude hook session pinning (T5/HAR-04/AC-5)", () => {
     });
     expect(res.status).toBe(0);
 
-    const pinDir = path.join(h.tmpdir, "massa-th0th-hooks");
+    const pinDir = path.join(h.tmpdir, "massa-ai-hooks");
     const entries = fs.readdirSync(pinDir);
     expect(entries.length).toBe(1);
     expect(entries[0]).toMatch(/^[A-Za-z0-9._-]+$/);
@@ -329,7 +329,7 @@ describe("Claude hook session pinning (T5/HAR-04/AC-5)", () => {
         PATH: `${h.binDir}:/usr/bin:/bin`,
         TMPDIR: h.tmpdir,
         STUB_CURL_LOG: h.log,
-        MASSA_TH0TH_API_BASE: "http://127.0.0.1:9",
+        MASSA_AI_API_BASE: "http://127.0.0.1:9",
       },
     });
     expect(res.status).toBe(0);
@@ -380,7 +380,7 @@ describe("Claude hook session pinning (T5/HAR-04/AC-5)", () => {
     expect(res.status).toBe(0);
     expect(readCalls(h).length).toBe(0);
     expect(
-      fs.existsSync(path.join(h.tmpdir, "massa-th0th-hooks")),
+      fs.existsSync(path.join(h.tmpdir, "massa-ai-hooks")),
     ).toBe(false);
   });
 });

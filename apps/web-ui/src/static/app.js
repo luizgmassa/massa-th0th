@@ -1,5 +1,5 @@
 /**
- * massa-th0th Web UI — app.js (read-only memory/search browser).
+ * massa-ai Web UI — app.js (read-only memory/search browser).
  *
  * Single source for the pure helpers (markdownToHtml, view renderers, theme
  * helpers). The browser-init block is guarded by `typeof document !==
@@ -43,13 +43,13 @@ export const MEMORY_LEVELS = [
   { value: 3, label: "3 — Session" },
 ];
 
-const THEME_STORAGE_KEY = "massa-th0th-ui-theme";
+const THEME_STORAGE_KEY = "massa-ai-ui-theme";
 
-/** Check if write mode is enabled (MASSA_TH0TH_WEB_WRITE_MODE=true). Default off. */
+/** Check if write mode is enabled (MASSA_AI_WEB_WRITE_MODE=true). Default off. */
 export function isWriteModeEnabled() {
-  if (typeof globalThis !== "undefined" && globalThis.MASSA_TH0TH_WEB_WRITE_MODE === true) return true;
+  if (typeof globalThis !== "undefined" && globalThis.MASSA_AI_WEB_WRITE_MODE === true) return true;
   try {
-    return localStorage.getItem("massa-th0th-write-mode") === "true";
+    return localStorage.getItem("massa-ai-write-mode") === "true";
   } catch (_) {
     return false;
   }
@@ -136,7 +136,7 @@ function _minimalMarkdownToHtml(md) {
     const codeStash = [];
     t = t.replace(/`([^`]+)`/g, (_m, c) => {
       codeStash.push(c);
-      return "@@MASSA_TH0THCODE" + (codeStash.length - 1) + "@@";
+      return "@@MASSA_AICODE" + (codeStash.length - 1) + "@@";
     });
     t = t.replace(
       /\[([^\]]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/g,
@@ -145,7 +145,7 @@ function _minimalMarkdownToHtml(md) {
     );
     t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     t = t.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-    t = t.replace(/@@MASSA_TH0THCODE(\d+)@@/g, (_m, idx) => "<code>" + codeStash[Number(idx)] + "</code>");
+    t = t.replace(/@@MASSA_AICODE(\d+)@@/g, (_m, idx) => "<code>" + codeStash[Number(idx)] + "</code>");
     return t;
   }
 
@@ -867,7 +867,7 @@ function startApp(opts) {
 }
 
 // Export pure helpers + bootstrap on globalThis for both browser and Node import.
-const MASSA_TH0TH_UI = {
+const MASSA_AI_UI = {
   markdownToHtml,
   escapeHtml,
   renderProjects,
@@ -887,7 +887,7 @@ const MASSA_TH0TH_UI = {
   MEMORY_LEVELS,
 };
 if (typeof globalThis !== "undefined") {
-  globalThis.MASSA_TH0TH_UI = MASSA_TH0TH_UI;
+  globalThis.MASSA_AI_UI = MASSA_AI_UI;
 }
 
 // Auto-start in a browser environment.

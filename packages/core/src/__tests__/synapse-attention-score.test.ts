@@ -5,8 +5,8 @@ import {
   DEFAULT_ATTENTION_WEIGHTS,
 } from "../services/synapse/scoring/attention-score.js";
 import { SessionRegistry } from "../services/synapse/session/session-registry.js";
-import type { SearchResult } from "@massa-th0th/shared";
-import { SearchSource } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-ai/shared";
+import { SearchSource } from "@massa-ai/shared";
 
 const NOW = 2_000_000_000;
 const DAY = 86_400_000;

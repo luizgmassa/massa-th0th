@@ -5,7 +5,7 @@ set -euo pipefail
 
 BATCH="${BATCH:-A}"
 MINSCORE="${MINSCORE:-0.001}"
-PROJECT="${PROJECT:@massa-th0th}"
+PROJECT="${PROJECT:@massa-ai}"
 URL="${URL:-http://localhost:3333/api/v1/search/project}"
 OUT="${OUT:-/tmp/synapse-bench-${BATCH}.jsonl}"
 

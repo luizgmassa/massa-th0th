@@ -2,7 +2,7 @@
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
-Implement these tasks with the `massa-th0th` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
+Implement these tasks with the `massa-ai` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
 
 **If the skill cannot be activated, STOP and tell the user — do not proceed without it.**
 
@@ -41,7 +41,7 @@ Implement these tasks with the `massa-th0th` skill: **activate it by name and fo
 | Gate Level | When to Use | Command |
 | --- | --- | --- |
 | Quick | After each unit-touching task | `bun test packages/core/src/__tests__/<changed-suite>.test.ts` |
-| Acceptance | After T4/T7 and before validation | `HOOK_ATTRIBUTION_ACCEPTANCE_DATABASE_URL=postgres://luizmassa@127.0.0.1:5432/massa_th0th_hook_attribution bun test packages/core/src/__tests__/hook-attribution-acceptance.test.ts` (owned DB; suite skips without var) |
+| Acceptance | After T4/T7 and before validation | `HOOK_ATTRIBUTION_ACCEPTANCE_DATABASE_URL=postgres://luizmassa@127.0.0.1:5432/massa_ai_hook_attribution bun test packages/core/src/__tests__/hook-attribution-acceptance.test.ts` (owned DB; suite skips without var) |
 | Full | After T7 and at validation | `bun run test` (expect only pre-existing failure set from HANDOFF) |
 | Build | Validation | `bun run type-check` (6/6) and `bun run build --force` (5/5) |
 

@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-massa-th0th's MCP tools return rich JSON `data` payloads that bloat agent context. A TOON (Token-Oriented Object Notation) encoder (`@toon-format/toon`) is already pinned and wired into 9 tools via a duplicated inline `format === "toon" ? {success,data:toTOON(x)} : {success,data:x}` switch — one copy per tool, no shared seam. Three high-value graph/context tools (`get_optimized_context`, `trace_path`, `impact_analysis`) have no `format` support at all, and no tool supports field projection (`fields`), which is the larger token lever for heavy graph payloads (e.g. `trace_path.nodes`/`edges`, `impact_analysis.impacted[]`).
+massa-ai's MCP tools return rich JSON `data` payloads that bloat agent context. A TOON (Token-Oriented Object Notation) encoder (`@toon-format/toon`) is already pinned and wired into 9 tools via a duplicated inline `format === "toon" ? {success,data:toTOON(x)} : {success,data:x}` switch — one copy per tool, no shared seam. Three high-value graph/context tools (`get_optimized_context`, `trace_path`, `impact_analysis`) have no `format` support at all, and no tool supports field projection (`fields`), which is the larger token lever for heavy graph payloads (e.g. `trace_path.nodes`/`edges`, `impact_analysis.impacted[]`).
 
 ## Goals
 

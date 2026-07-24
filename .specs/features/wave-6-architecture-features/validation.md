@@ -74,11 +74,11 @@
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ---------------------- | ------ |
-| AC1: WHEN MASSA_TH0TH_EMBEDDED=true THEN MCP routes tool calls direct to core (no HTTP hop), REST not required | Embedded routes direct, no REST needed | `embedded-mode-parity.test.ts:27-33` — `expect(client).toBeInstanceOf(EmbeddedApiClient)`; `embedded-api-client.ts:272` implements ToolProxyApiClient routing to core services directly (no fetch) | ✅ PASS |
+| AC1: WHEN MASSA_AI_EMBEDDED=true THEN MCP routes tool calls direct to core (no HTTP hop), REST not required | Embedded routes direct, no REST needed | `embedded-mode-parity.test.ts:27-33` — `expect(client).toBeInstanceOf(EmbeddedApiClient)`; `embedded-api-client.ts:272` implements ToolProxyApiClient routing to core services directly (no fetch) | ✅ PASS |
 | AC2: WHEN embedded THEN proxyCallTool uses in-process dispatcher not ApiClient HTTP | In-process dispatcher | `embedded-mode-parity.test.ts:44-50` — both clients implement get/post; `embedded-api-client.ts` routes to `IndexProjectTool`, `SearchProjectTool` etc. directly | ✅ PASS |
-| AC3: WHEN embedded THEN health check reports mode:"embedded" + REST optional (start only if MASSA_TH0TH_API_PORT set) | mode field "embedded" or "http" | `embedded-mode-parity.test.ts:62-65` — `expect(healthy).toBe(true)`; `apps/mcp-client/src/index.ts` — MASSA_TH0TH_EMBEDDED → EmbeddedApiClient (verified via test:27-33) | ✅ PASS |
+| AC3: WHEN embedded THEN health check reports mode:"embedded" + REST optional (start only if MASSA_AI_API_PORT set) | mode field "embedded" or "http" | `embedded-mode-parity.test.ts:62-65` — `expect(healthy).toBe(true)`; `apps/mcp-client/src/index.ts` — MASSA_AI_EMBEDDED → EmbeddedApiClient (verified via test:27-33) | ✅ PASS |
 | AC4: WHEN tool call fails in embedded THEN error identical to HTTP-mode shape (same ToolError structure) | Same `{success:false, error}` structure | `embedded-mode-parity.test.ts:102-115` — `expect(parsed.success).toBe(false)`, `expect(typeof parsed.error).toBe("string")`; `embedded-api-client.ts:236` — `throw new ApiHttpError(status, { success: false, error: message })` | ✅ PASS |
-| AC5: WHEN both modes available THEN single config flag switches with no code changes | Config flag switches, no code changes | `embedded-mode-parity.test.ts:27-42` — `process.env.MASSA_TH0TH_EMBEDDED === "true"` selects EmbeddedApiClient vs ApiClient | ✅ PASS |
+| AC5: WHEN both modes available THEN single config flag switches with no code changes | Config flag switches, no code changes | `embedded-mode-parity.test.ts:27-42` — `process.env.MASSA_AI_EMBEDDED === "true"` selects EmbeddedApiClient vs ApiClient | ✅ PASS |
 
 **Status**: ✅ 5/5 ACs match spec outcome
 
@@ -88,11 +88,11 @@
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ---------------------- | ------ |
-| AC1: WHEN massa-th0th-hook invoked with event + stdin THEN POST to /api/v1/hook (2s timeout, exit 0 always) | POST to /api/v1/hook, 2s timeout, exit 0 | `massa-th0th-hook.test.ts:66-71` — `expect(result.exitCode).toBe(0)`; `massa-th0th-hook.ts:229-237` — `postObservation(hookUrl, obsBody, 2000)` + `process.exit(0)`. **Gap**: test only checks exit 0, does NOT verify POST body or endpoint target. | ⚠️ Spec-precision gap: exit 0 verified, POST body/endpoint NOT asserted |
-| AC2: WHEN binary installed THEN replaces 7 shell scripts + .claude/settings.json references binary | 7 scripts replaced, settings.json references binary | `apps/claude-plugin/settings.json.template` modified (diff shows +12/-1). 7 shell scripts replaced by `massa-th0th-hook.ts` (5 subcommands cover 7 events: session-start, user-prompt-submit, post-tool-use, pre-compact, stop) | ✅ PASS (wiring verified via diff) |
-| AC3: WHEN project-id pinning runs THEN same resolution order (pin→env→git→cwd) + silent-degrade | Pin→env→git→cwd, silent-degrade | `massa-th0th-hook.test.ts:117-137` — env pin test: `expect(pinned).toBe("env-project-id")`; `:140-163` — existing pin wins: `expect(pinned).toBe("pinned-project-id")`; `massa-th0th-hook.ts:61-111` implements resolution order | ✅ PASS |
-| AC4: WHEN stdin is terminal (no pipe) THEN exit 0 no POST | Terminal stdin → exit 0, no POST | `massa-th0th-hook.test.ts:79-83` — `expect(result.exitCode).toBe(0)` with `pipeStdin=false`; `massa-th0th-hook.ts:118-125` — `stats.isCharacterDevice()` check | ✅ PASS |
-| AC5: WHEN jq absent THEN binary parses JSON TS-native | TS-native JSON parse, no jq | `massa-th0th-hook.ts:183` — `JSON.parse(stdinStripped)` (Bun-native, no jq import); `massa-th0th-hook.test.ts:61-64` — malformed JSON → exit 0 | ✅ PASS |
+| AC1: WHEN massa-ai-hook invoked with event + stdin THEN POST to /api/v1/hook (2s timeout, exit 0 always) | POST to /api/v1/hook, 2s timeout, exit 0 | `massa-ai-hook.test.ts:66-71` — `expect(result.exitCode).toBe(0)`; `massa-ai-hook.ts:229-237` — `postObservation(hookUrl, obsBody, 2000)` + `process.exit(0)`. **Gap**: test only checks exit 0, does NOT verify POST body or endpoint target. | ⚠️ Spec-precision gap: exit 0 verified, POST body/endpoint NOT asserted |
+| AC2: WHEN binary installed THEN replaces 7 shell scripts + .claude/settings.json references binary | 7 scripts replaced, settings.json references binary | `apps/claude-plugin/settings.json.template` modified (diff shows +12/-1). 7 shell scripts replaced by `massa-ai-hook.ts` (5 subcommands cover 7 events: session-start, user-prompt-submit, post-tool-use, pre-compact, stop) | ✅ PASS (wiring verified via diff) |
+| AC3: WHEN project-id pinning runs THEN same resolution order (pin→env→git→cwd) + silent-degrade | Pin→env→git→cwd, silent-degrade | `massa-ai-hook.test.ts:117-137` — env pin test: `expect(pinned).toBe("env-project-id")`; `:140-163` — existing pin wins: `expect(pinned).toBe("pinned-project-id")`; `massa-ai-hook.ts:61-111` implements resolution order | ✅ PASS |
+| AC4: WHEN stdin is terminal (no pipe) THEN exit 0 no POST | Terminal stdin → exit 0, no POST | `massa-ai-hook.test.ts:79-83` — `expect(result.exitCode).toBe(0)` with `pipeStdin=false`; `massa-ai-hook.ts:118-125` — `stats.isCharacterDevice()` check | ✅ PASS |
+| AC5: WHEN jq absent THEN binary parses JSON TS-native | TS-native JSON parse, no jq | `massa-ai-hook.ts:183` — `JSON.parse(stdinStripped)` (Bun-native, no jq import); `massa-ai-hook.test.ts:61-64` — malformed JSON → exit 0 | ✅ PASS |
 | AC6: WHEN attribution resolved THEN matches AttributionResolver behavior (explicit→sticky→containment→verbatim, fail-open) | Attribution matches existing resolver | **Gap**: No test asserts attribution resolution behavior. Hook binary does not import or replicate AttributionResolver — it uses pin resolution (AC3) only. Spec AC6 mentions AttributionResolver but hook binary doesn't implement it. | ❌ GAP: no evidence of AttributionResolver parity |
 
 **Status**: 3/6 PASS, 2 spec-precision gaps, 1 GAP (attribution parity untested + not implemented)
@@ -148,7 +148,7 @@
 | AC1: WHEN preset=true THEN consolidation enabled (≥30 min) + decay enabled (≥60 min) | consolidation+decay enabled at conservative intervals | `scheduler-safe-defaults.test.ts:106-118` — `expect(jobs["memory-consolidation"]?.enabled).toBe(true)`, `expect(jobs["decay-sweep"]?.enabled).toBe(true)`; `scheduler-defaults.ts:120-141` — `Math.max(currentInterval, THIRTY_MIN)` / `ONE_HOUR` | ✅ PASS |
 | AC2: WHEN preset active THEN auto-improve stays opt-in (NOT enabled by preset) | Auto-improve NOT enabled | `scheduler-safe-defaults.test.ts:116` — `expect(jobs["auto-improve"]?.enabled).toBe(false)` | ✅ PASS |
 | AC3: WHEN preset active THEN master switch still required | Master switch required | `scheduler-safe-defaults.test.ts:89-104` — preset without master: `expect(status.running).toBe(false)`; `:106-118` preset + master → jobs enabled | ✅ PASS |
-| AC4: WHEN individual envs conflict with preset THEN individual envs take precedence | Individual envs override preset | `scheduler-safe-defaults.test.ts:165-177` — `MASSA_TH0TH_SCHEDULER_CONSOLIDATION_ENABLED=false` → `expect(jobs["memory-consolidation"]?.enabled).toBe(false)`, decay still true | ✅ PASS |
+| AC4: WHEN individual envs conflict with preset THEN individual envs take precedence | Individual envs override preset | `scheduler-safe-defaults.test.ts:165-177` — `MASSA_AI_SCHEDULER_CONSOLIDATION_ENABLED=false` → `expect(jobs["memory-consolidation"]?.enabled).toBe(false)`, decay still true | ✅ PASS |
 | AC5: WHEN preset not set THEN behavior unchanged (all default-disabled) | Unchanged, all disabled | `scheduler-safe-defaults.test.ts:152-163` — `expect(jobs["memory-consolidation"]?.enabled).toBe(false)` for all 4 jobs | ✅ PASS |
 
 **Status**: ✅ 5/5 ACs match spec outcome — strongest test suite in this wave
@@ -231,7 +231,7 @@
 
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --------- | -------------------- | ---------------------- | ------ |
-| AC1: WHEN GLR probed THEN document current cap (if any) + whether affects massa-th0th grammars | Cap documented + impact assessed | `docs/glr-verification.md:24-49` — "not exposed by binding API", "No defect found", "Affects massa-th0th's grammars: no" | ✅ PASS (documented) |
+| AC1: WHEN GLR probed THEN document current cap (if any) + whether affects massa-ai grammars | Cap documented + impact assessed | `docs/glr-verification.md:24-49` — "not exposed by binding API", "No defect found", "Affects massa-ai's grammars: no" | ✅ PASS (documented) |
 | AC2: WHEN defect found THEN report with fix proposal (not silently fixed) | Report, don't silently fix | `glr-verification.md:48-49` — "No fix needed" (no defect found) | ✅ PASS (N/A — no defect) |
 | AC3: WHEN no defect THEN documented in docs/ or .specs/ | Documented | `docs/glr-verification.md` (60 LOC) + `scripts/verify-glr-stack-depth.ts` (169 LOC probe) | ✅ PASS |
 
@@ -245,7 +245,7 @@
 |---|----------|-----------|-------------|---------|
 | 1 | N29 preset no-op | `scheduler-defaults.ts:202` | Removed `applySafeDefaults(rawDef)` call → `const def = rawDef` (preset never applied) | ✅ Killed (4 tests fail) |
 | 2 | N20 UNION GUARD disabled | `run-tests-parallel.ts:243-257` | Replaced missing/extra checks with empty arrays (guard always passes) | ❌ Survived (6 pass, 1 fail — same as baseline; no test injects missing suite) |
-| 3 | N30 hook second POST removed | `massa-th0th-hook.ts:219-227` | Removed snapshot POST from pre-compact (only 1 POST instead of 2) | ❌ Survived (11 pass — tests only check exit 0, never POST body/count/endpoint) |
+| 3 | N30 hook second POST removed | `massa-ai-hook.ts:219-227` | Removed snapshot POST from pre-compact (only 1 POST instead of 2) | ❌ Survived (11 pass — tests only check exit 0, never POST body/count/endpoint) |
 | 4 | N32 embedded error shape flipped | `embedded-api-client.ts:236` | Changed `{ success: false, error }` → `{ success: true, error }` | ✅ Killed (2 tests fail — parity test checks `parsed.success === false`) |
 | 5 | N31 mapper kind flipped | `symbol-repo-mappers.ts:123` | Changed `kind: d.kind as SymbolKind` → `kind: "function" as SymbolKind` | ✅ Killed (2 tests fail — characterization catches mapped value drift) |
 
@@ -285,7 +285,7 @@ UAT: not applicable — backend/harness/infrastructure work, no user-facing UI b
 |-----------|----------|----------|
 | Decomposed module imported by non-existent path → barrel re-export maintains backward compat | ✅ | Facade files re-export; characterization tests pass through facade |
 | Embedded MCP with file I/O tool (index) works without HTTP multipart | ✅ | `embedded-mode-parity.test.ts:120-160` — uploadAndIndex path-safety tests; `embedded-api-client.ts` does in-process fs |
-| Hook binary receives malformed JSON → exit 0 no POST | ✅ | `massa-th0th-hook.test.ts:61-64` — `expect(result.exitCode).toBe(0)` |
+| Hook binary receives malformed JSON → exit 0 no POST | ✅ | `massa-ai-hook.test.ts:61-64` — `expect(result.exitCode).toBe(0)` |
 | Parallel runner zero suites → UNION GUARD passes | ✅ | `run-tests-parallel.test.ts:69-74` — `expect(result.exitCode).toBe(0)` |
 | Dashboard loads with scheduler disabled → shows "scheduler disabled" not crash | ✅ | `dashboard-views.test.ts:47-53` — `expect(html).toContain("scheduler disabled")` |
 | Preset set but master switch off → no jobs run | ✅ | `scheduler-safe-defaults.test.ts:89-104` — `expect(status.running).toBe(false)` |
@@ -324,7 +324,7 @@ UAT: not applicable — backend/harness/infrastructure work, no user-facing UI b
 ### Fix 3: N30 hook pre-compact dual-POST untested (Major — surviving mutant)
 
 - **Root cause**: All hook tests assert `exitCode === 0` only. None verify the POST body, endpoint, or count. Discrimination sensor mutation 3 (removed second POST) survived. Spec W6-03 AC1 requires POST to `/api/v1/hook` with correct semantics; pre-compact requires TWO POSTs to different endpoints.
-- **Fix task**: Add a test that spins up a local HTTP capture server, runs `massa-th0th-hook pre-compact` with valid stdin, and asserts: (1) 2 POSTs received, (2) first to `/api/v1/hook` with observation body `{event, projectId, sessionId, cwd, payload}`, (3) second to `/api/v1/hook/compact-snapshot` with snapshot body `{sessionId, projectId, persist, cwd}`.
+- **Fix task**: Add a test that spins up a local HTTP capture server, runs `massa-ai-hook pre-compact` with valid stdin, and asserts: (1) 2 POSTs received, (2) first to `/api/v1/hook` with observation body `{event, projectId, sessionId, cwd, payload}`, (3) second to `/api/v1/hook/compact-snapshot` with snapshot body `{sessionId, projectId, persist, cwd}`.
 - **Priority**: Major
 
 ### Fix 4: M25 name resolution 0 behavior tests (Major — 3 ACs uncovered)
@@ -435,7 +435,7 @@ UAT: not applicable — backend/harness/infrastructure work, no user-facing UI b
 
 #### Gap 3: N30 hook pre-compact dual-POST — CLOSED ✅
 
-- **Fix**: `79f4aa2` — added `massa-th0th-hook.test.ts:191-221` (capture server + dual-POST assertions).
+- **Fix**: `79f4aa2` — added `massa-ai-hook.test.ts:191-221` (capture server + dual-POST assertions).
 - **Assertion**: `:200` — `expect(posts.length).toBe(2)`; `:203-209` — 1st POST to `/api/v1/hook` with observation body `{event:"pre-compact", projectId, sessionId, cwd, payload}`; `:212-220` — 2nd POST to `/api/v1/hook/compact-snapshot` with snapshot body `{sessionId, projectId, persist:true, cwd}` and NOT `{event, payload}`.
 - **Non-shallow**: removing the 2nd POST → `posts.length` = 1 (fails). Wrong body shape → field assertions fail. Confirmed by Mutant B (3 tests fail).
 - **Test result**: 15 pass, 0 fail.
@@ -454,7 +454,7 @@ UAT: not applicable — backend/harness/infrastructure work, no user-facing UI b
 
 #### Gap 5: N42 recover behavior — CLOSED ✅
 
-- **Fix**: `01048c0` + `72fc2cf` — `recover-project.test.ts` (mock.module on `@massa-th0th/core/services` → fakePrisma; 4 behavior tests).
+- **Fix**: `01048c0` + `72fc2cf` — `recover-project.test.ts` (mock.module on `@massa-ai/core/services` → fakePrisma; 4 behavior tests).
 - **Assertions**:
   - Valid projectId + newPath: `:56-66` — `expect(result.found).toBe(true)`, `result.oldPath` = old, `result.newPath` = new, `findUniqueCalls` = 1, `updateCalls` = 1, `lastUpdateArgs.where.projectId` = "proj-abc", `lastUpdateArgs.data.projectPath` = new path (alias-chain preserved: projectId unchanged)
   - Non-existent projectId: `:73-78` — `expect(result.found).toBe(false)`, `result.oldPath` = null, `findUniqueCalls` = 1, `updateCalls` = 0 (no update when not found)
@@ -464,7 +464,7 @@ UAT: not applicable — backend/harness/infrastructure work, no user-facing UI b
 
 #### Gap 6: N30 AC6 AttributionResolver parity — CLOSED ✅ (SPEC-CLARIFIED)
 
-- **Fix**: `79f4aa2` — `massa-th0th-hook.test.ts:303-365` + `massa-th0th-hook.ts:243-247` (comment clarifying server-side resolution).
+- **Fix**: `79f4aa2` — `massa-ai-hook.test.ts:303-365` + `massa-ai-hook.ts:243-247` (comment clarifying server-side resolution).
 - **Worker clarification confirmed matches spec intent**: Spec AC6 says "attribution resolved THEN it SHALL match existing AttributionResolver behavior." The hook binary does NOT replicate AttributionResolver client-side — it sends raw inputs (`projectId`, `sessionId`, `cwd`) for server-side resolution. The server-side AttributionResolver runs the explicit→sticky→containment→verbatim chain using these inputs. The binary is the transport; the server is the resolver. This matches spec intent: the resolved attribution (server-side) matches AttributionResolver behavior; the binary just provides the inputs.
 - **Assertions**: `:325-331` — observation POST carries `projectId`/`sessionId`/`cwd` as strings, `projectId` = caller value, `sessionId` = session value; `:343-347` — snapshot POST carries same trio; `:358-364` — source assertions: binary does NOT import AttributionResolver (`not.toMatch(/import.*AttributionResolver/)`), does NOT call `resolveContainment`, but DOES send `sessionId`/`projectId`/`cwd`.
 - **Non-shallow**: a mutant that drops `sessionId`/`cwd`/`projectId` from the POST body fails the `toHaveProperty` assertions; a mutant that replicates AttributionResolver client-side fails the `not.toMatch` source assertions.
@@ -483,7 +483,7 @@ Re-injected the 2 surviving mutants from iteration 1:
 | # | Mutation | File:line | Description | Killed? |
 |---|----------|-----------|-------------|---------|
 | A | N20 UNION GUARD disabled | `run-tests-parallel.ts:243-256` | Replaced missing/extra checks with `const missing: string[] = []; const extra: string[] = [];` (guard always passes, "UNION GUARD FAIL" string removed) | ✅ **KILLED** — 1 fail: `run-tests-parallel.test.ts:191` `expect(runnerSource).toContain("UNION GUARD FAIL")` fails (string absent in mutant). Source-assertion test catches the guard removal. |
-| B | N30 hook second POST removed | `massa-th0th-hook.ts:228-241` | Removed snapshot POST from pre-compact (only 1 POST instead of 2) | ✅ **KILLED** — 3 fail: `:200` `expect(posts.length).toBe(2)` gets 1; `:230` same; `:342` `expect(snap).toBeDefined()` gets undefined. Dual-POST count + snapshot attribution tests catch the removal. |
+| B | N30 hook second POST removed | `massa-ai-hook.ts:228-241` | Removed snapshot POST from pre-compact (only 1 POST instead of 2) | ✅ **KILLED** — 3 fail: `:200` `expect(posts.length).toBe(2)` gets 1; `:230` same; `:342` `expect(snap).toBeDefined()` gets undefined. Dual-POST count + snapshot attribution tests catch the removal. |
 
 **Sensor result (iteration 2)**: 5/5 mutations killed, 0 survived — **PASS**
 

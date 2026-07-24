@@ -6,7 +6,7 @@ Atomic, one commit per task. Conventional Commits. Gate (`bun run test` +
 ## Task 1 — Scaffold `apps/web-ui` package + Tools API static route
 
 **Files:**
-- `apps/web-ui/package.json` — `@massa-th0th/web-ui`, private, zero deps, script
+- `apps/web-ui/package.json` — `@massa-ai/web-ui`, private, zero deps, script
   `type-check` (`tsc --noEmit` on an empty-ish tsconfig — or skip tsconfig and
   rely on the JS being type-checked via the API's reference; simplest: a
   tsconfig that includes `src/**/*.ts` only, and we keep app logic in `.js` so
@@ -32,8 +32,8 @@ test task). Commit: `feat(web-ui): scaffold apps/web-ui + serve static via tools
 
 **Files:**
 - `apps/web-ui/src/static/app.js` — exports (for testing) + wires the app:
-  - `api(path, { method, body })` — fetch wrapper; reads `MASSA_TH0TH_API_BASE` from
-    `window.__MASSA_TH0TH_API_BASE__` or `""` (same-origin); injectable for tests.
+  - `api(path, { method, body })` — fetch wrapper; reads `MASSA_AI_API_BASE` from
+    `window.__MASSA_AI_API_BASE__` or `""` (same-origin); injectable for tests.
   - View renderers (pure `({ data, state }) => string`): `renderProjects`,
     `renderMemoryBrowser`, `renderSearch`, `renderHandoffs`, `renderCheckpoints`.
   - `markdownToHtml(md)` — minimal renderer (headings/bold/italic/lists/links/

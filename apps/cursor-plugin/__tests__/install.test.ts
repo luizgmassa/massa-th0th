@@ -3,8 +3,8 @@
  *
  * Verifies the install.sh behavior against the spec acceptance criteria
  * (CRS-01, CRS-02, CRS-07) and the F5 array-append merge mitigation:
- * - user-scope install creates ~/.cursor/plugins/massa-th0th/ + merges hooks.json
- * - project-scope install creates ./.cursor/plugins/massa-th0th/
+ * - user-scope install creates ~/.cursor/plugins/massa-ai/ + merges hooks.json
+ * - project-scope install creates ./.cursor/plugins/massa-ai/
  * - array-append merge preserves pre-existing user hooks
  * - uninstall removes only owned entries; user hooks survive
  * - idempotent re-run is a no-op
@@ -73,13 +73,13 @@ async function pathExists(p: string): Promise<boolean> {
 }
 
 describe("cursor-plugin install.sh (T10 / CRS-01,02,07 + F5)", () => {
-  test("user-scope install creates ~/.cursor/plugins/massa-th0th/ + merges hooks.json with 7 events", async () => {
+  test("user-scope install creates ~/.cursor/plugins/massa-ai/ + merges hooks.json with 7 events", async () => {
     const res = runInstall(["--user"], { HOME: tmp });
     expect(res.exitCode).toBe(0);
 
-    const pluginDir = path.join(tmp, ".cursor/plugins/massa-th0th");
+    const pluginDir = path.join(tmp, ".cursor/plugins/massa-ai");
     expect(await pathExists(path.join(pluginDir, ".cursor-plugin/plugin.json"))).toBe(true);
-    expect(await pathExists(path.join(pluginDir, "agents/massa-th0th-navigator.md"))).toBe(true);
+    expect(await pathExists(path.join(pluginDir, "agents/massa-ai-navigator.md"))).toBe(true);
 
     const cfg = await readJson(path.join(tmp, ".cursor/hooks.json"));
     expect(cfg).toHaveProperty("version");
@@ -97,16 +97,16 @@ describe("cursor-plugin install.sh (T10 / CRS-01,02,07 + F5)", () => {
     expect(Object.keys(hooks).sort()).toEqual(expectedEvents.sort());
   });
 
-  test("project-scope install creates ./.cursor/plugins/massa-th0th/", async () => {
+  test("project-scope install creates ./.cursor/plugins/massa-ai/", async () => {
     const res = runInstall(["--project"], { HOME: tmp }, tmp);
     expect(res.exitCode).toBe(0);
 
-    const pluginDir = path.join(tmp, ".cursor/plugins/massa-th0th");
+    const pluginDir = path.join(tmp, ".cursor/plugins/massa-ai");
     expect(await pathExists(path.join(pluginDir, ".cursor-plugin/plugin.json"))).toBe(true);
     expect(await pathExists(path.join(tmp, ".cursor/hooks.json"))).toBe(true);
   });
 
-  test("array-append merge: pre-existing user hook survives alongside massa-th0th entry", async () => {
+  test("array-append merge: pre-existing user hook survives alongside massa-ai entry", async () => {
     // Pre-create hooks.json with a user hook under sessionStart (no marker)
     await fs.mkdir(path.join(tmp, ".cursor"), { recursive: true });
     const userHooks = {
@@ -131,9 +131,9 @@ describe("cursor-plugin install.sh (T10 / CRS-01,02,07 + F5)", () => {
       (e) => (e.command as string) === "user-script",
     );
     expect(userEntry).toBeDefined();
-    // massa-th0th entry appended
+    // massa-ai entry appended
     const owned = sessionStart.find(
-      (e) => e._massaTh0thOwned === true,
+      (e) => e._massaAiOwned === true,
     );
     expect(owned).toBeDefined();
     // Top-level version preserved
@@ -159,9 +159,9 @@ describe("cursor-plugin install.sh (T10 / CRS-01,02,07 + F5)", () => {
 
     const cfg = await readJson(path.join(tmp, ".cursor/hooks.json"));
     const sessionStart = cfg.hooks!.sessionStart as Record<string, unknown>[];
-    // massa-th0th entries gone
+    // massa-ai entries gone
     expect(
-      sessionStart.find((e) => e._massaTh0thOwned === true),
+      sessionStart.find((e) => e._massaAiOwned === true),
     ).toBeUndefined();
     // User hook survives
     expect(
@@ -169,7 +169,7 @@ describe("cursor-plugin install.sh (T10 / CRS-01,02,07 + F5)", () => {
     ).toBeDefined();
     // Plugin dir removed
     expect(
-      await pathExists(path.join(tmp, ".cursor/plugins/massa-th0th")),
+      await pathExists(path.join(tmp, ".cursor/plugins/massa-ai")),
     ).toBe(false);
   });
 
@@ -214,13 +214,13 @@ describe("cursor-plugin install.sh (T10 / CRS-01,02,07 + F5)", () => {
     const res = runInstall(["--user"], { HOME: tmp });
     expect(res.exitCode).toBe(0);
 
-    const agentsDir = path.join(tmp, ".cursor/plugins/massa-th0th/agents");
+    const agentsDir = path.join(tmp, ".cursor/plugins/massa-ai/agents");
     // Navigator preserved (CRS-04)
-    expect(await pathExists(path.join(agentsDir, "massa-th0th-navigator.md"))).toBe(true);
+    expect(await pathExists(path.join(agentsDir, "massa-ai-navigator.md"))).toBe(true);
     // 12 specialists (CRS-01)
     for (const name of SPECIALIST_NAMES) {
       expect(
-        await pathExists(path.join(agentsDir, `massa-th0th-${name}.md`)),
+        await pathExists(path.join(agentsDir, `massa-ai-${name}.md`)),
       ).toBe(true);
     }
     // Total 13 .md files in agents/
@@ -233,14 +233,14 @@ describe("cursor-plugin install.sh (T10 / CRS-01,02,07 + F5)", () => {
 
   test("CRS-05: uninstall removes whole plugin dir (all 13 agents gone)", async () => {
     runInstall(["--user"], { HOME: tmp });
-    const agentsDir = path.join(tmp, ".cursor/plugins/massa-th0th/agents");
+    const agentsDir = path.join(tmp, ".cursor/plugins/massa-ai/agents");
     expect(await pathExists(agentsDir)).toBe(true);
 
     const res = runInstall(["--uninstall"], { HOME: tmp });
     expect(res.exitCode).toBe(0);
     // Whole plugin dir removed (CRS-05: unchanged behavior)
     expect(
-      await pathExists(path.join(tmp, ".cursor/plugins/massa-th0th")),
+      await pathExists(path.join(tmp, ".cursor/plugins/massa-ai")),
     ).toBe(false);
   });
 });

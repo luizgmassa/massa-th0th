@@ -4,7 +4,7 @@
  * POST /api/v1/file/read - Read file with optimizations
  */
 
-import { ReadFileTool, SymbolGraphService } from "@massa-th0th/core";
+import { ReadFileTool, SymbolGraphService } from "@massa-ai/core";
 import { Elysia, t } from "elysia";
 
 let readFileTool: ReadFileTool | null = null;

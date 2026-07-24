@@ -15,7 +15,7 @@
  */
 
 import { createHash } from "crypto";
-import { logger, estimateTokens } from "@massa-th0th/shared";
+import { logger, estimateTokens } from "@massa-ai/shared";
 import { TokenMetrics } from "../metrics/token-metrics.js";
 
 // ── Constants ─────────────────────────────────────────────────────────────────

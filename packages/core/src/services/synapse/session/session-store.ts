@@ -1,4 +1,4 @@
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import type { AgentSession } from "../types.js";
 import type { WorkingMemoryBufferConfig } from "../buffer/working-memory-buffer.js";
 import { PgSynapseSessionStore } from "./session-store-pg.js";

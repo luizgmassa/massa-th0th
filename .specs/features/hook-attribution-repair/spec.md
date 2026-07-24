@@ -8,7 +8,7 @@ Hook-captured observations are attributed to the correct durable project even wh
 
 Bug class confirmed REAL in current source:
 
-- Attribution is client-side cwd basename: `apps/claude-plugin/hooks/_post.sh:44` (`${MASSA_TH0TH_PROJECT_ID:-$(basename "$PWD")}`), `apps/opencode-plugin/src/index.ts:118` (`project?.id || basename || "default"`). Server treats `projectId` as opaque required string (`hook-service.ts:100-105`).
+- Attribution is client-side cwd basename: `apps/claude-plugin/hooks/_post.sh:44` (`${MASSA_AI_PROJECT_ID:-$(basename "$PWD")}`), `apps/opencode-plugin/src/index.ts:118` (`project?.id || basename || "default"`). Server treats `projectId` as opaque required string (`hook-service.ts:100-105`).
 - Subdirectory misattribution: hook from `repo/apps/tools-api` sends `"tools-api"`, indexed project is root basename — strict-equality reads split (`observation-repository-pg.ts:217`).
 - Worktree/symlink fragmentation: index side canonicalizes (`index_project.ts:37-42`), hook side never does.
 - Unregistered/$HOME events create silent new buckets; no sentinel, no containment, no broad-root exclusion anywhere; basename collisions mix projects silently.
@@ -56,7 +56,7 @@ Bug class confirmed REAL in current source:
 ## Non-goals
 
 - Index-side broad-root blocking (`index_project` refusing `$HOME`/`/`) — separate hardening; attribution-side exclusion only.
-- Shared-DB workspace grooming execution (retiring junk/e2e registrations) — an ops runbook is authored in design.md, but running it against the shared dev DB requires explicit user approval and is not this feature's code scope; `e2e-th0th-shared` is intentionally preserved per standing ops decision.
+- Shared-DB workspace grooming execution (retiring junk/e2e registrations) — an ops runbook is authored in design.md, but running it against the shared dev DB requires explicit user approval and is not this feature's code scope; `e2e-ai-shared` is intentionally preserved per standing ops decision.
 - Rejecting or queue-holding unattributable events (fail-open is contractual).
 - Durable (DB-backed) session pin store — in-memory + repair migration is sufficient.
 - Provenance column on `memories` (observations only; memories repair counted via migration notices).
@@ -74,7 +74,7 @@ Bug class confirmed REAL in current source:
 | Session pin store | In-memory bounded TTL map | KISS; repair migration backfills history; pins are an optimization not a correctness dependency | y (assumption) |
 | Memories repair source | `session_id` → unambiguous session project | Memories have no cwd payload; session linkage is the only honest signal | y (assumption) |
 | Compact-snapshot route | Covered by same resolver via new optional `cwd` wire field | Verified bypass (`compact_snapshot.ts:80` persists directly; no cwd on wire) — closed by requirement, not assumption | y |
-| Shared-DB data shape (duplicate/nested/junk workspace roots on dev DB) | Resolver + migration dedupe by path; self-match preference; ambiguous-safe; grooming runbook authored, execution needs user approval | Plan-critic C1/C2 evidence: dev DB has duplicate root (`e2e-th0th-shared` ≡ `massa-th0th-self-test`), nested (`e2e-th0th-verify-586`), `/tmp` (`partial`) | y (design hardened) |
+| Shared-DB data shape (duplicate/nested/junk workspace roots on dev DB) | Resolver + migration dedupe by path; self-match preference; ambiguous-safe; grooming runbook authored, execution needs user approval | Plan-critic C1/C2 evidence: dev DB has duplicate root (`e2e-ai-shared` ≡ `massa-ai-self-test`), nested (`e2e-ai-verify-586`), `/tmp` (`partial`) | y (design hardened) |
 
 **Open questions:** none.
 

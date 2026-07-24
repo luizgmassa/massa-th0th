@@ -9,7 +9,7 @@
 import {
   STRUCTURAL_FQN_DESCRIPTION,
   STRUCTURAL_SYMBOL_KIND_SCHEMA,
-} from "@massa-th0th/shared";
+} from "@massa-ai/shared";
 import type { ToolDefinition } from "../tool-definitions.js";
 
 export const SEARCH_TOOL_DEFINITIONS: ToolDefinition[] = [

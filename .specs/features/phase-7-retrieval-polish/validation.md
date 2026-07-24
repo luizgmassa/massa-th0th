@@ -50,7 +50,7 @@ All mutants reverted before commit; killing tests stay.
 ## Gate command output
 
 ```
-$ bun run test      → @massa-th0th/core 893 pass / 0 fail / 46 skip (7/7 tasks)
+$ bun run test      → @massa-ai/core 893 pass / 0 fail / 46 skip (7/7 tasks)
 $ bun run type-check → 5/5 successful
 ```
 

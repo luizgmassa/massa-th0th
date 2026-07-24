@@ -1,6 +1,6 @@
 ---
 name: synapse-usage
-description: Use the massa-th0th Synapse cognitive modulation layer to get focused, low-noise retrieval during multi-step coding tasks. Open a session, prime the buffer with known-relevant memories, pass synapseSessionId on every search, and prefetch when opening a file. Triggers on tasks involving repeated searches in the same context (debugging, code review, refactor, onboarding) where retrieval quality matters more than one-shot speed.
+description: Use the massa-ai Synapse cognitive modulation layer to get focused, low-noise retrieval during multi-step coding tasks. Open a session, prime the buffer with known-relevant memories, pass synapseSessionId on every search, and prefetch when opening a file. Triggers on tasks involving repeated searches in the same context (debugging, code review, refactor, onboarding) where retrieval quality matters more than one-shot speed.
 license: MIT
 metadata:
   author: S1LV4, luizgmassa
@@ -9,7 +9,7 @@ metadata:
 
 # synapse-usage Skill
 
-Use the massa-th0th **Synapse** cognitive modulation layer to get focused, low-noise retrieval during multi-step coding tasks. Synapse does not replace `search` or `optimized_context` — it modulates *which results survive and in what order* based on session context, task alignment, agent affinity, intent, recency, and result diversity.
+Use the massa-ai **Synapse** cognitive modulation layer to get focused, low-noise retrieval during multi-step coding tasks. Synapse does not replace `search` or `optimized_context` — it modulates *which results survive and in what order* based on session context, task alignment, agent affinity, intent, recency, and result diversity.
 
 ## When to Apply
 
@@ -25,7 +25,7 @@ Skip Synapse for one-shot lookups; the overhead does not pay back.
 
 ## Interface
 
-Synapse is exposed via the massa-th0th MCP server (10 Synapse tools: `synapse_session`, `synapse_get`, `synapse_update`, `synapse_end`, `synapse_prime`, `synapse_access`, `synapse_prefetch`, `synapse_list`, `synapse_task_begin`, `synapse_task_end`) and, as a fallback when the MCP adapter is unavailable, via the tools-API REST endpoints at `http://localhost:3333/api/v1/synapse/...`. Prefer MCP; fall back to REST only after a documented MCP schema or adapter failure. The eight REST endpoints are:
+Synapse is exposed via the massa-ai MCP server (10 Synapse tools: `synapse_session`, `synapse_get`, `synapse_update`, `synapse_end`, `synapse_prime`, `synapse_access`, `synapse_prefetch`, `synapse_list`, `synapse_task_begin`, `synapse_task_end`) and, as a fallback when the MCP adapter is unavailable, via the tools-API REST endpoints at `http://localhost:3333/api/v1/synapse/...`. Prefer MCP; fall back to REST only after a documented MCP schema or adapter failure. The eight REST endpoints are:
 
 | Endpoint | Purpose |
 |----------|---------|

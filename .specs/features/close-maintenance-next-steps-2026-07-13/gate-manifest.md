@@ -6,9 +6,9 @@ Frozen before implementation. Rows may gain measured evidence; they may not be r
 
 - HEAD/origin: `cc985905fae3495a31a16aaf0fbd75435a2e63df`; branch `main`; worktree clean.
 - Bun `1.3.11`; Node `v25.9.0`; Turbo `2.10.2`; PostgreSQL tools `17.10`; Ollama client `0.31.2`; RTK available.
-- Shared `:3333`: PID `9754`, start `2026-07-12 20:39:53 -0300`, command `bun src/index.ts`, health `ok`, service `massa-th0th-tools-api`, version `1.0.0`.
+- Shared `:3333`: PID `9754`, start `2026-07-12 20:39:53 -0300`, command `bun src/index.ts`, health `ok`, service `massa-ai-tools-api`, version `1.0.0`.
 - Dedicated ports `3334`, `5433`, and `11435`: free.
-- Required env: `DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_th0th_test`, same `POSTGRES_VECTOR_URL`, `VECTOR_STORE_TYPE=postgres`, `MASSA_TH0TH_DEDICATED=1`.
+- Required env: `DATABASE_URL=postgresql://test:test@127.0.0.1:5433/massa_ai_test`, same `POSTGRES_VECTOR_URL`, `VECTOR_STORE_TYPE=postgres`, `MASSA_AI_DEDICATED=1`.
 
 ## Sequential Gates
 
@@ -32,17 +32,17 @@ Every measured row records exact command, exit code, duration, pass/fail/skip co
 ## TASK-002 Measured Evidence
 
 - Focused unit/Synapse gate: explicit dedicated env; 8 files; 82 pass, 0 fail, 0 skip; Bun-reported 181 ms, command wall 4.9 s; exit 0.
-- Live F24: explicit PostgreSQL `127.0.0.1:5433/massa_th0th_test`, API `:3334`, Ollama `:11435`, qwen3-embedding:8b/4096; 1 pass, 0 fail, 0 skip, 35 filtered; 1.66 s; exit 0.
+- Live F24: explicit PostgreSQL `127.0.0.1:5433/massa_ai_test`, API `:3334`, Ollama `:11435`, qwen3-embedding:8b/4096; 1 pass, 0 fail, 0 skip, 35 filtered; 1.66 s; exit 0.
 - Type-check: latest 6/6 Turbo tasks; 3.741 s; exit 0.
-- Owned listeners: PostgreSQL PID 23481/data directory `/tmp/massa-th0th-close-20260713-1424/postgres`; Ollama PID 24780; API PID 25391. Shared `:3333` remained PID 9754 and healthy.
-- Temporary F24 index: 4 files/4 chunks, 0 errors, 3.517 s; project `e2e-th0th-shared` inside the dedicated DB only. This stack is disposable and will be reprovisioned before fixture/G10 acceptance.
+- Owned listeners: PostgreSQL PID 23481/data directory `/tmp/massa-ai-close-20260713-1424/postgres`; Ollama PID 24780; API PID 25391. Shared `:3333` remained PID 9754 and healthy.
+- Temporary F24 index: 4 files/4 chunks, 0 errors, 3.517 s; project `e2e-ai-shared` inside the dedicated DB only. This stack is disposable and will be reprovisioned before fixture/G10 acceptance.
 
 ## TASK-003 Measured Evidence
 
 - Focused filter/controller/cache gate: explicit dedicated env; 3 files; 25 pass, 0 fail, 0 skip; Bun-reported 148 ms, command wall 5.3 s; exit 0. Includes assertion-equivalent SQLite and dedicated PostgreSQL cache-key checks.
-- Live F18: explicit PostgreSQL `127.0.0.1:5433/massa_th0th_test`, API `:3334`, Ollama `:11435`, qwen3-embedding:8b/4096; 1 pass, 0 fail, 0 skip, 35 filtered; Bun-reported 160 ms; exit 0.
+- Live F18: explicit PostgreSQL `127.0.0.1:5433/massa_ai_test`, API `:3334`, Ollama `:11435`, qwen3-embedding:8b/4096; 1 pass, 0 fail, 0 skip, 35 filtered; Bun-reported 160 ms; exit 0.
 - Type-check after the final implementation: 6/6 Turbo tasks; 3.217 s; exit 0.
-- Disposable live fixture refresh: 5 files/7 chunks, 0 errors, 185 ms; project `e2e-th0th-shared` in the dedicated DB. API PID 35336; PostgreSQL PID 23481; Ollama PID 24780.
+- Disposable live fixture refresh: 5 files/7 chunks, 0 errors, 185 ms; project `e2e-ai-shared` in the dedicated DB. API PID 35336; PostgreSQL PID 23481; Ollama PID 24780.
 - Shared `:3333` remained PID 9754 and healthy after TASK-003. No shared process or data was mutated.
 - Skip ledger: none. The 35 F18 entries reported as filtered are non-selected tests, not runtime skips.
 
@@ -57,7 +57,7 @@ Every measured row records exact command, exit code, duration, pass/fail/skip co
 ## TASK-005 Measured Evidence
 
 - Bounded full-repository cold-qwen sample: empty dedicated PostgreSQL database; qwen3-embedding:8b/4096; stopped at 10 distinct completed files before the 180-second cap; 97 chunks and 97 embedding-cache rows; indexing job active for 51.795 s, measured throughput 0.193 files/s.
-- Commit-locked fixture: local sparse clone at tested HEAD; 5 unique needle targets, 20 tracked source distractors, and 21 explicitly required support files; SHA-256 validation rejects changed, missing, secret, generated, `adsads/`, absolute, and traversal paths. Fixture selection requires both `MASSA_TH0TH_DEDICATED=1` and an explicit path.
+- Commit-locked fixture: local sparse clone at tested HEAD; 5 unique needle targets, 20 tracked source distractors, and 21 explicitly required support files; SHA-256 validation rejects changed, missing, secret, generated, `adsads/`, absolute, and traversal paths. Fixture selection requires both `MASSA_AI_DEDICATED=1` and an explicit path.
 - Cache dimension red/green: 8 pass/2 expected fail before dimension enforcement; final SQLite/PostgreSQL parity 10 pass, 0 fail. Final combined fixture/cache/search regression gate: 28 pass, 0 fail, 0 skip; Bun 1.468 s; exit 0.
 - Focused live qwen/PostgreSQL sequence: `02.indexing` 19/19 in 401.15 s; `08.search` 36/36 in 24.84 s; `14.needles` 1/1 in 171 ms with identical sweeps at hit@1 .643, hit@5 .857, hit@10 .929, MRR .732; `18.graph-phase4` 9/9 in 896 ms; disposable negative fixture 1/1 in 3.63 s. No Bun test was skipped.
 - Search relevance prerequisite exposed by the live fixture is independently committed as `e995ea6`; stale needle source spans are independently committed as `66607d3`. Neither qwen threshold, query, nor timeout changed.
@@ -68,7 +68,7 @@ Every measured row records exact command, exit code, duration, pass/fail/skip co
 
 - Canonical/profile unit gate: 10 pass, 0 fail, 0 skip; 27 assertions; latest Bun 1.404 s; exit 0. Covers symlink realpath, same-root alias reuse, non-force wrong-root refusal, force-owned replacement, five-field profile identity sensitivity, invalid-dimension fail-closed behavior, and dedicated-only guarded rebuild.
 - Live wrong-root/path gate: seeded a fully warm duplicate fixture under the derived shared ID, proved all three warm probes hit, then `ensureSharedIndex` reset only the guarded dedicated prefix and rebuilt the canonical root. Final 3 pass, 0 fail, 0 skip; 351 assertions; Bun 8.63 s; exit 0. A live non-force API request for the wrong root returned structured `success:false` without changing the workspace.
-- Derived identity `e2e-th0th-shared-cf1a4754d3e50a0f` binds fixture commit `7d680fd329578dfaec60e73cbfd3ae88224989c7`, manifest hash, provider `ollama`, model `qwen3-embedding:8b`, and dimension `4096`. Stored canonical root is `/private/tmp/massa-th0th-close-20260713-1424/qwen-fixture-t6`.
+- Derived identity `e2e-ai-shared-cf1a4754d3e50a0f` binds fixture commit `7d680fd329578dfaec60e73cbfd3ae88224989c7`, manifest hash, provider `ollama`, model `qwen3-embedding:8b`, and dimension `4096`. Stored canonical root is `/private/tmp/massa-ai-close-20260713-1424/qwen-fixture-t6`.
 - Direct dedicated PostgreSQL sentinel: 468 vectors across 34 distinct metadata paths and 34 symbol-file paths; every path is relative, traversal-free, excludes `adsads/`, and belongs to the checked manifest. Search regression 36/36 in 35.33 s; symbol/workspace regression 23/23 in 6.48 s.
 - Type-check: 6/6 Turbo tasks; latest 3.963 s; exit 0. Owned listeners: PostgreSQL PID 23481, Ollama PID 24780, API PID 64524. Shared `:3333` remains PID 9754 and healthy; it was not otherwise contacted or mutated.
 - Conditional skip ledger: search reasons are unchanged from TASK-005. Symbol F46 and F49 lacked duplicate/FQN ambiguity in the sparse index and executed their documented best-effort assertions; Bun reported zero skips.
@@ -76,8 +76,8 @@ Every measured row records exact command, exit code, duration, pass/fail/skip co
 ## TASK-007 Measured Evidence
 
 - Exact gate: explicit dedicated PostgreSQL/vector/API/Ollama env plus `RUN_E2E=1 RUN_OWNED_DESTRUCTIVE=1 bun test --max-concurrency 1 src/__tests__/e2e/23.owned-destructive.test.ts`; exit 0; 4 pass, 0 fail, 0 skip; 73 assertions; Bun 14.44 s.
-- Backend identity: native PostgreSQL 17 + pgvector at `127.0.0.1:5433/massa_th0th_test`; Ollama `qwen3-embedding:8b`, dimension 4096; isolated home/config and temporary PostgreSQL data directory. The harness refused preoccupied dedicated ports and used repository-local Prisma migrations.
-- Ownership proof: initial PostgreSQL PID 77391/data directory `/var/folders/2s/y7r9gt5d15s48_z4nxkhyldr0000gn/T/massa-th0th-owned-destructive-JY5G71/postgres`/executable `/opt/homebrew/Cellar/postgresql@17/17.10/bin/postgres`, Ollama PID 77417/executable `/Applications/Ollama.app/Contents/Resources/ollama`, and API PID 77428/executable `/Users/luizmassa/.bun/bin/bun`. Listener PID, process start/executable/command, and PostgreSQL `postmaster.pid` were revalidated before every signal.
+- Backend identity: native PostgreSQL 17 + pgvector at `127.0.0.1:5433/massa_ai_test`; Ollama `qwen3-embedding:8b`, dimension 4096; isolated home/config and temporary PostgreSQL data directory. The harness refused preoccupied dedicated ports and used repository-local Prisma migrations.
+- Ownership proof: initial PostgreSQL PID 77391/data directory `/var/folders/2s/y7r9gt5d15s48_z4nxkhyldr0000gn/T/massa-ai-owned-destructive-JY5G71/postgres`/executable `/opt/homebrew/Cellar/postgresql@17/17.10/bin/postgres`, Ollama PID 77417/executable `/Applications/Ollama.app/Contents/Resources/ollama`, and API PID 77428/executable `/Users/luizmassa/.bun/bin/bun`. Listener PID, process start/executable/command, and PostgreSQL `postmaster.pid` were revalidated before every signal.
 - N1: after warm unique search/recall/remember operations, uncached search, recall, and remember each returned structured `success:false` while owned Ollama was stopped; Ollama restarted as PID 77475 and uncached search recovered with `success:true`.
 - N3: PostgreSQL outage returned HTTP and MCP `success:false`; PostgreSQL restarted as PID 77503, API restarted as PID 77526, and the data-plane probe recovered with `success:true`.
 - E25: API termination left durable job `58b0ff53-3e9c-441a-9fbb-f66f3a8f98eb` running; restart PID 77574 marked it failed with exact error `process restart`; recovery job `c384fdf6-9957-49f9-9d6f-90bb91a45368` completed.
@@ -96,7 +96,7 @@ Every measured row records exact command, exit code, duration, pass/fail/skip co
 - G07/G08 clean reviewer rerun: empty native PostgreSQL 17.10 database with pgvector 0.8.4; PIDs PostgreSQL 18151, Ollama 19055, API 19706; qwen3-embedding:8b/4096. Commit-locked fixture HEAD `02b7475fa519ff29be05e6d161390685a0024037`, 46 hash-verified files.
 - G08 standard run: 17 sequential files, `bun test --max-concurrency 1`, 243 pass, 6 skip, 0 fail, 1,999 assertions, 781.80 s; cold load 34 files/468 chunks/1,070 symbols in 369.091 s. Cleanup ran as the separate last command: 2 pass, 0 fail, 0 skip, 29 ms. Total: 245 pass, 6 explained skips, 0 fail across 18 files.
 - Relevance: two identical qwen sweeps at hit@1 .643, hit@3 .786, hit@5 .929, hit@10 .929, MRR .746; unchanged floors .36/.64/.47. Negative fixture discrimination passed.
-- G09 direct SQL: unexpected prefixed workspaces 0; invalid vector paths 0; invalid symbol paths 0; 468 vectors over 34 distinct vector paths and 34 symbol paths. Sole shared workspace `e2e-th0th-shared-b4c0f19595b437ab` stored the canonical fixture root and reported 34 files/468 chunks/1,070 symbols.
+- G09 direct SQL: unexpected prefixed workspaces 0; invalid vector paths 0; invalid symbol paths 0; 468 vectors over 34 distinct vector paths and 34 symbol paths. Sole shared workspace `e2e-ai-shared-b4c0f19595b437ab` stored the canonical fixture root and reported 34 files/468 chunks/1,070 symbols.
 - G10 cleanup: owned API/Ollama/PostgreSQL stopped after ownership recording; dedicated ports free; final run root removed. Shared `:3333` stayed PID 9754 with the same start time and health `ok` before and after; it was never managed or mutated.
 - Exact commands, environment, exit codes, durations, identities, skips, sentinels, and teardown are recorded in `final-verification-evidence.md`.
 - The clean G10 above was completed at `02b7475`. A second clean stack at `2e5ad3d` was provisioned and reached 10/34 cold-load files, then was stopped on the user's explicit instruction to skip repeating the full G10. It is not counted as gate evidence; all its owned resources were removed. Residual risk: the final test-helper-only fail-closed patch has focused/type-check evidence but not a repeated full qwen run.

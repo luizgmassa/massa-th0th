@@ -1,9 +1,9 @@
 /**
  * T14 — Cleanup verification.
  *
- * Asserts no `e2e-th0th-*` test pollution leaked on the live shared stack:
- *  - workspace/list must contain ONLY `e2e-th0th-shared` (the intentionally
- *    persistent shared index). Any other `e2e-th0th-*` is an orphan from a
+ * Asserts no `e2e-ai-*` test pollution leaked on the live shared stack:
+ *  - workspace/list must contain ONLY `e2e-ai-shared` (the intentionally
+ *    persistent shared index). Any other `e2e-ai-*` is an orphan from a
  *    prior crashed run and is reported (warning, not hard fail — the user can
  *    reset_project the orphans without failing this gate).
  *  - memory/list is best-effort: PG backend ignored the projectId filter until
@@ -28,7 +28,7 @@ import {
 
 const READY = E2E_ENABLED;
 
-describe.skipIf(!READY)("T14 — cleanup verification (e2e-th0th-* pollution)", () => {
+describe.skipIf(!READY)("T14 — cleanup verification (e2e-ai-* pollution)", () => {
   let avail: Availability;
 
   beforeAll(async () => {
@@ -38,7 +38,7 @@ describe.skipIf(!READY)("T14 — cleanup verification (e2e-th0th-* pollution)", 
     }
   });
 
-  test("workspace/list exposes ONLY e2e-th0th-shared among e2e-th0th-* projectIds", async () => {
+  test("workspace/list exposes ONLY e2e-ai-shared among e2e-ai-* projectIds", async () => {
     const resp = await httpGet<any>("/api/v1/workspace/list");
     const projects: any[] = resp?.data?.workspaces ?? resp?.data ?? resp?.projects ?? [];
     const ids: string[] = projects
@@ -49,7 +49,7 @@ describe.skipIf(!READY)("T14 — cleanup verification (e2e-th0th-* pollution)", 
     const orphans = e2eIds.filter((id) => id !== SHARED_PID);
 
     console.log(
-      `[T14] e2e-th0th-* projectIds found: ${JSON.stringify(e2eIds)}\n` +
+      `[T14] e2e-ai-* projectIds found: ${JSON.stringify(e2eIds)}\n` +
         `      expected: ["${SHARED_PID}"]\n` +
         `      orphans : ${JSON.stringify(orphans)}`,
     );
@@ -69,7 +69,7 @@ describe.skipIf(!READY)("T14 — cleanup verification (e2e-th0th-* pollution)", 
     expect(e2eIds).toContain(SHARED_PID);
   });
 
-  test("memory/list has no unexpected e2e-th0th test-mem leak (best-effort)", async () => {
+  test("memory/list has no unexpected e2e-ai test-mem leak (best-effort)", async () => {
     // PG backend: POST /api/v1/memory/list with projectId is honored after T5,
     // but list-recent / global listings may still surface test memories that
     // cannot be cleanly filtered. We do a best-effort scoped listing and
@@ -92,12 +92,12 @@ describe.skipIf(!READY)("T14 — cleanup verification (e2e-th0th-* pollution)", 
 
     console.log(
       `[T14] memory/list scoped(SHARED): ${scopedRows.length} rows; recent/global: ${recentRows.length} rows.\n` +
-        `      recent rows tagged with non-shared e2e-th0th-* projectId: ${recentE2e.length}`,
+        `      recent rows tagged with non-shared e2e-ai-* projectId: ${recentE2e.length}`,
     );
 
     if (recentE2e.length > 0) {
       console.warn(
-        `[T14] WARNING: ${recentE2e.length} recent memory row(s) reference orphan e2e-th0th-* projectIds.\n` +
+        `[T14] WARNING: ${recentE2e.length} recent memory row(s) reference orphan e2e-ai-* projectIds.\n` +
           `  These cannot be cleanly filtered without a projectId filter on every memory route.\n` +
           `  Recommendation: reset_project the orphan projectId(s) (clearMemories:true), or filter by content prefix in a follow-up.`,
       );

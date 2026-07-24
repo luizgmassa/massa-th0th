@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# massa-th0th Cursor plugin installer
+# massa-ai Cursor plugin installer
 #
 # Copies the plugin bundle (skills, hooks.json, mcp.json, agents, optional
 # manifest, binary symlink) into the user's or project's Cursor config
-# directory and merges the 7 massa-th0th hook events into
+# directory and merges the 7 massa-ai hook events into
 # ~/.cursor/hooks.json (or ./.cursor/hooks.json) using an array-append merge
 # that preserves existing user hooks.
 #
@@ -22,7 +22,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-CLAUDE_PLUGIN_BIN="$REPO_ROOT/apps/claude-plugin/hooks/massa-th0th-hook.ts"
+CLAUDE_PLUGIN_BIN="$REPO_ROOT/apps/claude-plugin/hooks/massa-ai-hook.ts"
 
 SCOPE="user"
 UNINSTALL=0
@@ -42,7 +42,7 @@ done
 
 # Banner
 source "$SCRIPT_DIR/../../scripts/banner.sh"
-massa_th0th_banner
+massa_ai_banner
 
 # Resolve target base dir
 if [[ "$SCOPE" == "project" ]]; then
@@ -50,22 +50,22 @@ if [[ "$SCOPE" == "project" ]]; then
 else
   CURSOR_DIR="$HOME/.cursor"
 fi
-PLUGIN_DIR="$CURSOR_DIR/plugins/massa-th0th"
+PLUGIN_DIR="$CURSOR_DIR/plugins/massa-ai"
 HOOKS_JSON="$CURSOR_DIR/hooks.json"
 
 # The 7 Cursor events → binary subcommands. The command path uses the
 # INSTALLED plugin dir (not the placeholder), so Cursor invokes the copy.
 # Cursor hooks.json shape: { "version": 1, "hooks": { "<event>": [...] } }
-massa_th0th_event_entry() {
+massa_ai_event_entry() {
   local subcommand="$1"
   cat <<JSON
-{ "command": "$PLUGIN_DIR/hooks/massa-th0th-hook $subcommand", "_massaTh0thOwned": true }
+{ "command": "$PLUGIN_DIR/hooks/massa-ai-hook $subcommand", "_massaAiOwned": true }
 JSON
 }
 
 # Array-append merge (F5 mitigation): for each of the 7 events, append the
-# massa-th0th hook entry to the event's array inside the nested "hooks"
-# object if no entry with _massaTh0thOwned: true already exists. Preserves
+# massa-ai hook entry to the event's array inside the nested "hooks"
+# object if no entry with _massaAiOwned: true already exists. Preserves
 # the top-level "version" field (defaults to 1). Backup before first write.
 # Uses node (preferred) or bun for safe JSON manipulation.
 merge_hooks_json() {
@@ -126,28 +126,28 @@ if (typeof cfg.hooks !== "object" || cfg.hooks === null) cfg.hooks = {};
 const hooks = cfg.hooks;
 
 function hasOwned(arr) {
-  return Array.isArray(arr) && arr.some((e) => e && e._massaTh0thOwned === true);
+  return Array.isArray(arr) && arr.some((e) => e && e._massaAiOwned === true);
 }
 
 if (mode === "uninstall") {
   for (const [evt] of EVENTS) {
     if (Array.isArray(hooks[evt])) {
-      hooks[evt] = hooks[evt].filter((e) => !(e && e._massaTh0thOwned === true));
+      hooks[evt] = hooks[evt].filter((e) => !(e && e._massaAiOwned === true));
       if (hooks[evt].length === 0) delete hooks[evt];
     }
   }
 } else {
   // install: backup before first write if file existed
   if (existed) {
-    const bak = `${file}.massa-th0th.bak-${ts}`;
+    const bak = `${file}.massa-ai.bak-${ts}`;
     fs.copyFileSync(file, bak);
   }
   for (const [evt, sub] of EVENTS) {
     if (!Array.isArray(hooks[evt])) hooks[evt] = [];
     if (!hasOwned(hooks[evt])) {
       hooks[evt].push({
-        command: `${pluginDir}/hooks/massa-th0th-hook ${sub}`,
-        _massaTh0thOwned: true,
+        command: `${pluginDir}/hooks/massa-ai-hook ${sub}`,
+        _massaAiOwned: true,
       });
     }
   }
@@ -160,11 +160,11 @@ NODE
 
 # ── Uninstall ───────────────────────────────────────────────────────────────
 if [[ "$UNINSTALL" -eq 1 ]]; then
-  echo "Uninstalling massa-th0th Cursor plugin (scope: $SCOPE)..."
+  echo "Uninstalling massa-ai Cursor plugin (scope: $SCOPE)..."
   # Remove owned hook entries (preserves user hooks)
   if [[ -f "$HOOKS_JSON" ]]; then
     merge_hooks_json "$HOOKS_JSON" "uninstall"
-    echo "  - removed massa-th0th hook entries from $HOOKS_JSON"
+    echo "  - removed massa-ai hook entries from $HOOKS_JSON"
   fi
   # Remove plugin directory
   if [[ -d "$PLUGIN_DIR" ]]; then
@@ -177,7 +177,7 @@ if [[ "$UNINSTALL" -eq 1 ]]; then
 fi
 
 # ── Install ──────────────────────────────────────────────────────────────────
-echo "Installing massa-th0th Cursor plugin to: $PLUGIN_DIR"
+echo "Installing massa-ai Cursor plugin to: $PLUGIN_DIR"
 mkdir -p "$PLUGIN_DIR/.cursor-plugin" "$PLUGIN_DIR/skills" "$PLUGIN_DIR/hooks" "$PLUGIN_DIR/agents"
 
 # Copy manifest
@@ -203,10 +203,10 @@ echo "  + mcp.json"
 # Copy agents — navigator + 12 subagent specialists (auto-discovered by Cursor
 # from the plugin's agents/ dir). The existing navigator is preserved; the 12
 # specialists are additive (CRS-04).
-cp "$SCRIPT_DIR/agents/massa-th0th-navigator.md" "$PLUGIN_DIR/agents/massa-th0th-navigator.md"
-echo "  + agents/massa-th0th-navigator.md"
+cp "$SCRIPT_DIR/agents/massa-ai-navigator.md" "$PLUGIN_DIR/agents/massa-ai-navigator.md"
+echo "  + agents/massa-ai-navigator.md"
 specialist_count=0
-for src in "$SCRIPT_DIR/agents/"massa-th0th-*.md; do
+for src in "$SCRIPT_DIR/agents/"massa-ai-*.md; do
   [[ -f "$src" ]] || continue
   name="$(basename "$src")"
   [[ "$name" == *navigator* ]] && continue
@@ -218,8 +218,8 @@ echo "  + ${specialist_count} subagent specialists: investigator, planner, build
 # Create the binary symlink → repo's claude-plugin binary (resolved at install
 # time via SCRIPT_DIR → REPO_ROOT). This keeps a single source of truth.
 if [[ -f "$CLAUDE_PLUGIN_BIN" ]]; then
-  ln -sfn "$CLAUDE_PLUGIN_BIN" "$PLUGIN_DIR/hooks/massa-th0th-hook"
-  echo "  + hooks/massa-th0th-hook → $CLAUDE_PLUGIN_BIN"
+  ln -sfn "$CLAUDE_PLUGIN_BIN" "$PLUGIN_DIR/hooks/massa-ai-hook"
+  echo "  + hooks/massa-ai-hook → $CLAUDE_PLUGIN_BIN"
 else
   echo "  ⚠ Warning: claude-plugin binary not found at $CLAUDE_PLUGIN_BIN" >&2
   echo "    Hooks will not fire until the binary is available." >&2
@@ -229,7 +229,7 @@ fi
 echo ""
 echo "Merging hooks into $HOOKS_JSON..."
 merge_hooks_json "$HOOKS_JSON" "install"
-echo "  + 7 massa-th0th hook events wired (array-append, user hooks preserved)"
+echo "  + 7 massa-ai hook events wired (array-append, user hooks preserved)"
 
 echo ""
 echo "Done. Restart Cursor to pick up the plugin."

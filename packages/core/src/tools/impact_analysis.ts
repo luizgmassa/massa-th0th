@@ -18,7 +18,7 @@
  * grepping the whole codebase.
  */
 
-import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse } from "@massa-ai/shared";
 import { impactAnalysisService } from "../services/symbol/impact-analysis.js";
 import type { ImpactScope } from "../services/symbol/impact-analysis.js";
 import { serializeToolResponse } from "./serialize.js";

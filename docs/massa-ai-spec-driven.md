@@ -1,6 +1,6 @@
-# massa-th0th Spec-Driven Workflow
+# massa-ai Spec-Driven Workflow
 
-Human-facing guide for the TLC Spec-Driven v3 workflow built directly into `massa-th0th`. Canonical agent instructions live in [`workflows/spec-driven.md`](../../skills/massa-th0th/workflows/spec-driven.md) and its [`references/spec-driven/`](../../skills/massa-th0th/references/spec-driven/) contracts.
+Human-facing guide for the TLC Spec-Driven v3 workflow built directly into `massa-ai`. Canonical agent instructions live in [`workflows/spec-driven.md`](../../skills/massa-ai/workflows/spec-driven.md) and its [`references/spec-driven/`](../../skills/massa-ai/references/spec-driven/) contracts.
 
 ## Purpose
 
@@ -14,7 +14,7 @@ Specify and Execute always run. Validation is the mandatory final Execute gate, 
 
 ## State
 
-The workflow combines .specs/ artifact files with massa-th0th durable memory:
+The workflow combines .specs/ artifact files with massa-ai durable memory:
 
 - `features/<slug>/spec.md` owns requirements.
 - `features/<slug>/context.md` records Discuss decisions when gray areas are material.
@@ -27,7 +27,7 @@ The workflow combines .specs/ artifact files with massa-th0th durable memory:
 - `lessons.json` and `LESSONS.md` store project-local lessons in `.specs/lessons.json` and `.specs/LESSONS.md`.
 - th0th stores durable decisions, rejected approaches, reusable patterns, and verification recipes across sessions.
 
-Use `skills/massa-th0th/references/spec-driven/artifact-store.md` for guidance on reading and writing `.specs/` files directly with standard shell commands. Root aliases are not runtime fallback. Optional `.specs-exports/` projections are untracked review aids only.
+Use `skills/massa-ai/references/spec-driven/artifact-store.md` for guidance on reading and writing `.specs/` files directly with standard shell commands. Root aliases are not runtime fallback. Optional `.specs-exports/` projections are untracked review aids only.
 
 Restart-save and restart-load are artifact checkpoint/resume mechanisms. They are not substitutes for saving an unattached plan file; chat-only plans must be promoted into `.specs/` artifacts or supplied again after restart.
 

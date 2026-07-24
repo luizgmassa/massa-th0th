@@ -8,8 +8,8 @@
  * on the instance; see design.md "Delegate-preservation contract").
  */
 
-import { logger, config } from "@massa-th0th/shared";
-import { VectorDocument } from "@massa-th0th/shared";
+import { logger, config } from "@massa-ai/shared";
+import { VectorDocument } from "@massa-ai/shared";
 import fs from "fs/promises";
 import path from "path";
 import { glob } from "glob";

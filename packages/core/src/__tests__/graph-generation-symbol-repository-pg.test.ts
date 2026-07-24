@@ -9,7 +9,7 @@ import type { GraphGenerationLease } from "../data/graph-generation/graph-genera
 
 const adminUrl = "postgresql://test@127.0.0.1:5433/postgres";
 const requested = process.env.RUN_GRAPH_GENERATION_SYMBOL_REPOSITORY === "1" &&
-  process.env.MASSA_TH0TH_DEDICATED === "1";
+  process.env.MASSA_AI_DEDICATED === "1";
 const databaseName = `massa_graph_symbol_${process.pid}_${randomUUID().replaceAll("-", "")}`;
 const projectId = "generation-symbol-project";
 const activeId = "generation-active";

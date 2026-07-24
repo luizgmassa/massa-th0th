@@ -1,4 +1,4 @@
-import type { MemoryLevel, MemoryType } from "@massa-th0th/shared";
+import type { MemoryLevel, MemoryType } from "@massa-ai/shared";
 
 export interface MemoryRow {
   id: string; content: string; type: string; level: number;

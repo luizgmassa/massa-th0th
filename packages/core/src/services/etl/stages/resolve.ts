@@ -6,13 +6,13 @@
  *
  * Resolution strategy (TS/JS):
  *   1. Relative imports (./  ../) → path.resolve + extension probing
- *   2. Workspace aliases (@massa-th0th/core, etc.) → read tsconfig.json paths
+ *   2. Workspace aliases (@massa-ai/core, etc.) → read tsconfig.json paths
  *   3. Everything else → external (npm), resolvedPath = null
  */
 
 import path from "path";
 import fs from "fs";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { getSymbolRepository } from "../../../data/symbol/symbol-repository-factory.js";
 import type { SymbolDefinition } from "../../../data/symbol/symbol-repository-pg.js";
 import {
@@ -535,7 +535,7 @@ export class ResolveStage {
 
   /**
    * Parse tsconfig.json compilerOptions.paths into a flat alias list.
-   * Handles standard monorepo setups like { "@massa-th0th/core/*": ["packages/core/src/*"] }.
+   * Handles standard monorepo setups like { "@massa-ai/core/*": ["packages/core/src/*"] }.
    */
   private loadTsConfigPaths(projectPath: string, packageBase?: string): TsPathAlias[] {
     const aliases: TsPathAlias[] = [];
@@ -549,7 +549,7 @@ export class ResolveStage {
       const paths: Record<string, string[]> = tsconfig?.compilerOptions?.paths ?? {};
 
       for (const [alias, targets] of Object.entries(paths)) {
-        // "@massa-th0th/core/*" → prefix "@massa-th0th/core"
+        // "@massa-ai/core/*" → prefix "@massa-ai/core"
         const prefix = alias.replace(/\/\*$/, "");
         aliases.push({ 
           prefix, 

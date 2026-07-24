@@ -5,11 +5,11 @@
  */
 
 import { Elysia } from "elysia";
-import { SearchServiceError } from "@massa-th0th/core";
+import { SearchServiceError } from "@massa-ai/core";
 
 export const errorHandler = new Elysia({ name: "error-handler" }).onError(
   ({ code, error, set }) => {
-    console.error("[massa-th0th-api] Request failed", {
+    console.error("[massa-ai-api] Request failed", {
       name: error instanceof Error ? error.name : "UnknownError",
       code,
     });

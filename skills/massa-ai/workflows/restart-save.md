@@ -32,7 +32,7 @@ Use this workflow when the user asks to save the old chat, preserve canonical re
    - verification commands and results
    - approved feature artifacts with logical paths
    - exact next step
-   - new-chat instruction: `Use massa-th0th restart-load for project <projectId> and workflowSessionId <workflowSessionId>; load .specs/ artifacts before implementation.`
+   - new-chat instruction: `Use massa-ai restart-load for project <projectId> and workflowSessionId <workflowSessionId>; load .specs/ artifacts before implementation.`
 7. Keep the save report metadata-first:
    - Allowed metadata fields: logical path, status, feature, timestamps.
    - Allowed content fields: compact derived summaries, exact next step, owning workflow, verification results, blockers, memory outcome, residual risk, and restart-load instruction.

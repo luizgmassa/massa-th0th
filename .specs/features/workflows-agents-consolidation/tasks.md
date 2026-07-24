@@ -2,7 +2,7 @@
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
-Implement these tasks with the `massa-th0th` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
+Implement these tasks with the `massa-ai` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
 
 **If the skill cannot be activated, STOP and tell the user — do not proceed without it.**
 
@@ -29,7 +29,7 @@ Relevant existing tests: `scripts/__tests__/subagent-parity.test.ts` — drift g
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | Generator TS (path change) | unit (existing parity test) | Drift gate green; 48 files match; model/effort/permission pins intact | `scripts/__tests__/subagent-parity.test.ts` | `bun test scripts/__tests__/subagent-parity.test.ts` |
-| Workflow markdown (dispatch blocks) | structural (grep + diff) | All 14 audit/fix workflows have `Dispatch:` blocks; zero old role names | `skills/massa-th0th/workflows/**/*.md` | `rg 'Dispatch:' skills/massa-th0th/workflows/` + `rg 'implementer\|verifier\|domain-mapper\|coupling-auditor\|deepening-architect' skills/massa-th0th/workflows/` |
+| Workflow markdown (dispatch blocks) | structural (grep + diff) | All 14 audit/fix workflows have `Dispatch:` blocks; zero old role names | `skills/massa-ai/workflows/**/*.md` | `rg 'Dispatch:' skills/massa-ai/workflows/` + `rg 'implementer\|verifier\|domain-mapper\|coupling-auditor\|deepening-architect' skills/massa-ai/workflows/` |
 | Registry markdown (charter column) | structural (grep) | Charter column points at `skills/agents/<name>/SKILL.md` | `skills/AGENTS.md` | `rg 'skills/agents/' skills/AGENTS.md` |
 | Type integrity | build | type-check 6/6 passes | `turbo run type-check` | `bun run type-check` |
 
@@ -40,8 +40,8 @@ Relevant existing tests: `scripts/__tests__/subagent-parity.test.ts` — drift g
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
 | Quick | After generator path change + registry update | `bun test scripts/__tests__/subagent-parity.test.ts` |
-| Quick (copy) | After workflow skill move (T4-T5) | `diff -rq "<source>/skills/massa-th0th/references/" skills/massa-th0th/references/ && find skills/massa-th0th -name '*.pyc' -o -name '__pycache__' \| wc -l` (0) && `python3 skills/massa-th0th/scripts/lessons.py --root . list --status confirmed` |
-| Full | After all rewrites | `bun test scripts/__tests__/subagent-parity.test.ts && rg 'Dispatch:' skills/massa-th0th/workflows/ && rg 'implementer\|domain-mapper\|coupling-auditor\|deepening-architect' skills/massa-th0th/workflows/ \|\| echo "zero old roles" && rg -A 12 'Dispatch: architecture-specialist' skills/massa-th0th/workflows/ \| rg 'lens:'` |
+| Quick (copy) | After workflow skill move (T4-T5) | `diff -rq "<source>/skills/massa-ai/references/" skills/massa-ai/references/ && find skills/massa-ai -name '*.pyc' -o -name '__pycache__' \| wc -l` (0) && `python3 skills/massa-ai/scripts/lessons.py --root . list --status confirmed` |
+| Full | After all rewrites | `bun test scripts/__tests__/subagent-parity.test.ts && rg 'Dispatch:' skills/massa-ai/workflows/ && rg 'implementer\|domain-mapper\|coupling-auditor\|deepening-architect' skills/massa-ai/workflows/ \|\| echo "zero old roles" && rg -A 12 'Dispatch: architecture-specialist' skills/massa-ai/workflows/ \| rg 'lens:'` |
 | Build | After all tasks | `bun run type-check` |
 
 ---
@@ -72,7 +72,7 @@ T15 → T16 → T17
 
 ### T1: Move 12 agent charters to skills/agents/
 
-**What**: Move the 12 specialist charter directories from `skills/<name>/` to `skills/agents/<name>/`. Leave `massa-th0th-memory` and `synapse-usage` at `skills/` top level.
+**What**: Move the 12 specialist charter directories from `skills/<name>/` to `skills/agents/<name>/`. Leave `massa-ai-memory` and `synapse-usage` at `skills/` top level.
 **Where**: `skills/agents/` (new), removing `skills/investigator/` ... `skills/mobile-specialist/`
 **Depends on**: None
 **Reuses**: None (pure move)
@@ -84,7 +84,7 @@ T15 → T16 → T17
 
 **Done when**:
 - [ ] `skills/agents/<name>/SKILL.md` exists for all 12 specialists
-- [ ] `skills/<name>/` no longer exists for the 12 specialists (only `massa-th0th-memory`, `synapse-usage`, `agents`, `AGENTS.md` remain at top level)
+- [ ] `skills/<name>/` no longer exists for the 12 specialists (only `massa-ai-memory`, `synapse-usage`, `agents`, `AGENTS.md` remain at top level)
 - [ ] No charter content changed (byte-identical move)
 
 **Tests**: none (structural move; generator gate covers in T2)
@@ -135,12 +135,12 @@ T15 → T16 → T17
 
 ---
 
-### T4: Copy massa-th0th workflow skill into product repo
+### T4: Copy massa-ai workflow skill into product repo
 
-**What**: Copy the entire `skills/massa-th0th/` tree (SKILL.md router + workflows/ + references/ + scripts/lessons.py) from Useful-Agent-Skills into the product repo at `skills/massa-th0th/`. Exclude `__pycache__/` and `*.pyc` (stale bytecode) per the Plan Challenge finding E. The source tree has 124 files; the product copy must have exactly 123 (124 minus 1 `__pycache__/lessons.cpython-314.pyc`).
-**Where**: `skills/massa-th0th/` (new in product repo)
+**What**: Copy the entire `skills/massa-ai/` tree (SKILL.md router + workflows/ + references/ + scripts/lessons.py) from Useful-Agent-Skills into the product repo at `skills/massa-ai/`. Exclude `__pycache__/` and `*.pyc` (stale bytecode) per the Plan Challenge finding E. The source tree has 124 files; the product copy must have exactly 123 (124 minus 1 `__pycache__/lessons.cpython-314.pyc`).
+**Where**: `skills/massa-ai/` (new in product repo)
 **Depends on**: T2 (Phase 1 green first)
-**Reuses**: Full tree from Useful-Agent-Skills `skills/massa-th0th/`
+**Reuses**: Full tree from Useful-Agent-Skills `skills/massa-ai/`
 **Requirement**: WAC-02
 
 **Tools**:
@@ -148,13 +148,13 @@ T15 → T16 → T17
 - Skill: NONE
 
 **Done when**:
-- [ ] `skills/massa-th0th/SKILL.md` exists (router)
-- [ ] `skills/massa-th0th/workflows/` contains all 39 workflow files
-- [ ] `skills/massa-th0th/references/` contains all reference files (exact count: `diff -rq <source>/skills/massa-th0th/references/ skills/massa-th0th/references/` returns empty, ignoring `__pycache__`)
-- [ ] `skills/massa-th0th/scripts/lessons.py` exists
-- [ ] Post-copy purge gate: `find skills/massa-th0th -name '*.pyc' -o -name '__pycache__' -o -name 'lessons.json' -o -name 'STATE.md'` returns 0 lines (no stale state files copied in)
-- [ ] Reference-equality check: `diff -rq "/Users/luizmassa/Personal Projects/Useful-Agent-Skills/skills/massa-th0th/references/" skills/massa-th0th/references/` is empty (Plan Challenge finding C)
-- [ ] File count: `find skills/massa-th0th -type f | wc -l` == 123 (source 124 minus the excluded `__pycache__` pyc)
+- [ ] `skills/massa-ai/SKILL.md` exists (router)
+- [ ] `skills/massa-ai/workflows/` contains all 39 workflow files
+- [ ] `skills/massa-ai/references/` contains all reference files (exact count: `diff -rq <source>/skills/massa-ai/references/ skills/massa-ai/references/` returns empty, ignoring `__pycache__`)
+- [ ] `skills/massa-ai/scripts/lessons.py` exists
+- [ ] Post-copy purge gate: `find skills/massa-ai -name '*.pyc' -o -name '__pycache__' -o -name 'lessons.json' -o -name 'STATE.md'` returns 0 lines (no stale state files copied in)
+- [ ] Reference-equality check: `diff -rq "/Users/luizmassa/Personal Projects/Useful-Agent-Skills/skills/massa-ai/references/" skills/massa-ai/references/` is empty (Plan Challenge finding C)
+- [ ] File count: `find skills/massa-ai -type f | wc -l` == 123 (source 124 minus the excluded `__pycache__` pyc)
 
 **Tests**: structural (diff + purge gate)
 **Gate**: quick
@@ -164,18 +164,18 @@ T15 → T16 → T17
 ### T5: Verify workflow skill internal paths resolve + lessons.py smoke
 
 **What**: Confirm internal reference paths in the copied skill resolve correctly, and confirm `lessons.py` runs without path errors (Plan Challenge finding A — falsified: lessons.py uses `--root .` not `__file__`-relative, but a smoke test confirms this empirically).
-**Where**: `skills/massa-th0th/`
+**Where**: `skills/massa-ai/`
 **Depends on**: T4
 **Reuses**: None
 **Requirement**: WAC-02
 
 **Tools**: NONE
 **Done when**:
-- [ ] `rg 'references/agent-orchestration' skills/massa-th0th/workflows/` returns hits (paths resolve)
-- [ ] `rg 'references/spec-driven' skills/massa-th0th/workflows/spec-driven.md` returns hits
-- [ ] `ls skills/massa-th0th/references/agent-orchestration.md` exists
+- [ ] `rg 'references/agent-orchestration' skills/massa-ai/workflows/` returns hits (paths resolve)
+- [ ] `rg 'references/spec-driven' skills/massa-ai/workflows/spec-driven.md` returns hits
+- [ ] `ls skills/massa-ai/references/agent-orchestration.md` exists
 - [ ] Referenced-path-resolves: every `references/...` path in workflows points to an existing file (spot-check 5 random references)
-- [ ] `python3 skills/massa-th0th/scripts/lessons.py --root . list --status confirmed` runs without error (lessons.py path smoke — finding A falsified, empirically confirmed)
+- [ ] `python3 skills/massa-ai/scripts/lessons.py --root . list --status confirmed` runs without error (lessons.py path smoke — finding A falsified, empirically confirmed)
 
 **Tests**: structural
 **Gate**: quick (grep checks + lessons.py smoke)
@@ -185,7 +185,7 @@ T15 → T16 → T17
 ### T6: Rewrite architecture-audit + architecture-fix
 
 **What**: Replace the duplicated scope-resolution block + "Use subagents only when useful" block with named dispatch blocks. Map `domain-mapper`/`coupling-auditor`/`deepening-architect` → `architecture-specialist` (name lens in inputs); `implementer` → `builder`; `verifier` → `verification-agent`.
-**Where**: `skills/massa-th0th/workflows/architecture/architecture-audit.md`, `architecture-fix.md`
+**Where**: `skills/massa-ai/workflows/architecture/architecture-audit.md`, `architecture-fix.md`
 **Depends on**: T5
 **Reuses**: Capability packet format from `agent-orchestration.md:74-87`
 **Requirement**: WAC-06, WAC-07, WAC-08, WAC-09
@@ -206,7 +206,7 @@ T15 → T16 → T17
 ### T7: Rewrite security-audit + security-fix
 
 **What**: Same pattern as T6 for security family. Map roles; replace inline blocks with dispatch blocks.
-**Where**: `skills/massa-th0th/workflows/security/security-audit.md`, `security-fix.md`
+**Where**: `skills/massa-ai/workflows/security/security-audit.md`, `security-fix.md`
 **Depends on**: T6
 **Reuses**: Same dispatch block format
 **Requirement**: WAC-06, WAC-07, WAC-08, WAC-09
@@ -225,7 +225,7 @@ T15 → T16 → T17
 ### T8: Rewrite requirements-audit + requirements-fix
 
 **What**: Same pattern. Map `requirements-analyst` for requirement-specific scope resolution.
-**Where**: `skills/massa-th0th/workflows/requirements/requirements-audit.md`, `requirements-fix.md`
+**Where**: `skills/massa-ai/workflows/requirements/requirements-audit.md`, `requirements-fix.md`
 **Depends on**: T7
 **Reuses**: Same dispatch block format
 **Requirement**: WAC-06, WAC-07, WAC-08, WAC-09
@@ -244,7 +244,7 @@ T15 → T16 → T17
 ### T9: Rewrite tests-audit + tests-fix
 
 **What**: Same pattern. Map `test-engineer` for test-specific scope analysis.
-**Where**: `skills/massa-th0th/workflows/tests/tests-audit.md`, `tests-fix.md`
+**Where**: `skills/massa-ai/workflows/tests/tests-audit.md`, `tests-fix.md`
 **Depends on**: T8
 **Reuses**: Same dispatch block format
 **Requirement**: WAC-06, WAC-07, WAC-08, WAC-09
@@ -263,7 +263,7 @@ T15 → T16 → T17
 ### T10: Rewrite bugs-audit + bugs-fix
 
 **What**: Same pattern.
-**Where**: `skills/massa-th0th/workflows/bugs/bugs-audit.md`, `bugs-fix.md`
+**Where**: `skills/massa-ai/workflows/bugs/bugs-audit.md`, `bugs-fix.md`
 **Depends on**: T9
 **Reuses**: Same dispatch block format
 **Requirement**: WAC-06, WAC-07, WAC-08, WAC-09
@@ -282,7 +282,7 @@ T15 → T16 → T17
 ### T11: Rewrite code-quality-audit + code-quality-fix
 
 **What**: Same pattern.
-**Where**: `skills/massa-th0th/workflows/code-quality/code-quality-audit.md`, `code-quality-fix.md`
+**Where**: `skills/massa-ai/workflows/code-quality/code-quality-audit.md`, `code-quality-fix.md`
 **Depends on**: T10
 **Reuses**: Same dispatch block format
 **Requirement**: WAC-06, WAC-07, WAC-08, WAC-09
@@ -301,7 +301,7 @@ T15 → T16 → T17
 ### T12: Rewrite implementation-audit + implementation-fix
 
 **What**: Same pattern. The implementation-audit is the parent that fans out child lenses — its dispatch blocks call `audit-specialist` with each lens name.
-**Where**: `skills/massa-th0th/workflows/implementation/implementation-audit.md`, `implementation-fix.md`
+**Where**: `skills/massa-ai/workflows/implementation/implementation-audit.md`, `implementation-fix.md`
 **Depends on**: T11
 **Reuses**: Same dispatch block format
 **Requirement**: WAC-06, WAC-07, WAC-08, WAC-09
@@ -320,7 +320,7 @@ T15 → T16 → T17
 ### T13: Rewrite spec-driven.md verifier contract + exploration.md investigation
 
 **What**: Replace the inline verifier contract (spec-driven.md:96-98) with a `verification-agent` dispatch block. Replace the exploration.md BRIEFING→PLAN→EXECUTE→DEBRIEF investigation steps with an `investigator` dispatch block.
-**Where**: `skills/massa-th0th/workflows/spec-driven.md`, `skills/massa-th0th/workflows/exploration.md`
+**Where**: `skills/massa-ai/workflows/spec-driven.md`, `skills/massa-ai/workflows/exploration.md`
 **Depends on**: T12
 **Reuses**: Same dispatch block format
 **Requirement**: WAC-06, WAC-08, WAC-09
@@ -339,7 +339,7 @@ T15 → T16 → T17
 ### T14: Rewrite remaining workflows with dispatch references (the-fool, furps-refinement, agent-handoff, debug, refactor, feature, general, tdd, adr, rfc, ticket, commit, design, restart-save, restart-load, long-session, onboarding, maestro*, mobile-figma*)
 
 **What**: For workflows that reference role-based dispatches (`plan-critic`, `furps-analyst`, `handoff-writer`), keep them as role-based dispatch blocks (no charter). For workflows with no duplicated inline dispatch prose (onboarding, long-session), copy as-is. For debug/refactor/feature/general, replace any inline "use investigator/verifier" prose with dispatch blocks.
-**Where**: All remaining workflow files under `skills/massa-th0th/workflows/`
+**Where**: All remaining workflow files under `skills/massa-ai/workflows/`
 **Depends on**: T13
 **Reuses**: Same dispatch block format
 **Requirement**: WAC-08, WAC-10
@@ -361,18 +361,18 @@ T15 → T16 → T17
 ### T15: Full old-role-name sweep + dispatch-block field-completeness check + isolation checkpoint
 
 **What**: Run a repo-wide grep to confirm zero old role names remain in any workflow, confirm dispatch blocks are present in all 14 audit/fix workflows, AND confirm every dispatch block has all 9 required fields (Plan Challenge finding B), AND confirm every `architecture-specialist` dispatch includes `lens:` (finding B/R6). This task also serves as the isolation checkpoint: run the parity test here to confirm the move (Phase 1-2) didn't break generator emission before the rewrite signal is trusted.
-**Where**: `skills/massa-th0th/workflows/`
+**Where**: `skills/massa-ai/workflows/`
 **Depends on**: T14
 **Reuses**: None
 **Requirement**: WAC-06, WAC-07, WAC-08, WAC-09
 
 **Tools**: NONE
 **Done when**:
-- [ ] `rg 'implementer|domain-mapper|coupling-auditor|deepening-architect' skills/massa-th0th/workflows/` returns 0 hits
-- [ ] `rg -c 'Dispatch:' skills/massa-th0th/workflows/` returns ≥14 (7 audit + 7 fix)
-- [ ] **Field-completeness (finding B)**: every `Dispatch:` block contains all 8 listed fields. Check: for each dispatch block, `trigger:`, `scope:`, `permissions:`, `inputs:`, `sensors:`, `output:`, `firewall:`, `memory:` all present. Grep: `rg -A 12 'Dispatch:' skills/massa-th0th/workflows/ | rg -c 'trigger:|scope:|permissions:|inputs:|sensors:|output:|firewall:|memory:'` ≥ 8× the dispatch count.
-- [ ] **architecture-specialist lens check (finding B/R6)**: `rg -A 12 'Dispatch: architecture-specialist' skills/massa-th0th/workflows/` — every hit block contains `lens:` in the inputs field.
-- [ ] `rg 'verifier' skills/massa-th0th/workflows/` returns 0 hits (bare `verifier` role replaced by `verification-agent`)
+- [ ] `rg 'implementer|domain-mapper|coupling-auditor|deepening-architect' skills/massa-ai/workflows/` returns 0 hits
+- [ ] `rg -c 'Dispatch:' skills/massa-ai/workflows/` returns ≥14 (7 audit + 7 fix)
+- [ ] **Field-completeness (finding B)**: every `Dispatch:` block contains all 8 listed fields. Check: for each dispatch block, `trigger:`, `scope:`, `permissions:`, `inputs:`, `sensors:`, `output:`, `firewall:`, `memory:` all present. Grep: `rg -A 12 'Dispatch:' skills/massa-ai/workflows/ | rg -c 'trigger:|scope:|permissions:|inputs:|sensors:|output:|firewall:|memory:'` ≥ 8× the dispatch count.
+- [ ] **architecture-specialist lens check (finding B/R6)**: `rg -A 12 'Dispatch: architecture-specialist' skills/massa-ai/workflows/` — every hit block contains `lens:` in the inputs field.
+- [ ] `rg 'verifier' skills/massa-ai/workflows/` returns 0 hits (bare `verifier` role replaced by `verification-agent`)
 - [ ] **Isolation checkpoint**: `bun test scripts/__tests__/subagent-parity.test.ts` passes (confirms Phase 1-2 move didn't break generator emission; if red here, the move is blamed, not the rewrite)
 
 **Tests**: structural
@@ -382,8 +382,8 @@ T15 → T16 → T17
 
 ### T16: Update agent-orchestration.md role table with charter paths
 
-**What**: Update the Roles table in `skills/massa-th0th/references/agent-orchestration.md` to add a "Charter" column pointing mapped roles to `skills/agents/<name>/SKILL.md`, and mark `plan-critic`/`furps-analyst`/`handoff-writer` as "role-based (no charter)". Make the old→new mapping explicit.
-**Where**: `skills/massa-th0th/references/agent-orchestration.md` (Roles table, ~line 62)
+**What**: Update the Roles table in `skills/massa-ai/references/agent-orchestration.md` to add a "Charter" column pointing mapped roles to `skills/agents/<name>/SKILL.md`, and mark `plan-critic`/`furps-analyst`/`handoff-writer` as "role-based (no charter)". Make the old→new mapping explicit.
+**Where**: `skills/massa-ai/references/agent-orchestration.md` (Roles table, ~line 62)
 **Depends on**: T15
 **Reuses**: Mapping from `skills/AGENTS.md:71-88`
 **Requirement**: WAC-11, WAC-12
@@ -409,13 +409,13 @@ T15 → T16 → T17
 
 **Tools**:
 - MCP: NONE
-- Skill: `massa-th0th` (Verifier role)
+- Skill: `massa-ai` (Verifier role)
 
 **Done when**:
 - [ ] `bun run type-check` exits 0 (6/6)
 - [ ] `bun test scripts/__tests__/subagent-parity.test.ts` all describes pass
 - [ ] `bun run scripts/generate-subagent-artifacts.ts --check` exits 0
-- [ ] `rg 'implementer|domain-mapper|coupling-auditor|deepening-architect' skills/massa-th0th/workflows/` returns 0 hits
+- [ ] `rg 'implementer|domain-mapper|coupling-auditor|deepening-architect' skills/massa-ai/workflows/` returns 0 hits
 - [ ] Verifier writes `.specs/features/workflows-agents-consolidation/validation.md` with PASS verdict
 - [ ] **Discrimination sensor 1 (old-role revert)**: revert one audit workflow to an old role name (`implementer`); confirm the grep test detects it (kills mutant).
 - [ ] **Discrimination sensor 2 (missing lens — finding B)**: inject a `Dispatch: architecture-specialist` block missing the `lens:` field in inputs; confirm the field-completeness check from T15 detects it (kills mutant).
@@ -507,7 +507,7 @@ Execution is strictly sequential — there is no intra-phase parallelism. Total 
 For each task, which tools should I use?
 
 - **MCP**: filesystem (for T1/T4 file moves) — otherwise NONE.
-- **Skill**: `massa-th0th` (for T17 Verifier dispatch) — otherwise NONE.
+- **Skill**: `massa-ai` (for T17 Verifier dispatch) — otherwise NONE.
 
 No available MCP or skill materially changes implementation or verification correctness for T2-T16 (they are markdown edits + structural greps). The existing parity test + type-check are the deterministic sensors.
 

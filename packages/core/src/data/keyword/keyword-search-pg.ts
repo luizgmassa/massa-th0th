@@ -4,8 +4,8 @@
  * Uses PostgreSQL full-text search with to_tsvector for FTS capabilities.
  */
 
-import { SearchResult, SearchSource } from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
+import { SearchResult, SearchSource } from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
 import { getPgPool } from "../db-connection.js";
 import { installGuardOnTable } from "../../services/project-identity/identity-guard-installer.js";
 import type { Pool } from "pg";

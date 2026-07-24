@@ -7,7 +7,7 @@
  * a no-op stub — the core value is parallel gather.
  */
 
-import type { ToolResponse, IToolHandler } from "@massa-th0th/shared";
+import type { ToolResponse, IToolHandler } from "@massa-ai/shared";
 
 export interface BatchCommand {
   command: string;

@@ -5,7 +5,7 @@
  * Data sourced from WorkspaceManager (PostgreSQL workspaces table).
  */
 
-import { IToolHandler, ToolResponse } from "@massa-th0th/shared";
+import { IToolHandler, ToolResponse } from "@massa-ai/shared";
 import { workspaceManager } from "../services/workspace/workspace-manager.js";
 import type { WorkspaceStatus } from "../services/workspace/workspace-manager.js";
 import { validateEnum } from "./enum-validation.js";

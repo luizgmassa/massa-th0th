@@ -1,5 +1,5 @@
 /**
- * @massa-th0th/core - Lógica de negócio do massa-th0th
+ * @massa-ai/core - Lógica de negócio do massa-ai
  *
  * Contém tools, controllers, services, data e models
  * independente do protocolo de transporte (MCP, HTTP, etc.)
@@ -185,4 +185,4 @@ export type {
 } from "./services/jobs/auto-improve-job.js";
 
 // Re-export types from shared for convenience
-export type { ToolResponse, IToolHandler } from "@massa-th0th/shared";
+export type { ToolResponse, IToolHandler } from "@massa-ai/shared";

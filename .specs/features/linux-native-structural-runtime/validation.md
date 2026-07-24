@@ -2,7 +2,7 @@
 
 **Role:** Final independent verifier (TLC v3 Validate phase). Author ≠ verifier.
 **Date:** 2026-07-21
-**Repo:** `/Users/luizmassa/Personal Projects/massa-th0th-wt-wave-3` (branch `wave-3`)
+**Repo:** `/Users/luizmassa/Personal Projects/massa-ai-wt-wave-3` (branch `wave-3`)
 **Baseline:** `cc5e5e9` (M21 start)
 **Diff range:** `cc5e5e9..2724cff` (T1–T8: 6 atomic commits)
 **Runtime:** Bun `1.3.11`, Node `25.9.0` (npm `11.12.1` on Codespace). macOS arm64 (T1–T4 + T7 initial) + Ubuntu 24.04.4 LTS x86_64 Codespace (T5/T6 unblock).
@@ -20,7 +20,7 @@ All ten acceptance criteria are met. Phase A (T1–T4) PASS on macOS arm64. Phas
 | AC-003 / LNLSR-003 | isNativeTarget + describeNative widen | PASS | T3 `2167901`: `native-skip.ts:12` accepts (darwin,arm64) OR (linux,x64). Codespace: native-structural suites RAN (not skipped) — 152/152 pass. |
 | AC-004 / LNLSR-004 | Linux addon builds from source | PASS | Codespace T5: `node install-guard.js` → `node-gyp-build` → `node-gyp rebuild` compiled tree-sitter under Node 25.9.0 + C++20 `binding.gyp` cleanly on Ubuntu 24.04 gcc (pre-mortem #1 did NOT materialize, unlike macos-14 Apple clang). 3 from-source grammars (clojure-orchard, dart, erlang) also compiled (pre-mortem #2 did NOT materialize). |
 | AC-005 / LNLSR-005 | Linux native verifier (33+33, 27+27, 10 sensors, RSS < 16 MiB, ELF) | PASS | Codespace T5: `verifyColdConsumerProcesses` — source 33 parses/27 modules/27 resolvable, dist 33 parses/27 modules/27 resolvable. `verifyPatchBehaviorProcess` — 10/10 behavior sensors PASS. `verifyRssDiscriminationProcesses` — patchedMedianDelta -266240 bytes (≪ 16 MiB bound), controlGrowth 114 MiB. `runDiscriminationSensors` — {missing:true, incompatible:true}. Native-structural unit tests 152/152 pass. Type-check 6/6, build 5/5. **Caveat:** the full `bun run verify:tree-sitter-source-dist` script fails on a PRE-EXISTING `bun.lock tree-sitter-dart Git identity drift` (lock format has SRI as last element; verifier expects gitIdentity — present on macOS too, documented pre-existing 2/9 verifier test failure). The native verification functions were called directly, bypassing the pre-existing lock-contract check, and ALL PASS. |
-| AC-006 / LNLSR-006 | Linux packed-package verifier | PASS | Codespace T6: `npm pack` shared + core under Node 25.9.0. Core tarball bundles the nested patched runtime addon (1 match for `node_modules/tree-sitter/build/Release/tree_sitter_runtime_binding.node`) + install-guard.js (1 match). Cold empty-cache consumer install resolved the nested patched runtime at `@massa-th0th/core/node_modules/tree-sitter/`. The nested addon is ELF 64-bit LSB x86-64 with system-only NEEDED (libstdc++.so.6, libgcc_s.so.1, libc.so.6). **Same pre-existing lock-contract caveat as AC-005.** |
+| AC-006 / LNLSR-006 | Linux packed-package verifier | PASS | Codespace T6: `npm pack` shared + core under Node 25.9.0. Core tarball bundles the nested patched runtime addon (1 match for `node_modules/tree-sitter/build/Release/tree_sitter_runtime_binding.node`) + install-guard.js (1 match). Cold empty-cache consumer install resolved the nested patched runtime at `@massa-ai/core/node_modules/tree-sitter/`. The nested addon is ELF 64-bit LSB x86-64 with system-only NEEDED (libstdc++.so.6, libgcc_s.so.1, libc.so.6). **Same pre-existing lock-contract caveat as AC-005.** |
 | AC-007 / LNLSR-007 | Linux CI gate | PASS (static) | T4 `be9c8e8`: `ci.yml` adds `structural-native-linux` job (ubuntu-latest, Bun 1.3.11, Node 25.9.0, frozen install, build, verify:tree-sitter-native, unit tests, provenance upload). `native-linux-x64-workflow.test.ts` 6/6 pass. |
 | AC-008 / LNLSR-008 | Docs dual-platform parity | PASS | T4 `be9c8e8`: README updated (macOS arm64 + Linux glibc x64, ELF x86-64, no musl/Alpine/Windows). `polyglot-indexing-docs.test.ts` 13/13 pass. |
 | AC-009 / LNLSR-009 | E2E + graph-gen guards widen | PASS (static + runtime) | T3 `2167901`: E2E guards (02/09/15) + graph-gen PG guards accept linux/x64. Codespace: native-structural suites (which use describeNative) ran 152/152. |
@@ -53,7 +53,7 @@ All ten acceptance criteria are met. Phase A (T1–T4) PASS on macOS arm64. Phas
 | ELF linkage (from-source) | `file` + `readelf -d` on 5 from-source addons | **PASS** — all ELF 64-bit LSB x86-64, system-only NEEDED. |
 | ELF linkage (prebuilds) | `file` + `readelf -d` on 23 prebuild addons | **PASS** — all ELF 64-bit LSB x86-64, system-only NEEDED. |
 | Packed core tarball | `npm pack` + `tar -tzf` inspection | **PASS** — bundles `node_modules/tree-sitter/build/Release/tree_sitter_runtime_binding.node` + `install-guard.js`. |
-| Cold consumer install | `npm install` from tarballs | **PASS** — resolved nested patched runtime at `@massa-th0th/core/node_modules/tree-sitter/`; ELF x86-64 system-only. |
+| Cold consumer install | `npm install` from tarballs | **PASS** — resolved nested patched runtime at `@massa-ai/core/node_modules/tree-sitter/`; ELF x86-64 system-only. |
 | Type-check | `bun run type-check` | **PASS** — 6/6. |
 | Build | `bun run build` | **PASS** — 5/5. |
 | Native-structural unit tests | `bun scripts/run-tests-isolated.ts --unit --filter='structural\|parse-long-class'` | **PASS** — 152/152, 993 assertions, 0 fail. |

@@ -76,7 +76,7 @@ Quick artifacts live under `.specs/quick/NNN-slug/` with a `TASK.md` (one-line i
    - Load current canonical artifacts from `.specs/` files: `.specs/project/FEATURES.json`, `.specs/project/STATE.md`, `.specs/HANDOFF.md`, existing `.specs/features/<slug>/` phase artifacts, lessons, and project source. Current repository source and approved `.specs/` artifacts override stale memory, old handoff notes, external summaries, debug exports, or unapproved generated plans.
    - `search` only counts as codebase evidence when it is fresh for the current repository path and commit/worktree state, or when the result is confirmed against source files read in this session.
    - Load confirmed project lessons through `references/lessons.md` when `.specs/lessons.json` exists:
-     `python3 skills/massa-th0th/scripts/lessons.py --root . list --status confirmed`
+     `python3 skills/massa-ai/scripts/lessons.py --root . list --status confirmed`
 3. Run `Specify` with `references/spec-driven/specify.md`.
    - Capture stable requirement IDs, testable acceptance criteria, edge cases, and explicit out-of-scope items.
    - Run `references/spec-driven/discuss.md` inside Specify when gray areas, implicit requirements, persistence/state, external calls, auth, payments, concurrency, or state transitions affect behavior.

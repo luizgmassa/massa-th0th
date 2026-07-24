@@ -1,7 +1,7 @@
 import {
   assertDedicatedDbAllowed,
   requirePostgresDatabaseUrl,
-} from "@massa-th0th/shared/config";
+} from "@massa-ai/shared/config";
 
 /** Validate the mandatory database contract before API services initialize. */
 export function validateApiStartup(): string {

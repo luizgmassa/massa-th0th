@@ -9,7 +9,7 @@
  * Raw-SQL paths work correctly — both in the API server and in bun:test.
  */
 
-import { logger, MemoryType } from "@massa-th0th/shared";
+import { logger, MemoryType } from "@massa-ai/shared";
 import { Prisma } from "../../generated/prisma/index.js";
 import { getPrismaClient } from "../../services/query/prisma-client.js";
 import { getProjectIdentityAliasResolver } from "../../services/project-identity/alias-resolver.js";

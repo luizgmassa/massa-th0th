@@ -1,10 +1,10 @@
 import path from "node:path";
 import { buildQwenFixture } from "../src/__tests__/e2e/qwen-fixture.js";
 
-const explicitPath = process.env.MASSA_TH0TH_E2E_PROJECT_PATH?.trim();
-if (process.env.MASSA_TH0TH_DEDICATED !== "1" || !explicitPath) {
+const explicitPath = process.env.MASSA_AI_E2E_PROJECT_PATH?.trim();
+if (process.env.MASSA_AI_DEDICATED !== "1" || !explicitPath) {
   console.log(
-    "[qwen-fixture] skipped: requires MASSA_TH0TH_DEDICATED=1 and explicit MASSA_TH0TH_E2E_PROJECT_PATH",
+    "[qwen-fixture] skipped: requires MASSA_AI_DEDICATED=1 and explicit MASSA_AI_E2E_PROJECT_PATH",
   );
   process.exit(0);
 }

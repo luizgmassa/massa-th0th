@@ -19,8 +19,8 @@ const mockLogger = {
   metric: mock(() => {}),
 };
 
-mock.module("@massa-th0th/shared", () => {
-  const actual = require("@massa-th0th/shared");
+mock.module("@massa-ai/shared", () => {
+  const actual = require("@massa-ai/shared");
   return { ...actual, logger: mockLogger };
 });
 
@@ -67,7 +67,7 @@ function makePayload(overrides: Partial<{
 }> = {}) {
   return {
     memoryId: "mem_new_abc",
-    projectId: "massa-th0th",
+    projectId: "massa-ai",
     sessionId: "sess-xyz",
     query: "pagerank damping",
     ...overrides,
@@ -84,14 +84,14 @@ describe("CoRetrievalHook", () => {
   let mockGraph: ReturnType<typeof makeMockGraphStore>;
   let mockRepo: ReturnType<typeof makeMockRepo>;
   let hook: CoRetrievalHook;
-  const OLD_ENV = process.env.MASSA_TH0TH_CO_RETRIEVAL_HOOK;
+  const OLD_ENV = process.env.MASSA_AI_CO_RETRIEVAL_HOOK;
 
   beforeEach(() => {
     CoRetrievalHook.reset();
     mockLogger.warn.mockClear();
     mockLogger.debug.mockClear();
 
-    process.env.MASSA_TH0TH_CO_RETRIEVAL_HOOK = "true";
+    process.env.MASSA_AI_CO_RETRIEVAL_HOOK = "true";
     mockGraph = makeMockGraphStore();
     mockRepo = makeMockRepo();
     hook = CoRetrievalHook.createForTest(mockGraph, mockRepo);
@@ -101,17 +101,17 @@ describe("CoRetrievalHook", () => {
     hook.unregisterHook();
     CoRetrievalHook.reset();
     if (OLD_ENV === undefined) {
-      delete process.env.MASSA_TH0TH_CO_RETRIEVAL_HOOK;
+      delete process.env.MASSA_AI_CO_RETRIEVAL_HOOK;
     } else {
-      process.env.MASSA_TH0TH_CO_RETRIEVAL_HOOK = OLD_ENV;
+      process.env.MASSA_AI_CO_RETRIEVAL_HOOK = OLD_ENV;
     }
   });
 
   // ── Feature flag ─────────────────────────────────────────
 
   describe("feature flag", () => {
-    test("does nothing when MASSA_TH0TH_CO_RETRIEVAL_HOOK is not set", async () => {
-      delete process.env.MASSA_TH0TH_CO_RETRIEVAL_HOOK;
+    test("does nothing when MASSA_AI_CO_RETRIEVAL_HOOK is not set", async () => {
+      delete process.env.MASSA_AI_CO_RETRIEVAL_HOOK;
       hook.register();
       eventBus.publish("memory:session-stored", makePayload());
       await sleep(20);
@@ -119,7 +119,7 @@ describe("CoRetrievalHook", () => {
       expect(mockGraph.createEdge).not.toHaveBeenCalled();
     });
 
-    test("runs when MASSA_TH0TH_CO_RETRIEVAL_HOOK=true", async () => {
+    test("runs when MASSA_AI_CO_RETRIEVAL_HOOK=true", async () => {
       hook.register();
       eventBus.publish("memory:session-stored", makePayload());
       await sleep(20);

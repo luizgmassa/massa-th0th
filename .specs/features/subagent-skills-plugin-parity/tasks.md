@@ -2,7 +2,7 @@
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
-Implement these tasks with the `massa-th0th` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
+Implement these tasks with the `massa-ai` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
 
 **If the skill cannot be activated, STOP and tell the user — do not proceed without it.**
 
@@ -37,7 +37,7 @@ Implement these tasks with the `massa-th0th` skill: **activate it by name and fo
 | Claude plugin installer (agents copy + uninstall scoping) | integration | 12 agents installed; navigator preserved on uninstall; idempotent | `apps/claude-plugin/__tests__/install.test.ts` (extend) | `bun test apps/claude-plugin/__tests__/` |
 | Codex plugin installer (agents write to `~/.codex/agents/` + owned-marker uninstall) | integration | 12 TOML installed outside plugin dir; user agents preserved on uninstall; TOML parses; owned marker present | `apps/codex-plugin/__tests__/install.test.ts` (extend) | `bun test apps/codex-plugin/__tests__/` |
 | Cursor plugin manifest (12 agents + navigator in `agents/`) | integration | 13 `.md` in `agents/`; correct frontmatter; directory layout intact | `apps/cursor-plugin/__tests__/manifest.test.ts` (extend) | `bun test apps/cursor-plugin/__tests__/` |
-| OpenCode agents CLI (`massa-th0th-config agents install/uninstall`) | integration | 12 `.md` written to `~/.config/opencode/agents/`; owned-marker uninstall preserves user agents; idempotent | `apps/opencode-plugin/src/__tests__/agents-install.test.ts` (new) | `bun test apps/opencode-plugin/src/__tests__/agents-install.test.ts` |
+| OpenCode agents CLI (`massa-ai-config agents install/uninstall`) | integration | 12 `.md` written to `~/.config/opencode/agents/`; owned-marker uninstall preserves user agents; idempotent | `apps/opencode-plugin/src/__tests__/agents-install.test.ts` (new) | `bun test apps/opencode-plugin/src/__tests__/agents-install.test.ts` |
 | FEATURES.md ↔ spec table parity | unit | 4 model-pinning tables byte-match spec | `scripts/__tests__/subagent-parity.test.ts` | `bun test scripts/__tests__/subagent-parity.test.ts` |
 | Static agent files (all hosts) | none | — (build gate only: parity test covers structure) | — | parity test gate |
 
@@ -82,7 +82,7 @@ T9 → T10 → T11 → T12
 
 ### T1: Create the subagent-artifacts generator
 
-**What**: Create `scripts/generate-subagent-artifacts.ts` that reads `skills/*/SKILL.md` (12 charters), parses frontmatter (`name`, `description`, `metadata.model_hint`, `metadata.permission`) + body, and emits per-host agent files into `apps/{claude,codex,cursor,opencode}-plugin/agents/massa-th0th-<name>.{md,toml}`. Encode the 3 model-pinning tables (Claude/Codex/Cursor-OpenCode) + permission→tools mapping as constants. Idempotent (overwrites). `--check` mode emits to a temp dir and diffs against checked-in files (exit non-zero on drift).
+**What**: Create `scripts/generate-subagent-artifacts.ts` that reads `skills/*/SKILL.md` (12 charters), parses frontmatter (`name`, `description`, `metadata.model_hint`, `metadata.permission`) + body, and emits per-host agent files into `apps/{claude,codex,cursor,opencode}-plugin/agents/massa-ai-<name>.{md,toml}`. Encode the 3 model-pinning tables (Claude/Codex/Cursor-OpenCode) + permission→tools mapping as constants. Idempotent (overwrites). `--check` mode emits to a temp dir and diffs against checked-in files (exit non-zero on drift).
 **Where**: `scripts/generate-subagent-artifacts.ts`
 **Depends on**: None
 **Reuses**: `skills/*/SKILL.md` (input); spec model-pinning + permission tables (constants)
@@ -96,9 +96,9 @@ T9 → T10 → T11 → T12
 - [ ] Generator reads all 12 `skills/*/SKILL.md` charters
 - [ ] Emits 48 files (12 × 4 hosts) into `apps/*/agents/`
 - [ ] Claude emitter: array-form `tools`, `model` (haiku/sonnet/opus), `effort: high`, omits `hooks`/`mcpServers`/`permissionMode`
-- [ ] Codex emitter: TOML with `# massa-th0th-owned` top comment, `model`, `model_reasoning_effort = "high"`, `sandbox_mode` (read-only→`"read-only"`, write→`"workspace-write"`), `developer_instructions` triple-quoted with `"""` escaped as `\"\"\"`
+- [ ] Codex emitter: TOML with `# massa-ai-owned` top comment, `model`, `model_reasoning_effort = "high"`, `sandbox_mode` (read-only→`"read-only"`, write→`"workspace-write"`), `developer_instructions` triple-quoted with `"""` escaped as `\"\"\"`
 - [ ] Cursor emitter: array-form `tools`, `model` = charter hint verbatim, `reasoningEffort: max`
-- [ ] OpenCode emitter: `mode: subagent`, `model` = charter hint verbatim, `reasoningEffort: max`, `permission` (bash deny/ask/allow per mapping), `metadata: { massa-th0th-owned: true }`
+- [ ] OpenCode emitter: `mode: subagent`, `model` = charter hint verbatim, `reasoningEffort: max`, `permission` (bash deny/ask/allow per mapping), `metadata: { massa-ai-owned: true }`
 - [ ] `--check` mode exits non-zero on drift
 - [ ] `bun run scripts/generate-subagent-artifacts.ts` runs clean; `bun run type-check` passes for the new file
 
@@ -111,7 +111,7 @@ T9 → T10 → T11 → T12
 ### T2: Run generator + commit emitted agent files
 
 **What**: Run `bun run scripts/generate-subagent-artifacts.ts` to emit the 48 agent files into `apps/*/agents/`. Verify the output looks correct (12 per host, frontmatter per spec). Commit the checked-in generated files.
-**Where**: `apps/claude-plugin/agents/massa-th0th-*.md` (12), `apps/codex-plugin/agents/massa-th0th-*.toml` (12), `apps/cursor-plugin/agents/massa-th0th-*.md` (12), `apps/opencode-plugin/agents/massa-th0th-*.md` (12)
+**Where**: `apps/claude-plugin/agents/massa-ai-*.md` (12), `apps/codex-plugin/agents/massa-ai-*.toml` (12), `apps/cursor-plugin/agents/massa-ai-*.md` (12), `apps/opencode-plugin/agents/massa-ai-*.md` (12)
 **Depends on**: T1
 **Reuses**: T1 generator
 **Requirement**: CLA-01, CDX-01, CRS-01, OPC-01 (file existence)
@@ -121,10 +121,10 @@ T9 → T10 → T11 → T12
 - Skill: NONE
 
 **Done when**:
-- [ ] 12 `massa-th0th-*.md` in `apps/claude-plugin/agents/` (alongside existing navigator)
-- [ ] 12 `massa-th0th-*.toml` in `apps/codex-plugin/agents/`
-- [ ] 12 `massa-th0th-*.md` in `apps/cursor-plugin/agents/` (alongside navigator)
-- [ ] 12 `massa-th0th-*.md` in `apps/opencode-plugin/agents/`
+- [ ] 12 `massa-ai-*.md` in `apps/claude-plugin/agents/` (alongside existing navigator)
+- [ ] 12 `massa-ai-*.toml` in `apps/codex-plugin/agents/`
+- [ ] 12 `massa-ai-*.md` in `apps/cursor-plugin/agents/` (alongside navigator)
+- [ ] 12 `massa-ai-*.md` in `apps/opencode-plugin/agents/`
 - [ ] `bun run scripts/generate-subagent-artifacts.ts --check` exits 0 (no drift between just-generated and committed)
 
 **Tests**: none (T4 parity test verifies)
@@ -135,7 +135,7 @@ T9 → T10 → T11 → T12
 
 ### T3: Extend Claude Code installer to copy the 12 agents
 
-**What**: Extend `apps/claude-plugin/install.sh` to copy `agents/massa-th0th-*.md` (the 12 specialists) into `~/.claude/agents/` (or `.claude/agents/`) alongside the existing navigator copy. Extend `--uninstall` to remove `massa-th0th-*.md` EXCLUDING `massa-th0th-navigator.md` (R1: name-prefix glob catches navigator — exclude by name). Print "+ 12 subagent specialists: ..." line.
+**What**: Extend `apps/claude-plugin/install.sh` to copy `agents/massa-ai-*.md` (the 12 specialists) into `~/.claude/agents/` (or `.claude/agents/`) alongside the existing navigator copy. Extend `--uninstall` to remove `massa-ai-*.md` EXCLUDING `massa-ai-navigator.md` (R1: name-prefix glob catches navigator — exclude by name). Print "+ 12 subagent specialists: ..." line.
 **Where**: `apps/claude-plugin/install.sh` (modify)
 **Depends on**: T2
 **Reuses**: existing install.sh copy loop pattern at `:184-192`
@@ -146,8 +146,8 @@ T9 → T10 → T11 → T12
 - Skill: NONE
 
 **Done when**:
-- [ ] `install.sh --user` copies 12 `massa-th0th-*.md` to `~/.claude/agents/`
-- [ ] `install.sh --uninstall` removes the 12 specialists AND preserves `massa-th0th-navigator.md` (R1 exclusion)
+- [ ] `install.sh --user` copies 12 `massa-ai-*.md` to `~/.claude/agents/`
+- [ ] `install.sh --uninstall` removes the 12 specialists AND preserves `massa-ai-navigator.md` (R1 exclusion)
 - [ ] Install prints "+ 12 subagent specialists: investigator, planner, ..."
 - [ ] Idempotent (re-run overwrites identical content)
 - [ ] Existing `apps/claude-plugin/__tests__/install.test.ts` still passes
@@ -161,7 +161,7 @@ T9 → T10 → T11 → T12
 
 ### T4: Create the subagent parity test
 
-**What**: Create `scripts/__tests__/subagent-parity.test.ts` that (a) runs the generator `--check` and asserts exit 0 (drift gate), (b) parses every emitted agent file per host and asserts `model`/`effort`/`tools`/`sandbox_mode`/`permission` match the spec pinning tables, (c) asserts no shipped name collides with host built-ins, (d) asserts the exact 12 names per host, (e) asserts each Codex TOML parses + has `# massa-th0th-owned` top comment, (f) asserts FEATURES.md 4 tables byte-match spec (after T10).
+**What**: Create `scripts/__tests__/subagent-parity.test.ts` that (a) runs the generator `--check` and asserts exit 0 (drift gate), (b) parses every emitted agent file per host and asserts `model`/`effort`/`tools`/`sandbox_mode`/`permission` match the spec pinning tables, (c) asserts no shipped name collides with host built-ins, (d) asserts the exact 12 names per host, (e) asserts each Codex TOML parses + has `# massa-ai-owned` top comment, (f) asserts FEATURES.md 4 tables byte-match spec (after T10).
 **Where**: `scripts/__tests__/subagent-parity.test.ts`
 **Depends on**: T2 (T10 for FEATURES.md parity sub-check)
 **Reuses**: `bun:test`; spec tables as fixtures
@@ -188,7 +188,7 @@ T9 → T10 → T11 → T12
 
 ### T5: Extend Codex installer to write 12 TOML agents outside the plugin dir
 
-**What**: Extend `apps/codex-plugin/install.sh` to write the 12 `massa-th0th-*.toml` files into `~/.codex/agents/` (or `.codex/agents/`) — OUTSIDE the plugin dir. Extend `--uninstall` to remove only files with the `# massa-th0th-owned` top comment (grep + rm). Print "+ 12 subagent specialists" line.
+**What**: Extend `apps/codex-plugin/install.sh` to write the 12 `massa-ai-*.toml` files into `~/.codex/agents/` (or `.codex/agents/`) — OUTSIDE the plugin dir. Extend `--uninstall` to remove only files with the `# massa-ai-owned` top comment (grep + rm). Print "+ 12 subagent specialists" line.
 **Where**: `apps/codex-plugin/install.sh` (modify)
 **Depends on**: T2
 **Reuses**: existing `CODEX_DIR` resolution at `:47-53`
@@ -199,9 +199,9 @@ T9 → T10 → T11 → T12
 - Skill: NONE
 
 **Done when**:
-- [ ] `install.sh --user` writes 12 `massa-th0th-*.toml` to `~/.codex/agents/`
-- [ ] `--uninstall` removes only files with `# massa-th0th-owned` top comment; user TOML files preserved (R3)
-- [ ] Each TOML has `# massa-th0th-owned` top comment
+- [ ] `install.sh --user` writes 12 `massa-ai-*.toml` to `~/.codex/agents/`
+- [ ] `--uninstall` removes only files with `# massa-ai-owned` top comment; user TOML files preserved (R3)
+- [ ] Each TOML has `# massa-ai-owned` top comment
 - [ ] Install prints "+ 12 subagent specialists: ..."
 - [ ] Idempotent
 - [ ] Existing `apps/codex-plugin/__tests__/manifest.test.ts` still passes
@@ -215,7 +215,7 @@ T9 → T10 → T11 → T12
 
 ### T6: Extend Cursor installer to copy the 12 agents into the plugin dir
 
-**What**: Extend `apps/cursor-plugin/install.sh` to copy `agents/massa-th0th-*.md` (12 specialists) into the plugin's `agents/` dir alongside the existing navigator. The existing single navigator `cp` at `:204` becomes a loop over `agents/*.md`. Print "+ 12 subagent specialists" line.
+**What**: Extend `apps/cursor-plugin/install.sh` to copy `agents/massa-ai-*.md` (12 specialists) into the plugin's `agents/` dir alongside the existing navigator. The existing single navigator `cp` at `:204` becomes a loop over `agents/*.md`. Print "+ 12 subagent specialists" line.
 **Where**: `apps/cursor-plugin/install.sh` (modify)
 **Depends on**: T2
 **Reuses**: existing agent copy at `:204`
@@ -238,9 +238,9 @@ T9 → T10 → T11 → T12
 
 ---
 
-### T7: Add OpenCode `massa-th0th-config agents` subcommand
+### T7: Add OpenCode `massa-ai-config agents` subcommand
 
-**What**: Add an `agents` subcommand to `apps/opencode-plugin/src/config-cli.ts` (`agents install [--user|--project]` / `agents uninstall`) that writes the 12 generated `massa-th0th-*.md` files to `~/.config/opencode/agents/` (or `.opencode/agents/`). Read source files from the package's `agents/` dir (resolved relative to the built CLI). Uninstall removes only files with `metadata: { massa-th0th-owned: true }` (R3). Print "+ 12 subagent specialists" line.
+**What**: Add an `agents` subcommand to `apps/opencode-plugin/src/config-cli.ts` (`agents install [--user|--project]` / `agents uninstall`) that writes the 12 generated `massa-ai-*.md` files to `~/.config/opencode/agents/` (or `.opencode/agents/`). Read source files from the package's `agents/` dir (resolved relative to the built CLI). Uninstall removes only files with `metadata: { massa-ai-owned: true }` (R3). Print "+ 12 subagent specialists" line.
 **Where**: `apps/opencode-plugin/src/config-cli.ts` (modify)
 **Depends on**: T2
 **Reuses**: existing CLI structure at `:62-194`; `getConfigDir()` for scope
@@ -251,8 +251,8 @@ T9 → T10 → T11 → T12
 - Skill: NONE
 
 **Done when**:
-- [ ] `massa-th0th-config agents install --user` writes 12 `massa-th0th-*.md` to `~/.config/opencode/agents/`
-- [ ] `agents uninstall` removes only files with `metadata: { massa-th0th-owned: true }`; user agents preserved (R3)
+- [ ] `massa-ai-config agents install --user` writes 12 `massa-ai-*.md` to `~/.config/opencode/agents/`
+- [ ] `agents uninstall` removes only files with `metadata: { massa-ai-owned: true }`; user agents preserved (R3)
 - [ ] Install prints "+ 12 subagent specialists: ..."
 - [ ] Idempotent
 - [ ] `bun run type-check` passes for the CLI extension
@@ -279,7 +279,7 @@ T9 → T10 → T11 → T12
 **Done when**:
 - [ ] `files` array includes `"agents/*.md"` (or `"agents"`)
 - [ ] `bun run build` passes (5/5)
-- [ ] `npm pack --dry-run` (or equivalent) shows `agents/massa-th0th-*.md` in the tarball
+- [ ] `npm pack --dry-run` (or equivalent) shows `agents/massa-ai-*.md` in the tarball
 - [ ] Gate: `bun run build`
 
 **Tests**: none (build gate; T7 install test exercises the files)

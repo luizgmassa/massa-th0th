@@ -71,7 +71,7 @@ LANGUAGE sql
 IMMUTABLE PARALLEL SAFE
 SET search_path = pg_catalog
 AS $$
-  SELECT hashtextextended('massa-th0th:project-identity:' || project_id, 0);
+  SELECT hashtextextended('massa-ai:project-identity:' || project_id, 0);
 $$;
 
 CREATE FUNCTION project_identity_lock_shared(project_ids TEXT[])

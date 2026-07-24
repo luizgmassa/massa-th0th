@@ -12,7 +12,7 @@
 
 ## Summary
 
-The massa-th0th workflow skill (`skills/massa-th0th/`) was adapted to use the full 52-tool surface from `apps/mcp-client/src/tool-definitions.ts` CANONICAL_ORDER. All `th0th_*`-prefixed tool references were renamed to canonical un-prefixed names across 60 files. `references/th0th-tools.md` was expanded from ~20 to 52 tools. 13 workflows adopted previously-unreferenced tools (checkpoints, handoffs, bootstrap, compact_snapshot, trace_path, impact_analysis, get_architecture, code execution, full Synapse lifecycle, read_file, symbol_snippet, memory_update/delete, analytics, fetch_and_index). `SKILL.md` router Core Contract, Retrieval, and Graceful Degradation sections were updated for the full tool surface.
+The massa-ai workflow skill (`skills/massa-ai/`) was adapted to use the full 52-tool surface from `apps/mcp-client/src/tool-definitions.ts` CANONICAL_ORDER. All `th0th_*`-prefixed tool references were renamed to canonical un-prefixed names across 60 files. `references/mcp-tools.md` was expanded from ~20 to 52 tools. 13 workflows adopted previously-unreferenced tools (checkpoints, handoffs, bootstrap, compact_snapshot, trace_path, impact_analysis, get_architecture, code execution, full Synapse lifecycle, read_file, symbol_snippet, memory_update/delete, analytics, fetch_and_index). `SKILL.md` router Core Contract, Retrieval, and Graceful Degradation sections were updated for the full tool surface.
 
 **12 tasks executed, 11 atomic commits** (`e318fe9`..`5a1894d`).
 
@@ -22,9 +22,9 @@ The massa-th0th workflow skill (`skills/massa-th0th/`) was adapted to use the fu
 
 | AC | Requirement | Evidence | Verdict |
 | --- | --- | --- | --- |
-| 1 | WTA-01: no `th0th_` prefix (full tree) | `rg 'th0th_' skills/massa-th0th/` → 0 matches across 60 files | PASS |
-| 2 | WTA-02: th0th-tools.md all 52 tools | 0/52 missing; all CANONICAL_ORDER tools present in matrix | PASS |
-| 3 | WTA-03: SKILL.md no `th0th_` | `rg 'th0th_' skills/massa-th0th/SKILL.md` → 0 | PASS |
+| 1 | WTA-01: no `th0th_` prefix (full tree) | `rg 'th0th_' skills/massa-ai/` → 0 matches across 60 files | PASS |
+| 2 | WTA-02: mcp-tools.md all 52 tools | 0/52 missing; all CANONICAL_ORDER tools present in matrix | PASS |
+| 3 | WTA-03: SKILL.md no `th0th_` | `rg 'th0th_' skills/massa-ai/SKILL.md` → 0 | PASS |
 | 4 | WTA-04: create_checkpoint in spec-driven | 2 matches in `spec-driven.md` | PASS |
 | 5 | WTA-05: list_checkpoints/restore_checkpoint in spec-driven | 1 match in `spec-driven.md` | PASS |
 | 6 | WTA-06: create_checkpoint in long-session | 1 match in `long-session.md` | PASS |
@@ -58,7 +58,7 @@ The massa-th0th workflow skill (`skills/massa-th0th/`) was adapted to use the fu
 
 | Finding | Mitigation | Evidence | Verdict |
 | --- | --- | --- | --- |
-| F1: references not renamed | T1 covers full `skills/massa-th0th/**/*.md` tree | `rg 'th0th_' skills/massa-th0th/` → 0 (60 files) | PASS |
+| F1: references not renamed | T1 covers full `skills/massa-ai/**/*.md` tree | `rg 'th0th_' skills/massa-ai/` → 0 (60 files) | PASS |
 | F2: graph tools lack freshness gate | T8 adds freshness gate to every graph-tool reference | `rg 'fresh.*current repository path\|fall back.*search'` → 1 match each in debug, architecture-audit, refactor | PASS |
 | F3: compact_snapshot session-id confusion | T7 disambiguates lifecycle sessionId vs workflowSessionId | `rg 'NOT.*workflowSessionId\|lifecycle.*sessionId' long-session.md` → 1 match | PASS |
 | F5: get_architecture vs project_map confusion | T8 distinguishes the two in architecture-audit | `rg 'distinct from.*project_map\|general overview.*architecture-specific' architecture-audit.md` → 1 match | PASS |
@@ -67,7 +67,7 @@ The massa-th0th workflow skill (`skills/massa-th0th/`) was adapted to use the fu
 
 ## Discrimination Sensor
 
-**Method**: Injected `th0th_recall` into a scratch copy of `general.md` and `onboarding.md`. Confirmed `rg 'th0th_'` catches the mutation (count=1). Scratch copies discarded. Sensor kills the mutation.
+**Method**: Injected `recall` into a scratch copy of `general.md` and `onboarding.md`. Confirmed `rg 'th0th_'` catches the mutation (count=1). Scratch copies discarded. Sensor kills the mutation.
 
 **Result**: PASS — the `rg 'th0th_'` sensor reliably catches `th0th_`-prefixed references.
 
@@ -79,8 +79,8 @@ The massa-th0th workflow skill (`skills/massa-th0th/`) was adapted to use the fu
 | --- | --- | --- |
 | Type-check | `bun run type-check` | 6/6 green (FULL TURBO, cached) |
 | Build | `bun run build` | 5/5 green (FULL TURBO, cached) |
-| th0th_ prefix sensor | `rg 'th0th_' skills/massa-th0th/` | 0 matches |
-| 52-tool matrix sensor | per-tool grep in `th0th-tools.md` | 0/52 missing |
+| th0th_ prefix sensor | `rg 'th0th_' skills/massa-ai/` | 0 matches |
+| 52-tool matrix sensor | per-tool grep in `mcp-tools.md` | 0/52 missing |
 | Tool-adoption sensors (24 total) | per-AC grep sensors | All PASS |
 | Discrimination sensor | inject + catch | Mutation killed |
 | Behavior preservation | diff routing/memory/Evidence-Gate | Unchanged in meaning |
@@ -94,7 +94,7 @@ The massa-th0th workflow skill (`skills/massa-th0th/`) was adapted to use the fu
 | Commit | Task | Description |
 | --- | --- | --- |
 | `e318fe9` | T1 | Rename th0th_ tool refs across full tree (60 files) |
-| `897d7c9` | T2 | Expand th0th-tools.md to 52-tool matrix |
+| `897d7c9` | T2 | Expand mcp-tools.md to 52-tool matrix |
 | `b6fcc63` | T4 | Adopt checkpoints in spec-driven/long-session/restart-save |
 | `f84f591` | T5 | Adopt handoff tools in agent-handoff/restart-load |
 | `8501803` | T6 | Adopt bootstrap in onboarding |

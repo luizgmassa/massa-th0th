@@ -20,7 +20,7 @@ async function fixtureRoots(): Promise<{
   firstAlias: string;
   second: string;
 }> {
-  const root = await mkdtemp(path.join(tmpdir(), "massa-th0th-root-identity-"));
+  const root = await mkdtemp(path.join(tmpdir(), "massa-ai-root-identity-"));
   roots.push(root);
   const first = path.join(root, "first");
   const second = path.join(root, "second");

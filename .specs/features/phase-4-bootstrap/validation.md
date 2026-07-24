@@ -125,7 +125,7 @@ Mutant killed. No surviving mutant.
    mock. Read `bootstrap-service.test.ts`: injects `MemoryRepoSeam` +
    `LlmSurface` + `CentralitySource` + `GitRunner`; single P4-SEARCH-01 block
    resets the MemoryRepository singleton to a temp DB and restores it. No
-   `mock.module("@massa-th0th/shared")`. **OK.**
+   `mock.module("@massa-ai/shared")`. **OK.**
 9. **No migration (NF2).** Spec: seed memories are existing `memories` rows.
    Read `storeSeeds`: only calls `MemoryRepository.insert` (existing schema);
    marker = tag query. No `ALTER TABLE`, no new table. **OK.**

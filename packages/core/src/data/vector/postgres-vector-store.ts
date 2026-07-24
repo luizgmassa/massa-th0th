@@ -21,8 +21,8 @@ import {
   ProjectInfo,
   SearchResult,
   SearchSource,
-} from '@massa-th0th/shared';
-import { logger } from '@massa-th0th/shared';
+} from '@massa-ai/shared';
+import { logger } from '@massa-ai/shared';
 import { installGuardOnTable } from '../../services/project-identity/identity-guard-installer.js';
 import type { Pool, PoolConfig } from 'pg';
 

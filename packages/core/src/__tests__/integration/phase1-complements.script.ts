@@ -3,7 +3,7 @@
  */
 
 import { getPrismaClient } from '../../services/query/prisma-client.js';
-import { logger } from '@massa-th0th/shared';
+import { logger } from '@massa-ai/shared';
 
 const prisma = getPrismaClient();
 

@@ -6,7 +6,7 @@
  *   (b) degrades silently ({ ok:false }) on failure — never throws,
  *   (c) default-off.
  *
- * Isolation: this file deliberately does NOT `mock.module("@massa-th0th/shared")`.
+ * Isolation: this file deliberately does NOT `mock.module("@massa-ai/shared")`.
  * bun's mock.module is process-wide, and another test file (memory-crud.test.ts)
  * already mocks shared config for dataDir isolation; a second mock here would
  * collide (last-writer-wins) and break one of the two files. Instead the
@@ -243,14 +243,14 @@ describe("llm-client — pure helpers", () => {
 // ─── T4: per-task model routing (COVERAGE #1/#5/#7) ──────────────────────────
 
 // Several sibling suites (redundancy-clustering, relation-extractor, …) mock
-// @massa-th0th/shared with a config that has NO llm block. bun's mock.module is
+// @massa-ai/shared with a config that has NO llm block. bun's mock.module is
 // process-wide and last-writer-wins, so when one of those runs in the same bun
 // batch it starves config.get("llm") here → codeModel is undefined and these
 // routing assertions cannot hold. Skip the code-routing tests in that case; the
 // instruct-default test still passes via the DEFAULT_LLM_MODEL fallback.
 const LLM_CFG_AVAILABLE = (() => {
   try {
-    const { config } = require("@massa-th0th/shared");
+    const { config } = require("@massa-ai/shared");
     const llm = config.get?.("llm");
     return Boolean(llm && (llm.codeModel || llm.model));
   } catch {
@@ -273,7 +273,7 @@ describe("llm-client — per-task model routing (T4)", () => {
 
   test.skipIf(!LLM_CFG_AVAILABLE)("code role selects config.llm.codeModel (differs from instruct default)", async () => {
     // Read both from the live config to stay robust to env overrides.
-    const { config } = await import("@massa-th0th/shared");
+    const { config } = await import("@massa-ai/shared");
     const llmCfg = config.get("llm");
     const instructModel = llmCfg?.model;
     const codeModel = llmCfg?.codeModel;
@@ -287,7 +287,7 @@ describe("llm-client — per-task model routing (T4)", () => {
   });
 
   test.skipIf(!LLM_CFG_AVAILABLE)("llmObject routes by modelRole too (code → codeModel)", async () => {
-    const { config } = await import("@massa-th0th/shared");
+    const { config } = await import("@massa-ai/shared");
     const codeModel = config.get("llm")?.codeModel;
     await llmObject("hello", sampleSchema, { modelRole: "code" });
     expect(lastModel).toBe(codeModel);
@@ -300,7 +300,7 @@ describe("llm-client — per-task model routing (T4)", () => {
     // llm-client.ts — the source of truth is config (which itself references the
     // constant). We assert the resolved model matches config, and that the
     // constant exported from shared is the new non-thinking default.
-    const { config, DEFAULT_LLM_MODEL } = await import("@massa-th0th/shared");
+    const { config, DEFAULT_LLM_MODEL } = await import("@massa-ai/shared");
     const cfgModel = config.get("llm")?.model;
     await llmComplete("hello");
     // When a sibling suite's process-wide mock starves config.llm, cfgModel is

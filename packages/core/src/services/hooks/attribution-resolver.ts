@@ -25,7 +25,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { getPgPool } from "../../data/db-connection.js";
 import type { AttributionSource } from "../../data/memory/observation-contract.js";
 import {

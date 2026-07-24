@@ -1,7 +1,7 @@
 /**
  * Dashboard Routes (N28 — observability).
  *
- * Read-only status endpoints for the massa-th0th dashboard.
+ * Read-only status endpoints for the massa-ai dashboard.
  *
  *   GET /api/v1/scheduler/status   — scheduler snapshot (wraps scheduler.status())
  *   GET /api/v1/hooks/queue-status — hook writer-queue depth (wraps WriterQueue)
@@ -11,8 +11,8 @@
  * crash, no 500).
  */
 
-import { getScheduler } from "@massa-th0th/core/services";
-import { getHookService } from "@massa-th0th/core";
+import { getScheduler } from "@massa-ai/core/services";
+import { getHookService } from "@massa-ai/core";
 import { Elysia } from "elysia";
 
 const DASHBOARD_DETAIL = {

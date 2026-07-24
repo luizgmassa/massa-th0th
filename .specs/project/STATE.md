@@ -1,8 +1,8 @@
-# massa-th0th Spec State
+# massa-ai Spec State
 
 ## Current — Workflow Tools Adaptation
 
-- projectId: `massa-th0th`
+- projectId: `massa-ai`
 - workflowSessionId: `spec-workflow-tools-adaptation`
 - workflow: spec-driven (Large/Complex)
 - feature: `workflow-tools-adaptation` — COMPLETE + validated PASS
@@ -16,7 +16,7 @@
 - Plan Challenge: full The Fool pre-mortem mode; 5 failure narratives; 3 critical/high findings (F1 references not renamed, F2 graph tools lack freshness gate, F3 compact_snapshot session-id confusion) incorporated as plan revisions.
 - Key decisions:
   - Canonical tool naming = un-prefixed (matching `tool-definitions.ts` CANONICAL_ORDER); all `th0th_*` references removed across 60 files.
-  - `references/th0th-tools.md` expanded from ~20 to 52 tools (full MCP Capability Matrix).
+  - `references/mcp-tools.md` expanded from ~20 to 52 tools (full MCP Capability Matrix).
   - Selective tool adoption: each workflow adopts only tools that materially benefit its flow.
   - Graph tools (`trace_path`, `impact_analysis`, `get_architecture`) include explicit freshness gates.
   - `compact_snapshot` uses lifecycle `sessionId`, NOT `workflowSessionId` (two-session-id rule).
@@ -25,7 +25,7 @@
 
 ## Previous — Subagent Skills Plugin Parity
 
-- projectId: `massa-th0th`
+- projectId: `massa-ai`
 - workflowSessionId: `spec-subagent-skills-plugins-parity`
 - workflow: spec-driven (Large/Complex)
 - feature: `subagent-skills-plugin-parity` — COMPLETE + validated PASS
@@ -39,9 +39,9 @@
 - Tasks plan: Phase 1 (T1-T4 generator foundation) → Phase 2 (T5-T8 installer extensions) → Phase 3 (T9-T12 docs + final gate). Single source of truth = `scripts/generate-subagent-artifacts.ts`; drift gate via `--check` + parity test.
 - Design key decisions:
   - `scripts/generate-subagent-artifacts.ts` = single source of truth; reads `skills/*/SKILL.md`, emits per-host agent files into `apps/*/agents/`; outputs checked in; `--check` mode + parity test = drift gate (F1 mitigation).
-  - Codex agents → `~/.codex/agents/*.toml` (OUTSIDE plugin dir; `# massa-th0th-owned` top comment). OpenCode agents → `~/.config/opencode/agents/*.md` (OUTSIDE npm package; `metadata: { massa-th0th-owned: true }`; shipped via `files` array update — R2).
-  - Claude/Cursor agents → plugin's `agents/` dir (Claude uninstall excludes `massa-th0th-navigator.md` by name — R1).
-  - OpenCode: new `massa-th0th-config agents install/uninstall` subcommand (extends `config-cli.ts`).
+  - Codex agents → `~/.codex/agents/*.toml` (OUTSIDE plugin dir; `# massa-ai-owned` top comment). OpenCode agents → `~/.config/opencode/agents/*.md` (OUTSIDE npm package; `metadata: { massa-ai-owned: true }`; shipped via `files` array update — R2).
+  - Claude/Cursor agents → plugin's `agents/` dir (Claude uninstall excludes `massa-ai-navigator.md` by name — R1).
+  - OpenCode: new `massa-ai-config agents install/uninstall` subcommand (extends `config-cli.ts`).
   - 10 risks R1-R10 documented with mitigations; no project-level AD (additive, no DB/binary).
 - Docs parity (user follow-up): `README.md` = summary layer (12 names, pinned model+effort per host in compact form, link to FEATURES.md); `FEATURES.md` = depth layer (new "Subagent Skills (12 Specialists)" section: per-host names, file locations/formats, four model-pinning tables verbatim, effort pins, permission mappings, ownership markers, generator+parity contract). DOC-02/03/06/07 assert the split; DOC-06 asserts FEATURES.md ↔ spec table byte-parity (test).
 - Model pinning (user follow-up): `model` PINNED per agent per host, NOT advisory. Claude aliases (haiku/sonnet/opus); Codex IDs (gpt-5.4-mini / gpt-5.6-terra / gpt-5.6-sol); Cursor + OpenCode use charter `metadata.model_hint` verbatim (DeepSeek V4 Pro / GLM-5.2 / MiniMax M3). Three model-pinning tables added to spec; AC CLA-10/CDX-10/CRS-08/OPC-10 assert exact pinning.
@@ -51,14 +51,14 @@
   - Ship as host-native subagent definitions (Claude `agents/*.md`, Cursor `agents/*.md`, OpenCode `agents/<name>.md` mode: subagent, Codex `agents/<name>.toml`).
   - Full native frontmatter adaptation (tools/sandbox_mode/permission per host; model hint as advisory body comment, omitted from frontmatter).
   - No new lifecycle hooks (invocation-based specialists; existing 6 lifecycle hooks unchanged; shared binary untouched).
-  - Codex/OpenCode agents live OUTSIDE the plugin dir (shared agent dirs) → in-file ownership marker (`# massa-th0th-owned` comment / `metadata: { massa-th0th-owned: true }`).
+  - Codex/OpenCode agents live OUTSIDE the plugin dir (shared agent dirs) → in-file ownership marker (`# massa-ai-owned` comment / `metadata: { massa-ai-owned: true }`).
   - Single source of truth: `scripts/generate-subagent-artifacts.ts` emits shipped files from `skills/*/SKILL.md`; parity test asserts byte-identity (drift fails CI).
-  - Existing `massa-th0th-navigator.md` (Claude/Cursor) preserved; 12 specialists additive.
+  - Existing `massa-ai-navigator.md` (Claude/Cursor) preserved; 12 specialists additive.
 - Next step: Design phase (`references/spec-driven/design.md`) — architecture, components, per-host frontmatter mapping table, generator design, verification design.
 
 ## Previous — Codex + Cursor Plugin Parity
 
-- projectId: `massa-th0th`
+- projectId: `massa-ai`
 - workflowSessionId: `spec-codex-cursor-plugin-parity`
 - workflow: spec-driven (Large/Complex)
 - feature: `codex-cursor-plugin-parity` — COMPLETE + validated PASS
@@ -74,7 +74,7 @@
 
 ## Previous — Wave 7
 
-- projectId: `massa-th0th`
+- projectId: `massa-ai`
 - workflowSessionId: `spec-wave-7-hygiene-ui-process`
 - workflow: spec-driven (Large/Complex)
 - feature: `wave-7-hygiene-ui-process` (Wave 7) — COMPLETE + validated PASS
@@ -90,7 +90,7 @@
 
 | ID | Status | Decision | Evidence |
 | --- | --- | --- | --- |
-| AD-007 | active (T12) | Executor sandbox default is `auto` (not `on`); uses platform tool if available, falls back to best-effort. F1 mitigation. | `sandbox.ts` getSandboxMode, `MASSA_TH0TH_EXECUTOR_SANDBOX=auto\|on\|none` |
+| AD-007 | active (T12) | Executor sandbox default is `auto` (not `on`); uses platform tool if available, falls back to best-effort. F1 mitigation. | `sandbox.ts` getSandboxMode, `MASSA_AI_EXECUTOR_SANDBOX=auto\|on\|none` |
 | AD-008 | active (T11) | json_schema constrained decoding for Ollama structured calls; version-gated (>= 0.5.0), graceful fallback to json_object. F3 mitigation. | `llm-client.ts` _checkJsonSchemaSupport, llmObject |
 | AD-009 | active (T5) | D5 Cypher subset deferral formally removed — structural graph traversal covers use cases. | `docs/adr/0001-remove-d5-cypher-subset.md` |
 
@@ -98,7 +98,7 @@
 
 ## Wave 7 — Active
 
-- projectId: `massa-th0th`
+- projectId: `massa-ai`
 - workflowSessionId: `spec-wave-7-hygiene-ui-process`
 - workflow: spec-driven (Large/Complex)
 - feature: `wave-7-hygiene-ui-process` (Wave 7) — IN PROGRESS
@@ -117,7 +117,7 @@
 
 ## Wave 5 — Active
 
-- projectId: `massa-th0th`
+- projectId: `massa-ai`
 - workflowSessionId: `spec-wave-5`
 - workflow: spec-driven (Large/Complex)
 - feature: `wave-5-cross-pollination` (Wave 5, P1) — COMPLETE + validated PASS
@@ -135,7 +135,7 @@
 
 ## Wave 4 — Complete
 
-- projectId: `massa-th0th`
+- projectId: `massa-ai`
 - workflowSessionId: `spec-wave-4-correctness-hygiene`
 - workflow: spec-driven
 - feature: `wave-4-correctness-hygiene` (Wave 4, P1) — COMPLETE + validated PASS
@@ -148,13 +148,13 @@
 
 ## Wave 3 — Active
 
-- projectId: `massa-th0th`
+- projectId: `massa-ai`
 - workflowSessionId: `spec-wave3-followup` (native-runtime-rebaseline follow-up); prior `spec-m21` (M21) COMPLETE.
 - workflow: spec-driven
 - feature: `native-runtime-rebaseline` (Wave 3 follow-up, P1) — T1–T6 COMPLETE + validated PASS. T1 merge `b6aa4a4`; T2 test rewrite `428d462`; spec artifacts `846ff29`; T3 classification `e866ea5` + `17eedfd`; T4 npm reconcile (no code change — Codespace npm 11.12.1 → 11.14.1 install); T5 cross-platform verify (Codespace Bun 1.3.14 install, ABI 137, both platforms `verify:tree-sitter-native` exit 0, 152/152 native-structural); T6 AD amendment + validation.md (this commit). Status: `complete`.
 - prior: `linux-native-structural-runtime` (M21, P0) — COMPLETE + validated PASS.
 - status: M19, M20+M54, M50, M16+M17, M45+M47, M21 complete. **native-runtime-rebaseline COMPLETE** (T1–T6: `b6aa4a4`/`428d462`/`846ff29`/`e866ea5`/`17eedfd` + T4/T5/T6). Phase A (T1–T2) PASS on macOS arm64; Phase B (T3) six-suite classification — 2 FIX (`e866ea5` auto-improve LLM-surface isolation defect, `17eedfd` qwen fixture re-lock after identity-guard drift) + 4 DOCUMENTED-ACCEPT (etl-cache-invalidation, etl-pipeline-queue, scheduler-store-pg, trace-path — shared-DB fixture gaps: `graph_generation_workspace_missing:*`, `scheduled-*` pollution) — **RESOLVED in Wave 6**: `clearProject` now deletes `graph_generations` rows (prevents orphaned generations), `architecture-map.test.ts` calls `markIndexing` before `EtlPipeline.run` (prevents workspace-missing race), qwen fixture hashes re-locked after N31 decomposition; Phase C (T4–T5) npm reconciled 11.14.1 both platforms, Bun 1.3.14 installed on Codespace (ABI 137), `verify:tree-sitter-native` PASS on macOS arm64 + Ubuntu Codespace (33+33 parses, 27+27 modules, 10 sensors, RSS -188 KB Codespace / +589 KB macOS < 16 MiB, packed package PASS, 152/152 native-structural both platforms). Phase D (T6) AD-004/005/006 amendment + validation.md.
-- branch/worktree: `wave-3` / `massa-th0th-wt-wave-3`
+- branch/worktree: `wave-3` / `massa-ai-wt-wave-3`
 - sequence: M19 → M20+M54 → M50 → M16+M17 → M45+M47 ✅ → M21 ✅ → native-runtime-rebaseline ✅
 - invariant: `sqlite-removal` complete; `sqlite-removal-followup` in_progress (M29); `multi-language-tree-sitter-breadth` reconciled to `complete` from its recorded PASS evidence.
 - cleanup: temp branch `wave-3-codespace-sync` on origin (used to sync Codespace for T5) — delete after feature closure.
@@ -167,7 +167,7 @@ native-runtime-rebaseline complete. Wave 3 follow-up exhausted. Clean up: delete
 
 ## Current
 
-- projectId: `massa-th0th`
+- projectId: `massa-ai`
 - workflowSessionId: `spec-multi-language`
 - workflow: spec-driven
 - persona: AI Engineer
@@ -273,7 +273,7 @@ Commit the native runtime re-baseline, then commit TASK-023 (`build(parser): ver
 
 ## Wave 2 (Improvement Plan v2) — COMPLETE
 
-- Source plan: `~/Downloads/massa-th0th-improvement-plan.md`. Wave 1 merged via PR #3 (`9fb32f3`).
+- Source plan: `~/Downloads/massa-ai-improvement-plan.md`. Wave 1 merged via PR #3 (`9fb32f3`).
 - workflowSessionId: `spec-driven-wave2`; branch: `wave-2` (off `main`).
 - Status: **COMPLETE** — 10/10 items done (M36, M7, M9, M40, M13, M11, M10, M8, M12, M14). All validated PASS. Local branch `wave-2` now tracks `origin/wave-2`.
 - **M36 (TOON compact output) — DONE + validated PASS** (2026-07-18). Shared `serializeToolResponse` + `fields` projection; `format` added to 3 tools (get_optimized_context, trace_path, impact_analysis), `fields` to all 12, two-layer MCP parity. Commits `33fea92`, `23035ac`, `05d518b`, `1d30061` on `wave-2`. Independent verifier PASS, discrimination sensor 4/4. Artifacts: `.specs/features/toon-compact-output/`. Follow-ups (non-blocking): MCP `search` def lacks `format` (pre-existing, M32 scope); pre-existing PG-fixture failures in `trace-path.test.ts` (test-isolation task).

@@ -13,7 +13,7 @@
  * audit trail that must always let the primary action run.
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import type { PrismaClient } from "../../generated/prisma/index.js";
 import { getPrismaClient } from "../../services/query/prisma-client.js";
 import { UNKNOWN_ACTOR } from "./operation-log-contract.js";

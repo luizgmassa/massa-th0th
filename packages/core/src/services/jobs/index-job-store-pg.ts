@@ -21,8 +21,8 @@
  * isObjectEnumValue incompatibility. Reuses getPrismaClient() (no second pool).
  */
 
-import { logger } from "@massa-th0th/shared";
-import { parsePositiveIntEnv } from "@massa-th0th/shared/config";
+import { logger } from "@massa-ai/shared";
+import { parsePositiveIntEnv } from "@massa-ai/shared/config";
 import { getPrismaClient } from "../../services/query/prisma-client.js";
 import { getProjectIdentityAliasResolver } from "../../services/project-identity/alias-resolver.js";
 import type { PrismaClient } from "../../generated/prisma/index.js";
@@ -136,12 +136,12 @@ export class PgJobStore implements JobStore {
    * Stale-heartbeat cutoff (ms-epoch): running jobs whose
    * `COALESCE(heartbeat_at, started_at)` is older than this are considered
    * stale (crashed / orphaned) and may be flipped to `failed`. Sourced from
-   * the same env knob the live reaper uses (MASSA_TH0TH_JOB_STALE_MS, default
+   * the same env knob the live reaper uses (MASSA_AI_JOB_STALE_MS, default
    * 300000), so a live process with a fresh heartbeat is never touched.
    */
   private staleHeartbeatCutoffMs(now: number = Date.now()): number {
     const staleMs = parsePositiveIntEnv(
-      process.env.MASSA_TH0TH_JOB_STALE_MS,
+      process.env.MASSA_AI_JOB_STALE_MS,
       300_000,
     );
     return now - staleMs;

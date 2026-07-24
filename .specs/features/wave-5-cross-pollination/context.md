@@ -1,7 +1,7 @@
 # Wave 5 — Cross-pollination Context
 
 Source: 3 parallel `explore` subagent investigations on `main`, 2026-07-21.
-Source plan: `~/Downloads/massa-th0th-improvement-plan-v3.md`. Wave 4 complete.
+Source plan: `~/Downloads/massa-ai-improvement-plan-v3.md`. Wave 4 complete.
 
 ## Investigation findings (compact)
 
@@ -19,12 +19,12 @@ Source plan: `~/Downloads/massa-th0th-improvement-plan-v3.md`. Wave 4 complete.
 
 | Target | Path | Current state | Gap |
 |---|---|---|---|
-| Auto-reindex cap | `packages/shared/src/config/index.ts:410` + `massa-th0th-config.ts:206` | `autoReindexMaxFiles: 200` (env `AUTOREINDEX_MAX_FILES`) | — |
+| Auto-reindex cap | `packages/shared/src/config/index.ts:410` + `massa-ai-config.ts:206` | `autoReindexMaxFiles: 200` (env `AUTOREINDEX_MAX_FILES`) | — |
 | Indexing entry | `packages/core/src/tools/index_project.ts:68` → `EtlPipeline.run()` at `packages/core/src/services/etl/pipeline.ts:119` | In-process `runTails: Map<string, Promise<void>>` chains same-project runs | NO cross-process single-writer; lost on restart |
 | Discover stage | `packages/core/src/services/etl/stages/discover.ts:170` | Per-file content-hash fingerprint (closest thing to incremental state) | NO `FileCursor{path,offset}` resumable state |
 | Ignore patterns | `packages/core/src/services/search/ignore-patterns.ts:15-50` | Hard-coded `DEFAULT_IGNORES` + `.gitignore` merge via `Ignore` | NO bounded module; NO `MAX_MATCH_WORK`; NO `deny_unknown_fields`; security.excludePatterns not wired to glob filtering |
 | read_file path safety | `packages/core/src/tools/read_file.ts:352-365` | Refuses relative-path guess; absolute paths returned verbatim | NO filesystem-side containment; `sanitizeFilePath` exists at `packages/shared/src/utils/sanitizer.ts:87` but NOT imported |
-| Scheduler | `packages/core/src/services/scheduler/scheduler.ts` + `scheduler-store-pg.ts` | Env-driven (`MASSA_TH0TH_SCHEDULER_ENABLED`); per-job state PG-backed; `last_run_at` updated unconditionally | NO `last_success_at`; NO `consecutive_failures`; NO crash-safe catch-up |
+| Scheduler | `packages/core/src/services/scheduler/scheduler.ts` + `scheduler-store-pg.ts` | Env-driven (`MASSA_AI_SCHEDULER_ENABLED`); per-job state PG-backed; `last_run_at` updated unconditionally | NO `last_success_at`; NO `consecutive_failures`; NO crash-safe catch-up |
 | Lease infra | `packages/core/src/data/graph-generation/graph-generation-repository-pg.ts:158` | `graph_generations` table has lease columns + CHECK + partial UNIQUE indexes | Bound to generation row; not reusable for indexing single-writer |
 | Latest migrations | `packages/core/prisma/migrations/` | Latest: `20260720210000_repair_hook_attribution` | 22 migrations total |
 
@@ -61,7 +61,7 @@ Recorded as open questions for Specify Discuss step:
 
 ## Authoritative plan extracts
 
-From `massa-th0th-improvement-plan-v3.md` Wave 5 table:
+From `massa-ai-improvement-plan-v3.md` Wave 5 table:
 
 - N2: iterative Tarjan SCC over CALLS, SCCs > 1, opt-in, 400 k-edge budget, `*truncated`.
 - N3: temp-table anchor, `NOT IN` seed exclusion, `MIN(hop)`, `(hop,id)` order, `*truncated` ceiling.

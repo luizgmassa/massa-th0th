@@ -7,21 +7,21 @@ import {
   loadConfig,
   saveConfig,
   initConfig,
-  defaultMassaTh0thConfig,
-} from "@massa-th0th/shared/config";
+  defaultMassaAiConfig,
+} from "@massa-ai/shared/config";
 
 const args = process.argv.slice(2);
 const command = args[0];
 
 function help() {
   console.log(`
-massa-th0th-config - Configuration manager for massa-th0th
+massa-ai-config - Configuration manager for massa-ai
 
 Usage:
-  massa-th0th-config <command> [options]
+  massa-ai-config <command> [options]
 
 Commands:
-  init              Initialize massa-th0th configuration
+  init              Initialize massa-ai configuration
     --ollama          Use Ollama (local, default)
     --mistral <key>   Use Mistral with API key
     --openai <key>    Use OpenAI with API key
@@ -39,12 +39,12 @@ Commands:
     --path <newPath>  New filesystem path
 
 Examples:
-  massa-th0th-config init
-  massa-th0th-config init --mistral your-api-key
-  massa-th0th-config use ollama --model qwen3-embedding:8b
-  massa-th0th-config use mistral --api-key your-key
-  massa-th0th-config set embedding.dimensions 1024
-  massa-th0th-config recover my-project --path /home/user/renamed-dir
+  massa-ai-config init
+  massa-ai-config init --mistral your-api-key
+  massa-ai-config use ollama --model qwen3-embedding:8b
+  massa-ai-config use mistral --api-key your-key
+  massa-ai-config set embedding.dimensions 1024
+  massa-ai-config recover my-project --path /home/user/renamed-dir
 `);
 }
 
@@ -110,9 +110,9 @@ switch (command) {
 
   case "show": {
     if (!configExists()) {
-      console.log("No config file found. Run `massa-th0th-config init` to create one.");
+      console.log("No config file found. Run `massa-ai-config init` to create one.");
       console.log("\nUsing defaults:");
-      console.log(JSON.stringify(defaultMassaTh0thConfig, null, 2));
+      console.log(JSON.stringify(defaultMassaAiConfig, null, 2));
       process.exit(0);
     }
     
@@ -126,7 +126,7 @@ switch (command) {
     const value = args[2];
     
     if (!key || !value) {
-      console.error("Usage: massa-th0th-config set <key> <value>");
+      console.error("Usage: massa-ai-config set <key> <value>");
       process.exit(1);
     }
     
@@ -197,11 +197,11 @@ switch (command) {
     const newPath = options.path as string | undefined;
 
     if (!projectId) {
-      console.error("Error: projectId required. Usage: massa-th0th-config recover <projectId> --path <newPath>");
+      console.error("Error: projectId required. Usage: massa-ai-config recover <projectId> --path <newPath>");
       process.exit(1);
     }
     if (!newPath || typeof newPath !== "string") {
-      console.error("Error: --path required. Usage: massa-th0th-config recover <projectId> --path <newPath>");
+      console.error("Error: --path required. Usage: massa-ai-config recover <projectId> --path <newPath>");
       process.exit(1);
     }
 

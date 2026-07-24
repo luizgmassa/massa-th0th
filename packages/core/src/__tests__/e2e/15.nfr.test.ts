@@ -6,7 +6,7 @@
  *
  * OOM GUARD: NEVER index the full repo here. Concurrency tests use the TINY
  * polyglot fixture (33 small files at fixtures/polyglot/) or a throwaway
- * 2-3 file project, all into throwaway `e2e-th0th-nfr-*` projectIds.
+ * 2-3 file project, all into throwaway `e2e-ai-nfr-*` projectIds.
  * Concurrent parallelism is capped at 3. The full repository is never indexed.
  *
  * Scenarios (prefix-isolatable NFR only — destructive/shared-infra ones
@@ -59,9 +59,9 @@ async function postLong<T = any>(
   timeoutMs = 300_000,
 ): Promise<{ status: number; json: any }> {
   const headers: Record<string, string> = { "content-type": "application/json" };
-  const key = process.env.MASSA_TH0TH_API_KEY ?? "";
+  const key = process.env.MASSA_AI_API_KEY ?? "";
   if (key) headers["x-api-key"] = key;
-  const api = process.env.MASSA_TH0TH_API_URL ?? "http://localhost:3333";
+  const api = process.env.MASSA_AI_API_URL ?? "http://localhost:3333";
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -86,9 +86,9 @@ async function postLong<T = any>(
 
 async function getLong<T = any>(endpoint: string, timeoutMs = 60_000): Promise<{ status: number; json: any }> {
   const headers: Record<string, string> = {};
-  const key = process.env.MASSA_TH0TH_API_KEY ?? "";
+  const key = process.env.MASSA_AI_API_KEY ?? "";
   if (key) headers["x-api-key"] = key;
-  const api = process.env.MASSA_TH0TH_API_URL ?? "http://localhost:3333";
+  const api = process.env.MASSA_AI_API_URL ?? "http://localhost:3333";
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -713,7 +713,7 @@ describe.skipIf(!READY)("T9 N17 — memory hard-delete leaves no tombstone", () 
 
 describe.skipIf(!READY)("T9 N18 — auth-on 401 without key", () => {
   test.skip(
-    "N18: cannot exercise the 401 path — server has no MASSA_TH0TH_API_KEY set (no key configured). " +
+    "N18: cannot exercise the 401 path — server has no MASSA_AI_API_KEY set (no key configured). " +
       "Exercising it would require restarting tools-api with a key (destructive — deferred to T13).",
     () => {},
   );
@@ -744,9 +744,9 @@ describe.skipIf(!READY)("T9 N20 — hook payload cap (>65536 bytes rejected)", (
     ];
 
     const headers: Record<string, string> = { "content-type": "application/json" };
-    const key = process.env.MASSA_TH0TH_API_KEY ?? "";
+    const key = process.env.MASSA_AI_API_KEY ?? "";
     if (key) headers["x-api-key"] = key;
-    const api = process.env.MASSA_TH0TH_API_URL ?? "http://localhost:3333";
+    const api = process.env.MASSA_AI_API_URL ?? "http://localhost:3333";
     const body = JSON.stringify({ events });
     const bodyBytes = Buffer.byteLength(body);
     console.log(`[N20] oversized hook batch body = ${bodyBytes} bytes (>65536 cap)`);

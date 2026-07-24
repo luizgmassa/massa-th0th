@@ -18,8 +18,8 @@ import {
 } from "../services/synapse/inhibition/chain-inhibition.js";
 import { inferTypeFromPath } from "../services/synapse/inhibition/type-inference.js";
 import { applyDiversityPenalty } from "../services/synapse/inhibition/diversity-penalty.js";
-import type { SearchResult } from "@massa-th0th/shared";
-import { SearchSource } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-ai/shared";
+import { SearchSource } from "@massa-ai/shared";
 
 function r(
   id: string,

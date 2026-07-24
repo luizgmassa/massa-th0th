@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "massa-th0th": {
+    "massa-ai": {
       "type": "stdio",
       "command": "bun",
       "args": ["run", "./apps/mcp-client/src/index.ts"],

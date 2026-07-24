@@ -55,8 +55,8 @@ Commit `6b5852f` implements A--E and updates the coverage record.
 - `format:"toon"` must return a non-empty encoded string; `format:"json"`
   returns a non-null object with string `content`.
 - In dedicated mode, either `DATABASE_URL` or the effective
-  `POSTGRES_VECTOR_URL || DATABASE_URL` resolving to `massa_th0th` is refused.
-- `MASSA_TH0TH_PROXY_TIMEOUT_MS=0` is valid; zero, negative, malformed, or
+  `POSTGRES_VECTOR_URL || DATABASE_URL` resolving to `massa_ai` is refused.
+- `MASSA_AI_PROXY_TIMEOUT_MS=0` is valid; zero, negative, malformed, or
   absent stale-window/reaper-interval values select their safe defaults.
 - Running jobs are recovered only when
   `COALESCE(heartbeat_at, started_at)` is older than the stale cutoff; hydration

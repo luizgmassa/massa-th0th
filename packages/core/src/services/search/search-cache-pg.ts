@@ -4,8 +4,8 @@
  * Two-level cache for search results using PostgreSQL.
  */
 
-import { SearchResult } from "@massa-th0th/shared";
-import { logger } from "@massa-th0th/shared";
+import { SearchResult } from "@massa-ai/shared";
+import { logger } from "@massa-ai/shared";
 import crypto from "crypto";
 import { getPgPool } from "../../data/db-connection.js";
 import { installGuardOnTable } from "../project-identity/identity-guard-installer.js";

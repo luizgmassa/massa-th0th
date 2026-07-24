@@ -9,7 +9,7 @@
  * This is the single entry point for all memory use cases.
  */
 
-import { logger, MemoryType, MemoryLevel } from "@massa-th0th/shared";
+import { logger, MemoryType, MemoryLevel } from "@massa-ai/shared";
 import { getMemoryRepository } from "../data/memory/memory-repository-factory.js";
 import type { MemoryRow } from "../data/memory/memory-repository.js";
 import {

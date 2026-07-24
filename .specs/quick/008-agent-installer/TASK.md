@@ -1,7 +1,7 @@
 # M12 — First-class multi-agent installer
 
 ## Goal
-One command installs massa-th0th MCP config (and skill pointers) into each
+One command installs massa-ai MCP config (and skill pointers) into each
 supported agent's config file, with safe-merge, backup, --dry-run, --uninstall,
 and a home-write consent gate. Today `install.sh` only *prints* config blocks;
 `apps/claude-plugin/install.sh` is the only real writer (Claude Code only,
@@ -28,10 +28,10 @@ Deferred (formats unstated in install.sh): Gemini, Grok, Devin.
 - `scripts/install-agents.ts` (TS over bash; matches repo's scripts/*.ts convention).
 - `AgentWriter` interface: `configPath / plan / apply / uninstall`.
 - Per-agent writers; JSON writers share `JsonMcpWriter` base; `CodexWriter` is TOML.
-- Safe-merge: deep-merge preserves all user keys; only the `massa-th0th` owned
-  key is replaced. Owned key carries `_massaTh0thOwned: true` marker so
+- Safe-merge: deep-merge preserves all user keys; only the `massa-ai` owned
+  key is replaced. Owned key carries `_massaAiOwned: true` marker so
   uninstall is exact.
-- Backup: `<path>.massa-th0th.bak-<iso-ts>` before every write; directory
+- Backup: `<path>.massa-ai.bak-<iso-ts>` before every write; directory
   ensured first so the backup copy succeeds.
 - Flags: `--dry-run`, `--uninstall`, `--agent <name>`, `--target <dir>`,
   `--api-base <url>`, `--yes`.

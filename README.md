@@ -1,6 +1,6 @@
-# massa-th0th
+# massa-ai
 
-massa-th0th is a local-first MCP server that indexes your codebase — semantic search, keyword search, and a symbol graph ranked by dependency centrality — and keeps a persistent, cross-session memory of decisions, patterns, and critical facts.
+massa-ai is a local-first MCP server that indexes your codebase — semantic search, keyword search, and a symbol graph ranked by dependency centrality — and keeps a persistent, cross-session memory of decisions, patterns, and critical facts.
 
 Instead of loading whole files into context, your assistant retrieves just the relevant symbols, references, and memories, so it reads less, forgets nothing between sessions, and costs less to run. It runs on Ollama (free, offline), with optional LLM consolidation, rerank, and query understanding, and plugs into Claude Code, Codex, Cursor, and OpenCode via MCP plus passive-capture hooks.
 
@@ -13,7 +13,7 @@ Instead of loading whole files into context, your assistant retrieves just the r
 ### One-line install (recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-th0th/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-ai/main/install.sh | bash
 ```
 
 Installs interactively. Three modes:
@@ -32,16 +32,16 @@ Non-interactive (CI/scripted):
 
 ```bash
 # Docker mode, custom port, skip start
-MASSA_TH0TH_MODE=docker MASSA_TH0TH_API_PORT=4000 MASSA_TH0TH_NO_START=1 \
-  curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-th0th/main/install.sh | bash
+MASSA_AI_MODE=docker MASSA_AI_API_PORT=4000 MASSA_AI_NO_START=1 \
+  curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-ai/main/install.sh | bash
 ```
 
 ### Manual setup (from source)
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/luizgmassa/massa-th0th.git
-cd massa-th0th
+git clone https://github.com/luizgmassa/massa-ai.git
+cd massa-ai
 bun install
 
 # 2. Setup (100% offline with Ollama)
@@ -68,7 +68,7 @@ Instead of Docker (~5GB RAM), run PostgreSQL natively (~100MB):
 ./scripts/setup-native-postgres.sh      # brew install postgresql@17 + pgvector, create role/db, migrate
 
 # .env then contains:
-#   DATABASE_URL=postgresql://massa_th0th:massa_th0th_password@localhost:5432/massa_th0th
+#   DATABASE_URL=postgresql://massa_ai:massa_ai_password@localhost:5432/massa_ai
 ```
 
 Linux/WSL: install `postgresql` + `postgresql-*-pgvector` from your distro, create the role/db/extension, then set `DATABASE_URL`. Or use Docker (option 3, ~5GB RAM).
@@ -82,7 +82,7 @@ Linux/WSL: install `postgresql` + `postgresql-*-pgvector` from your distro, crea
 
 ### OpenCode (recommended)
 
-The OpenCode plugin is an npm package (`@massa-th0th/opencode-plugin`). Its
+The OpenCode plugin is an npm package (`@massa-ai/opencode-plugin`). Its
 hooks are in-process (no `hooks.json` to merge): the plugin registers
 lifecycle handlers (`session.created`, `tool.execute.after`,
 `experimental.session.compacting`, `shell.env`, `event`, `dispose`) directly,
@@ -91,9 +91,9 @@ so observations are captured the moment the plugin loads.
 **Install the package:**
 
 ```bash
-npm install @massa-th0th/opencode-plugin
+npm install @massa-ai/opencode-plugin
 # or from source:
-bun add @massa-th0th/opencode-plugin
+bun add @massa-ai/opencode-plugin
 ```
 
 **Configure** `~/.config/opencode/opencode.json`:
@@ -105,14 +105,14 @@ File: `~/.config/opencode/opencode.json`
 ```json
 {
   "mcp": {
-    "massa-th0th": {
+    "massa-ai": {
       "type": "local",
       "command": [
         "bunx",
-        "@massa-th0th/mcp-client"
+        "@massa-ai/mcp-client"
       ],
       "environment": {
-        "MASSA_TH0TH_API_URL": "http://localhost:3333"
+        "MASSA_AI_API_URL": "http://localhost:3333"
       },
       "enabled": true
     }
@@ -124,7 +124,7 @@ File: `~/.config/opencode/opencode.json`
 
 ```json
 {
-  "plugin": ["@massa-th0th/opencode-plugin"]
+  "plugin": ["@massa-ai/opencode-plugin"]
 }
 ```
 
@@ -133,9 +133,9 @@ File: `~/.config/opencode/opencode.json`
 ```json
 {
   "mcpServers": {
-    "massa-th0th": {
+    "massa-ai": {
       "type": "local",
-      "command": ["bun", "run", "/path/to/massa-th0th/apps/mcp-client/src/index.ts"],
+      "command": ["bun", "run", "/path/to/massa-ai/apps/mcp-client/src/index.ts"],
       "enabled": true
     }
   }
@@ -151,32 +151,32 @@ File: `~/.config/opencode/opencode.json`
 All four major AI coding tools have native plugin bundles that install skills
 (slash commands), MCP server config, and passive-capture hooks in one command.
 Hooks are **auto-written** (not just printed) using array-append merge with
-backup + `_massaTh0thOwned` marker — user hooks are always preserved.
+backup + `_massaAiOwned` marker — user hooks are always preserved.
 
 | Tool | Install command | Events | Bundles | Trust step? |
 |------|----------------|--------|---------|-------------|
 | **Claude Code** | `bash apps/claude-plugin/install.sh --user` | 5 | 6 slash commands + navigator subagent + 12 subagent specialists + hooks into `settings.json` | No |
 | **Codex** | `bash apps/codex-plugin/install.sh --user` | 6 | 6 skills + 12 subagent specialists (TOML to `~/.codex/agents/`) + hooks into `hooks.json` + `.mcp.json` | Yes — run `/hooks` in Codex |
 | **Cursor** | `bash apps/cursor-plugin/install.sh --user` | 7 | 6 skills + hooks into `hooks.json` + `mcp.json` + navigator agent + 12 subagent specialists | No |
-| **OpenCode** | `npm install @massa-th0th/opencode-plugin` then `massa-th0th-config agents install --user` | 6 (in-process) | 14 in-process tools + lifecycle handlers + 12 subagent specialists (`.md` to `~/.config/opencode/agents/`) | No |
+| **OpenCode** | `npm install @massa-ai/opencode-plugin` then `massa-ai-config agents install --user` | 6 (in-process) | 14 in-process tools + lifecycle handlers + 12 subagent specialists (`.md` to `~/.config/opencode/agents/`) | No |
 
 All installers support `--user` (default, e.g. `~/.claude`), `--project` (e.g.
-`./.claude`), and `--uninstall` (removes only massa-th0th-owned entries).
-OpenCode is an npm package — add `"plugin": ["@massa-th0th/opencode-plugin"]`
+`./.claude`), and `--uninstall` (removes only massa-ai-owned entries).
+OpenCode is an npm package — add `"plugin": ["@massa-ai/opencode-plugin"]`
 to `~/.config/opencode/opencode.json`.
 
 Or pick the `p` option from the root `bash install.sh` post-install menu, which
 offers all four plugin choices plus an "All four" shortcut.
 
 **Shared binary:** Claude Code, Codex, and Cursor all use the same
-`massa-th0th-hook.ts` Bun binary from `apps/claude-plugin/hooks/`. Codex and
+`massa-ai-hook.ts` Bun binary from `apps/claude-plugin/hooks/`. Codex and
 Cursor symlink to it. OpenCode uses in-process handlers (no external hooks file).
 
 **MCP deconfliction:** if you install a plugin, the MCP server is already
 registered via the plugin's `.mcp.json`/`mcp.json`. Skip the
 `install-agents.ts` MCP step for that tool to avoid double-registration.
 
-**12 subagent specialists:** all four plugins ship the 12 massa-th0th
+**12 subagent specialists:** all four plugins ship the 12 massa-ai
 sub-agent specialists (investigator, planner, builder, reviewer,
 context-curator, verification-agent, requirements-analyst,
 architecture-specialist, test-engineer, documentation-agent,
@@ -206,10 +206,10 @@ The repo ships a set of repo-local skills plus a unified installer that symlinks
 
 | Skill | Location | Purpose |
 |-------|----------|---------|
-| `massa-th0th` | `skills/massa-th0th/` | Workflow router (spec-driven, debug, feature, refactor, audits, ADR/RFC/TDD, etc.) |
-| `massa-th0th-memory` | `skills/massa-th0th-memory/` | Rules for using massa-th0th semantic search, compression, memory, and symbol graph tools |
+| `massa-ai` | `skills/massa-ai/` | Workflow router (spec-driven, debug, feature, refactor, audits, ADR/RFC/TDD, etc.) |
+| `massa-ai-memory` | `skills/massa-ai-memory/` | Rules for using massa-ai semantic search, compression, memory, and symbol graph tools |
 | `synapse-usage` | `skills/synapse-usage/` | Synapse cognitive modulation layer for focused multi-step retrieval |
-| `persona-router` | `skills/persona-router/` | Automatic persona selection from catalog (`skills/massa-th0th/personas/`) |
+| `persona-router` | `skills/persona-router/` | Automatic persona selection from catalog (`skills/massa-ai/personas/`) |
 
 ### Unified skills installer
 
@@ -228,11 +228,11 @@ bun scripts/install-skills.ts --dry-run --platform all
 # Check for drift (exit 1 if symlinks missing or pointing wrong)
 bun scripts/install-skills.ts --check --platform all
 
-# Uninstall (remove only massa-th0th-owned symlinks + bootstrap block)
+# Uninstall (remove only massa-ai-owned symlinks + bootstrap block)
 bun scripts/install-skills.ts --uninstall --platform all --yes
 ```
 
-**State:** `~/.config/massa-th0th/install-state.json` (v2 format; v1 auto-migrates).
+**State:** `~/.config/massa-ai/install-state.json` (v2 format; v1 auto-migrates).
 
 **Safety:** aborts on non-symlink conflict (won't overwrite user files); `--dry-run` writes nothing; requires `--yes` for real `$HOME`.
 
@@ -240,23 +240,23 @@ See [FEATURES.md → Skills & Install System](./FEATURES.md#skills--install-syst
 
 ### Workflow guides
 
-Migrated documentation for massa-th0th workflows lives in `docs/`:
+Migrated documentation for massa-ai workflows lives in `docs/`:
 
 | Guide | File |
 |-------|------|
-| Spec-Driven | `docs/massa-th0th-spec-driven.md` |
-| TDD | `docs/massa-th0th-tdd.md` |
-| RFC | `docs/massa-th0th-rfc.md` |
-| Commit | `docs/massa-th0th-commit.md` |
-| Ticket | `docs/massa-th0th-ticket.md` |
-| Maestro | `docs/massa-th0th-maestro.md` |
-| Mobile Figma | `docs/massa-th0th-mobile-figma.md` |
+| Spec-Driven | `docs/massa-ai-spec-driven.md` |
+| TDD | `docs/massa-ai-tdd.md` |
+| RFC | `docs/massa-ai-rfc.md` |
+| Commit | `docs/massa-ai-commit.md` |
+| Ticket | `docs/massa-ai-ticket.md` |
+| Maestro | `docs/massa-ai-maestro.md` |
+| Mobile Figma | `docs/massa-ai-mobile-figma.md` |
 | Context Slices | `docs/context-slices.md` |
 
 ```json
 {
   "mcpServers": {
-    "massa-th0th": {
+    "massa-ai": {
       "type": "local",
       "command": ["docker", "compose", "run", "--rm", "-i", "mcp"],
       "enabled": true
@@ -378,7 +378,7 @@ roster** with required/optional params for every tool.
 
 ### Workflow integration
 
-The massa-th0th workflow skill (`skills/massa-th0th/`) references all 52 tools
+The massa-ai workflow skill (`skills/massa-ai/`) references all 52 tools
 by their canonical un-prefixed names. Each workflow adopts the tools that
 materially benefit its flow — e.g. `spec-driven` and `long-session` use
 checkpoints for task save/resume; `debug` uses `trace_path` for call-path
@@ -447,7 +447,7 @@ falls back to its rule-based path.
 > above.
 
 > **Embeddings note:** The config default embedding model is `nomic-embed-text:latest`
-> (see `massa-th0th-config.ts`). `qwen3-embedding:8b` (4096d) gives stronger recall
+> (see `massa-ai-config.ts`). `qwen3-embedding:8b` (4096d) gives stronger recall
 > than `nomic-embed-text` or `bge-m3` but is slower — bulk indexing a large corpus
 > takes minutes. Override via `OLLAMA_EMBEDDING_MODEL` or config `embedding.model`.
 > Switch to `bge-m3` (1024d) for speed if its recall quality is sufficient.
@@ -456,7 +456,7 @@ falls back to its rule-based path.
 
 ## Passive Capture (Hooks)
 
-Passive capture streams agent lifecycle events into massa-th0th as Observations,
+Passive capture streams agent lifecycle events into massa-ai as Observations,
 so the agent's behaviour is recorded without any change to how you prompt.
 
 - **Fire-and-forget:** each hook POSTs to the endpoint with a **2s timeout** and
@@ -468,7 +468,7 @@ so the agent's behaviour is recorded without any change to how you prompt.
 ### Install hooks for your tool
 
 All four tools have plugin installers that **auto-write** the hooks config (not
-just print it) using array-append merge with backup + `_massaTh0thOwned` marker,
+just print it) using array-append merge with backup + `_massaAiOwned` marker,
 so user hooks are always preserved:
 
 ```bash
@@ -481,7 +481,7 @@ OpenCode is an npm plugin with **in-process hooks** — no installer script
 needed:
 
 ```bash
-npm install @massa-th0th/opencode-plugin
+npm install @massa-ai/opencode-plugin
 ```
 
 Or pick the `p` option from the root `bash install.sh` post-install menu, which
@@ -522,7 +522,7 @@ observations — zero loss across `/compact`.
 | `Stop` | `stop` | `session-end` |
 
 > **Trust step (Codex only):** after install, run `/hooks` in Codex to trust
-> massa-th0th hooks — Codex skips non-managed plugin hooks until trusted.
+> massa-ai hooks — Codex skips non-managed plugin hooks until trusted.
 
 **Cursor (7 events)** — wired by `apps/cursor-plugin/install.sh` into
 `~/.cursor/hooks.json`:
@@ -538,7 +538,7 @@ observations — zero loss across `/compact`.
 | `stop` | `stop` | `session-end` |
 
 **OpenCode (in-process, 6 lifecycle handlers)** — registered by the
-`@massa-th0th/opencode-plugin` npm package, no external hooks file:
+`@massa-ai/opencode-plugin` npm package, no external hooks file:
 `session.created`, `tool.execute.after`, `experimental.session.compacting`,
 `shell.env`, `event`, `dispose`.
 
@@ -546,9 +546,9 @@ observations — zero loss across `/compact`.
 
 | Variable | Default | Notes |
 |----------|---------|-------|
-| `MASSA_TH0TH_API_BASE` | `http://localhost:3333` | Tools API base URL |
-| `MASSA_TH0TH_API_KEY` | _(none)_ | Optional auth key |
-| `MASSA_TH0TH_PROJECT_ID` | cwd basename | Project the observations attach to |
+| `MASSA_AI_API_BASE` | `http://localhost:3333` | Tools API base URL |
+| `MASSA_AI_API_KEY` | _(none)_ | Optional auth key |
+| `MASSA_AI_PROJECT_ID` | cwd basename | Project the observations attach to |
 
 ### Non-Claude hosts
 
@@ -578,7 +578,7 @@ bun run dev:api
 # then open http://localhost:3333/ui
 ```
 
-> The `dev:ui` script was removed — `@massa-th0th/ui-client` (its target) did not
+> The `dev:ui` script was removed — `@massa-ai/ui-client` (its target) did not
 > exist. The web UI is served exclusively via `dev:api` at `/ui`.
 
 ---
@@ -669,7 +669,7 @@ curl -X POST http://localhost:3333/api/v1/proposal/list \
 
 ## Configuration
 
-Config file: `~/.config/massa-th0th/config.json` (auto-created on first run).
+Config file: `~/.config/massa-ai/config.json` (auto-created on first run).
 The canonical annotated reference for every environment variable is
 [`.env.example`](./.env.example) — mirror it into `.env` and edit there.
 
@@ -693,9 +693,9 @@ and config CLI commands.**
 | `bun run lint` | Lint code |
 | `bun run type-check` | Type checking |
 | `bun run diagnose` | Validate full stack (Ollama, database, embeddings) |
-| `bun run bench:fixture` | Run the massa-th0th retrieval fixture benchmark |
+| `bun run bench:fixture` | Run the massa-ai retrieval fixture benchmark |
 
-> **`dev:ui` was removed.** Its target (`@massa-th0th/ui-client`) did not exist.
+> **`dev:ui` was removed.** Its target (`@massa-ai/ui-client`) did not exist.
 > The Web UI is served by the Tools API at `http://localhost:3333/ui` — run it
 > with `bun run dev:api`.
 
@@ -703,7 +703,7 @@ and config CLI commands.**
 
 ## Architecture
 
-massa-th0th/
+massa-ai/
 ├── apps/
 │   ├── mcp-client/           # MCP Server (stdio) — 52 tools
 │   ├── tools-api/            # REST API (port 3333) + Web UI at /ui
@@ -736,7 +736,7 @@ massa-th0th/
 
 ## Structural indexing (polyglot native Tree-sitter)
 
-massa-th0th indexes code with **pinned native Tree-sitter grammars** across all
+massa-ai indexes code with **pinned native Tree-sitter grammars** across all
 33 canonical source extensions, producing a versioned symbol/edge graph ranked by
 dependency centrality. The native runtime is correct and verified; no WASM or
 runtime/post-install download is used.
@@ -758,7 +758,7 @@ embedded parsing, verification commands, and performance details.
 
 ## Credits
 
-massa-th0th builds on ideas and inspiration from these open-source projects:
+massa-ai builds on ideas and inspiration from these open-source projects:
 
 - **[th0th](https://github.com/S1LV4/th0th)** — the semantic code-search and memory platform this project is built on
 - **[ai-memory](https://github.com/akitaonrails/ai-memory)** — persistent agent memory concepts

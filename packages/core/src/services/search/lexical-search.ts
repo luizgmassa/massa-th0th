@@ -14,7 +14,7 @@
  *    length-bounded by maxEditDistance and LRU-cached at the call site.
  */
 
-import type { SearchResult } from "@massa-th0th/shared";
+import type { SearchResult } from "@massa-ai/shared";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Stopwords

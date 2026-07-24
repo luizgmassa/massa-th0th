@@ -19,7 +19,7 @@
  * - Health checking
  */
 
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import { createEmbeddingProvider, type EmbeddingProvider } from "./index.js";
 
 export class EmbeddingService {

@@ -124,7 +124,7 @@ describe("web-ui read-only guarantee (R8-READONLY-01)", () => {
     };
 
     // Write mode OFF: no edit/delete/approve/reject buttons.
-    (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE = undefined;
+    (globalThis as any).MASSA_AI_WEB_WRITE_MODE = undefined;
     expect(ui.isWriteModeEnabled()).toBe(false);
     expect(ui.renderMemoryBrowser(memData, { filters: {} })).not.toContain(
       'data-action="memory-edit"',
@@ -135,7 +135,7 @@ describe("web-ui read-only guarantee (R8-READONLY-01)", () => {
 
     // Write mode ON: buttons render (the write-mode request() handlers are
     // only reachable from these gated buttons).
-    (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE = true;
+    (globalThis as any).MASSA_AI_WEB_WRITE_MODE = true;
     expect(ui.isWriteModeEnabled()).toBe(true);
     expect(ui.renderMemoryBrowser(memData, { filters: {} })).toContain(
       'data-action="memory-edit"',
@@ -144,7 +144,7 @@ describe("web-ui read-only guarantee (R8-READONLY-01)", () => {
       'data-action="proposal-approve"',
     );
 
-    delete (globalThis as any).MASSA_TH0TH_WEB_WRITE_MODE;
+    delete (globalThis as any).MASSA_AI_WEB_WRITE_MODE;
   });
 
   test("index.html has no mutating control (no submit form / no type=submit)", () => {

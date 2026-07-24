@@ -206,8 +206,8 @@ rtk bun run typecheck && rtk bun run build && rtk bun test
 ### W5-T08 — Wire BFS CTE behind flag + parity test
 
 **Files:**
-- `packages/shared/src/config/index.ts` (+`MASSA_TH0TH_IMPACT_BFS_CTE` env, default false)
-- `packages/shared/src/config/massa-th0th-config.ts` (+config block)
+- `packages/shared/src/config/index.ts` (+`MASSA_AI_IMPACT_BFS_CTE` env, default false)
+- `packages/shared/src/config/massa-ai-config.ts` (+config block)
 - `packages/core/src/services/symbol/impact-analysis.ts` (branch on flag)
 - `packages/core/src/__tests__/impact-bfs-parity.test.ts` (NEW — characterization)
 
@@ -314,7 +314,7 @@ rtk bun run typecheck && rtk bun run build && rtk bun test
 - `packages/core/src/services/etl/pipeline.ts` (heartbeat spawn, AbortController on lease_lost)
 - `packages/core/src/__tests__/etl-pipeline-lease.test.ts` (NEW)
 
-**Behavior:** Concurrent `th0th_index` on same project: first acquires (202 + runId), second gets 409 busy with active runId. Stopped mid-run: lease expires after 90s; next call acquires.
+**Behavior:** Concurrent `index` on same project: first acquires (202 + runId), second gets 409 busy with active runId. Stopped mid-run: lease expires after 90s; next call acquires.
 
 **ACs touched:** AC-7.
 
@@ -368,7 +368,7 @@ rtk bun run typecheck && rtk bun run build && rtk bun test
 
 **Files:**
 - `packages/core/src/services/search/ignore-patterns.ts` (becomes thin wrapper over capture-policy; `.gitignore` merge via `Ignore` library runs *before* `applyPolicy` per AD-W5-015)
-- `packages/shared/src/config/massa-th0th-config.ts` (+`capturePolicy` config block)
+- `packages/shared/src/config/massa-ai-config.ts` (+`capturePolicy` config block)
 - `packages/shared/src/config/index.ts` (load + validate policy)
 
 **Behavior:** `loadProjectIgnore` continues to merge `.gitignore` rules with `DEFAULT_IGNORES` via `Ignore` library, then delegates the merged rule list to `applyPolicy`. Config load validates bounds + denyUnknownFields. Existing consumers (rlm-indexing, discover, index-manager) unchanged (still call `loadProjectIgnore`).
@@ -389,7 +389,7 @@ rtk bun run typecheck && rtk bun run build && rtk bun test
 
 **Files:**
 - `packages/core/src/tools/read_file.ts` (import sanitizer, enforce roots)
-- `packages/shared/src/config/index.ts` (+`MASSA_TH0TH_READ_FILE_ROOTS` env)
+- `packages/shared/src/config/index.ts` (+`MASSA_AI_READ_FILE_ROOTS` env)
 - `packages/core/src/__tests__/read-file-containment.test.ts` (NEW)
 
 **Behavior:** Absolute paths must resolve under project root (`projectPath` arg), `cwd`, or env allowlist. Outside → teaching error listing valid roots. Does not regress 500-line cap.

@@ -4,7 +4,7 @@
  * These tests require a running PostgreSQL instance with pgvector.
  * Run with: docker-compose -f docker-compose.test.yml up -d
  *
- * Connection: postgresql://test:test@localhost:5433/massa_th0th_test
+ * Connection: postgresql://test:test@localhost:5433/massa_ai_test
  *
  * Gate: like the other PG-integration suites, this suite runs (not skips) when
  *   DATABASE_URL points at postgres, and skips otherwise. To force a different
@@ -13,12 +13,12 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from "bun:test";
-import { SearchSource } from "@massa-th0th/shared";
+import { SearchSource } from "@massa-ai/shared";
 
 // Aligned with the other PG-integration suites: gate on DATABASE_URL so all PG
 // suites run uniformly when PG is configured (not the old RUN_POSTGRES_TESTS opt-in).
 const DB_AVAILABLE = (process.env.DATABASE_URL ?? "").startsWith("postgres");
-const POSTGRES_URL = process.env.POSTGRES_TEST_URL || process.env.DATABASE_URL || "postgresql://test:test@localhost:5433/massa_th0th_test";
+const POSTGRES_URL = process.env.POSTGRES_TEST_URL || process.env.DATABASE_URL || "postgresql://test:test@localhost:5433/massa_ai_test";
 
 // These tests need real embeddings, so we don't mock the embedding service
 // Make sure OLLAMA_URL is set or embeddings are available

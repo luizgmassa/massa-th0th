@@ -46,7 +46,7 @@ Current source overrides the stale 2026-07-10 index.
   HNSW/IVFFlat params, pool sizes, embedding RPM/TPM/batches, query-understanding/rerank
   switches, and cache TTL/capacity.
 - Known full-index risk: concurrent full repository indexing can OOM; E2E intentionally reuses
-  `e2e-th0th-shared`.
+  `e2e-ai-shared`.
 
 ## Confirmed Sharp Edges and Gaps
 

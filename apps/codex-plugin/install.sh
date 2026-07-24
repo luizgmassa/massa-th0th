@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# massa-th0th Codex plugin installer
+# massa-ai Codex plugin installer
 #
 # Copies the plugin bundle (manifest, skills, hooks.json, .mcp.json, binary
 # symlink) into the user's or project's Codex config directory and merges the
-# 6 massa-th0th hook events into ~/.codex/hooks.json (or ./.codex/hooks.json)
+# 6 massa-ai hook events into ~/.codex/hooks.json (or ./.codex/hooks.json)
 # using an array-append merge that preserves existing user hooks.
 #
 # Idempotent: re-running is a no-op when owned entries already present.
@@ -21,7 +21,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-CLAUDE_PLUGIN_BIN="$REPO_ROOT/apps/claude-plugin/hooks/massa-th0th-hook.ts"
+CLAUDE_PLUGIN_BIN="$REPO_ROOT/apps/claude-plugin/hooks/massa-ai-hook.ts"
 
 SCOPE="user"
 UNINSTALL=0
@@ -41,7 +41,7 @@ done
 
 # Banner
 source "$SCRIPT_DIR/../../scripts/banner.sh"
-massa_th0th_banner
+massa_ai_banner
 
 # Resolve target base dir
 if [[ "$SCOPE" == "project" ]]; then
@@ -49,22 +49,22 @@ if [[ "$SCOPE" == "project" ]]; then
 else
   CODEX_DIR="$HOME/.codex"
 fi
-PLUGIN_DIR="$CODEX_DIR/plugins/massa-th0th"
+PLUGIN_DIR="$CODEX_DIR/plugins/massa-ai"
 HOOKS_JSON="$CODEX_DIR/hooks.json"
 AGENTS_DIR="$CODEX_DIR/agents"
 
 # The 6 Codex events → binary subcommands. The command path uses the
 # INSTALLED plugin dir (not the placeholder), so Codex invokes the copy.
-massa_th0th_event_entry() {
+massa_ai_event_entry() {
   local subcommand="$1"
   cat <<JSON
-{ "type": "command", "command": "$PLUGIN_DIR/hooks/massa-th0th-hook $subcommand", "_massaTh0thOwned": true }
+{ "type": "command", "command": "$PLUGIN_DIR/hooks/massa-ai-hook $subcommand", "_massaAiOwned": true }
 JSON
 }
 
 # Array-append merge (F5 mitigation): for each of the 6 events, append the
-# massa-th0th hook entry to the event's array if no entry with
-# _massaTh0thOwned: true already exists. Backup before first write. Uses node
+# massa-ai hook entry to the event's array if no entry with
+# _massaAiOwned: true already exists. Backup before first write. Uses node
 # (preferred) or bun for safe JSON manipulation — bash cannot do JSON safely.
 merge_hooks_json() {
   local file="$1"
@@ -117,20 +117,20 @@ try {
 }
 
 function hasOwned(arr) {
-  return Array.isArray(arr) && arr.some((e) => e && e._massaTh0thOwned === true);
+  return Array.isArray(arr) && arr.some((e) => e && e._massaAiOwned === true);
 }
 
 if (mode === "uninstall") {
   for (const [evt] of EVENTS) {
     if (Array.isArray(cfg[evt])) {
-      cfg[evt] = cfg[evt].filter((e) => !(e && e._massaTh0thOwned === true));
+      cfg[evt] = cfg[evt].filter((e) => !(e && e._massaAiOwned === true));
       if (cfg[evt].length === 0) delete cfg[evt];
     }
   }
 } else {
   // install: backup before first write if file existed
   if (existed) {
-    const bak = `${file}.massa-th0th.bak-${ts}`;
+    const bak = `${file}.massa-ai.bak-${ts}`;
     fs.copyFileSync(file, bak);
   }
   for (const [evt, sub] of EVENTS) {
@@ -138,8 +138,8 @@ if (mode === "uninstall") {
     if (!hasOwned(cfg[evt])) {
       cfg[evt].push({
         type: "command",
-        command: `${pluginDir}/hooks/massa-th0th-hook ${sub}`,
-        _massaTh0thOwned: true,
+        command: `${pluginDir}/hooks/massa-ai-hook ${sub}`,
+        _massaAiOwned: true,
       });
     }
   }
@@ -152,11 +152,11 @@ NODE
 
 # ── Uninstall ───────────────────────────────────────────────────────────────
 if [[ "$UNINSTALL" -eq 1 ]]; then
-  echo "Uninstalling massa-th0th Codex plugin (scope: $SCOPE)..."
+  echo "Uninstalling massa-ai Codex plugin (scope: $SCOPE)..."
   # Remove owned hook entries (preserves user hooks)
   if [[ -f "$HOOKS_JSON" ]]; then
     merge_hooks_json "$HOOKS_JSON" "uninstall"
-    echo "  - removed massa-th0th hook entries from $HOOKS_JSON"
+    echo "  - removed massa-ai hook entries from $HOOKS_JSON"
   fi
   # Remove plugin directory
   if [[ -d "$PLUGIN_DIR" ]]; then
@@ -164,18 +164,18 @@ if [[ "$UNINSTALL" -eq 1 ]]; then
     echo "  - removed $PLUGIN_DIR"
   fi
   # Remove only ownership-marked agent TOML files (R3: shared agents dir, user
-  # agents preserved). Marker = "# massa-th0th-owned" top comment.
+  # agents preserved). Marker = "# massa-ai-owned" top comment.
   if [[ -d "$AGENTS_DIR" ]]; then
     removed=0
     for f in "$AGENTS_DIR/"*.toml; do
       [[ -f "$f" ]] || continue
-      if head -n1 "$f" | grep -q "^# massa-th0th-owned$"; then
+      if head -n1 "$f" | grep -q "^# massa-ai-owned$"; then
         rm -f "$f"
         removed=$((removed + 1))
       fi
     done
     if [[ "$removed" -gt 0 ]]; then
-      echo "  - removed ${removed} massa-th0th-owned agent TOML files from $AGENTS_DIR/"
+      echo "  - removed ${removed} massa-ai-owned agent TOML files from $AGENTS_DIR/"
     fi
   fi
   echo ""
@@ -184,7 +184,7 @@ if [[ "$UNINSTALL" -eq 1 ]]; then
 fi
 
 # ── Install ──────────────────────────────────────────────────────────────────
-echo "Installing massa-th0th Codex plugin to: $PLUGIN_DIR"
+echo "Installing massa-ai Codex plugin to: $PLUGIN_DIR"
 mkdir -p "$PLUGIN_DIR/.codex-plugin" "$PLUGIN_DIR/skills" "$PLUGIN_DIR/hooks"
 
 # Copy manifest
@@ -209,8 +209,8 @@ echo "  + .mcp.json"
 # Create the binary symlink → repo's claude-plugin binary (resolved at install
 # time via SCRIPT_DIR → REPO_ROOT). This keeps a single source of truth.
 if [[ -f "$CLAUDE_PLUGIN_BIN" ]]; then
-  ln -sfn "$CLAUDE_PLUGIN_BIN" "$PLUGIN_DIR/hooks/massa-th0th-hook"
-  echo "  + hooks/massa-th0th-hook → $CLAUDE_PLUGIN_BIN"
+  ln -sfn "$CLAUDE_PLUGIN_BIN" "$PLUGIN_DIR/hooks/massa-ai-hook"
+  echo "  + hooks/massa-ai-hook → $CLAUDE_PLUGIN_BIN"
 else
   echo "  ⚠ Warning: claude-plugin binary not found at $CLAUDE_PLUGIN_BIN" >&2
   echo "    Hooks will not fire until the binary is available." >&2
@@ -220,15 +220,15 @@ fi
 echo ""
 echo "Merging hooks into $HOOKS_JSON..."
 merge_hooks_json "$HOOKS_JSON" "install"
-echo "  + 6 massa-th0th hook events wired (array-append, user hooks preserved)"
+echo "  + 6 massa-ai hook events wired (array-append, user hooks preserved)"
 
 # Write 12 subagent specialist TOML files to ~/.codex/agents/ (OUTSIDE the
 # plugin dir — Codex custom agents load from the config-root agents/ dir, not
-# the plugin dir). Each file carries a "# massa-th0th-owned" top comment for
+# the plugin dir). Each file carries a "# massa-ai-owned" top comment for
 # scoped uninstall (R3: shared agents dir, user agents preserved).
 mkdir -p "$AGENTS_DIR"
 specialist_count=0
-for src in "$SCRIPT_DIR/agents/"massa-th0th-*.toml; do
+for src in "$SCRIPT_DIR/agents/"massa-ai-*.toml; do
   [[ -f "$src" ]] || continue
   name="$(basename "$src")"
   cp "$src" "$AGENTS_DIR/$name"
@@ -239,5 +239,5 @@ echo "  + ${specialist_count} subagent specialists: investigator, planner, build
 echo ""
 echo "Done. Restart Codex to pick up the plugin."
 echo ""
-echo "⚠ Run /hooks in Codex to trust massa-th0th hooks, or no observations will be captured."
+echo "⚠ Run /hooks in Codex to trust massa-ai hooks, or no observations will be captured."
 echo "💡 If you also run install-agents.ts --agent codex, skip MCP — the plugin already registers it."

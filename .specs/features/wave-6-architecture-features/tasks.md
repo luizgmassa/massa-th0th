@@ -2,7 +2,7 @@
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
-Implement these tasks with the `massa-th0th` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
+Implement these tasks with the `massa-ai` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).
 
 **If the skill cannot be activated, STOP and tell the user — do not proceed without it.**
 
@@ -491,7 +491,7 @@ T38 (independent verifier)
 
 ### T19: MCP server embedded mode wiring + handleIndexTool refactor
 
-**What**: Wire `MASSA_TH0TH_EMBEDDED=true` to use `EmbeddedApiClient` instead of `ApiClient`; health check reports `mode: "embedded"`. CRITICAL: `McpProxyServer.apiClient` is typed as `ApiClient` (concrete) and calls `uploadAndIndex` + `healthCheck` which are NOT on `ToolProxyApiClient` interface. Must refactor `handleIndexTool` to work in embedded mode with same path-safety validation as HTTP route (`project.ts:351-356`).
+**What**: Wire `MASSA_AI_EMBEDDED=true` to use `EmbeddedApiClient` instead of `ApiClient`; health check reports `mode: "embedded"`. CRITICAL: `McpProxyServer.apiClient` is typed as `ApiClient` (concrete) and calls `uploadAndIndex` + `healthCheck` which are NOT on `ToolProxyApiClient` interface. Must refactor `handleIndexTool` to work in embedded mode with same path-safety validation as HTTP route (`project.ts:351-356`).
 **Where**: `apps/mcp-client/src/index.ts` (modify McpProxyServer constructor + handleIndexTool), `apps/mcp-client/src/embedded-api-client.ts` (add uploadAndIndex + healthCheck)
 **Depends on**: T18
 **Reuses**: `proxyCallTool` (unchanged for non-index tools), path-safety validation from `project.ts:351-356`
@@ -500,8 +500,8 @@ T38 (independent verifier)
 **Tools**: MCP: NONE. Skill: NONE.
 
 **Done when**:
-- [ ] `MASSA_TH0TH_EMBEDDED=true` → `this.apiClient = new EmbeddedApiClient()`
-- [ ] `MASSA_TH0TH_EMBEDDED` not set → `this.apiClient = new ApiClient()` (HTTP, unchanged)
+- [ ] `MASSA_AI_EMBEDDED=true` → `this.apiClient = new EmbeddedApiClient()`
+- [ ] `MASSA_AI_EMBEDDED` not set → `this.apiClient = new ApiClient()` (HTTP, unchanged)
 - [ ] Health check includes `mode` field (`"embedded"` or `"http"`)
 - [ ] `handleIndexTool` in embedded mode exercises same path-safety validation as HTTP route (`project.ts:351-356` traversal guard)
 - [ ] `EmbeddedApiClient.uploadAndIndex` does in-process file indexing (not HTTP multipart) with path safety
@@ -515,8 +515,8 @@ T38 (independent verifier)
 
 ### T20: Hook binary — core implementation
 
-**What**: Implement `massa-th0th-hook` Bun binary: typed stdin JSON parsing, project-id pinning (port _pin.sh logic to TS), POST to `/api/v1/hook` with 2s timeout, exit 0 always. CRITICAL: `pre-compact` subcommand is a special case — it does TWO POSTs: (1) observation to `/api/v1/hook` with 3s timeout, (2) snapshot to `/api/v1/hook/compact-snapshot` with 5s timeout and DIFFERENT body shape (`{sessionId, projectId, persist, cwd}` vs `{event, projectId, sessionId, cwd, payload}`). All other subcommands are uniform single-POST.
-**Where**: `apps/claude-plugin/hooks/massa-th0th-hook.ts` (new)
+**What**: Implement `massa-ai-hook` Bun binary: typed stdin JSON parsing, project-id pinning (port _pin.sh logic to TS), POST to `/api/v1/hook` with 2s timeout, exit 0 always. CRITICAL: `pre-compact` subcommand is a special case — it does TWO POSTs: (1) observation to `/api/v1/hook` with 3s timeout, (2) snapshot to `/api/v1/hook/compact-snapshot` with 5s timeout and DIFFERENT body shape (`{sessionId, projectId, persist, cwd}` vs `{event, projectId, sessionId, cwd, payload}`). All other subcommands are uniform single-POST.
+**Where**: `apps/claude-plugin/hooks/massa-ai-hook.ts` (new)
 **Depends on**: T17
 **Reuses**: `_pin.sh` resolution logic, `_post.sh` POST semantics, `pre-compact.sh` dual-POST logic, `AttributionResolver` concepts
 **Requirement**: W6-03
@@ -541,7 +541,7 @@ T38 (independent verifier)
 ### T21: Hook binary — tests + install wiring
 
 **What**: Write hook binary tests (same stdin → same POST body → exit 0) and update `.claude/settings.json` template to reference binary. CRITICAL: `pre-compact` test must verify BOTH POSTs (observation + snapshot) with correct body shapes and timeouts.
-**Where**: `apps/claude-plugin/hooks/__tests__/massa-th0th-hook.test.ts` (new), `apps/claude-plugin/settings.json.template` (modify)
+**Where**: `apps/claude-plugin/hooks/__tests__/massa-ai-hook.test.ts` (new), `apps/claude-plugin/settings.json.template` (modify)
 **Depends on**: T20
 **Reuses**: Shell hook test pattern from `hook-scripts.test.ts`
 **Requirement**: W6-03
@@ -551,7 +551,7 @@ T38 (independent verifier)
 **Done when**:
 - [ ] Tests: malformed JSON → exit 0 no POST; valid JSON → POST correct; terminal stdin → exit 0; pin resolution order correct
 - [ ] **`pre-compact` test verifies BOTH POSTs**: (1) observation to `/api/v1/hook` (3s, observation body shape), (2) snapshot to `/api/v1/hook/compact-snapshot` (5s, snapshot body shape)
-- [ ] settings.json.template references `massa-th0th-hook` binary
+- [ ] settings.json.template references `massa-ai-hook` binary
 - [ ] Build gate passes
 - [ ] Test count: ≥8 tests pass (6 standard + 2 pre-compact dual-POST)
 
@@ -707,7 +707,7 @@ T38 (independent verifier)
 
 ### T29: Scheduler safe-defaults preset
 
-**What**: Add `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true` logic in `scheduler-defaults.ts`: enables consolidation + decay at conservative intervals; auto-improve stays opt-in; individual envs override preset; master switch still required. CRITICAL: `applySafeDefaults` must be wired INSIDE `registerDefaultJobs` before the `envBool` loop reads `defaultEnabled` — NOT as a separate export (silent no-op if caller forgets).
+**What**: Add `MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true` logic in `scheduler-defaults.ts`: enables consolidation + decay at conservative intervals; auto-improve stays opt-in; individual envs override preset; master switch still required. CRITICAL: `applySafeDefaults` must be wired INSIDE `registerDefaultJobs` before the `envBool` loop reads `defaultEnabled` — NOT as a separate export (silent no-op if caller forgets).
 **Where**: `packages/core/src/services/scheduler/scheduler-defaults.ts` (modify `registerDefaultJobs` at L157)
 **Depends on**: T22
 **Reuses**: Existing `envBool` helper
@@ -717,10 +717,10 @@ T38 (independent verifier)
 
 **Done when**:
 - [ ] **Preset applied inside `registerDefaultJobs` before `envBool` reads `defaultEnabled`** (not a separate export)
-- [ ] Preset enables consolidation + decay `defaultEnabled=true` when `MASSA_TH0TH_SCHEDULER_SAFE_DEFAULTS=true`
+- [ ] Preset enables consolidation + decay `defaultEnabled=true` when `MASSA_AI_SCHEDULER_SAFE_DEFAULTS=true`
 - [ ] Auto-improve NOT enabled by preset
-- [ ] Individual envs (`MASSA_TH0TH_SCHEDULER_CONSOLIDATION_ENABLED` etc.) override preset
-- [ ] Master switch (`MASSA_TH0TH_SCHEDULER_ENABLED`) still required
+- [ ] Individual envs (`MASSA_AI_SCHEDULER_CONSOLIDATION_ENABLED` etc.) override preset
+- [ ] Master switch (`MASSA_AI_SCHEDULER_ENABLED`) still required
 - [ ] Preset not set → behavior unchanged
 - [ ] Tests: preset without master → no jobs; preset + master → consolidation+decay only; preset + master + auto-improve env → all three; **preset + master + no per-kind env → consolidation enabled** (proves wiring, not just function logic)
 - [ ] Quick gate passes
@@ -864,7 +864,7 @@ T38 (independent verifier)
 
 **Done when**:
 - [ ] Probe runs ambiguous grammar input
-- [ ] Documents current cap (if any) and whether it affects massa-th0th's grammars
+- [ ] Documents current cap (if any) and whether it affects massa-ai's grammars
 - [ ] If defect found → report with fix proposal (not silently fixed)
 - [ ] If no defect → documented
 - [ ] Build gate passes
@@ -900,7 +900,7 @@ T38 (independent verifier)
 **Reuses**: Spec-driven validate.md protocol
 **Requirement**: All
 
-**Tools**: MCP: NONE. Skill: `massa-th0th` (validate flow).
+**Tools**: MCP: NONE. Skill: `massa-ai` (validate flow).
 
 **Done when**:
 - [ ] Spec-anchored outcome check: each AC confirmed with file:line + assertion

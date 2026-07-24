@@ -1,6 +1,6 @@
 # Restart State
 
-Use this reference when `workflows/restart-save.md` or `workflows/restart-load.md` is selected. It defines the canonical clean-chat restart contract for massa-th0th.
+Use this reference when `workflows/restart-save.md` or `workflows/restart-load.md` is selected. It defines the canonical clean-chat restart contract for massa-ai.
 
 ## Source Authority
 

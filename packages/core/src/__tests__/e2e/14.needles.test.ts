@@ -2,13 +2,13 @@
  * T10 — Needles benchmark (E2E, live stack).
  *
  * Domain: search quality — needle-in-haystack retrieval against the running
- * massa-th0th instance. Read-only: no production source / route edits, no
+ * massa-ai instance. Read-only: no production source / route edits, no
  * restart of tools-api (pid 9524), no dist rebuild, no DB schema changes.
  *
  * Strategy:
- *  - Reuses the shared index `e2e-th0th-shared` (indexed ONCE across the whole
+ *  - Reuses the shared index `e2e-ai-shared` (indexed ONCE across the whole
  *    E2E suite via ensureSharedIndex). Do NOT reset SHARED_PID.
- *  - Loads the dogfood corpus from benchmarks/needles/fixtures/massa-th0th.json
+ *  - Loads the dogfood corpus from benchmarks/needles/fixtures/massa-ai.json
  *    (14 needles covering string-literal magic, business-rule utilities,
  *    cross-file event coupling, cross-language stack).
  *  - Reuses scorer semantics from benchmarks/needles/scorer.ts (hit@1/3/5/10 +
@@ -65,9 +65,9 @@ const READY = await (async () => {
 // ── Long-timeout POST (shared helper caps at 120s; search embeds can exceed) ─
 async function postLong<T = any>(endpoint: string, body?: unknown, timeoutMs = 120_000): Promise<T> {
   const headers: Record<string, string> = { "content-type": "application/json" };
-  const key = process.env.MASSA_TH0TH_API_KEY ?? "";
+  const key = process.env.MASSA_AI_API_KEY ?? "";
   if (key) headers["x-api-key"] = key;
-  const api = process.env.MASSA_TH0TH_API_URL ?? "http://localhost:3333";
+  const api = process.env.MASSA_AI_API_URL ?? "http://localhost:3333";
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -86,7 +86,7 @@ async function postLong<T = any>(endpoint: string, body?: unknown, timeoutMs = 1
 // ── Dataset + scorer (imported from the repo, read-only) ────────────────────
 const FIXTURE_PATH = path.join(
   PROJECT_PATH,
-  "benchmarks/needles/fixtures/massa-th0th.json",
+  "benchmarks/needles/fixtures/massa-ai.json",
 );
 
 interface NeedleExpected {

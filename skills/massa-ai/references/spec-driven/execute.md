@@ -316,14 +316,14 @@ Mark the task complete in `.specs/features/<slug>/tasks.md`. Update requirement 
 **Distill a confirmed lesson** when a task produced a reusable signal (an unexpected failure mode, a confirmed pattern, a corrected assumption):
 
 ```
-python3 skills/massa-th0th/scripts/lessons.py --root . add \
+python3 skills/massa-ai/scripts/lessons.py --root . add \
   --feature <slug> --signal <S> --source <src> --text "<T>" --scope <O>
 ```
 
 `--source` is mandatory (grounding gate). Load applicable confirmed lessons before starting a task:
 
 ```
-python3 skills/massa-th0th/scripts/lessons.py --root . list --status confirmed [--scope <relevant>]
+python3 skills/massa-ai/scripts/lessons.py --root . list --status confirmed [--scope <relevant>]
 ```
 
 ### 10. Feature-Level Validation (after the LAST task — MANDATORY, always runs)

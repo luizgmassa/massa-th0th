@@ -1,13 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "_description": "massa-th0th plugin settings template. Merge the 'hooks' block into your project (.claude/settings.json) or user (~/.claude/settings.json) settings. The single massa-th0th-hook binary replaces the 7 shell scripts; it fire-and-forgets POST lifecycle observations to the Tools API, always exits 0, and never blocks the agent. Set CLAUDE_PLUGIN_ROOT to the repo root, or replace it with an absolute path to apps/claude-plugin. Pass the event type as the first argument (session-start, user-prompt-submit, post-tool-use, pre-compact, stop).",
+  "_description": "massa-ai plugin settings template. Merge the 'hooks' block into your project (.claude/settings.json) or user (~/.claude/settings.json) settings. The single massa-ai-hook binary replaces the 7 shell scripts; it fire-and-forgets POST lifecycle observations to the Tools API, always exits 0, and never blocks the agent. Set CLAUDE_PLUGIN_ROOT to the repo root, or replace it with an absolute path to apps/claude-plugin. Pass the event type as the first argument (session-start, user-prompt-submit, post-tool-use, pre-compact, stop).",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts\" session-start"
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-ai-hook.ts\" session-start"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts\" user-prompt-submit"
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-ai-hook.ts\" user-prompt-submit"
           }
         ]
       }
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts\" post-tool-use"
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-ai-hook.ts\" post-tool-use"
           }
         ]
       }
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts\" stop"
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-ai-hook.ts\" stop"
           }
         ]
       }
@@ -47,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-th0th-hook.ts\" pre-compact"
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/massa-ai-hook.ts\" pre-compact"
           }
         ]
       }
@@ -55,14 +55,14 @@
   },
   "permissions": {
     "allow": [
-      "mcp__massa-th0th__list_projects",
-      "mcp__massa-th0th__project_map",
-      "mcp__massa-th0th__index_status",
-      "mcp__massa-th0th__analytics",
-      "mcp__massa-th0th__search",
-      "mcp__massa-th0th__search_definitions",
-      "mcp__massa-th0th__go_to_definition",
-      "mcp__massa-th0th__get_references"
+      "mcp__massa-ai__list_projects",
+      "mcp__massa-ai__project_map",
+      "mcp__massa-ai__index_status",
+      "mcp__massa-ai__analytics",
+      "mcp__massa-ai__search",
+      "mcp__massa-ai__search_definitions",
+      "mcp__massa-ai__go_to_definition",
+      "mcp__massa-ai__get_references"
     ]
   }
 }

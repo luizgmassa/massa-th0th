@@ -8,7 +8,7 @@
  * runs when BOTH:
  *
  *   - `RUN_E2E_DESTRUCTIVE=1` is set, AND
- *   - a DEDICATED, DISPOSABLE target stack is provided (via `MASSA_TH0TH_API_URL`
+ *   - a DEDICATED, DISPOSABLE target stack is provided (via `MASSA_AI_API_URL`
  *     pointing away from the live http://localhost:3333 stack, plus the
  *     corresponding DEDICATED Ollama / PG resources).
  *
@@ -67,7 +67,7 @@ import {
 // Belt-and-suspenders: even with the gate open, each destructive test that
 // CAN be automated (N9 / N12 / N13 / F87) must confirm it is NOT pointed at
 // the shared live stack (default http://localhost:3333) before acting. A
-// dedicated stack is signaled by MASSA_TH0TH_API_URL being overridden to
+// dedicated stack is signaled by MASSA_AI_API_URL being overridden to
 // anything other than the default. The orchestration-required tests
 // (N1 / N3 / E25 / F88) are static test.skip with a runbook baked into the
 // name — they are not executed even on a dedicated stack without external
@@ -76,9 +76,9 @@ import {
 const DESTRUCTIVE = process.env.RUN_E2E_DESTRUCTIVE === "1";
 const DEFAULT_API = "http://localhost:3333";
 const IS_DEDICATED_URL =
-  !!process.env.MASSA_TH0TH_API_URL &&
-  process.env.MASSA_TH0TH_API_URL !== DEFAULT_API &&
-  process.env.MASSA_TH0TH_DEDICATED === "1";
+  !!process.env.MASSA_AI_API_URL &&
+  process.env.MASSA_AI_API_URL !== DEFAULT_API &&
+  process.env.MASSA_AI_DEDICATED === "1";
 
 // Shared availability probe; reused across gated tests that need it.
 let _avail: Availability | null = null;
@@ -102,7 +102,7 @@ const DEDICATED_PREAMBLE =
   `\n[SKIPPED — DEDICATED stack required. This test is destructive to shared infra and ` +
   `MUST NOT run against the live stack (${DEFAULT_API}). To run for real: ` +
   `(1) provision a DISPOSABLE stack (dedicated tools-api + dedicated PG + dedicated Ollama); ` +
-  `(2) point this suite at it via MASSA_TH0TH_API_URL=http://<dedicated>:<port>; ` +
+  `(2) point this suite at it via MASSA_AI_API_URL=http://<dedicated>:<port>; ` +
   `(3) RUN_E2E_DESTRUCTIVE=1 RUN_E2E=1 bun test src/__tests__/e2e/16.destructive.test.ts.]\n` +
   `RUNBOOK:`;
 
@@ -163,7 +163,7 @@ describe.skipIf(!DESTRUCTIVE)("T13 destructive (DEDICATED stack only)", () => {
   //
   // GATED REAL TEST. Not catastrophic, but the measurement is only meaningful
   // on an UNLOADED dedicated stack. On the shared stack the timing reflects
-  // concurrent load. When DESTRUCTIVE=1 AND MASSA_TH0TH_API_URL points away
+  // concurrent load. When DESTRUCTIVE=1 AND MASSA_AI_API_URL points away
   // from the default, this test runs for real and records a warn-only
   // baseline. Otherwise it early-returns with a runbook log line.
   test(
@@ -171,9 +171,9 @@ describe.skipIf(!DESTRUCTIVE)("T13 destructive (DEDICATED stack only)", () => {
     async () => {
       if (!IS_DEDICATED_URL) {
         console.log(
-          `[N9] SKIP: needs a DEDICATED stack (set MASSA_TH0TH_API_URL ≠ ${DEFAULT_API}) for a clean baseline. ` +
+          `[N9] SKIP: needs a DEDICATED stack (set MASSA_AI_API_URL ≠ ${DEFAULT_API}) for a clean baseline. ` +
             `On the shared stack, concurrent load makes ms/file meaningless. Runbook: ` +
-            `provision dedicated tools-api+PG+Ollama, point MASSA_TH0TH_API_URL at it, ` +
+            `provision dedicated tools-api+PG+Ollama, point MASSA_AI_API_URL at it, ` +
             `RUN_E2E_DESTRUCTIVE=1 RUN_E2E=1 bun test src/__tests__/e2e/16.destructive.test.ts.`,
         );
         return;
@@ -260,16 +260,16 @@ describe.skipIf(!DESTRUCTIVE)("T13 destructive (DEDICATED stack only)", () => {
   // ── N12 — Embedding mutex serialization latency (parallel embeds) ──────────
   //
   // GATED REAL TEST. Shared Ollama skews the timings. Only meaningful on a
-  // dedicated stack. When DESTRUCTIVE=1 AND MASSA_TH0TH_API_URL points away
+  // dedicated stack. When DESTRUCTIVE=1 AND MASSA_AI_API_URL points away
   // from the default, this test runs for real. Otherwise early-return + log.
   test(
     "🔴 DEDICATED N12 — parallel embeds serialize; observe latency",
     async () => {
       if (!IS_DEDICATED_URL) {
         console.log(
-          `[N12] SKIP: needs a DEDICATED stack (set MASSA_TH0TH_API_URL ≠ ${DEFAULT_API}); ` +
+          `[N12] SKIP: needs a DEDICATED stack (set MASSA_AI_API_URL ≠ ${DEFAULT_API}); ` +
             `shared Ollama skews mutex-serialization timings. Runbook: ` +
-            `provision dedicated tools-api+Ollama, point MASSA_TH0TH_API_URL at it, ` +
+            `provision dedicated tools-api+Ollama, point MASSA_AI_API_URL at it, ` +
             `RUN_E2E_DESTRUCTIVE=1 RUN_E2E=1 bun test src/__tests__/e2e/16.destructive.test.ts.`,
         );
         return;
@@ -320,16 +320,16 @@ describe.skipIf(!DESTRUCTIVE)("T13 destructive (DEDICATED stack only)", () => {
   // ── N13 — Cache hit faster + byte-identical modulo _rrfRawVectorScore ──────
   //
   // GATED REAL TEST. Cache contention on the shared stack skews latency. When
-  // DESTRUCTIVE=1 AND MASSA_TH0TH_API_URL points away from the default, runs
+  // DESTRUCTIVE=1 AND MASSA_AI_API_URL points away from the default, runs
   // for real. Otherwise early-return + log.
   test(
     "🔴 DEDICATED N13 — repeat identical search: cache hit faster + identical modulo _rrfRawVectorScore",
     async () => {
       if (!IS_DEDICATED_URL) {
         console.log(
-          `[N13] SKIP: needs a DEDICATED stack (set MASSA_TH0TH_API_URL ≠ ${DEFAULT_API}); ` +
+          `[N13] SKIP: needs a DEDICATED stack (set MASSA_AI_API_URL ≠ ${DEFAULT_API}); ` +
             `shared cache contention skews latency. Runbook: ` +
-            `provision dedicated tools-api (cold, uncontended cache), point MASSA_TH0TH_API_URL at it, ` +
+            `provision dedicated tools-api (cold, uncontended cache), point MASSA_AI_API_URL at it, ` +
             `RUN_E2E_DESTRUCTIVE=1 RUN_E2E=1 bun test src/__tests__/e2e/16.destructive.test.ts.`,
         );
         return;
@@ -404,7 +404,7 @@ describe.skipIf(!DESTRUCTIVE)("T13 destructive (DEDICATED stack only)", () => {
     `🔴 DEDICATED E25 — mid-index API restart marks stale running jobs failed ` +
       `${DEDICATED_PREAMBLE}\n` +
       `  Precondition: DEDICATED tools-api whose process you control (NOT pid 9524).\n` +
-      `  1. Start a long index: POST /api/v1/project/index with a large projectPath on a throwaway e2e-th0th-* projectId.\n` +
+      `  1. Start a long index: POST /api/v1/project/index with a large projectPath on a throwaway e2e-ai-* projectId.\n` +
       `  2. Capture the jobId from the response.\n` +
       `  3. MID-FLIGHT, restart the dedicated tools-api process (e.g. \`kill <dedicated-pid>; <restart-unit>\`).\n` +
       `  4. After reboot, GET /api/v1/project/index/status/<jobId>.\n` +
@@ -419,7 +419,7 @@ describe.skipIf(!DESTRUCTIVE)("T13 destructive (DEDICATED stack only)", () => {
   // ── F87 — Hook-queue saturation → 429 (gated real test) ───────────────────
   //
   // GATED REAL TEST. Saturating the GLOBAL hook writer queue blocks every
-  // other producer. When DESTRUCTIVE=1 AND MASSA_TH0TH_API_URL points away
+  // other producer. When DESTRUCTIVE=1 AND MASSA_AI_API_URL points away
   // from the default, fire batches in a tight loop until 429 or a cap;
   // assert the contract held (429 returned, not a 5xx crash). Otherwise
   // early-return + log.
@@ -428,9 +428,9 @@ describe.skipIf(!DESTRUCTIVE)("T13 destructive (DEDICATED stack only)", () => {
     async () => {
       if (!IS_DEDICATED_URL) {
         console.log(
-          `[F87] SKIP: needs a DEDICATED stack (set MASSA_TH0TH_API_URL ≠ ${DEFAULT_API}); ` +
+          `[F87] SKIP: needs a DEDICATED stack (set MASSA_AI_API_URL ≠ ${DEFAULT_API}); ` +
             `saturating the GLOBAL hook queue blocks every other producer. Runbook: ` +
-            `provision dedicated tools-api, point MASSA_TH0TH_API_URL at it, ` +
+            `provision dedicated tools-api, point MASSA_AI_API_URL at it, ` +
             `RUN_E2E_DESTRUCTIVE=1 RUN_E2E=1 bun test src/__tests__/e2e/16.destructive.test.ts.`,
         );
         return;

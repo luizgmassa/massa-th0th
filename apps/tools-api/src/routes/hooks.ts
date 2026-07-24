@@ -14,8 +14,8 @@ import {
   ValidationError,
   QueueSaturatedError,
   CompactSnapshotTool,
-} from "@massa-th0th/core";
-import { config, logger } from "@massa-th0th/shared";
+} from "@massa-ai/core";
+import { config, logger } from "@massa-ai/shared";
 import { Elysia, t } from "elysia";
 
 let cachedService: ReturnType<typeof getHookService> | null = null;

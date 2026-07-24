@@ -1,4 +1,4 @@
-import { requirePostgresDatabaseUrl } from "@massa-th0th/shared/config";
+import { requirePostgresDatabaseUrl } from "@massa-ai/shared/config";
 import { GraphGenerationRepositoryPg } from "./graph-generation-repository-pg.js";
 
 export function getGraphGenerationRepository(): GraphGenerationRepositoryPg {

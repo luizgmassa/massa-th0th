@@ -4,7 +4,7 @@
  * homedir/fsRoot, clock. No pg, no fs, no network.
  */
 import { describe, expect, spyOn, test } from "bun:test";
-import { logger } from "@massa-th0th/shared";
+import { logger } from "@massa-ai/shared";
 import {
   AttributionResolver,
   type WorkspaceRoot,
