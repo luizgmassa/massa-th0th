@@ -14,7 +14,7 @@ const ISOLATED_URL = "postgresql://massa_ai:x@localhost:5432/massa_ai_dedicated"
 describe("getDbName / isSharedDb", () => {
   test("extracts lowercased last path segment, query stripped", () => {
     expect(getDbName("postgresql://u:p@h:5432/massa_ai")).toBe("massa_ai");
-    expect(getDbName("postgresql://u:p@h:5432/Massa_Th0th?sslmode=require")).toBe(
+    expect(getDbName("postgresql://u:p@h:5432/Massa_Ai?sslmode=require")).toBe(
       "massa_ai",
     );
     expect(getDbName("postgresql://u:p@h:5432/massa_ai_dedicated")).toBe(
