@@ -120,7 +120,7 @@ metadata:
 ## massa-ai Integration
 - Context Firewall: <how this agent summarizes verbose output>
 - Verification Ladder: <sensors this agent runs>
-- Th0th Memory: <suggest only | never>
+- Massa-ai Memory: <suggest only | never>
 - Synapse: <own session | none>
 - References: <named reference files>
 

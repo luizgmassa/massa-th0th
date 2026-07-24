@@ -128,7 +128,7 @@ Quick artifacts live under `.specs/quick/NNN-slug/` with a `TASK.md` (one-line i
 ## Failure Handling
 
 - `.specs/` directory missing or not writable: block spec-driven state mutation; do not fall back to memory or chat.
-- th0th search or durable memory unavailable: continue from current source and `.specs/` artifacts; report that discovery or durable-memory synchronization was skipped.
+- massa-ai search or durable memory unavailable: continue from current source and `.specs/` artifacts; report that discovery or durable-memory synchronization was skipped.
 - Synapse unavailable: continue with stateless targeted search.
 - Artifact missing: create it only through an approved first write; otherwise block and ask for direction.
 - Requirement cannot close: keep Specify open and ask the user, or record an explicit accepted assumption before execution.

@@ -51,7 +51,7 @@ Analyze requirements before implementation to surface ambiguity, gaps, contradic
 ## massa-ai Integration
 - Context Firewall: return findings, not raw spec text.
 - Verification Ladder: static (spec citation) only; no behavioral sensors.
-- Th0th Memory: suggest durable requirement-decision memories only when an implicit requirement is accepted as an assumption; main agent persists.
+- Massa-ai Memory: suggest durable requirement-decision memories only when an implicit requirement is accepted as an assumption; main agent persists.
 - Synapse: none (analysis is not a repeated-search task).
 - References: `references/spec-driven/specify.md`, `references/furps/`.
 

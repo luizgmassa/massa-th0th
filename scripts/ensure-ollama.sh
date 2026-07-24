@@ -38,7 +38,7 @@ if ! command -v ollama &> /dev/null; then
 fi
 
 # Start ollama in background
-nohup ollama serve > /tmp/ollama-th0th.log 2>&1 &
+nohup ollama serve > /tmp/ollama-massa-ai.log 2>&1 &
 
 # Wait for it to be ready
 MAX_RETRIES=10
@@ -54,7 +54,7 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
 done
 
 echo "[massa-ai] WARNING: Ollama did not start within ${MAX_RETRIES}s."
-echo "[massa-ai] Check logs: cat /tmp/ollama-th0th.log"
+echo "[massa-ai] Check logs: cat /tmp/ollama-massa-ai.log"
 echo "[massa-ai] Continuing without local Ollama (remote providers may be used)."
 # Exit 0 to not block dev workflow
 exit 0

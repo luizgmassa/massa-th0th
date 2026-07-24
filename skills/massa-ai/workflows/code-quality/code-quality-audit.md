@@ -14,7 +14,7 @@ This workflow is findings-only. Do not edit code unless the user separately asks
    - `references/context-firewall.md` before inspecting large diffs, logs, snapshots, generated reports, or broad search output
    - `references/mobile-context.md` when scope includes Android Jetpack Compose or KMP Compose Multiplatform files, source sets, compiler reports, UI tests, screenshot tests, or runtime evidence
    - `references/naming-standards.md` when evaluating generic names, domain vocabulary, public contract names, or rename recommendations
-   - `references/synapse-policy.md` when repeated th0th searches are expected
+   - `references/synapse-policy.md` when repeated massa-ai searches are expected
    - `references/agent-orchestration.md` only for large scopes, explicit parallel/subagent requests, PR subagent invocation, or independent verification of high-impact findings
 3. `recall` -> load project style rules, ADRs, prior quality decisions, accepted extension points, repeated anti-patterns, and accepted exceptions for the target area.
    - Apply the Memory Freshness Gate from `references/audit-scope.md`; recalled exceptions are leads, not proof.

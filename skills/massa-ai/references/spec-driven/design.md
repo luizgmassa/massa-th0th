@@ -47,7 +47,7 @@ Follow the **Knowledge Verification Chain** (see SKILL.md) in strict order:
 Codebase → Project docs → Context7 MCP → Web search → Flag as uncertain
 ```
 
-When verifying codebase claims, prefer the th0th tool chain FIRST — `list_projects`, `search`, `project_map`, `optimized_context` — before falling back to ast-grep / ripgrep / grep. Apply freshness and source-precedence rules: current source code overrides a stale index, and a stale index or durable memory never overrides current evidence. When uncertain about index freshness, read the live file directly.
+When verifying codebase claims, prefer the massa-ai tool chain FIRST — `list_projects`, `search`, `project_map`, `optimized_context` — before falling back to ast-grep / ripgrep / grep. Apply freshness and source-precedence rules: current source code overrides a stale index, and a stale index or durable memory never overrides current evidence. When uncertain about index freshness, read the live file directly.
 
 **CRITICAL: NEVER assume or fabricate information.** If you cannot find an answer through the chain, explicitly say "I don't know" or "I couldn't find documentation for this". Inventing an API, a pattern, or a behavior that doesn't exist is far worse than admitting uncertainty. Wrong assumptions propagate through design → tasks → implementation and cause cascading failures.
 

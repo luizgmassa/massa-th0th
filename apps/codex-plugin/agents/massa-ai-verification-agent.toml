@@ -46,7 +46,7 @@ Centralize Verification Ladder logic and validate that a task's output meets its
 ## massa-ai Integration
 - Context Firewall: summarize command output; return PASS/FAIL + evidence, not raw logs.
 - Verification Ladder: this agent IS the ladder; choose the cheapest sufficient evidence first.
-- Th0th Memory: suggest durable verification-recipe memories only when a sensor pattern is reusable; main agent persists.
+- Massa-ai Memory: suggest durable verification-recipe memories only when a sensor pattern is reusable; main agent persists.
 - Synapse: none (verification is not a repeated-search task).
 - References: `references/verification-ladder.md`, `references/evidence-gate.md`.
 

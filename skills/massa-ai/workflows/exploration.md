@@ -34,7 +34,7 @@ Step 5: Flag as uncertain → "I'm not certain about X — here's my reasoning, 
 2. Load shared references:
    - `references/codebase-investigation.md` always.
    - `references/context-firewall.md` when source inspection, logs, traces, snapshots, generated output, external research, or broad search results may flood context.
-   - `references/synapse-policy.md` when two or more related th0th searches are expected.
+   - `references/synapse-policy.md` when two or more related massa-ai searches are expected.
    - `references/mobile-context.md` only for non-debug mobile exploration involving KMP, iOS, Android, native bridges, mobile lifecycle, offline sync, permissions, push/background work, local persistence, backend-mobile contracts, or runtime lazy loading.
    - `references/agent-orchestration.md` only when an isolated read-only investigation or independent verification task is justified.
    - Route broken mobile behavior, crashes, regressions, or device-specific failures to `workflows/debug.md` plus `references/mobile-diagnosis.md`; do not keep them in Exploration.
@@ -85,10 +85,10 @@ Step 5: Flag as uncertain → "I'm not certain about X — here's my reasoning, 
    - name the next best workflow if the user wants changes after the explanation (`debug`, `feature`, `refactor`, `architecture-audit`, `spec-driven`, etc.)
 9. Debrief memory with scoring from `references/decision-engine.md`:
    - Persist only durable discoveries that would cost future effort to rediscover: repeated project patterns, architectural constraints, fragile flows, gotchas, accepted exceptions, rejected approaches, or reusable verification recipes.
-   - **Note-worthiness trigger:** when understanding touches 3+ files or a non-trivial flow, persist a note to the th0th memory layer. Below that threshold, decide per-finding.
+   - **Note-worthiness trigger:** when understanding touches 3+ files or a non-trivial flow, persist a note to the massa-ai memory layer. Below that threshold, decide per-finding.
    - Three-way note decision: **create** (new durable finding), **update** (existing non-stale note for the same entity), or **skip** (trivial, one-off, already captured). The Debrief records what was verified against source, not just what was read.
    - Use `remember` with required tags and the correct memory tier.
-   - Keep `th0th` as the canonical memory layer for massa-ai workflows. Do not introduce `.notebook/`, generated state files, or copied-code notes as default persistence.
+   - Keep `massa-ai` as the canonical memory layer for massa-ai workflows. Do not introduce `.notebook/`, generated state files, or copied-code notes as default persistence.
    - Skip memory for trivial observations, one-off facts, raw logs, copied source, screenshots, customer data, tokens, device IDs, and facts already captured in current non-stale memories.
 10. Complete the Evidence Gate from `references/evidence-gate.md`.
 

@@ -51,7 +51,7 @@ Generate a testing strategy that covers unit, integration, edge cases, negative 
 ## massa-ai Integration
 - Context Firewall: summarize test output; return the plan and coverage map, not raw logs.
 - Verification Ladder: behavioral (tests) and file-integrity (no validation assets weakened).
-- Th0th Memory: suggest durable test-pattern memories only when a testing convention is established; main agent persists.
+- Massa-ai Memory: suggest durable test-pattern memories only when a testing convention is established; main agent persists.
 - Synapse: none (test planning is not a repeated-search task).
 - References: `references/verification-ladder.md`.
 

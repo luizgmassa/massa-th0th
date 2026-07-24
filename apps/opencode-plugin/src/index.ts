@@ -51,7 +51,7 @@ function ensureConfig(): void {
 // HTTP client with timeout + abort
 // ---------------------------------------------------------------------------
 
-async function th0thFetch<T = unknown>(
+async function massaAiFetch<T = unknown>(
   endpoint: string,
   body: Record<string, unknown>,
   timeoutMs = FETCH_TIMEOUT_MS,
@@ -76,7 +76,7 @@ async function th0thFetch<T = unknown>(
   }
 }
 
-async function th0thGet<T = unknown>(
+async function massaAiGet<T = unknown>(
   endpoint: string,
   timeoutMs = FETCH_TIMEOUT_MS,
 ): Promise<T> {
@@ -98,7 +98,7 @@ async function th0thGet<T = unknown>(
   }
 }
 
-async function th0thGetWithQuery<T = unknown>(
+async function massaAiGetWithQuery<T = unknown>(
   endpoint: string,
   params: Record<string, string | number | boolean | undefined>,
   timeoutMs = FETCH_TIMEOUT_MS,
@@ -108,7 +108,7 @@ async function th0thGetWithQuery<T = unknown>(
     if (v !== undefined && v !== null) qs.set(k, String(v))
   }
   const sep = endpoint.includes("?") ? "&" : "?"
-  return th0thGet<T>(`${endpoint}${sep}${qs.toString()}`, timeoutMs)
+  return massaAiGet<T>(`${endpoint}${sep}${qs.toString()}`, timeoutMs)
 }
 
 // ---------------------------------------------------------------------------
@@ -172,7 +172,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
   }
 
   function fireAndForget(endpoint: string, body: Record<string, unknown>, label: string) {
-    th0thFetch(endpoint, body).catch((err) => {
+    massaAiFetch(endpoint, body).catch((err) => {
       log("warn", `${label} failed`, { error: err instanceof Error ? err.message : String(err) })
     })
   }
@@ -186,7 +186,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
       reindexInFlight = true
       const count = editedFiles.size
       try {
-        await th0thFetch("/api/v1/project/index", {
+        await massaAiFetch("/api/v1/project/index", {
           projectPath,
           projectId,
           forceReindex: false,
@@ -231,7 +231,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
           format: tool.schema.enum(["json", "toon"]).optional().default("toon").describe("Output format"),
         },
         async execute(args, ctx: ToolContext) {
-          const result = await th0thFetch("/api/v1/search/project", {
+          const result = await massaAiFetch("/api/v1/search/project", {
             query: args.query,
             projectId: args.projectId || projectId,
             projectPath: ctx.worktree || projectPath,
@@ -257,7 +257,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
           importance: tool.schema.number().min(0).max(1).optional().default(0.5).describe("Importance 0-1"),
         },
         async execute(args, ctx: ToolContext) {
-          const result = await th0thFetch("/api/v1/memory/store", {
+          const result = await massaAiFetch("/api/v1/memory/store", {
             content: args.content,
             type: args.type,
             projectId,
@@ -281,7 +281,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
           minImportance: tool.schema.number().optional().default(0.3).describe("Minimum importance"),
         },
         async execute(args, ctx: ToolContext) {
-          const result = await th0thFetch("/api/v1/memory/search", {
+          const result = await massaAiFetch("/api/v1/memory/search", {
             query: args.query,
             projectId,
             sessionId: ctx.sessionID,
@@ -304,7 +304,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
         },
         async execute(args, ctx: ToolContext) {
           toast("Indexing project...", "info")
-          const result = await th0thFetch("/api/v1/project/index", {
+          const result = await massaAiFetch("/api/v1/project/index", {
             projectPath: ctx.worktree || projectPath,
             projectId,
             forceReindex: args.forceReindex ?? false,
@@ -325,7 +325,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
           language: tool.schema.string().optional().describe("Programming language"),
         },
         async execute(args) {
-          const result = await th0thFetch("/api/v1/context/compress", {
+          const result = await massaAiFetch("/api/v1/context/compress", {
             content: args.content,
             strategy: args.strategy ?? "code_structure",
             targetRatio: args.targetRatio ?? 0.7,
@@ -344,7 +344,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
           maxResults: tool.schema.number().optional().default(5).describe("Max search results"),
         },
         async execute(args, ctx: ToolContext) {
-          const result = await th0thFetch("/api/v1/context/optimized", {
+          const result = await massaAiFetch("/api/v1/context/optimized", {
             query: args.query,
             projectId,
             projectPath: ctx.worktree || projectPath,
@@ -372,7 +372,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
           includeImports: tool.schema.boolean().optional().default(true).describe("Extract and show import statements"),
         },
         async execute(args, ctx: ToolContext) {
-          const result = await th0thFetch("/api/v1/file/read", {
+          const result = await massaAiFetch("/api/v1/file/read", {
             filePath: args.filePath,
             projectId: args.projectId || projectId,
             offset: args.offset,
@@ -396,7 +396,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
           jobId: tool.schema.string().describe("Job ID returned by index"),
         },
         async execute(args) {
-          const result = await th0thGet(`/api/v1/project/index/status/${encodeURIComponent(args.jobId)}`)
+          const result = await massaAiGet(`/api/v1/project/index/status/${encodeURIComponent(args.jobId)}`)
           return JSON.stringify(result)
         },
       }),
@@ -408,7 +408,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
           limit: tool.schema.number().optional().default(10),
         },
         async execute(args) {
-          const result = await th0thFetch("/api/v1/analytics/", {
+          const result = await massaAiFetch("/api/v1/analytics/", {
             type: args.type ?? "summary",
             projectId,
             limit: args.limit ?? 10,
@@ -430,7 +430,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
             .describe("Filter by workspace status. Defaults to 'all'."),
         },
         async execute(args) {
-          const result = await th0thGetWithQuery("/api/v1/workspace/list", {
+          const result = await massaAiGetWithQuery("/api/v1/workspace/list", {
             status: args.status ?? "all",
           })
           return JSON.stringify(result)
@@ -465,7 +465,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
             .describe("Maximum number of results to return (default: 20)"),
         },
         async execute(args, ctx: ToolContext) {
-          const result = await th0thGetWithQuery("/api/v1/symbol/definitions", {
+          const result = await massaAiGetWithQuery("/api/v1/symbol/definitions", {
             projectId,
             search: args.query,
             kind: args.kind?.join(","),
@@ -497,7 +497,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
             .describe("Maximum references to return (default: 50)"),
         },
         async execute(args) {
-          const result = await th0thGetWithQuery("/api/v1/symbol/references", {
+          const result = await massaAiGetWithQuery("/api/v1/symbol/references", {
             projectId,
             symbolName: args.symbolName,
             fqn: args.fqn,
@@ -522,7 +522,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
             ),
         },
         async execute(args) {
-          const result = await th0thGetWithQuery("/api/v1/symbol/definition", {
+          const result = await massaAiGetWithQuery("/api/v1/symbol/definition", {
             projectId,
             symbolName: args.symbolName,
             fromFile: args.fromFile,
@@ -606,7 +606,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
       if (!apiAvailable) return
 
       try {
-        const memories = await th0thFetch<{ success: boolean; data?: { memories?: Array<{ content: string }> } }>(
+        const memories = await massaAiFetch<{ success: boolean; data?: { memories?: Array<{ content: string }> } }>(
           "/api/v1/memory/search",
           {
             query: `project ${projectId} critical decisions patterns`,
@@ -636,7 +636,7 @@ export const MassaAiPlugin: Plugin = async ({ project, directory, worktree, clie
       // Fire-and-forget: the snapshot is a bounded TOC with runnable search
       // calls — zero information loss, raw events stay in the observation store.
       try {
-        await th0thFetch(
+        await massaAiFetch(
           "/api/v1/hook/compact-snapshot",
           {
             sessionId: input.sessionID,

@@ -102,7 +102,7 @@ Prisma model added. Repository mirrors `graph-generation-repository-pg.ts` patte
 **FR-09 — Lease-based single-writer for indexing**
 `IndexProjectTool` + auto-reindex path acquire a `managed_runs` lease (`run_kind='indexing'`)
 before ETL starts; 90s expiry + 30s heartbeat; release on terminal state. Concurrent
-`index`/`th0th_reindex` on the same project gets `409 busy` with the active run id.
+`index`/`reindex` on the same project gets `409 busy` with the active run id.
 
 **FR-10 — Idempotent incremental import**
 Each ETL file-batch event has `event_id = SHA-256(source_record || content_hash)`.

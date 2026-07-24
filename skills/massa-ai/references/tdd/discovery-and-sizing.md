@@ -8,7 +8,7 @@ Use the narrowest authoritative source first:
 
 1. Current repository source, schemas, tests, configuration, and project instructions.
 2. Approved project RFCs, ADRs, TDDs, requirements, architecture documents, and tickets available in the workspace.
-3. Relevant current th0th memories, treated as evidence rather than authority.
+3. Relevant current massa-ai memories, treated as evidence rather than authority.
 4. Official dependency or platform documentation when the design depends on external behavior.
 5. External research only when local and official sources cannot answer a material question and browsing is allowed.
 

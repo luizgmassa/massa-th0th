@@ -26,7 +26,7 @@ equivalent PostgreSQL evidence is a blocking coverage gap. Removing SQLite is ou
 - **MNT-05 Correct fixes:** fix PostgreSQL-relevant failures minimally; never weaken,
   delete, or skip validation assets to make a gate green.
 - **MNT-06 Continuity:** persist manifest, ledger, parity, validation, state, handoff,
-  verified TODO findings, and durable th0th lessons.
+  verified TODO findings, and durable massa-ai lessons.
 
 ## Acceptance Criteria
 

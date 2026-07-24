@@ -9,7 +9,7 @@ Use this precedence order:
 1. `.specs/` files loaded from the repository — canonical project state.
 2. Current repository source for implementation/code evidence only.
 3. A handoff package as a compact human-readable summary of already-loaded artifact state.
-4. Durable th0th memories for decisions, rejected approaches, reusable verification recipes, and repeated lessons.
+4. Durable massa-ai memories for decisions, rejected approaches, reusable verification recipes, and repeated lessons.
 5. `.specs-exports/` only as optional debug output for human review.
 
 Never reconstruct canonical restart state from `recall`, `search`, chat history, handoff prose, current source files, or `.specs-exports/`. If `.specs/` is unavailable or not writable, block restart state mutation and report the missing operation.

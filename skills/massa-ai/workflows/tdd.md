@@ -51,7 +51,7 @@ Use this workflow when the readiness checklist is true: one product direction is
 
 ## Failure Handling
 
-- th0th unavailable: continue from current source and project documents; report skipped durable-memory synchronization.
+- massa-ai unavailable: continue from current source and project documents; report skipped durable-memory synchronization.
 - Synapse unavailable: continue with stateless targeted search.
 - Evidence is insufficient: ask the smallest blocking question set or mark the point unresolved; do not fabricate completion.
 - Direction is still disputed: stop and route to RFC rather than embedding an unapproved choice in the TDD.

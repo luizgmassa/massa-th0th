@@ -3,7 +3,7 @@
 Use this workflow when the user asks to hand work to another agent, create an agent-to-agent continuation package, reset context safely, or package work for a new chat.
 
 Use `workflows/long-session.md` instead when the immediate trigger is context compaction during the same session; long-session still uses `references/handoff-package.md`.
-Use `workflows/restart-save.md` instead when the primary goal is preserving canonical th0th restart state for a clean/new chat. Agent handoff may summarize state, but restart-save owns exact `.specs/project/FEATURES.json`, `.specs/project/STATE.md`, `.specs/HANDOFF.md`, and `.specs/features/<slug>/` artifact writes.
+Use `workflows/restart-save.md` instead when the primary goal is preserving canonical massa-ai restart state for a clean/new chat. Agent handoff may summarize state, but restart-save owns exact `.specs/project/FEATURES.json`, `.specs/project/STATE.md`, `.specs/HANDOFF.md`, and `.specs/features/<slug>/` artifact writes.
 
 1. Resolve/reuse `projectId` and set `workflowSessionId`: `handoff-[entity]` by default. Preserve the exact existing `workflowSessionId` only when `.specs/project/STATE.md` lists that workflow as non-`complete` (active or blocked); otherwise use `handoff-[entity]`. Exclude ephemeral Synapse IDs from the durable handoff.
 2. Load shared references:

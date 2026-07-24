@@ -36,7 +36,7 @@ This feature promotes the repeated responsibilities into 12 standalone, independ
   12. mobile-specialist (Android/Kotlin/Compose/KMP/Swift/iOS/Gradle/CocoaPods/lifecycle/offline-sync)
 - A registry document `skills/AGENTS.md` listing all agents with invocation rules, model hints, and ownership boundaries.
 - Update `AGENTS.md` product root to list the new repo-local agent skills.
-- Each `SKILL.md` contains: mission, responsibilities, restrictions, inputs, outputs, invocation rules, model hint, and integration with massa-ai concepts (Th0th Memory, Synapse, Context Firewall, Verification Ladder, References, Lessons).
+- Each `SKILL.md` contains: mission, responsibilities, restrictions, inputs, outputs, invocation rules, model hint, and integration with massa-ai concepts (Massa-ai Memory, Synapse, Context Firewall, Verification Ladder, References, Lessons).
 
 ### Out of Scope
 
@@ -52,7 +52,7 @@ This feature promotes the repeated responsibilities into 12 standalone, independ
 - Sub-agents are single-purpose specialists with one responsibility only.
 - Every agent is reusable from any workflow.
 - No duplicated prompting across agents or workflows.
-- Preserve existing concepts: Th0th Memory, Synapse, Context Firewall, Verification Ladder, References, Lessons, workflow conventions.
+- Preserve existing concepts: Massa-ai Memory, Synapse, Context Firewall, Verification Ladder, References, Lessons, workflow conventions.
 - Architecture evolves from `Workflow → Large Prompt` into `Workflow → Investigator → Context Curator → Planner → Builder → Reviewer → Verification`, where workflows orchestrate and specialists perform.
 
 ## Requirements
@@ -79,7 +79,7 @@ Each `SKILL.md` records a `model_hint` field with the recommended model from the
 Each `SKILL.md` integrates the relevant massa-ai concepts:
 - Context Firewall: agents summarize verbose output and never return raw dumps.
 - Verification Ladder: agents declare the deterministic sensors they run.
-- Th0th Memory: agents may suggest durable memories; main agent persists.
+- Massa-ai Memory: agents may suggest durable memories; main agent persists.
 - Synapse: repeated-search agents (investigator, context-curator) receive an ephemeral Synapse session.
 - References: agents point to the relevant massa-ai reference files by name.
 - Lessons: agents surface reusable failures for lesson distillation.

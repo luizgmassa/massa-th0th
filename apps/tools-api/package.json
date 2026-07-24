@@ -1,6 +1,6 @@
 {
   "name": "@massa-ai/tools-api",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": "luizgmassa",
   "description": "massa-ai REST API server - Semantic code search, memory, and context compression",
   "type": "module",

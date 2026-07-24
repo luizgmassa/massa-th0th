@@ -482,7 +482,7 @@ describe("persona catalog deep validation", () => {
 
 // ── Hook enforcement reference (ported from legacy hook-graph tests) ──────
 // The legacy suite asserted the hook graph maps to references and enforces the
-// th0th dual-write/tag contract. These check the hook-enforcement reference
+// massa-ai dual-write/tag contract. These check the hook-enforcement reference
 // still documents that mapping and the procedural-is-tag rule.
 
 describe("hook enforcement reference", () => {
@@ -509,7 +509,7 @@ describe("hook enforcement reference", () => {
     expect(content).toMatch(/\.specs\/project\/STATE\.md/);
   });
 
-  test("documents the th0th dual-write/tag contract (procedural is a tag, never a type)", async () => {
+  test("documents the massa-ai dual-write/tag contract (procedural is a tag, never a type)", async () => {
     const content = await readFile(hookRef);
     // The phrase spans newlines ("`procedural`\nis a **tag**, never a\ntype"), so
     // assert the key tokens are all present rather than a single-line regex.
@@ -520,7 +520,7 @@ describe("hook enforcement reference", () => {
     expect(content).toContain("memory:procedural");
   });
 
-  test("lists supported th0th types (critical|conversation|code|decision|pattern only)", async () => {
+  test("lists supported massa-ai types (critical|conversation|code|decision|pattern only)", async () => {
     const content = await readFile(hookRef);
     expect(content).toMatch(/critical\s*\|\s*conversation\s*\|\s*code\s*\|\s*decision\s*\|\s*pattern/);
   });
@@ -537,7 +537,7 @@ describe("hook enforcement reference", () => {
 });
 
 // ── Lessons reference (ported from legacy lessons-contract tests) ─────────
-// Legacy asserted: lessons th0th type must be pattern, tag contract enforced,
+// Legacy asserted: lessons massa-ai type must be pattern, tag contract enforced,
 // procedural-is-tag loop doc. These verify the lessons reference + lessons.py
 // honor the dual-write contract.
 
@@ -569,9 +569,9 @@ describe("lessons contract", () => {
     expect(content).toContain("entity:");
   });
 
-  test("lessons.md documents the dual-write (file store + th0th REST best-effort)", async () => {
+  test("lessons.md documents the dual-write (file store + massa-ai REST best-effort)", async () => {
     const content = await readFile(lessonsRef);
-    expect(content).toMatch(/dual.?write|lessons\.json.*th0th|best.?effort/i);
+    expect(content).toMatch(/dual.?write|lessons\.json.*massa-ai|best.?effort/i);
     expect(content).toContain("lessons.json");
   });
 
@@ -1090,7 +1090,7 @@ describe("evidence gate and context firewall references", () => {
   });
 });
 
-// ── Synapse policy + th0th-tools matrix (ported, deep) ──────────────────
+// ── Synapse policy + mcp-tools matrix (ported, deep) ──────────────────
 
 describe("synapse policy and tool matrix references", () => {
   test("references/synapse-policy.md exists", async () => {

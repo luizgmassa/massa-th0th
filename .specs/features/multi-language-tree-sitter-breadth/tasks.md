@@ -63,7 +63,7 @@ Implement with the active `massa-ai` Spec Driven Execute flow, `coding-guideline
 ## MCP and Skill Decision
 
 - Selected skills: `caveman full`, `coding-guidelines`, `massa-ai` Spec Driven, and the routed AI Engineer persona.
-- Selected MCP: th0th recall/search for discovery only; current source and `.specs/` remain authoritative. Synapse is unavailable due the current shared `dist` export mismatch, so searches fall back to stateless retrieval.
+- Selected MCP: massa-ai recall/search for discovery only; current source and `.specs/` remain authoritative. Synapse is unavailable due the current shared `dist` export mismatch, so searches fall back to stateless retrieval.
 - External research: official Tree-sitter, Bun, npm registry, and grammar repositories only when native API/package behavior is not proven locally.
 - Local tools: `rtk`-prefixed shell commands, `apply_patch`, Bun, PostgreSQL, macOS arm64 native linker tools, and macOS CI when needed.
 - Sub-agents: user authorized them. Seven phase workers run sequentially; an independent verifier runs after TASK-026. No nested workers.

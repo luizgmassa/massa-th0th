@@ -16,7 +16,7 @@ Use this workflow to record a finalized or being-finalized architecture decision
    - Use Figma MCP for UI/UX context only when provided and relevant; otherwise use PRD/RFC/NotebookLM context, or ignore UI/UX when absent.
    - When supplied Figma links, nodes, desktop selections, or screenshots materially affect the decision, use `workflows/design.md` as optional child context for mobile UI implications only; the ADR still owns the decision record. Screenshots are context-only unless paired with structured Figma evidence.
    - Use NotebookLM only when the user provides one or more notebook IDs; query each relevant notebook separately, preserve attribution, and do not assume a default notebook.
-   - Corroborate with th0th search, current repo docs, existing ADRs, and code when the decision depends on current project reality.
+   - Corroborate with massa-ai search, current repo docs, existing ADRs, and code when the decision depends on current project reality.
 5. Run the ADR readiness gate from `references/adr-authoring.md`:
    - If a needed PRD, RFC, template, decision detail, or source fact is absent, ask for the missing context instead of inventing it.
    - If an RFC is needed but absent and the user does not know the missing context, assume the decision is not made and route to `workflows/rfc.md`.

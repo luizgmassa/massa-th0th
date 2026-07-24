@@ -1,6 +1,6 @@
 ---
 name: massa-ai
-description: Default memory-backed workflow router for every coding, planning-before-coding, debugging, code review, refactoring, or implementation conversation. Always load it once per new coding session, select specialized workflows first, and use the general fallback otherwise. Handles th0th recall/search, durable memory, context compaction, handoff, audits, specs, ADR/RFC/TDD, and evidence gates. Do NOT use for generic non-coding chat or bulk-loading every workflow/reference.
+description: Default memory-backed workflow router for every coding, planning-before-coding, debugging, code review, refactoring, or implementation conversation. Always load it once per new coding session, select specialized workflows first, and use the general fallback otherwise. Handles massa-ai recall/search, durable memory, context compaction, handoff, audits, specs, ADR/RFC/TDD, and evidence gates. Do NOT use for generic non-coding chat or bulk-loading every workflow/reference.
 ---
 
 # massa-ai Router
@@ -124,8 +124,8 @@ current context already contains it.
 | `bugs-audit` | findings-only bug discovery | `workflows/bugs/bugs-audit.md` |
 | `bugs-fix` | fix bugs audit report findings | `workflows/bugs/bugs-fix.md` |
 | `long-session` | context compaction / continuation package | `workflows/long-session.md` |
-| `restart-save` | preserve canonical th0th restart state for a clean/new chat | `workflows/restart-save.md` |
-| `restart-load` | load canonical th0th restart state in a clean/new chat | `workflows/restart-load.md` |
+| `restart-save` | preserve canonical massa-ai restart state for a clean/new chat | `workflows/restart-save.md` |
+| `restart-load` | load canonical massa-ai restart state in a clean/new chat | `workflows/restart-load.md` |
 | `exploration` | understand codebase/flow | `workflows/exploration.md` |
 | `spec-driven` | TLC v3 Specify, optional Design, optional Tasks, and Execute with mandatory independent validation | `workflows/spec-driven.md` |
 | `implementation-audit` | multi-lens audit of a concrete implementation target | `workflows/implementation/implementation-audit.md` |
@@ -232,7 +232,7 @@ schema or adapter failure. Keep REST-only fields out of MCP calls.
 ## Persistence
 
 Before writing memory, load `references/decision-engine.md` if scoring details
-are not already in context. Use supported th0th types only: `critical`,
+are not already in context. Use supported massa-ai types only: `critical`,
 `conversation`, `code`, `decision`, `pattern`.
 
 Required memory tags:

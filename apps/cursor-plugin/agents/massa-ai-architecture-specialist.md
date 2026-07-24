@@ -48,7 +48,7 @@ Provide architectural guidance by evaluating structure, suggesting boundaries, a
 ## massa-ai Integration
 - Context Firewall: summarize source reads; return findings and metrics, not raw code.
 - Verification Ladder: static (coupling, depth, boundary) checks; no behavioral changes.
-- Th0th Memory: suggest durable architecture-decision memories only when a boundary or abstraction is recommended; main agent persists.
+- Massa-ai Memory: suggest durable architecture-decision memories only when a boundary or abstraction is recommended; main agent persists.
 - Synapse: own ephemeral session when evaluation spans multiple modules with repeated searches.
 - References: `references/architecture-lenses.md`, `references/architecture-domain-lens.md`, `references/architecture-coupling-lens.md`, `references/architecture-deepening-lens.md`.
 

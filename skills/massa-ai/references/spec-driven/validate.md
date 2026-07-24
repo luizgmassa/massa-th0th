@@ -183,7 +183,7 @@ For mobile or UI features, follow the [references/mobile-context.md](../mobile-c
 
 For each issue found during UAT or from the Verifier:
 
-1. **Diagnose** — Analyze the codebase to find root cause. Prefer th0th code-analysis tools first (search, optimized_context) for symbol and dependency location; fall back to ast-grep/rg/grep when the index is stale or unavailable. Current source overrides stale index/memory.
+1. **Diagnose** — Analyze the codebase to find root cause. Prefer massa-ai code-analysis tools first (search, optimized_context) for symbol and dependency location; fall back to ast-grep/rg/grep when the index is stale or unavailable. Current source overrides stale index/memory.
 2. **Create fix task** — Write a task definition with:
    - What: The specific fix
    - Where: File paths

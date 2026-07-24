@@ -57,10 +57,10 @@ proves adapter translation.
 
 ## REST Lifecycle Fallback
 
-Use REST only when `TH0TH_API_URL` is available and the operation is absent or
+Use REST only when `MASSA_AI_API_URL` is available and the operation is absent or
 broken in MCP. Default local URL is `http://localhost:3333`.
 
-If `TH0TH_API_KEY` is configured, send it as `x-api-key`. Never print, persist,
+If `MASSA_AI_API_KEY` is configured, send it as `x-api-key`. Never print, persist,
 or place the key in memory, reports, status updates, command transcripts, or
 committed files.
 
@@ -80,7 +80,7 @@ optional. REST prefetch requires `filePath` and may include `symbols`, `chains`,
 
 ## Failure Policy
 
-- Session creation fails: continue with stateless th0th search.
+- Session creation fails: continue with stateless massa-ai search.
 - Priming or access fails: use verified REST exactly once after recording the MCP failure mode; if REST fails or is unavailable, continue without priming/access.
 - Search rejects `sessionId`: retry once without it and report the divergence.
 - REST unavailable or unauthorized: stay MCP-only and let TTL expire.

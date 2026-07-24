@@ -1,6 +1,6 @@
 {
   "name": "massa-ai",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "author": "luizgmassa",
   "description": "massa-ai - Ancient knowledge keeper for modern code. Semantic search with 98% token reduction",
@@ -55,6 +55,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/pg": "^8.18.0",
+    "toml": "^4.3.0",
     "turbo": "^2.5.0",
     "typescript": "^5.4.0"
   },

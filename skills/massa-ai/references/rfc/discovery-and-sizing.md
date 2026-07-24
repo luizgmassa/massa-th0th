@@ -27,7 +27,7 @@ Use the narrowest authoritative evidence first:
 
 1. Current repository source, schemas, tests, configuration, and project instructions.
 2. Existing RFC templates and conventions, approved ADRs/TDDs, tickets, metrics, incident records, and supplied research.
-3. Relevant current th0th memories, treated as evidence rather than authority.
+3. Relevant current massa-ai memories, treated as evidence rather than authority.
 4. Internal MCP sources such as Jira, Linear, Confluence, or NotebookLM when supplied or available and relevant.
 5. Official dependency, vendor, standard, or regulatory documentation.
 6. Broader external research only when authoritative local or official evidence cannot answer a material question.

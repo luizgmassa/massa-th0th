@@ -17,9 +17,9 @@ When sources conflict, resolve in this strict order — first match wins, lower 
 1. **Fresh user instruction** — the live user's explicit direction for the current decision.
 2. **Approved `.specs/` artifact** — the current `spec.md`/`design.md`/`tasks.md` approved for the active feature.
 3. **STATE / HANDOFF** — `.specs/project/STATE.md` and `.specs/HANDOFF.md` position and decision logs.
-4. **th0th memory** — durable cross-session recall; context until confirmed against current source.
+4. **massa-ai memory** — durable cross-session recall; context until confirmed against current source.
 
-th0th memory and external summaries are discovery, not authority. If a higher source is silent, the next source decides; if a lower source contradicts a higher one, the higher source wins and the lower one is corrected. Record the resolution in STATE so the chain stays auditable. `references/spec-driven/artifact-store.md` mirrors this chain for artifact reads.
+massa-ai memory and external summaries are discovery, not authority. If a higher source is silent, the next source decides; if a lower source contradicts a higher one, the higher source wins and the lower one is corrected. Record the resolution in STATE so the chain stays auditable. `references/spec-driven/artifact-store.md` mirrors this chain for artifact reads.
 
 ---
 
@@ -200,7 +200,7 @@ Both are silent data loss. The section-scoped write rule is the single correctne
 
 Use `remember` for durable cross-session decisions, rejected approaches, reusable verification recipes, repeated lessons, and high-signal gotchas after recall and importance scoring. Do not persist one-off command output, chat summaries, raw transcripts, raw logs, copied source, raw search output, raw subagent output, customer data, secrets, or already-captured facts.
 
-Required th0th tags for durable memory:
+Required massa-ai tags for durable memory:
 
 - `project:<projectId>`
 - `session:<workflowSessionId>`
@@ -208,7 +208,7 @@ Required th0th tags for durable memory:
 - `entity:<feature-or-domain>`
 - one of `memory:working`, `memory:episodic`, `memory:semantic`, or `memory:procedural`
 
-Current source and `.specs/` artifacts remain authoritative for implementation evidence; th0th durable memory is context until confirmed against current source.
+Current source and `.specs/` artifacts remain authoritative for implementation evidence; massa-ai durable memory is context until confirmed against current source.
 
 Completion, restart-save, and handoff reports must state the memory outcome:
 written, intentionally skipped with reason, duplicate skipped, forbidden payload skipped, or failed write with recovery note.

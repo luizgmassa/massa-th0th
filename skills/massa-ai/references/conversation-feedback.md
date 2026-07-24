@@ -22,7 +22,7 @@ Do:
 ```md
 🔵 [Start] Planning visual feedback for massa-ai. Workflow: Spec Driven. Session: Visual Feedback.
 🔄 [Loading] Reading AGENTS.md and massa-ai router guidance before planning.
-🧠 [Context] Found 8 relevant th0th memories and queried the requested NotebookLM source.
+🧠 [Context] Found 8 relevant massa-ai memories and queried the requested NotebookLM source.
 🤖 [Agent Running] Plan Critic is checking failure modes for the proposed design.
 ⚠️ [Divergence] Expected the legacy router path, but this checkout uses skills/massa-ai/SKILL.md.
 ✅ [Verified] Stale-reference checks and skill validation passed.

@@ -1109,7 +1109,7 @@ The installer writes the bootstrap block into each tool's `AGENTS.md` using the 
 | Skill | Location | Description |
 |-------|----------|-------------|
 | `massa-ai` | `skills/massa-ai/` | Default memory-backed workflow router for every coding session. 30+ workflows (spec-driven, debug, feature, refactor, audits, ADR/RFC/TDD, commit, ticket, etc.) and 30+ references (evidence gate, context firewall, verification ladder, agent orchestration, etc.). |
-| `massa-ai-memory` | `skills/massa-ai-memory/` | Mandatory rules for using massa-ai semantic search, compression, memory, and symbol graph tools. Prioritizes th0th tools over native Glob/Grep/Read. |
+| `massa-ai-memory` | `skills/massa-ai-memory/` | Mandatory rules for using massa-ai semantic search, compression, memory, and symbol graph tools. Prioritizes massa-ai tools over native Glob/Grep/Read. |
 | `synapse-usage` | `skills/synapse-usage/` | Synapse cognitive modulation layer for focused, low-noise retrieval during multi-step coding tasks. Open sessions, prime buffers, pass session IDs. |
 | `persona-router` | `skills/persona-router/` | Automatic persona selection from catalog. Reads `skills/massa-ai/personas/catalog.json`, routes based on primary deliverable ownership, supports explicit selection, ambiguity policy, and mid-conversation rerouting. |
 
@@ -1208,7 +1208,7 @@ Ported from the old repo's Python test suite to TypeScript/bun test:
 
 | Test file | Scenarios | Covers |
 |-----------|-----------|--------|
-| `scripts/__tests__/validate-repository.test.ts` | 185 | Skill structure, workflow/reference existence, bootstrap contract, persona catalog (deep: schema/fields/duplicates/path-escape/mirror-drift), hooks enforcement contract, lessons dual-write contract, harness state path migration, gitignore, context slices, agents harness routing, RFC/TDD/ticket/commit workflow contracts, deterministic router precedence, verification ladder, spec-driven phase gates, audit-report-IO, evidence gate, context firewall, synapse policy, th0th-tools matrix, canonical tool naming (no `th0th_*` prefixes), docs guides |
+| `scripts/__tests__/validate-repository.test.ts` | 185 | Skill structure, workflow/reference existence, bootstrap contract, persona catalog (deep: schema/fields/duplicates/path-escape/mirror-drift), hooks enforcement contract, lessons dual-write contract, harness state path migration, gitignore, context slices, agents harness routing, RFC/TDD/ticket/commit workflow contracts, deterministic router precedence, verification ladder, spec-driven phase gates, audit-report-IO, evidence gate, context firewall, synapse policy, mcp-tools matrix, canonical tool naming (no `th0th_*` prefixes), docs guides |
 | `scripts/__tests__/install-skills.test.ts` | 39 | Apply/uninstall idempotency, dry-run, conflict abort, state v1→v2 migration, drift detection, partial uninstall, hook gating scenarios (bad stdin, malformed state) |
 | `scripts/__tests__/install-agents.test.ts` | 56 | JSON writer plan/apply/idempotent/uninstall (claude-code, claude-desktop, cursor), OpenCode writer (`mcp` key + `bunx` + `environment` shape), Codex TOML writer, Claude settings.json plugin-hooks coordination, orchestration, consent gate, deconfliction hints |
 | `scripts/__tests__/subagent-parity.test.ts` | 16 | Drift gate, exact-12-per-host, name-collision, model+effort pinning (Claude/Codex/Cursor/OpenCode), permission boundary, Codex TOML round-trip+marker, OpenCode permission+marker, FEATURES.md table parity |

@@ -26,7 +26,7 @@ Use this workflow for coding, planning-before-coding, review, or implementation 
 
 ## Failure Handling
 
-- If th0th is unavailable, continue with focused shell and file inspection while retaining the project and workflow session concepts.
+- If massa-ai is unavailable, continue with focused shell and file inspection while retaining the project and workflow session concepts.
 - If recall is empty, proceed as a cold start without inventing memory.
 - If Synapse is unavailable, continue with stateless targeted search.
 - If a memory write fails, complete the task and report the durable insight that was not persisted.

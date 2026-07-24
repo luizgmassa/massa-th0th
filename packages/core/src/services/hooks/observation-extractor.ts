@@ -46,8 +46,7 @@ const TOOL_NAME_NORMALIZE: Record<string, string> = {
   // massa-ai MCP tools (note: read_file is ambiguous — Claude Code's Read
   // and massa-ai's read_file tool. We normalize to "Read" for extraction
   // purposes since both are file-read operations. Canonical names are
-  // un-prefixed; legacy th0th_* wire-names are kept as read-side aliases for
-  // existing DB rows.)
+  // un-prefixed.)
   search: "search",
   recall: "recall",
   store_memory: "store_memory",
@@ -96,7 +95,6 @@ const classifyToolCall: Classifier = (_source, payload) => {
 
   switch (toolName) {
     case "Read":
-    case "th0th_read_file":
       return "files-read";
     case "Write":
     case "Edit":
@@ -130,22 +128,16 @@ const classifyToolCall: Classifier = (_source, payload) => {
     case "WebSearch":
       return "searches";
     case "search":
-    case "th0th_search": // legacy alias
       return "searches";
     case "search_definitions":
-    case "th0th_search_def": // legacy alias
-    case "th0th_get_refs": // legacy alias
       return "searches";
     case "get_references":
       return "searches";
     case "recall":
-    case "th0th_recall": // legacy alias
       return "searches";
     case "store_memory":
-    case "th0th_store": // legacy alias
       return "memories-stored";
     case "compact_snapshot":
-    case "th0th_compact_snapshot": // legacy alias
       return "compaction-snapshots";
     case "Task": // subagent spawn
       return "subagents-spawned";
@@ -273,7 +265,7 @@ const classifyError: Classifier = (source, payload) => {
  */
 const classifyRuleFile: Classifier = (_source, payload) => {
   const toolName = normalizeToolName(field(payload, "tool_name"));
-  if (toolName !== "Read" && toolName !== "th0th_read_file" && toolName !== "read_file") return null;
+  if (toolName !== "Read" && toolName !== "read_file") return null;
 
   const toolInput = field(payload, "tool_input");
   const filePath = lower(

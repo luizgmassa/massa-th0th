@@ -23,7 +23,7 @@ Use this workflow when the user wants to draft, review, create, or resume creati
 13. Execute the top-down creation contract from `atlassian-fix.md`: Epic first when requested, then standard issues, then sub-tasks. Persist each successful key and URL into the external review artifact before the next create call.
 14. On partial failure, stop immediately. Retain the artifact, report created and pending draft IDs, and do not delete, transition, comment on, or otherwise compensate Jira issues automatically. Resume only with fresh explicit approval after Jira state and duplicate candidates are re-fetched.
 15. After complete success, report all created keys and URLs, then delete the temporary review artifact. A cleanup failure does not invalidate Jira creation; report the retained path.
-16. Persist only durable conventions or reusable Jira constraints after scoring and deduplication. Do not persist raw ticket bodies, customer data, temporary draft state, or one-run creation results to th0th.
+16. Persist only durable conventions or reusable Jira constraints after scoring and deduplication. Do not persist raw ticket bodies, customer data, temporary draft state, or one-run creation results to massa-ai.
 17. Complete `references/evidence-gate.md`, including Atlassian capability used, artifact cleanup result, created issue links, skipped checks, memory outcome, and residual risk.
 
 ## Failure Handling

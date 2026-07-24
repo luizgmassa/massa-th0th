@@ -26,7 +26,7 @@ Use each source only for its declared role:
 - DoR/DoD sources provide readiness and completion checks.
 - Current Jira metadata provides authoritative project, issue-type, field, option, and hierarchy constraints.
 - Current source code provides verified implementation context when exploration is enabled.
-- th0th memory provides leads and prior conventions, not current Jira truth.
+- massa-ai memory provides leads and prior conventions, not current Jira truth.
 
 Never copy a reference ticket's business context, customer names, issue keys, owners, components, labels, dates, estimates, links, acceptance criteria, or implementation claims unless another valid source confirms they apply.
 

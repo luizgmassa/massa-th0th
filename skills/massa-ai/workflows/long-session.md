@@ -2,7 +2,7 @@
 
 Use this workflow when the user asks for same-session handoff/continuation/safe stopping, work remains unfinished at session end, context budget falls below 40% remaining, context usage reaches 60% with more than one PR group/task still open, or verbose source/log/research context is reducing execution quality. Preserve the exact existing `projectId` and `workflowSessionId`; this workflow packages continuity rather than starting a new task. Do not persist an ephemeral `synapseSessionId` as continuation state.
 
-Use `workflows/restart-save.md` instead when the primary goal is preserving canonical th0th restart state for a clean/new chat. Long-session can create a Session Guide, but restart-save owns exact artifact writes for `.specs/project/FEATURES.json`, `.specs/project/STATE.md`, `.specs/HANDOFF.md`, and `.specs/features/<slug>/` state.
+Use `workflows/restart-save.md` instead when the primary goal is preserving canonical massa-ai restart state for a clean/new chat. Long-session can create a Session Guide, but restart-save owns exact artifact writes for `.specs/project/FEATURES.json`, `.specs/project/STATE.md`, `.specs/HANDOFF.md`, and `.specs/features/<slug>/` state.
 
 1. Continue with the same `workflowSessionId` and `projectId`; never generate a new durable workflow session for compaction
 2. Load `references/handoff-package.md` for the shared continuation-package shape
@@ -35,7 +35,7 @@ projectId: massa-ai
 Last request: continue the approved spec-driven billing implementation.
 Current state: requirements and design approved; T3 verification is pending.
 Pending tasks: run T3 Full gate, commit T3, update traceability, then start T4.
-Key decisions: feature artifacts own approved phase contracts; th0th owns durable cross-session memory.
+Key decisions: feature artifacts own approved phase contracts; massa-ai owns durable cross-session memory.
 Files touched: .specs/features/billing/tasks.md, `src/billing/service.ts`, `tests/billing/service.test.ts`.
 Unresolved errors: none found.
 Exact next step: run the T3 validation command recorded in .specs/features/billing/tasks.md.

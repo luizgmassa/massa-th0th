@@ -1,6 +1,6 @@
 {
   "name": "@massa-ai/core",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": "luizgmassa",
   "type": "module",
   "main": "dist/index.js",
@@ -48,7 +48,7 @@
     "@ai-sdk/google": "^3.0.19",
     "@ai-sdk/mistral": "^3.0.17",
     "@ai-sdk/openai": "^3.0.24",
-    "@massa-ai/shared": "1.2.0",
+    "@massa-ai/shared": "workspace:*",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "@prisma/client-runtime-utils": "^7.3.0",

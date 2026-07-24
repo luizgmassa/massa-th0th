@@ -4,14 +4,14 @@ Use this reference before any spec-driven workflow reads or writes feature regis
 
 ## Source Of Truth
 
-- Canonical state lives in `.specs/` files tracked in the repository, not th0th records, semantic memories, or root aliases.
+- Canonical state lives in `.specs/` files tracked in the repository, not massa-ai records, semantic memories, or root aliases.
 - Current repository source remains authoritative for implementation/code evidence.
 - `search`, `recall`, and durable memories may discover context, decisions, or reusable patterns, but must never reconstruct canonical artifact state.
 - If `.specs/` is unavailable or not writable, block spec-driven state mutation and record the blocker.
 
 ## STATE Precedence Chain
 
-Artifact reads resolve conflicts in this strict order (first match wins): fresh user instruction > approved `.specs/` artifact > STATE/HANDOFF > th0th memory. th0th memory and external summaries are discovery, not authority. Canonical ownership and full section rules live in `references/spec-driven/memory.md`; this store mirrors the chain so reads and writes stay consistent.
+Artifact reads resolve conflicts in this strict order (first match wins): fresh user instruction > approved `.specs/` artifact > STATE/HANDOFF > massa-ai memory. massa-ai memory and external summaries are discovery, not authority. Canonical ownership and full section rules live in `references/spec-driven/memory.md`; this store mirrors the chain so reads and writes stay consistent.
 
 ## Logical Paths
 

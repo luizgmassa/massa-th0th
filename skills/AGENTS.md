@@ -204,7 +204,7 @@ Use this shape:
 ```md
 🔵 [Start] Planning visual feedback for massa-ai. Workflow: Spec Driven. Session: Visual Feedback.
 🔄 [Loading] Reading AGENTS.md and massa-ai router guidance before planning.
-🧠 [Context] Found 8 relevant th0th memories and queried the requested NotebookLM source.
+🧠 [Context] Found 8 relevant massa-ai memories and queried the requested NotebookLM source.
 🤖 [Agent Running] Plan Critic is checking failure modes for the proposed design.
 ⚠️ [Divergence] Expected the legacy router path, but this checkout uses skills/massa-ai/SKILL.md.
 ✅ [Verified] Stale-reference checks and skill validation passed.
@@ -379,7 +379,7 @@ This pass adds the agents only. A follow-up feature will update massa-ai workflo
 
 All agents integrate these concepts (documented per-agent in each charter):
 
-- **Th0th Memory**: agents suggest durable memories only when useful; the main agent persists.
+- **Massa-ai Memory**: agents suggest durable memories only when useful; the main agent persists.
 - **Synapse**: repeated-search agents (investigator, context-curator) receive their own ephemeral Synapse session.
 - **Context Firewall**: agents summarize verbose output and never return raw dumps.
 - **Verification Ladder**: agents declare the deterministic sensors they run.

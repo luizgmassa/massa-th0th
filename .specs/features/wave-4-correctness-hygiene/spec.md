@@ -483,7 +483,7 @@ How we know the feature is successful:
 - [ ] No existing test regresses (full suite green except pre-existing documented
       skips).
 - [ ] `.specs/project/STATE.md`, `.specs/project/FEATURES.json`, `.specs/HANDOFF.md`
-      updated; durable decisions persisted to th0th memory.
+      updated; durable decisions persisted to massa-ai memory.
 
 ---
 

@@ -1,7 +1,7 @@
 # Hook Enforcement
 
 Maps the runtime hook layer (`scripts/hooks/`, `hooks/hooks.json`) to massa-ai
-workflows and references, and documents the th0th dual-write/tag contract.
+workflows and references, and documents the massa-ai dual-write/tag contract.
 Hooks **enforce** existing references and the gate the router already selected;
 they never re-author policy and never re-route. One canonical location per rule.
 
@@ -99,27 +99,27 @@ absent, it falls back to the flat evidence matrix (graceful degradation).
 | `the-fool` | flat evidence matrix |
 | `ticket` | flat evidence matrix |
 
-## th0th Dual-Write / Tag Contract
+## massa-ai Dual-Write / Tag Contract
 
 The continuous-learning loop writes two stores, not one:
 
 - `lessons.py add` / `import` — deterministic grounded file store
   (`.specs/lessons.json`); refuses ungrounded lessons; promotion/quarantine.
-- `remember` — durable memory, best-effort via REST (`TH0TH_API_URL`),
+- `remember` — durable memory, best-effort via REST (`MASSA_AI_API_URL`),
   file-only fallback when REST is unavailable.
 
 **Type:** always `pattern` (lessons are procedural knowledge) or `decision`
 (when a lesson captures a chosen trade-off). `procedural` is a **tag**, never a
-type — th0th supports only `critical | conversation | code | decision | pattern`
+type — massa-ai supports only `critical | conversation | code | decision | pattern`
 (`references/mcp-tools.md`).
 
-**Tags:** every th0th lesson write carries the full massa-ai persistence
+**Tags:** every massa-ai lesson write carries the full massa-ai persistence
 contract: `project:<projectId>`, `session:<workflowSessionId>`,
 `workflow:<type>`, `entity:<name>`, `memory:procedural`. This puts lessons in
 the same recall namespace as massa-ai decisions/patterns, so future
 `recall` surfaces them at Specify/Design.
 
-`PreCompact` (`precompact_save_state.py`) writes a th0th `critical` memory
+`PreCompact` (`precompact_save_state.py`) writes a massa-ai `critical` memory
 tagged `memory:working` for the active objective + exact next step before the
 window compacts; file-only fallback when REST is unavailable.
 
@@ -134,7 +134,7 @@ recall stays owned by the router.
 
 | Failure | Behavior |
 |---|---|
-| th0th REST unavailable | lesson still lands in `lessons.json`; skipped memory write logged to `scripts/hooks-state/skip.log` |
+| massa-ai REST unavailable | lesson still lands in `lessons.json`; skipped memory write logged to `scripts/hooks-state/skip.log` |
 | `.specs/STATE.md` absent / workflow unset | stop gate falls back to flat matrix |
 | bad / malformed stdin | hook exits 0, never blocks |
 | hook non-critical error | exit 0, approve, log skip |

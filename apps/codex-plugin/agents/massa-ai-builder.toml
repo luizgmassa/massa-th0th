@@ -49,7 +49,7 @@ Implement an approved plan or task by modifying source code with a disjoint writ
 ## massa-ai Integration
 - Context Firewall: summarize diffs and command output; return evidence, not raw dumps.
 - Verification Ladder: run the task's sensors (static + behavioral) before claiming Complete.
-- Th0th Memory: suggest durable code-pattern memories only when the implementation establishes a reusable convention; main agent persists.
+- Massa-ai Memory: suggest durable code-pattern memories only when the implementation establishes a reusable convention; main agent persists.
 - Synapse: none (implementation is not a repeated-search task).
 - References: `references/agent-orchestration.md`, `references/naming-standards.md`.
 

@@ -51,4 +51,4 @@ The workflow uses an explicit path or existing project convention and otherwise 
 - Too much detail: request a Compact TDD, but risk-triggered sections remain required.
 - Direction still open: use the `rfc` workflow first.
 - Broad delivery request: use `spec-driven` for requirements, design, tasks, and execution.
-- Missing tool integration: th0th, Synapse, diagram rendering, and external research degrade gracefully; current repository evidence remains authoritative.
+- Missing tool integration: massa-ai, Synapse, diagram rendering, and external research degrade gracefully; current repository evidence remains authoritative.

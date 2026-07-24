@@ -2,7 +2,7 @@
 
 Use this workflow in a new or clean chat when the user asks to load saved restart state, resume from canonical `.specs/` state, continue a saved plan, or start implementation after a planning chat. Use `workflows/agent-handoff.md` instead when the requested output is only a transfer package. Use `workflows/long-session.md` instead for same-session context compaction.
 
-1. Resolve `projectId` from the prompt, workspace, or th0th project memory. Resolve the target `workflowSessionId` from the user instruction, `.specs/HANDOFF.md`, active feature state, or prior exact artifact metadata; do not use a new session id when resuming saved work.
+1. Resolve `projectId` from the prompt, workspace, or massa-ai project memory. Resolve the target `workflowSessionId` from the user instruction, `.specs/HANDOFF.md`, active feature state, or prior exact artifact metadata; do not use a new session id when resuming saved work.
 2. Load shared references:
    - `references/restart-state.md`
    - `references/spec-driven/artifact-store.md`

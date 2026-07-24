@@ -34,7 +34,7 @@ python3 skills/massa-ai/scripts/lessons.py --root . add \
 ```
 
 `--project`/`--session`/`--workflow`/`--entity` carry the active massa-ai
-context onto the lesson so the file store and th0th memory stay in the same
+context onto the lesson so the file store and massa-ai memory stay in the same
 recall namespace. They are optional for manual runs but supplied by the
 continuous-learning hook loop.
 
@@ -86,9 +86,9 @@ The lessons layer is a closed loop, not manual-only. Two runtime hooks
    `--project`/`--session`/`--workflow`/`--entity` context. Ungrounded
    observations are left in the buffer for agent input and logged as skipped.
 
-### th0th Dual-Write
+### massa-ai Dual-Write
 
-`lessons.py add` and `import` best-effort write th0th memory so the file store
+`lessons.py add` and `import` best-effort write massa-ai memory so the file store
 and durable memory stay consistent:
 
 - **type** is always `pattern` (lessons are procedural knowledge). `procedural`
@@ -98,8 +98,8 @@ and durable memory stay consistent:
   `memory:procedural`. This puts lessons in the same recall namespace as
   massa-ai decisions/patterns, so future `recall` surfaces them at
   Specify/Design.
-- th0th MCP is agent-side only; the hook/CLI subprocess writes via REST
-  (`TH0TH_API_URL`). When REST is unavailable, the lesson still lands in
+- massa-ai MCP is agent-side only; the hook/CLI subprocess writes via REST
+  (`MASSA_AI_API_URL`). When REST is unavailable, the lesson still lands in
   `lessons.json` and the skipped memory write is logged (graceful degradation).
 
 ### Round-Trip
@@ -109,8 +109,8 @@ python3 skills/massa-ai/scripts/lessons.py --root . export --out lessons.export.
 python3 skills/massa-ai/scripts/lessons.py --root . import --in lessons.export.json
 ```
 
-`export`/`import` round-trip the file store; `import` re-emits th0th memory
-best-effort. An ungrounded lesson is refused by both `add` and the th0th write.
+`export`/`import` round-trip the file store; `import` re-emits massa-ai memory
+best-effort. An ungrounded lesson is refused by both `add` and the massa-ai write.
 
 ### Self-Check
 

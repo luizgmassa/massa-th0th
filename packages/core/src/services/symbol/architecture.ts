@@ -8,7 +8,7 @@
  * existing fields).
  *
  * Heuristics ported (rewritten fresh) from codebase-memory-mcp's
- * `get_architecture` aspects, adapted to th0th's symbol_imports / symbol_references
+ * `get_architecture` aspects, adapted to massa-ai's symbol_imports / symbol_references
  * model instead of a labeled property graph.
  */
 

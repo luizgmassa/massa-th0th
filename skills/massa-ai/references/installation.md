@@ -1,14 +1,14 @@
-# Th0th Installation And Diagnostics
+# Massa-ai Installation And Diagnostics
 
 Load this only for installing, configuring, validating, or troubleshooting the
-th0th stack. Ordinary workflow routing should use MCP tools instead.
+massa-ai stack. Ordinary workflow routing should use MCP tools instead.
 
 ## Install And Upgrade
 
 Current recommended installer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/S1LV4/th0th/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/luizgmassa/massa-ai/main/install.sh | bash
 ```
 
 Interactive modes:
@@ -19,15 +19,15 @@ Interactive modes:
 | Docker build | Docker and Git | Local changes and custom images. |
 | Source | Git and Bun | Development and contribution. |
 
-Non-interactive installs may set `TH0TH_MODE`, `TH0TH_API_PORT`, and
-`TH0TH_NO_START`. Review the downloaded script and environment before using the
+Non-interactive installs may set `MASSA_AI_MODE`, `MASSA_AI_API_PORT`, and
+`MASSA_AI_NO_START`. Review the downloaded script and environment before using the
 one-line installer in sensitive environments.
 
 Manual source setup:
 
 ```bash
-git clone https://github.com/S1LV4/th0th.git
-cd th0th
+git clone https://github.com/luizgmassa/massa-ai.git
+cd massa-ai
 bun install
 ./scripts/setup-local-first.sh
 bun run build
@@ -44,8 +44,8 @@ Relevant settings include:
 
 - `DATABASE_URL` and `POSTGRES_PASSWORD` for PostgreSQL/pgvector.
 - Embedding provider, model, dimensions, API key, and provider base URL.
-- `TH0TH_API_URL` for MCP/REST clients.
-- `TH0TH_API_KEY` for API protection; REST clients send it as `x-api-key`.
+- `MASSA_AI_API_URL` for MCP/REST clients.
+- `MASSA_AI_API_KEY` for API protection; REST clients send it as `x-api-key`.
 - Search tuning such as `SEARCH_DISABLE_KEYWORD`, `SEARCH_MIN_SCORE`,
   `RRF_KEYWORD_BOOST`, `RRF_VECTOR_WEIGHT`, and
   `RRF_MAX_CHUNKS_PER_FILE`.
@@ -55,11 +55,11 @@ Relevant settings include:
 Current config CLI:
 
 ```bash
-npx @th0th-ai/mcp-client --config-show
-npx @th0th-ai/mcp-client --config-path
-npx @th0th-ai/mcp-client --config-dir
-npx @th0th-ai/mcp-client --config-init
-npx @th0th-ai/mcp-client --config-set embedding.dimensions 4096
+npx @massa-ai/mcp-client --config-show
+npx @massa-ai/mcp-client --config-path
+npx @massa-ai/mcp-client --config-dir
+npx @massa-ai/mcp-client --config-init
+npx @massa-ai/mcp-client --config-set embedding.dimensions 4096
 ```
 
 Provider initialization supports Ollama plus `--mistral` and `--openai`
@@ -97,10 +97,10 @@ behavior through MCP declarations and non-destructive runtime probes.
 
 ## Client Integrations
 
-- OpenCode: local MCP package via `bunx @th0th-ai/mcp-client`, or
-  `@th0th-ai/opencode-plugin`.
+- OpenCode: local MCP package via `bunx @massa-ai/mcp-client`, or
+  `@massa-ai/opencode-plugin`.
 - VS Code/Antigravity: `.vscode/mcp.json` or `./scripts/setup-vscode.sh`.
 - Docker: run the `mcp` service through `docker compose run --rm -i mcp`.
 
-All MCP clients need the correct `TH0TH_API_URL`; protected deployments also
-need `TH0TH_API_KEY` in the client environment.
+All MCP clients need the correct `MASSA_AI_API_URL`; protected deployments also
+need `MASSA_AI_API_KEY` in the client environment.

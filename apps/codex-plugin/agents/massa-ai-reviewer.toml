@@ -48,7 +48,7 @@ Review implementation quality by analyzing the diff and flagging bugs, regressio
 ## massa-ai Integration
 - Context Firewall: summarize the diff; return findings, not the raw diff.
 - Verification Ladder: static checks (lint, typecheck) as supporting evidence; behavioral checks belong to verification-agent.
-- Th0th Memory: suggest durable code-quality memories only when a review reveals a reusable pattern; main agent persists.
+- Massa-ai Memory: suggest durable code-quality memories only when a review reveals a reusable pattern; main agent persists.
 - Synapse: none (review is not a repeated-search task).
 - References: `references/agent-orchestration.md`.
 

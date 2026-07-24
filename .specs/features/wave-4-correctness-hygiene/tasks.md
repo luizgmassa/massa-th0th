@@ -842,10 +842,10 @@ All tasks satisfy the Test Coverage Matrix. No test deferral. No "tested in anot
 ## MCP / Skill Question
 
 For each task, the available MCPs and skills:
-- **MCPs**: `massa-ai` (th0th — for code search if needed during implementation), `context7` (if a library API needs verification — not anticipated for Wave 4's surgical edits).
+- **MCPs**: `massa-ai` (massa-ai — for code search if needed during implementation), `context7` (if a library API needs verification — not anticipated for Wave 4's surgical edits).
 - **Skills**: `massa-ai` (the active workflow skill), `caveman` (communication compression, already active).
 
-No task requires an external MCP or skill beyond the active `massa-ai` workflow. All Wave 4 tasks are surgical TS/CI/doc edits against known files with confirmed signatures. The `massa-ai` th0th search may be used during Execute if a task reveals an unexpected caller, but is not required by the task plan.
+No task requires an external MCP or skill beyond the active `massa-ai` workflow. All Wave 4 tasks are surgical TS/CI/doc edits against known files with confirmed signatures. The massa-ai code search may be used during Execute if a task reveals an unexpected caller, but is not required by the task plan.
 
 ---
 

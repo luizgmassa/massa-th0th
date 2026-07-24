@@ -16,7 +16,7 @@ This workflow is findings-only. Do not edit code unless the user separately asks
    - `references/architecture-deepening-lens.md` only when scope includes module depth, seams, adapters, deletion tests, locality, testability, or AI-navigability
    - `references/audit-report-io.md` before writing the final direct audit report
    - `references/context-firewall.md` before inspecting large diffs, dependency graphs, generated reports, or broad search output
-   - `references/synapse-policy.md` when repeated th0th searches are expected
+   - `references/synapse-policy.md` when repeated massa-ai searches are expected
    - `references/agent-orchestration.md` only for large scopes, explicit parallel/subagent requests, PR subagent invocation, isolated audit slices, or independent verification of high-impact findings
 3. `recall` -> load ADRs, architecture decisions, known boundaries, coupling patterns, accepted exceptions, project constraints, and prior rejected refactors for the target area.
    - Apply the Memory Freshness Gate from `references/audit-scope.md`; recalled exceptions are leads, not proof.

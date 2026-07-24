@@ -35,4 +35,4 @@ No commits are authorized. Tasks remain independently verifiable and receive evi
 | MNT-03 | One result per Gate Manifest row |
 | MNT-04 | Assertion-level parity matrix |
 | MNT-05 | Failure ledger, focused and full reruns |
-| MNT-06 | Validation, state, handoff, TODO, th0th memory |
+| MNT-06 | Validation, state, handoff, TODO, massa-ai memory |

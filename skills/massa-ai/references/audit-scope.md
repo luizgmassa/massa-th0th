@@ -57,7 +57,7 @@ Use the smallest scope type that matches the user's target:
 - Commit range: user-provided commit hash, commit list, or revision range. Record the exact range, base/head when available, changed files, and diff command.
 - Branch comparison: user-provided base/head branch or ref comparison. Resolve base/head with the branch diff rules below and record changed files.
 - Codebase area: module, package, directory, service, bounded context, or feature area. Resolve entry points, exported surfaces, tests, config, and adjacent docs only as needed.
-- Symbol/class/function: locate definitions and references with th0th symbol
+- Symbol/class/function: locate definitions and references with massa-ai symbol
   tools, targeted enriched search, or focused fallback; use `read_file`
   for exact ranges and include defining files, callers, tests, and configs
   needed to verify claims.
@@ -97,7 +97,7 @@ Before suppressing or downgrading a finding because of memory:
 
 Summarize large diffs, logs, generated reports, snapshots, and broad search output before using them in the main context. Keep raw verbose output out of child-agent and final-report payloads unless a short excerpt is necessary as evidence.
 
-When an audit requires repeated th0th searches, use the shared Synapse policy.
+When an audit requires repeated massa-ai searches, use the shared Synapse policy.
 Each parallel audit lens receives an isolated `synapseSessionId`; all lenses
 retain the parent/child durable `workflowSessionId` tags and the same scope
 packet.

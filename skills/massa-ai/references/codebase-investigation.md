@@ -39,7 +39,7 @@ Prefer sources in this order:
 6. `optimized_context` when synthesized compact context is available and more useful
    than exact source.
 7. Local `.notebook/INDEX.md` only if the project already uses `.notebook/`.
-8. Focused shell search/read fallback when th0th is unavailable, stale, incomplete, or unindexed.
+8. Focused shell search/read fallback when massa-ai is unavailable, stale, incomplete, or unindexed.
 9. Official docs or web search only when current external API behavior matters.
 
 Project maps, search results, and optimized context are leads until confirmed
@@ -50,7 +50,7 @@ override indexed context, memories, external summaries, and old handoff notes.
 For multi-search investigations, load `references/synapse-policy.md`. Keep the
 durable `workflowSessionId` separate from the ephemeral Synapse session.
 
-th0th remains canonical memory for massa-ai workflows. Do not introduce `.notebook/` as a default persistence layer.
+massa-ai remains canonical memory for massa-ai workflows. Do not introduce `.notebook/` as a default persistence layer.
 
 ## Recon Rules
 
@@ -70,7 +70,7 @@ Persist only if rediscovery would cost future effort:
 - rejected approach that future agents might reintroduce
 - verification recipe worth reusing
 
-**Note-worthiness trigger:** when understanding touches 3+ files or a non-trivial flow, persist a note to the th0th memory layer. Below that threshold, decide per-finding.
+**Note-worthiness trigger:** when understanding touches 3+ files or a non-trivial flow, persist a note to the massa-ai memory layer. Below that threshold, decide per-finding.
 
 Three-way note decision:
 

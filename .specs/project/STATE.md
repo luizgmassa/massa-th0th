@@ -1,6 +1,28 @@
 # massa-ai Spec State
 
-## Current — Workflow Tools Adaptation
+## Current — Repository Rename Part 2
+
+- projectId: `massa-ai`
+- workflowSessionId: `spec-repo-rename-massa-ai-part2`
+- workflow: spec-driven (Large/Complex)
+- feature: `repo-rename-massa-ai-part2` — COMPLETE + validated PASS
+- scope: 13 requirements (R1-R13), residual `th0th`/`massa-th0th` concept + identity references across bun.lock, CHANGELOG, .specs, skills, plugin agents, docs, source
+- Validation: PASS — 13/13 ACs verified, discrimination sensor killed 1 mutation (observation-extractor `case "search":` → `th0th_search`), type-check 6/6, build 5/5, drift gate no-drift, 398+ tests green across affected suites
+- Report: `.specs/features/repo-rename-massa-ai-part2/validation.md`
+- Spec: `.specs/features/repo-rename-massa-ai-part2/spec.md`
+- Key decisions (user gray-area resolutions):
+  - D1: CHANGELOG historical `massa-th0th` refs rewritten to `massa-ai` (breaks append-only, accepted)
+  - D2: observation-extractor `th0th_*` legacy case arms REMOVED (breaks DB backward-compat, accepted; no migration)
+  - D3: .specs/features/** `th0th`/`Th0th` concept refs → `massa-ai`
+  - D4: installation.md upstream corrected to `luizgmassa/massa-ai` (from stale `S1LV4/th0th`)
+  - D5: README/FEATURES Credits `[th0th](S1LV4/th0th)` preserved
+- Latent bugs found + fixed during lockfile regen:
+  - web-ui type-check: added `@types/bun` devDep (was relying on accidental root hoisting)
+  - subagent-parity test: added `toml` root devDep (was relying on transitive `effect` dep hoisting)
+  - cursor+codex plugin hook symlinks: fixed stale `massa-th0th-hook.ts` target → `massa-ai-hook.ts`
+- Next step: none — feature complete.
+
+## Previous — Workflow Tools Adaptation
 
 - projectId: `massa-ai`
 - workflowSessionId: `spec-workflow-tools-adaptation`

@@ -67,7 +67,7 @@ If none are present, refuse with: `Non-mobile target. Refusing mobile-specialist
 ## massa-ai Integration
 - Context Firewall: summarize source reads; return guidance, not raw code.
 - Verification Ladder: platform-specific static checks when available; no behavioral changes.
-- Th0th Memory: suggest durable mobile-decision memories only when a platform constraint or lifecycle pattern is established; main agent persists.
+- Massa-ai Memory: suggest durable mobile-decision memories only when a platform constraint or lifecycle pattern is established; main agent persists.
 - Synapse: own ephemeral session when guidance spans multiple mobile modules with repeated searches.
 - References: `references/mobile-context.md`, `references/mobile-diagnosis.md`, `references/maestro.md`.
 

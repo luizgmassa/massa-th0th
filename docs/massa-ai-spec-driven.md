@@ -25,7 +25,7 @@ The workflow combines .specs/ artifact files with massa-ai durable memory:
 - `project/STATE.md` tracks progress, verification evidence, blockers, exact next step, and active/superseded `AD-NNN` decisions.
 - `HANDOFF.md` tracks handoff state and exact restart instructions.
 - `lessons.json` and `LESSONS.md` store project-local lessons in `.specs/lessons.json` and `.specs/LESSONS.md`.
-- th0th stores durable decisions, rejected approaches, reusable patterns, and verification recipes across sessions.
+- massa-ai stores durable decisions, rejected approaches, reusable patterns, and verification recipes across sessions.
 
 Use `skills/massa-ai/references/spec-driven/artifact-store.md` for guidance on reading and writing `.specs/` files directly with standard shell commands. Root aliases are not runtime fallback. Optional `.specs-exports/` projections are untracked review aids only.
 
@@ -55,7 +55,7 @@ These are natural-language requests, not CLI commands.
 - Tasks: always-generated Test Coverage Matrix, project testing guideline scan, Gate Check Commands, phase execution map, test co-location validation, pre-approval checks, and exact task validation tables.
 - Execute: one approved step at a time, protected validation assets, per-task test adequacy review, evidence-or-zero mapping, shallow assertion rejection, payload/conjunction checks, build/test count evidence, and restartable state updates.
 - Validate: independent read-only verifier or standalone fresh-eyes fallback, spec-anchored outcome checks, interactive UAT when user-facing behavior needs human judgment, reversible scratch-state discrimination sensor, expanded validation report, and 3-iteration fix loop.
-- Lessons and memory: section-scoped `project/STATE.md` artifact writes, explicit lesson signal table, no-script fallback, and th0th memory used as context until confirmed against current source.
+- Lessons and memory: section-scoped `project/STATE.md` artifact writes, explicit lesson signal table, no-script fallback, and massa-ai memory used as context until confirmed against current source.
 - Restart across clean chats: save artifact state with `workflows/restart-save.md`, load artifact state with `workflows/restart-load.md`, then return to spec-driven for the owning phase or Execute step.
 
 ## Verification Rules

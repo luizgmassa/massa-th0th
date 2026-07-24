@@ -496,6 +496,19 @@
       }
     },
     {
+      "slug": "repo-rename-massa-ai-part2",
+      "title": "Repository rename part 2 — residual th0th/massa-th0th references removed across bun.lock, CHANGELOG, .specs, skills, plugin agents, docs, source",
+      "status": "complete",
+      "priority": "P1",
+      "phases": {
+        "specify": true,
+        "design": false,
+        "tasks": "inline",
+        "execute": true
+      },
+      "spec": ".specs/features/repo-rename-massa-ai-part2/spec.md"
+    },
+    {
       "slug": "repo-rename-massa-ai",
       "title": "Repository rename to massa-ai (from prior massa-th0th identity)",
       "status": "complete",
@@ -509,5 +522,5 @@
       "spec": ".specs/features/repo-rename-massa-ai/spec.md"
     }
   ],
-  "active_feature": "workflow-tools-adaptation"
+  "active_feature": "repo-rename-massa-ai-part2"
 }

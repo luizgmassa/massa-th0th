@@ -20,7 +20,7 @@ Do not edit code or flows in this workflow. Do not use it for new flow implement
    - `references/mobile-context.md` for platform scope, parity, and device/emulator assumptions.
    - `references/audit-scope.md` for scope packet, budgets, skipped depth checks, and freshness.
    - `references/context-firewall.md` before large logs, screenshots, videos, JUnit XML, generated artifacts, or broad search output.
-   - `references/synapse-policy.md` when repeated th0th searches are expected.
+   - `references/synapse-policy.md` when repeated massa-ai searches are expected.
    - `references/agent-orchestration.md` only for large scopes, explicit parallel/subagent requests, or independent verification of high-impact findings.
 3. Run the mandatory Maestro CLI transcript gate from `references/maestro/cli-device.md` and `references/maestro/fact-ledger.md`: `command -v maestro`, `maestro --version` or `maestro --help`, and relevant subcommand help with command, exit code, stdout, and stderr. If missing or failing, block executable audit runs and produce only a blocked static-readiness report when source inspection is still useful.
 4. Establish the audit target:

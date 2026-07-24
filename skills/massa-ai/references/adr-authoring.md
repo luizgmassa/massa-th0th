@@ -78,7 +78,7 @@ Label each material claim before finalizing:
 
 - `confirmed`: verified against current source, docs, ADRs, or MCP-backed context.
 - `user-provided`: supplied directly by the user.
-- `recalled`: recovered from th0th memory and not contradicted by current evidence.
+- `recalled`: recovered from massa-ai memory and not contradicted by current evidence.
 - `inferred`: derived from evidence; state the inference and why it follows.
 - `unresolved`: not sufficiently supported; ask or omit.
 
@@ -182,7 +182,7 @@ Before finalizing:
 - Writing implementation details that belong in a TDD.
 - Editing the meaning of old ADRs instead of superseding them.
 - Omitting "why not" rationale for rejected alternatives.
-- Treating th0th memory as current truth without corroboration when accuracy matters.
+- Treating massa-ai memory as current truth without corroboration when accuracy matters.
 - Fabricating PRD, RFC, UI/UX, Atlassian, Figma, or NotebookLM facts because a source was unavailable.
 - Treating same-stack example ADR facts as context for the new ADR.
 - Copying complementary ADR rationale outside cross-stack contracts, constraints, dependencies, risks, or links.

@@ -12,7 +12,7 @@ This workflow is findings-only. Do not edit code unless the user separately asks
    - `references/audit-scope.md`
    - `references/audit-report-io.md` before writing the final direct audit report
    - `references/context-firewall.md` before inspecting large diffs, specs, issue text, generated reports, or broad search output
-   - `references/synapse-policy.md` when repeated th0th searches are expected
+   - `references/synapse-policy.md` when repeated massa-ai searches are expected
    - `references/agent-orchestration.md` only for large scopes, explicit parallel/subagent requests, PR subagent invocation, or independent verification of high-impact findings
 3. `recall` -> load prior product decisions, accepted requirements, ADRs, scope constraints, known regressions, project patterns, and accepted exceptions for the target area.
    - Apply the Memory Freshness Gate from `references/audit-scope.md`; recalled exceptions are leads, not proof.

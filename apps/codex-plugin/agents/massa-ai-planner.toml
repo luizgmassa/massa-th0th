@@ -47,7 +47,7 @@ Transform an engineering request into a structured implementation plan.
 ## massa-ai Integration
 - Context Firewall: summarize any source reads; return the plan, not raw code.
 - Verification Ladder: plan references expected sensors; does not run them.
-- Th0th Memory: suggest durable decision memories only when the plan locks a strategy; main agent persists.
+- Massa-ai Memory: suggest durable decision memories only when the plan locks a strategy; main agent persists.
 - Synapse: none (planning is not a repeated-search task).
 - References: `references/agent-orchestration.md`, `references/subagent-design.md`.
 

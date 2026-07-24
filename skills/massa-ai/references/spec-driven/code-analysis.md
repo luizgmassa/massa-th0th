@@ -6,7 +6,7 @@ Use this reference when Specify, Design, Tasks, Execute, or Validate needs sourc
 
 ## Tool Priority
 
-Use graceful degradation, starting from th0th indexed tooling and falling back to structural, then text, search:
+Use graceful degradation, starting from massa-ai indexed tooling and falling back to structural, then text, search:
 
 1. `list_projects` (or equivalent index metadata) before indexed reads, to verify project ID, path, status, and freshness.
 2. `search` (or indexed symbol reads) when available and fresh for the current repository path and worktree state. Prefer `search_definitions`, `get_references`, or `optimized_context` for symbol- and reference-shaped queries.
@@ -19,7 +19,7 @@ Use graceful degradation, starting from th0th indexed tooling and falling back t
 - Current repository source and approved `.specs/` artifacts override stale memory, old search results, external summaries, debug exports, and generated plans.
 - `project_map`, `search`, and `optimized_context` are discovery evidence, not proof, until confirmed against source files read in this session or returned with current freshness evidence.
 - If indexed results conflict with current files, or the index is stale, incomplete, missing the target path, or older than relevant local changes, trust current files and record the stale-index observation when it affects decisions.
-- Use th0th durable memory for prior decisions, rejected approaches, reusable patterns, and verification recipes; do not use it as codebase evidence without current-source confirmation.
+- Use massa-ai durable memory for prior decisions, rejected approaches, reusable patterns, and verification recipes; do not use it as codebase evidence without current-source confirmation.
 
 ## Rules
 
@@ -31,7 +31,7 @@ Use graceful degradation, starting from th0th indexed tooling and falling back t
 
 ## Detection
 
-Check tool availability before use. Run the th0th tier first; only probe `sg` / `rg` when you are about to rely on them:
+Check tool availability before use. Run the massa-ai tier first; only probe `sg` / `rg` when you are about to rely on them:
 
 ```bash
 # Check for ast-grep

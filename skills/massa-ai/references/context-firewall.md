@@ -57,6 +57,6 @@ Subagents should not return raw dumps. The main agent still owns memory recall, 
 
 ## Persistence Boundary
 
-`th0th` remains the canonical memory layer for massa-ai workflows. Do not introduce `.notebook/`, SQLite, generated state files, or new persistence systems unless a separate workflow explicitly requires them.
+`massa-ai` remains the canonical memory layer for massa-ai workflows. Do not introduce `.notebook/`, SQLite, generated state files, or new persistence systems unless a separate workflow explicitly requires them.
 
 `references/conversation-feedback.md` is chat-visible progress only. It must not be treated as durable state, memory, or an event store.

@@ -23,7 +23,7 @@ Commands:
   init       Create empty store + rendered file.
   observe    Ingest a JSON observation into the gitignored observations buffer.
   export     Export the lessons store as JSON (round-trips with import).
-  import     Import lessons from JSON (merge by dedup key; best-effort th0th memory).
+  import     Import lessons from JSON (merge by dedup key; best-effort massa-ai memory).
 
 Exit codes: 0 ok, 2 usage/validation error (e.g. missing grounding).
 """
@@ -50,10 +50,10 @@ SIGNALS = {
 
 DEFAULTS = {"promote_threshold": 2, "window_days": 45, "quarantine_threshold": 2}
 
-# th0th supported memory types (references/mcp-tools.md). `procedural` is a
+# massa-ai supported memory types (references/mcp-tools.md). `procedural` is a
 # TAG, never a type. Lessons are procedural knowledge -> type `pattern`.
-TH0TH_SUPPORTED_TYPES = ("critical", "conversation", "code", "decision", "pattern")
-TH0TH_LESSON_TYPE = "pattern"
+MASSA_AI_SUPPORTED_TYPES = ("critical", "conversation", "code", "decision", "pattern")
+MASSA_AI_LESSON_TYPE = "pattern"
 
 
 def _now():
@@ -138,25 +138,25 @@ def _obs_append(root, item):
 
 
 def _remember_best_effort(root, content, tags, project_id="", session_id=""):
-    """Best-effort th0th memory write via REST (urllib, stdlib only).
+    """Best-effort massa-ai memory write via REST (urllib, stdlib only).
 
-    th0th MCP is agent-side only; a CLI subprocess cannot call MCP. th0th exposes
-    REST at TH0TH_API_URL. Type is always `pattern` (lessons are procedural
+    massa-ai MCP is agent-side only; a CLI subprocess cannot call MCP. massa-ai exposes
+    REST at MASSA_AI_API_URL. Type is always `pattern` (lessons are procedural
     knowledge); `procedural` is a tag, not a type. Returns True on success,
     False (silent) when unavailable — the file store remains source of truth.
     """
-    api_url = os.environ.get("MASSA_AI_API_URL") or os.environ.get("TH0TH_API_URL")
+    api_url = os.environ.get("MASSA_AI_API_URL")
     if not api_url:
         return False
     path = os.environ.get("MASSA_AI_MEMORY_PATH", "/api/v1/memory")
     url = api_url.rstrip("/") + path
     body = json.dumps({
-        "content": content, "type": TH0TH_LESSON_TYPE, "importance": 0.6,
+        "content": content, "type": MASSA_AI_LESSON_TYPE, "importance": 0.6,
         "projectId": project_id, "sessionId": session_id, "tags": list(tags),
     }).encode("utf-8")
     req = urllib.request.Request(url, data=body, method="POST",
                                  headers={"Content-Type": "application/json"})
-    key = os.environ.get("MASSA_AI_API_KEY") or os.environ.get("TH0TH_API_KEY")
+    key = os.environ.get("MASSA_AI_API_KEY")
     if key:
         req.add_header("x-api-key", key)
     try:
@@ -167,7 +167,7 @@ def _remember_best_effort(root, content, tags, project_id="", session_id=""):
 
 
 def _lesson_tags(lesson):
-    """massa-ai persistence tag contract for a lesson's th0th memory."""
+    """massa-ai persistence tag contract for a lesson's massa-ai memory."""
     return [
         "project:%s" % lesson.get("project", ""),
         "session:%s" % lesson.get("session", ""),
@@ -465,8 +465,8 @@ def cmd_export(root, args):
 def cmd_import(root, args):
     """Import lessons from JSON (stdin or --in), merging by dedup key.
 
-    Re-emits th0th memory best-effort (type `pattern`, tag `memory:procedural`)
-    for each imported lesson so the file store and th0th memory stay consistent.
+    Re-emits massa-ai memory best-effort (type `pattern`, tag `memory:procedural`)
+    for each imported lesson so the file store and massa-ai memory stay consistent.
     """
     raw = sys.stdin.read() if args.in_ is None else open(args.in_, "r", encoding="utf-8").read()
     try:
@@ -510,7 +510,7 @@ def cmd_import(root, args):
         _remember_best_effort(root, "%s [%s] %s" % (target.get("id"), target.get("signal", ""), target.get("text", "")),
                                     _lesson_tags(target), target.get("project", ""), target.get("session", ""))
     _save(root, data)
-    print(f"IMPORTED added={added} merged={merged} th0th=best-effort")
+    print(f"IMPORTED added={added} merged={merged} massa-ai=best-effort")
     return 0
 
 

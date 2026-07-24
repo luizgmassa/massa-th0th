@@ -14,7 +14,7 @@ This workflow is findings-only. Do not edit the PRD/ADR unless the user separate
    - `references/furps/analyst-role.md` before dispatching `furps-analyst`
    - `references/agent-orchestration.md` and `references/context-firewall.md` before dispatch
    - `references/audit-report-io.md` before writing the final report
-   - `references/synapse-policy.md` when repeated th0th searches are expected
+   - `references/synapse-policy.md` when repeated massa-ai searches are expected
    - `references/evidence-gate.md` at completion
 3. Intake and packet build (main), per `references/furps/intake.md`:
    - Detect source (file / text / Jira / Confluence). Ingest via Atlassian MCP capability discovery (read-only) or file/text fallback.
@@ -49,7 +49,7 @@ This workflow is findings-only. Do not edit the PRD/ADR unless the user separate
 | Failure | Behavior |
 |---|---|
 | Atlassian MCP unavailable / no matching capability | Ask for file/text; continue |
-| th0th unavailable | Skip recall; use file reads; skip memory write and log it |
+| massa-ai unavailable | Skip recall; use file reads; skip memory write and log it |
 | Sub-agent spawning unavailable | Run dimensions sequentially in the main agent; record the skipped-delegation reason |
 | DoR not supplied | Use the built-in fallback; mark DoR-gaps explicitly |
 | Document too large | context-firewall: section summaries plus pointers to sub-agents |

@@ -1,6 +1,6 @@
 # Memory Policy
 
-Read this when writing, updating, pruning, promoting, or resolving conflicting th0th memories.
+Read this when writing, updating, pruning, promoting, or resolving conflicting massa-ai memories.
 
 ## Tiers
 
@@ -11,11 +11,11 @@ Read this when writing, updating, pruning, promoting, or resolving conflicting t
 | Semantic | Durable project facts, constraints, decisions, architecture patterns | `critical`, `decision`, or `pattern` | `memory:semantic` |
 | Procedural | Reusable workflow, command, verification recipe, debugging protocol | `pattern` or `decision` | `memory:procedural` |
 
-Supported th0th types are only `critical`, `conversation`, `code`, `decision`, and `pattern`.
+Supported massa-ai types are only `critical`, `conversation`, `code`, `decision`, and `pattern`.
 
 ## Observational Memory
 
-Observational Memory is not a new storage layer. It is the discipline for deciding which execution observations become th0th memories.
+Observational Memory is not a new storage layer. It is the discipline for deciding which execution observations become massa-ai memories.
 
 - Observer mode: capture only high-signal events, decisions, failed attempts, ruled-out hypotheses, and verification recipes.
 - Reflector mode: when the same lesson appears in 3+ independent sessions, promote it to semantic or procedural memory.
@@ -56,7 +56,7 @@ Add focused domain tags only when they improve future retrieval, such as `auth`,
 ## Write Protocol
 
 1. Recall first using the project, entity, and likely fact name.
-2. Classify the memory tier and supported th0th type.
+2. Classify the memory tier and supported massa-ai type.
 3. Score importance with `references/decision-engine.md`.
 4. Do not write duplicates. If the same fact already exists and still applies, reuse it.
 5. If a new fact supersedes an old memory, write a replacement containing the date, the new fact, and why it supersedes the old one. Add `stale-replaces:<memoryId>` to the replacement; do not mark the replacement itself as `stale`.
@@ -74,7 +74,7 @@ remember({
   sessionId: "spec-memory-routing",
   type: "decision",
   importance: 0.8,
-  content: "2026-06-27 workflows/spec-driven.md owns the TLC v3 Specify, optional Design, optional Tasks, and Execute flow with mandatory independent validation as Execute's final gate. Approved feature artifacts own phase contracts, .specs/project/STATE.md owns restart state, and th0th owns durable cross-session decisions and patterns.",
+  content: "2026-06-27 workflows/spec-driven.md owns the TLC v3 Specify, optional Design, optional Tasks, and Execute flow with mandatory independent validation as Execute's final gate. Approved feature artifacts own phase contracts, .specs/project/STATE.md owns restart state, and massa-ai owns durable cross-session decisions and patterns.",
   tags: [
     "project:massa-ai",
     "session:spec-memory-routing",

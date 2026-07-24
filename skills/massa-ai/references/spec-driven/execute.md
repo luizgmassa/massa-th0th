@@ -120,7 +120,7 @@ Follow [coding-principles.md](coding-principles.md):
 - Touch ONLY listed files.
 - No scope creep.
 
-**Code analysis priority:** Use th0th tooling FIRST (list_projects, project_map, search, optimized_context) to locate existing patterns and reuse before falling back to ast-grep/rg/grep. Apply freshness and source-precedence: current repository source overrides a stale index or memory; never let an outdated index reconstruct canonical artifact or code state.
+**Code analysis priority:** Use massa-ai tooling FIRST (list_projects, project_map, search, optimized_context) to locate existing patterns and reuse before falling back to ast-grep/rg/grep. Apply freshness and source-precedence: current repository source overrides a stale index or memory; never let an outdated index reconstruct canonical artifact or code state.
 
 **SPEC_DEVIATION markers:** If implementation diverges from spec/design, mark it inline:
 
@@ -443,7 +443,7 @@ Then run `references/spec-driven/validate.md` as the final Execute gate. The ver
 
 - **One task at a time** — Focus prevents errors.
 - **Tools matter** — Wrong MCP = wrong approach; ask the MCP and skill question when tool choice changes correctness or verification.
-- **Reuses save tokens** — Copy patterns, don't reinvent; reach for th0th tooling first to locate existing reuse.
+- **Reuses save tokens** — Copy patterns, don't reinvent; reach for massa-ai tooling first to locate existing reuse.
 - **Check before commit** — Verify all criteria, then commit.
 - **Stay surgical** — Touch only what's necessary.
 - **Commit per task** — Clean git history enables bisect and rollback.

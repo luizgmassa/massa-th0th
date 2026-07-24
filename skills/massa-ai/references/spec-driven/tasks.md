@@ -474,9 +474,9 @@ When Tasks runs, always generate these sections before listing implementation ta
 - `## Gate Check Commands`: name the exact quick, full, build, lint, type, validation, or artifact check commands expected for task approval and final validation.
 - `## Test Co-location Validation`: for every task, show expected test/artifact location and the convention or file evidence used.
 
-## th0th Integration
+## Massa-ai Integration
 
-Before sampling tests manually, prefer th0th tooling to read the codebase:
+Before sampling tests manually, prefer massa-ai tooling to read the codebase:
 
 1. **Code analysis priority.** Run `list_projects`, then `project_map` and `search` / `optimized_context` to discover test files, test config, and layer structure BEFORE falling back to `ast-grep` / `rg` / `grep`. If the index is stale or missing, current source always overrides the index or a stored memory; reindex only when freshness blocks the decision.
 2. **Durable memory.** Tag confirmed planning artifacts with `remember` using `project:<id>`, `session:<id>`, `workflow:spec-driven`, `entity:<slug>`, and `memory:working|episodic|semantic|procedural`.

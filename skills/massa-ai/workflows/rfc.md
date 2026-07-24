@@ -35,7 +35,7 @@ Use this workflow when a significant technical, process, product, vendor, tool, 
 
 ## Failure Handling
 
-- th0th unavailable: continue from current source and project documents; report skipped durable-memory synchronization.
+- massa-ai unavailable: continue from current source and project documents; report skipped durable-memory synchronization.
 - Evidence insufficient: use `AskQuestion` or concise conversation questions; do not omit a required field without naming the gap.
 - Direction already settled: stop and route to ADR or TDD instead of disguising implementation documentation as an RFC.
 - Only one credible option exists: research or elicit another option and compare the status quo; do not produce a one-sided proposal.

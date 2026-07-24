@@ -63,7 +63,7 @@ All lenses share `references/audit-scope.md` (scope rules) and `references/audit
 ## massa-ai Integration
 - Context Firewall: summarize the audit scope; return findings, not raw source dumps.
 - Verification Ladder: static checks per lens; no behavioral changes (findings-only).
-- Th0th Memory: suggest durable audit-pattern memories only when a lens reveals a recurring issue class; main agent persists.
+- Massa-ai Memory: suggest durable audit-pattern memories only when a lens reveals a recurring issue class; main agent persists.
 - Synapse: own ephemeral session when the audit spans multiple modules with repeated searches.
 - References: `references/audit-scope.md`, `references/audit-report-io.md`, plus the per-lens references above.
 

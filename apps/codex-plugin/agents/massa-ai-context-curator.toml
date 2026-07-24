@@ -49,7 +49,7 @@ Prepare the minimum high-quality Context Packet required for another agent to do
 ## massa-ai Integration
 - Context Firewall: this agent IS the firewall for downstream agents; return a compact packet, never raw dumps.
 - Verification Ladder: static checks only (file existence, reference existence).
-- Th0th Memory: retrieve via `recall`; do not persist unless the main agent assigns it.
+- Massa-ai Memory: retrieve via `recall`; do not persist unless the main agent assigns it.
 - Synapse: own ephemeral session per `references/synapse-policy.md`; pass `synapseSessionId` on every `search`.
 - References: `references/context-firewall.md`, `references/synapse-policy.md`, `references/mcp-tools.md`.
 

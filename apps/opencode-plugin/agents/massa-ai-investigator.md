@@ -53,7 +53,7 @@ Read and understand the codebase to answer engineering questions without modifyi
 ## massa-ai Integration
 - Context Firewall: summarize search output, logs, and source reads; return only `path:line` pointers and findings.
 - Verification Ladder: static checks (grep, search) and file-integrity; no behavioral changes.
-- Th0th Memory: suggest durable architecture/dependency memories only when useful; main agent persists.
+- Massa-ai Memory: suggest durable architecture/dependency memories only when useful; main agent persists.
 - Synapse: own ephemeral session per `references/synapse-policy.md`; pass `synapseSessionId` on every `search`.
 - References: `references/codebase-investigation.md`, `references/agent-orchestration.md`, `references/synapse-policy.md`.
 
