@@ -43,16 +43,18 @@ const TOOL_NAME_NORMALIZE: Record<string, string> = {
   search_files: "Grep",
   grep: "Grep",
   glob: "Glob",
-  // massa-th0th MCP tools (note: read_file is ambiguous — Claude Code's Read
-  // and massa-th0th's read_file tool. We normalize to "Read" for extraction
-  // purposes since both are file-read operations.)
-  search: "th0th_search",
-  recall: "th0th_recall",
-  store_memory: "th0th_store",
-  search_definitions: "th0th_search_def",
-  get_references: "th0th_get_refs",
+  // massa-ai MCP tools (note: read_file is ambiguous — Claude Code's Read
+  // and massa-ai's read_file tool. We normalize to "Read" for extraction
+  // purposes since both are file-read operations. Canonical names are
+  // un-prefixed; legacy th0th_* wire-names are kept as read-side aliases for
+  // existing DB rows.)
+  search: "search",
+  recall: "recall",
+  store_memory: "store_memory",
+  search_definitions: "search_definitions",
+  get_references: "get_references",
   read_file: "Read",
-  compact_snapshot: "th0th_compact_snapshot",
+  compact_snapshot: "compact_snapshot",
 };
 
 function normalizeToolName(raw: unknown): string {
@@ -127,15 +129,23 @@ const classifyToolCall: Classifier = (_source, payload) => {
       return "web-fetch";
     case "WebSearch":
       return "searches";
-    case "th0th_search":
-    case "th0th_search_def":
-    case "th0th_get_refs":
+    case "search":
+    case "th0th_search": // legacy alias
       return "searches";
-    case "th0th_recall":
+    case "search_definitions":
+    case "th0th_search_def": // legacy alias
+    case "th0th_get_refs": // legacy alias
       return "searches";
-    case "th0th_store":
+    case "get_references":
+      return "searches";
+    case "recall":
+    case "th0th_recall": // legacy alias
+      return "searches";
+    case "store_memory":
+    case "th0th_store": // legacy alias
       return "memories-stored";
-    case "th0th_compact_snapshot":
+    case "compact_snapshot":
+    case "th0th_compact_snapshot": // legacy alias
       return "compaction-snapshots";
     case "Task": // subagent spawn
       return "subagents-spawned";
@@ -263,7 +273,7 @@ const classifyError: Classifier = (source, payload) => {
  */
 const classifyRuleFile: Classifier = (_source, payload) => {
   const toolName = normalizeToolName(field(payload, "tool_name"));
-  if (toolName !== "Read" && toolName !== "th0th_read_file") return null;
+  if (toolName !== "Read" && toolName !== "th0th_read_file" && toolName !== "read_file") return null;
 
   const toolInput = field(payload, "tool_input");
   const filePath = lower(
